@@ -1,0 +1,141 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\PayrollStatus;
+use App\Models\Payslip;
+use App\Services\PayrollCalculator;
+use App\Services\PayrollPeriod;
+use App\Services\PayslipPdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+
+class PayslipController extends Controller
+{
+    public function index()
+    {
+        return Payslip::orderByDesc('created_at')->get();
+    }
+
+    public function show(Payslip $payslip)
+    {
+        return $payslip;
+    }
+
+    private function fields(Request $request): array
+    {
+        return $request->validate(['employee_name' => 'required|string|max:255', 'period' => 'required|string|max:255',
+            'bonus' => 'sometimes|nullable|integer|min:0|max:100000000000', 'status' => 'sometimes|in:belum,sudah',
+            'evidence' => 'present|array|max:366', 'evidence.*.date' => 'required|date_format:Y-m-d',
+            'evidence.*.approved_mins' => 'nullable|numeric|min:0', 'evidence.*.rejected_mins' => 'nullable|numeric|min:0',
+            'evidence.*.pending_mins' => 'nullable|numeric|min:0', 'evidence.*.total_video_mins' => 'nullable|numeric|min:0',
+            'evidence.*.tasks' => 'sometimes|array|max:1000', 'evidence.*.tasks.*.task_name' => 'nullable|string|max:1000',
+            'evidence.*.tasks.*.approved_mins' => 'nullable|numeric|min:0', 'evidence.*.tasks.*.rejected_mins' => 'nullable|numeric|min:0',
+            'evidence.*.tasks.*.pending_mins' => 'nullable|numeric|min:0', 'evidence.*.tasks.*.total_video_mins' => 'nullable|numeric|min:0',
+            'evidence.*.image_urls' => 'sometimes|array|max:10', 'evidence.*.image_urls.*' => 'string|regex:#^/evidence_images/[A-Za-z0-9_./-]+$#',
+        ]);
+    }
+
+    public function store(Request $request, PayrollCalculator $calculator)
+    {
+        $fields = $this->fields($request);
+        $slip = Payslip::create(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
+            'status' => $fields['status'] ?? 'belum'] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? 0)));
+
+        return response()->json(['success' => true, 'message' => 'Slip saved successfully', 'data' => ['id' => $slip->id]]);
+    }
+
+    public function update(Request $request, Payslip $payslip, PayrollCalculator $calculator)
+    {
+        $fields = $this->fields($request);
+        $payslip->update(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
+            'status' => $fields['status'] ?? $payslip->status, 'file_path' => null] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? $payslip->bonus)));
+
+        // Images may be shared by historical slips. Retain files rather than delete references from another slip.
+        return response()->json(['success' => true, 'id' => $payslip->id]);
+    }
+
+    public function destroy(Payslip $payslip)
+    {
+        $payslip->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function status(Request $request, Payslip $payslip)
+    {
+        $data = $request->validate(['status' => 'required|in:belum,sudah']);
+        DB::transaction(function () use ($data, $payslip) {
+            $payslip->update($data);
+            PayrollStatus::updateOrCreate(['worker_name' => $payslip->employee_name, 'period' => $payslip->period], $data);
+        });
+
+        return response()->json(['success' => true, 'id' => $payslip->id, 'status' => $payslip->status]);
+    }
+
+    public function page(Payslip $payslip, PayrollCalculator $calculator)
+    {
+        return view('slips.web', $calculator->displaySlip($payslip));
+    }
+
+    public function live(Request $request, string $worker, PayrollPeriod $resolver, PayrollCalculator $calculator)
+    {
+        return view('slips.web', $calculator->liveSlip($resolver->resolve($request->query()), $worker));
+    }
+
+    public function export(Payslip $payslip, PayrollCalculator $calculator, PayslipPdf $pdf)
+    {
+        $result = $pdf->export($calculator->displaySlip($payslip));
+        $payslip->update(['file_path' => $result['url']]);
+
+        return response()->json($result);
+    }
+
+    public function exportLive(Request $request, string $worker, PayrollPeriod $resolver, PayrollCalculator $calculator, PayslipPdf $pdf)
+    {
+        return response()->json($pdf->export($calculator->liveSlip($resolver->resolve($request->query()), $worker)));
+    }
+
+    public function upload(Request $request)
+    {
+        $request->validate(['images' => 'required|array|min:1|max:10', 'images.*' => 'required|image|mimes:jpeg,jpg,png,webp,gif|max:10240',
+            'worker_name' => 'nullable|string|max:255', 'date' => 'nullable|date_format:Y-m-d']);
+        $worker = preg_replace('/[^a-zA-Z0-9]/', '_', $request->input('worker_name', 'Unknown'));
+        $date = $request->input('date', 'no_date');
+        $urls = [];
+        foreach ($request->file('images') as $file) {
+            $name = bin2hex(random_bytes(16)).'.'.$file->extension();
+            $file->storeAs('payroll/evidence_images/'.$worker.'/'.$date, $name, 'local');
+            $urls[] = '/evidence_images/'.$worker.'/'.$date.'/'.$name;
+        }
+
+        return response()->json(['success' => true, 'urls' => $urls]);
+    }
+
+    public function file(string $type, string $path)
+    {
+        abort_unless(in_array($type, ['pdf_slips', 'evidence_images']) && ! str_contains($path, '..') && preg_match('#^[a-zA-Z0-9_./ -]+$#D', $path), 404);
+        $disk = Storage::disk('local');
+        $key = 'payroll/'.$type.'/'.$path;
+        abort_unless($disk->exists($key), 404);
+        $mime = $disk->mimeType($key);
+        abort_unless(in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp']), 404);
+
+        return response()->file($disk->path($key), ['Content-Type' => $mime, 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store']);
+    }
+
+    public function email(Request $request, Payslip $payslip, PayrollCalculator $calculator, PayslipPdf $pdf)
+    {
+        $data = $request->validate(['email' => 'required|email|max:255']);
+        abort_if(in_array(config('mail.default'), ['log', 'array']), 422, 'Konfigurasi SMTP belum diatur; email belum dikirim.');
+        $result = $pdf->export($calculator->displaySlip($payslip));
+        Mail::raw('Halo '.$payslip->employee_name.', terlampir slip pembayaran AIKu Studio untuk '.$payslip->period.'.', function ($message) use ($data, $payslip, $result) {
+            $message->to($data['email'])->subject('Payslip AIKu Studio: '.$payslip->period.' - '.$payslip->employee_name)
+                ->attach(Storage::disk('local')->path('payroll'.$result['url']), ['as' => $result['fileName'], 'mime' => 'application/pdf']);
+        });
+
+        return response()->json(['success' => true]);
+    }
+}

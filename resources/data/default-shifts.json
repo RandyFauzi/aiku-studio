@@ -1,0 +1,148 @@
+{
+  "start_time": "08:00",
+  "charging_duration_min": 60,
+  "session_duration_min": 120,
+  "sessions_count": 5,
+  "tools_count": 3,
+  "hp_per_tool": 2,
+  "hourly_rate": 50000,
+  "day_off": "monday",
+  "qa_yield_rate": 90,
+  "karyawan": [
+    {
+      "name": "Muhammad Rio Hadi",
+      "short": "Rio",
+      "role": "Utama",
+      "daily_work_hrs": 4,
+      "daily_prod_hrs": 8,
+      "sessions": [
+        1,
+        2
+      ],
+      "alat": "Alat 1"
+    },
+    {
+      "name": "Aufa Anugraha",
+      "short": "Aufa",
+      "role": "Utama",
+      "daily_work_hrs": 4,
+      "daily_prod_hrs": 8,
+      "sessions": [
+        1,
+        2
+      ],
+      "alat": "Alat 2"
+    },
+    {
+      "name": "Muhamad Zikri Fadhilah",
+      "short": "Zikri",
+      "role": "Utama",
+      "daily_work_hrs": 4,
+      "daily_prod_hrs": 8,
+      "sessions": [
+        1,
+        2
+      ],
+      "alat": "Alat 3"
+    },
+    {
+      "name": "Rahmatullah",
+      "short": "Rahmat",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        3
+      ],
+      "alat": "Alat 1"
+    },
+    {
+      "name": "Muhammad Diyoga",
+      "short": "Yoga",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        3
+      ],
+      "alat": "Alat 2"
+    },
+    {
+      "name": "Ghina Mawaddah",
+      "short": "Ghina",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        3
+      ],
+      "alat": "Alat 3"
+    },
+    {
+      "name": "Muhammad Nugraha Dwiputra",
+      "short": "Nuga",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        4
+      ],
+      "alat": "Alat 1"
+    },
+    {
+      "name": "Sasa",
+      "short": "Sasa",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        4
+      ],
+      "alat": "Alat 2"
+    },
+    {
+      "name": "Fai",
+      "short": "Fai",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        4
+      ],
+      "alat": "Alat 3"
+    },
+    {
+      "name": "Siti Mariyam",
+      "short": "Maryam",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        5
+      ],
+      "alat": "Alat 1"
+    },
+    {
+      "name": "Afif Anshari",
+      "short": "Afif",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        5
+      ],
+      "alat": "Alat 2"
+    },
+    {
+      "name": "Fahri",
+      "short": "Fahri",
+      "role": "Reguler",
+      "daily_work_hrs": 2,
+      "daily_prod_hrs": 4,
+      "sessions": [
+        5
+      ],
+      "alat": "Alat 3"
+    }
+  ]
+}

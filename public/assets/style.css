@@ -1,0 +1,7 @@
+/* Custom Styles (Tailwind is already handling most styling) */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+[x-cloak] { display: none !important; }
