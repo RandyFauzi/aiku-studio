@@ -8,5 +8,12 @@ class Contributor extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['nama', 'no_wa', 'domisili', 'no_rek', 'shift', 'hp', 'email'];
+    protected $fillable = ['nama', 'no_wa', 'domisili', 'no_rek', 'shift', 'hp', 'email', 'role'];
+
+    protected $attributes = ['role' => 'contributor'];
+
+    public function user()
+    {
+        return $this->hasOne(User::class);
+    }
 }

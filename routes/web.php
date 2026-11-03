@@ -45,6 +45,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::get('/contributors', [ContributorController::class, 'index']);
             Route::post('/contributors', [ContributorController::class, 'store']);
             Route::put('/contributors/{contributor}', [ContributorController::class, 'update']);
+            Route::patch('/contributors/{contributor}/role', [ContributorController::class, 'updateRole']);
             Route::delete('/contributors/{contributor}', [ContributorController::class, 'destroy']);
             Route::post('/upload-evidence', [PayslipController::class, 'upload']);
             Route::post('/payslips', [PayslipController::class, 'store']);

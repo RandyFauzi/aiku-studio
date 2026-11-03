@@ -37,8 +37,6 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     <span class="hidden sm:inline">Buat Slip Gaji</span>
                 </a>
-
-                
             </div>
         </header>
         <div class="w-full max-w-full px-3 sm:px-5 lg:px-7 py-5 space-y-6">
@@ -47,7 +45,10 @@
             <div class="mb-8">
                 <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">Overview / Contributors / List</p>
                 <div class="flex justify-between items-end">
-                    <h2 class="text-3xl font-extrabold text-gray-900">Contributors List</h2>
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-gray-900">Contributors List</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1">Kelola data kontributor dan hak akses akun (Admin atau Pekerja).</p>
+                    </div>
                     <button @click="openModal()" class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
                         + Add Contributor
                     </button>
@@ -60,6 +61,7 @@
                     <thead class="bg-gray-50/50">
                         <tr>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Peran / Role</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Domisili</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kontak (WA / Email)</th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Shift / Tim</th>
@@ -70,7 +72,7 @@
                     <tbody class="divide-y divide-gray-100">
                         <template x-if="isLoading">
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-400 font-medium">
+                                <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-400 font-medium">
                                     <div class="flex justify-center items-center gap-2">
                                         <svg class="animate-spin h-5 w-5 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -83,7 +85,7 @@
                         </template>
                         <template x-if="!isLoading && contributors.length === 0">
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-400 font-medium">No contributors found in database.</td>
+                                <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-400 font-medium">No contributors found in database.</td>
                             </tr>
                         </template>
                         <template x-for="c in contributors" :key="c.id">
@@ -98,20 +100,36 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600" x-text="c.domisili"></td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                                              :class="c.role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'">
+                                            <span class="w-1.5 h-1.5 rounded-full" :class="c.role === 'admin' ? 'bg-purple-600' : 'bg-emerald-600'"></span>
+                                            <span x-text="c.role === 'admin' ? 'Admin' : 'Pekerja'"></span>
+                                        </span>
+                                        <button type="button"
+                                                @click="quickToggleRole(c)"
+                                                :title="c.role === 'admin' ? 'Ubah menjadi role Pekerja' : 'Ubah menjadi role Admin'"
+                                                class="text-[11px] px-2 py-0.5 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold shadow-2xs transition">
+                                            <span x-text="c.role === 'admin' ? '→ Pekerja' : '→ Admin'"></span>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600" x-text="c.domisili || '-'"></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-semibold text-gray-900" x-text="c.no_wa || '-'"></div>
-                                    <div class="text-xs text-gray-500" x-text="c.email || '-'"></div><span class="mt-1 inline-block text-[10px] font-semibold" :class="c.login_enabled?'text-brand-700':'text-slate-400'" x-text="c.login_enabled?'Login aktif':'Login belum aktif'"></span>
+                                    <div class="text-xs text-gray-500" x-text="c.email || '-'"></div>
+                                    <span class="mt-1 inline-block text-[10px] font-semibold" :class="c.login_enabled?'text-brand-700':'text-slate-400'" x-text="c.login_enabled?'Login aktif':'Login belum aktif'"></span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-semibold text-gray-900" x-text="c.hp"></div>
-                                    <div class="text-xs text-gray-500">Shift: <span x-text="c.shift"></span></div>
+                                    <div class="text-sm font-semibold text-gray-900" x-text="c.hp || '-'"></div>
+                                    <div class="text-xs text-gray-500">Shift: <span x-text="c.shift || '-'"></span></div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700" x-text="c.no_rek || '-'"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button @click="openModal(c)" class="text-brand hover:text-indigo-900 mr-3">Edit</button>
-                                        <button @click="deleteContributor(c.id)" class="text-red-600 hover:text-red-900">Delete</button>
+                                        <button @click="openModal(c)" class="text-brand hover:text-indigo-900 mr-3 font-semibold">Edit</button>
+                                        <button @click="deleteContributor(c.id)" class="text-red-600 hover:text-red-900 font-semibold">Delete</button>
                                     </div>
                                 </td>
                             </tr>
@@ -128,7 +146,7 @@
         </div>
     </main>
 
-<!-- Modal Form -->
+    <!-- Modal Form -->
     <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             <div class="fixed inset-0 transition-opacity" aria-hidden="true">
@@ -145,6 +163,29 @@
                                 <label class="block text-xs font-semibold text-gray-500 mb-1">Nama Lengkap</label>
                                 <input type="text" x-model="formData.nama" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
                             </div>
+
+                            <!-- Role Selector -->
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1.5">Peran Akun (Role)</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition"
+                                           :class="formData.role === 'contributor' ? 'border-brand bg-brand-50/50 text-brand-900 ring-1 ring-brand' : 'border-gray-200 hover:bg-gray-50 text-gray-700'">
+                                        <input type="radio" name="role" value="contributor" x-model="formData.role" class="mt-0.5 text-brand focus:ring-brand">
+                                        <div>
+                                            <p class="text-xs font-bold">Pekerja (Contributor)</p>
+                                            <p class="text-[11px] text-gray-500 leading-tight mt-0.5">Akses portal jadwal, absensi & laporan kerja (/me)</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition"
+                                           :class="formData.role === 'admin' ? 'border-purple-600 bg-purple-50/50 text-purple-900 ring-1 ring-purple-600' : 'border-gray-200 hover:bg-gray-50 text-gray-700'">
+                                        <input type="radio" name="role" value="admin" x-model="formData.role" class="mt-0.5 text-purple-600 focus:ring-purple-500">
+                                        <div>
+                                            <p class="text-xs font-bold">Admin (Administrator)</p>
+                                            <p class="text-[11px] text-gray-500 leading-tight mt-0.5">Akses penuh panel operasional & payroll (/)</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
                             
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -152,10 +193,11 @@
                                     <input type="text" x-model="formData.no_wa" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Email login</label><p class="mb-2 text-xs text-slate-500">Akun baru memakai password awal: password. Gunakan email unik untuk tiap orang.</p>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Email login</label>
                                     <input type="email" x-model="formData.email" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
                                 </div>
                             </div>
+                            <p class="text-xs text-slate-500 -mt-2">Akun baru memakai password awal: <code class="font-bold text-slate-700">password</code>. Gunakan email unik untuk tiap orang.</p>
                             
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 mb-1">Domisili</label>
@@ -190,6 +232,7 @@
                 </form>
             </div>
         </div>
+    </div>
 
     <script src="/assets/app.js"></script>
 </body>

@@ -915,7 +915,7 @@ document.addEventListener('alpine:init', () => {
         isLoading: true,
         showModal: false,
         isEditing: false,
-        formData: { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '' },
+        formData: { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor' },
 
         init() {
             // Watch sidebarOpen in contributorsListData
@@ -938,10 +938,10 @@ document.addEventListener('alpine:init', () => {
         openModal(contributor = null) {
             if (contributor) {
                 this.isEditing = true;
-                this.formData = { ...contributor };
+                this.formData = { ...contributor, role: contributor.role || 'contributor' };
             } else {
                 this.isEditing = false;
-                this.formData = { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '' };
+                this.formData = { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor' };
             }
             this.showModal = true;
         },
@@ -961,15 +961,81 @@ document.addEventListener('alpine:init', () => {
                     body: JSON.stringify(this.formData)
                 });
                 
+                if (window.Swal) {
+                    window.Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: this.isEditing ? 'Data kontributor & role berhasil disimpan.' : 'Kontributor baru berhasil ditambahkan.',
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+                }
                 this.closeModal();
                 this.fetchContributors();
             } catch (error) {
                 console.error("Error saving contributor:", error);
             }
         },
+
+        async quickToggleRole(contributor) {
+            const newRole = contributor.role === 'admin' ? 'contributor' : 'admin';
+            const roleName = newRole === 'admin' ? 'Admin' : 'Pekerja (Contributor)';
+
+            const confirmed = window.Swal
+                ? (await window.Swal.fire({
+                    title: 'Ubah Role Akun?',
+                    text: `Apakah Anda yakin ingin mengubah role "${contributor.nama}" menjadi ${roleName}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#00B090',
+                    cancelButtonColor: '#94a3b8',
+                    confirmButtonText: 'Ya, Ubah Role',
+                    cancelButtonText: 'Batal'
+                })).isConfirmed
+                : confirm(`Ubah role "${contributor.nama}" menjadi ${roleName}?`);
+
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`/api/contributors/${contributor.id}/role`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+                if (res.ok) {
+                    contributor.role = newRole;
+                    if (window.Swal) {
+                        window.Swal.fire({
+                            icon: 'success',
+                            title: 'Role Berhasil Diubah',
+                            text: `Role "${contributor.nama}" sekarang adalah ${roleName}.`,
+                            timer: 1800,
+                            showConfirmButton: false
+                        });
+                    }
+                    this.fetchContributors();
+                }
+            } catch (error) {
+                console.error("Error updating role:", error);
+            }
+        },
         
         async deleteContributor(id) {
-            if (!confirm('Are you sure you want to delete this contributor?')) return;
+            const confirmed = window.Swal
+                ? (await window.Swal.fire({
+                    title: 'Hapus Kontributor?',
+                    text: 'Apakah Anda yakin ingin menghapus kontributor ini? Akses login terkait akan dinonaktifkan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#94a3b8',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal'
+                })).isConfirmed
+                : confirm('Are you sure you want to delete this contributor?');
+
+            if (!confirmed) return;
+
             try {
                 await fetch(`/api/contributors/${id}`, { method: 'DELETE' });
                 this.fetchContributors();
