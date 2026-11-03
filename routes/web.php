@@ -52,6 +52,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::prefix('devices')->group(function () {
                 Route::get('/', [DeviceAccountController::class, 'index']);
                 Route::post('/accounts', [DeviceAccountController::class, 'store']);
+                Route::match(['put', 'patch'], '/accounts/{deviceAccount}', [DeviceAccountController::class, 'update']);
                 Route::patch('/accounts/{deviceAccount}/activate', [DeviceAccountController::class, 'activate']);
                 Route::delete('/accounts/{deviceAccount}', [DeviceAccountController::class, 'destroy']);
             });

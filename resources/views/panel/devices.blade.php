@@ -150,9 +150,12 @@
                                             <span x-text="'Diaktifkan: ' + formatDate(currentActiveAccount.activated_at)"></span>
                                         </div>
                                     </div>
-                                    <span class="text-xs font-bold text-[#009B7E] bg-white px-3 py-1 rounded-lg border border-emerald-200/80 shrink-0 shadow-2xs">
-                                        Akun Utama HP
-                                    </span>
+                                    <button type="button" 
+                                            @click="openEditModal(currentActiveAccount)"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-white hover:bg-emerald-50 text-[#009B7E] font-bold text-xs transition shadow-2xs shrink-0">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                        <span>Edit Akun</span>
+                                    </button>
                                 </div>
                             </template>
 
@@ -268,6 +271,14 @@
                                                         </span>
                                                     </template>
 
+                                                    <button type="button" 
+                                                            @click="openEditModal(acc)"
+                                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition shadow-2xs hover:border-slate-300"
+                                                            title="Edit detail email / catatan">
+                                                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                        <span>Edit</span>
+                                                    </button>
+
                                                     <template x-if="!acc.is_active">
                                                         <button type="button" 
                                                                 @click="deleteAccount(acc)"
@@ -290,6 +301,108 @@
             </div>
 
         </div>
+
+        <!-- EDIT ACCOUNT POPUP MODAL -->
+        <div x-show="showEditModal" 
+             x-cloak 
+             class="fixed inset-0 z-50 overflow-y-auto" 
+             aria-labelledby="modal-title" 
+             role="dialog" 
+             aria-modal="true">
+            
+            <!-- Backdrop -->
+            <div x-show="showEditModal"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="closeEditModal()"
+                 class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"></div>
+
+            <!-- Modal Box -->
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+                <div x-show="showEditModal"
+                     x-transition:enter="ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95"
+                     @click.stop
+                     class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all border border-slate-100">
+                    
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-[#009B7E] flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900">Edit Detail Akun HP</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Perbarui email atau catatan akun pada perangkat ini.</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="closeEditModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="saveEditAccount()">
+                        <div class="px-6 py-5 space-y-4">
+                            <!-- Device info -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Perangkat HP</label>
+                                <div class="flex items-center gap-2 h-11 px-3.5 rounded-xl bg-slate-100/80 border border-slate-200 text-slate-800 text-sm font-semibold">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    <span x-text="'HP ' + getPhoneLabel(editForm.phone_key)"></span>
+                                    <template x-if="editForm.is_active">
+                                        <span class="ml-auto inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Sedang Aktif
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Email Login *</label>
+                                <input type="email" 
+                                       x-model="editForm.email" 
+                                       required 
+                                       placeholder="contoh: akun.streamer1@gmail.com"
+                                       class="w-full h-11 px-3.5 rounded-xl border border-slate-200 text-sm font-mono font-medium focus:outline-none focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20 bg-slate-50/50 focus:bg-white transition">
+                            </div>
+
+                            <!-- Catatan / Label -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Label (Opsional)</label>
+                                <input type="text" 
+                                       x-model="editForm.account_name" 
+                                       placeholder="misal: 3 Nov, Akun Batch 3"
+                                       class="w-full h-11 px-3.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20 bg-slate-50/50 focus:bg-white transition">
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3 rounded-b-2xl">
+                            <button type="button" 
+                                    @click="closeEditModal()" 
+                                    class="h-10 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
+                                Batal
+                            </button>
+                            <button type="submit" 
+                                    :disabled="isSavingEdit || !editForm.email"
+                                    class="h-10 px-5 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white text-xs font-bold transition shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg x-show="isSavingEdit" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                <span x-text="isSavingEdit ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -303,6 +416,15 @@
                 formName: '',
                 isLoading: false,
                 isSubmitting: false,
+                showEditModal: false,
+                isSavingEdit: false,
+                editForm: {
+                    id: null,
+                    phone_key: '',
+                    email: '',
+                    account_name: '',
+                    is_active: false
+                },
 
                 async init() {
                     await this.fetchDevices();
@@ -483,6 +605,78 @@
                             title: 'Gagal',
                             text: error.message
                         });
+                    }
+                },
+
+                getPhoneLabel(key) {
+                    const p = this.phones.find(x => x.key === key);
+                    return p ? p.label : (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
+                },
+
+                openEditModal(acc) {
+                    if (!acc) return;
+                    this.editForm = {
+                        id: acc.id,
+                        phone_key: acc.phone_key || this.selectedPhoneKey,
+                        email: acc.email,
+                        account_name: acc.account_name || '',
+                        is_active: !!acc.is_active
+                    };
+                    this.showEditModal = true;
+                },
+
+                closeEditModal() {
+                    this.showEditModal = false;
+                    this.editForm = {
+                        id: null,
+                        phone_key: '',
+                        email: '',
+                        account_name: '',
+                        is_active: false
+                    };
+                },
+
+                async saveEditAccount() {
+                    if (!this.editForm.id || !this.editForm.email) return;
+                    this.isSavingEdit = true;
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const res = await fetch(`/api/devices/accounts/${this.editForm.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                email: this.editForm.email,
+                                account_name: this.editForm.account_name
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok) {
+                            throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Gagal memperbarui detail akun.'));
+                        }
+
+                        this.closeEditModal();
+                        await this.fetchDevices();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil Diperbarui',
+                            text: data.message || 'Perubahan akun berhasil disimpan.',
+                            timer: 1800,
+                            showConfirmButton: false
+                        });
+                    } catch (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Menyimpan',
+                            text: error.message
+                        });
+                    } finally {
+                        this.isSavingEdit = false;
                     }
                 },
 

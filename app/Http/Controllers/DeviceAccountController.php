@@ -120,6 +120,53 @@ class DeviceAccountController extends Controller
         ]);
     }
 
+    public function update(Request $request, DeviceAccount $deviceAccount): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $allowedPhones = array_keys(DailyWorkReport::PHONES);
+        $data = $request->validate([
+            'phone_key' => ['nullable', 'string', Rule::in($allowedPhones)],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:128',
+                Rule::unique('device_accounts')
+                    ->where('phone_key', $request->input('phone_key', $deviceAccount->phone_key))
+                    ->ignore($deviceAccount->id),
+            ],
+            'account_name' => ['nullable', 'string', 'max:128'],
+        ]);
+
+        $oldEmail = $deviceAccount->email;
+        $newEmail = strtolower(trim($data['email']));
+        $phoneKey = $data['phone_key'] ?? $deviceAccount->phone_key;
+        $name = trim($data['account_name'] ?? '') ?: null;
+
+        DB::transaction(function () use ($deviceAccount, $phoneKey, $newEmail, $name, $oldEmail) {
+            $deviceAccount->update([
+                'phone_key' => $phoneKey,
+                'email' => $newEmail,
+                'account_name' => $name,
+            ]);
+
+            // Sync with StudioAccount if email was updated
+            if ($oldEmail !== $newEmail) {
+                StudioAccount::where('email', $oldEmail)->update(['email' => $newEmail]);
+            }
+            if ($name) {
+                StudioAccount::where('email', $newEmail)->update(['name' => $name]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Detail akun {$newEmail} berhasil diperbarui.",
+            'account' => $deviceAccount->fresh(),
+        ]);
+    }
+
     public function destroy(Request $request, DeviceAccount $deviceAccount): JsonResponse
     {
         $this->ensureAdmin($request);

@@ -137,4 +137,41 @@ class DeviceAccountTest extends TestCase
         $this->assertDatabaseMissing('device_accounts', ['id' => $inactive->id]);
         $this->assertDatabaseHas('device_accounts', ['id' => $active->id]);
     }
+
+    public function test_admin_can_update_device_account(): void
+    {
+        $account = DeviceAccount::create([
+            'phone_key' => 'putih',
+            'email' => 'old.email@example.com',
+            'account_name' => 'Old Label',
+            'is_active' => true,
+        ]);
+
+        // Non admin forbidden
+        $this->actingAs($this->worker)
+            ->putJson("/api/devices/accounts/{$account->id}", [
+                'email' => 'new.email@example.com',
+                'account_name' => 'New Label',
+            ])->assertForbidden();
+
+        // Admin update
+        $res = $this->actingAs($this->admin)
+            ->putJson("/api/devices/accounts/{$account->id}", [
+                'email' => 'revised.email@example.com',
+                'account_name' => 'Revisi Batch 3',
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('device_accounts', [
+            'id' => $account->id,
+            'email' => 'revised.email@example.com',
+            'account_name' => 'Revisi Batch 3',
+        ]);
+        $this->assertDatabaseMissing('device_accounts', [
+            'id' => $account->id,
+            'email' => 'old.email@example.com',
+        ]);
+    }
 }
