@@ -27,9 +27,13 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/me', fn () => auth()->user()->role === 'admin' ? redirect('/') : view('portal.index'));
     Route::get('/api/me/attendance', [AttendanceController::class, 'mine']);
     Route::post('/api/me/attendance', [AttendanceController::class, 'checkIn'])->middleware('throttle:20,1');
+    Route::post('/api/me/attendance/qr', [AttendanceController::class, 'checkInQr'])->middleware('throttle:20,1');
     Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
     Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
     Route::middleware(EnsureAdministrator::class)->group(function () {
+        Route::get('/attendance/barcode/poster', [AttendanceController::class, 'barcodePoster'])->name('attendance.barcode.poster');
+        Route::get('/api/attendance/wifi-config', [AttendanceController::class, 'getWifiConfig']);
+        Route::post('/api/attendance/wifi-config', [AttendanceController::class, 'saveWifiConfig']);
         Route::view('/attendance', 'panel.attendance')->name('attendance');
         Route::view('/attendance.html', 'panel.attendance');
         Route::get('/api/attendance', [AttendanceController::class, 'index']);

@@ -1,0 +1,208 @@
+window.barcodeWifiModal = () => ({
+    open: false,
+    tab: 'qr', // 'qr' | 'wifi'
+    loading: false,
+    saving: false,
+    config: {
+        wifi_ips: [],
+        wifi_check_enabled: true,
+        qr_secret: '',
+        studio_name: 'AIKu Studio',
+    },
+    currentIp: '',
+    qrUrl: '',
+    newIpInput: '',
+    copied: false,
+
+    async init() {
+        window.addEventListener('open-barcode-modal', (e) => {
+            if (e.detail && e.detail.tab) {
+                this.tab = e.detail.tab;
+            }
+            this.openModal();
+        });
+    },
+
+    async openModal() {
+        this.open = true;
+        await this.loadConfig();
+        this.$nextTick(() => {
+            this.renderQrCode();
+        });
+    },
+
+    closeModal() {
+        this.open = false;
+    },
+
+    async loadConfig() {
+        this.loading = true;
+        try {
+            const res = await fetch('/api/attendance/wifi-config', {
+                headers: { Accept: 'application/json' }
+            });
+            if (!res.ok) throw new Error('Gagal memuat konfigurasi WiFi & Barcode');
+            const data = await res.json();
+            this.config = data.config || {};
+            if (!Array.isArray(this.config.wifi_ips)) {
+                this.config.wifi_ips = [];
+            }
+            this.currentIp = data.current_ip || '';
+            this.qrUrl = data.qr_url || '';
+            this.$nextTick(() => this.renderQrCode());
+        } catch (e) {
+            if (window.Swal) {
+                window.Swal.fire({ icon: 'error', title: 'Error', text: e.message });
+            }
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    renderQrCode() {
+        if (!this.qrUrl) return;
+        const canvas = document.getElementById('admin-barcode-canvas');
+        if (!canvas) return;
+
+        let attempts = 0;
+        const draw = () => {
+            if (window.QRCode && canvas) {
+                window.QRCode.toCanvas(canvas, this.qrUrl, {
+                    width: 256,
+                    margin: 2,
+                    color: {
+                        dark: '#0f172a',
+                        light: '#ffffff'
+                    }
+                }, (error) => {
+                    if (error) console.error('QR Render Error:', error);
+                });
+            } else if (attempts < 20) {
+                attempts++;
+                setTimeout(draw, 100);
+            }
+        };
+        draw();
+    },
+
+    downloadPng() {
+        const canvas = document.getElementById('admin-barcode-canvas');
+        if (!canvas) return;
+        const link = document.createElement('a');
+        const studioSlug = (this.config.studio_name || 'AIKu-Studio').toLowerCase().replace(/[^a-z0-9]/g, '-');
+        link.download = `Barcode-Absensi-${studioSlug}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    },
+
+    downloadSvg() {
+        if (!window.QRCode || !this.qrUrl) return;
+        window.QRCode.toString(this.qrUrl, { type: 'svg', margin: 2 }, (err, svgString) => {
+            if (err) return;
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const studioSlug = (this.config.studio_name || 'AIKu-Studio').toLowerCase().replace(/[^a-z0-9]/g, '-');
+            a.href = url;
+            a.download = `Barcode-Absensi-${studioSlug}.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    },
+
+    copyQrUrl() {
+        if (!this.qrUrl) return;
+        navigator.clipboard.writeText(this.qrUrl).then(() => {
+            this.copied = true;
+            setTimeout(() => { this.copied = false; }, 2500);
+        });
+    },
+
+    addCurrentIp() {
+        if (!this.currentIp) return;
+        if (!this.config.wifi_ips.includes(this.currentIp)) {
+            this.config.wifi_ips.push(this.currentIp);
+        }
+    },
+
+    addManualIp() {
+        const ip = (this.newIpInput || '').trim();
+        if (!ip) return;
+        if (!this.config.wifi_ips.includes(ip)) {
+            this.config.wifi_ips.push(ip);
+        }
+        this.newIpInput = '';
+    },
+
+    removeIp(index) {
+        this.config.wifi_ips.splice(index, 1);
+    },
+
+    async saveSettings(regenerate = false) {
+        if (regenerate) {
+            if (window.Swal) {
+                const confirmed = await window.Swal.fire({
+                    title: 'Regenerasi Barcode Absensi?',
+                    text: 'Barcode lama yang sudah dicetak di dinding studio tidak akan berlaku lagi setelah diganti. Lanjutkan?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#009B7E',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Buat Barcode Baru',
+                    cancelButtonText: 'Batal'
+                });
+                if (!confirmed.isConfirmed) return;
+            } else if (!confirm('Regenerasi barcode absensi? Barcode lama akan kedaluwarsa.')) {
+                return;
+            }
+        }
+
+        this.saving = true;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const res = await fetch('/api/attendance/wifi-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    wifi_ips: this.config.wifi_ips,
+                    wifi_check_enabled: !!this.config.wifi_check_enabled,
+                    studio_name: this.config.studio_name || 'AIKu Studio',
+                    regenerate_qr: regenerate
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                const errorMsg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'Gagal menyimpan pengaturan');
+                throw new Error(errorMsg);
+            }
+
+            this.config = data.config || {};
+            this.currentIp = data.current_ip || this.currentIp;
+            this.qrUrl = data.qr_url || this.qrUrl;
+            this.$nextTick(() => this.renderQrCode());
+
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: data.message || 'Pengaturan Barcode & WiFi berhasil disimpan.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        } catch (e) {
+            if (window.Swal) {
+                window.Swal.fire({ icon: 'error', title: 'Gagal', text: e.message });
+            } else {
+                alert(e.message);
+            }
+        } finally {
+            this.saving = false;
+        }
+    }
+});
