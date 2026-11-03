@@ -101,19 +101,11 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-2">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-                                              :class="c.role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'">
-                                            <span class="w-1.5 h-1.5 rounded-full" :class="c.role === 'admin' ? 'bg-purple-600' : 'bg-emerald-600'"></span>
-                                            <span x-text="c.role === 'admin' ? 'Admin' : 'Pekerja'"></span>
-                                        </span>
-                                        <button type="button"
-                                                @click="quickToggleRole(c)"
-                                                :title="c.role === 'admin' ? 'Ubah menjadi role Pekerja' : 'Ubah menjadi role Admin'"
-                                                class="text-[11px] px-2 py-0.5 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold shadow-2xs transition">
-                                            <span x-text="c.role === 'admin' ? '→ Pekerja' : '→ Admin'"></span>
-                                        </button>
-                                    </div>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                                          :class="c.role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'">
+                                        <span class="w-1.5 h-1.5 rounded-full" :class="c.role === 'admin' ? 'bg-purple-600' : 'bg-emerald-600'"></span>
+                                        <span x-text="c.role === 'admin' ? 'Admin' : 'Pekerja'"></span>
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600" x-text="c.domisili || '-'"></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
