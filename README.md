@@ -24,6 +24,8 @@ Untuk mengembangkan CSS/JavaScript gunakan composer dev. Sinkronisasi Atlas loka
 - Payroll cut-off 22–21 WITA, bonus, status pembayaran, slip historis dan live.
 - PDF dibuat langsung oleh PHP; bukti/PDF dilindungi login.
 - Pengaturan shift per nama: beberapa sesi per anggota, pilihan alat, penambahan kontributor, dan deteksi bentrok. Jadwal harian serta simulasi bulanan mengikuti susunan tim yang disimpan.
+- Kalender shift per tanggal dengan pola rutin sebagai dasar, jadwal khusus harian, dan hari libur.
+- Login kontributor dari email terdaftar, portal jadwal pribadi, serta absensi Masuk dengan GPS dan waktu WITA tanpa checkout.
 - Profit dengan konfigurasi tersimpan di database.
 - Akun studio dan sinkronisasi Atlas melalui HTTP/cron bertahap.
 - Pengiriman slip melalui SMTP yang dikonfigurasi pada .env.
@@ -34,6 +36,7 @@ Tidak ada fitur menghidupkan/mematikan CMD. Hosting menjalankan PHP biasa. Node.
 ## Dokumentasi
 - [Arsitektur, pemetaan variabel, database, kontrak API, dan hasil verifikasi](docs/MIGRATION.md)
 - [Deployment shared hosting Hostinger](docs/HOSTINGER.md)
+- [Kalender, akses kontributor, dan absensi](docs/ATTENDANCE_AND_CALENDAR.md)
 - Contoh konfigurasi produksi: .env.hostinger.example
 - SQL siap impor ke database hosting kosong: storage/app/private/migration/aiku-studio-hostinger.sql
 

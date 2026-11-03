@@ -78,6 +78,7 @@
             </div>
         </div>
 
+        <div class="px-4 pb-3">@include('attendance.nav')</div>
         <!-- Sidebar Footer Admin -->
         <div class="p-4 border-t border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-3 truncate">
@@ -180,7 +181,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600" x-text="c.domisili"></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-semibold text-gray-900" x-text="c.no_wa || '-'"></div>
-                                    <div class="text-xs text-gray-500" x-text="c.email || '-'"></div>
+                                    <div class="text-xs text-gray-500" x-text="c.email || '-'"></div><span class="mt-1 inline-block text-[10px] font-semibold" :class="c.login_enabled?'text-brand-700':'text-slate-400'" x-text="c.login_enabled?'Login aktif':'Login belum aktif'"></span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-semibold text-gray-900" x-text="c.hp"></div>
@@ -231,7 +232,7 @@
                                     <input type="text" x-model="formData.no_wa" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Email</label>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Email login</label><p class="mb-2 text-xs text-slate-500">Akun baru memakai password awal: password. Gunakan email unik untuk tiap orang.</p>
                                     <input type="email" x-model="formData.email" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
                                 </div>
                             </div>

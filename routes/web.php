@@ -1,12 +1,16 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContributorController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\RecordingController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ShiftDayController;
 use App\Http\Controllers\SyncController;
+use App\Http\Middleware\EnsureActiveAccount;
+use App\Http\Middleware\EnsureAdministrator;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -14,48 +18,58 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::view('/', 'panel.index');
-    foreach (['index', 'contributors', 'create', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
-        Route::view('/'.$page.'.html', 'panel.'.$page);
-    }
-    Route::get('/slip/live/{worker}', [PayslipController::class, 'live']);
-    Route::get('/slip/{payslip}', [PayslipController::class, 'page'])->whereNumber('payslip');
-    Route::get('/{type}/{path}', [PayslipController::class, 'file'])->where('type', 'evidence_images|pdf_slips')->where('path', '.+');
+    Route::get('/', fn () => auth()->user()->role === 'contributor' ? redirect('/me') : view('panel.index'));
+    Route::get('/me', fn () => auth()->user()->role === 'admin' ? redirect('/') : view('portal.index'));
+    Route::get('/api/me/attendance', [AttendanceController::class, 'mine']);
+    Route::post('/api/me/attendance', [AttendanceController::class, 'checkIn'])->middleware('throttle:20,1');
+    Route::middleware(EnsureAdministrator::class)->group(function () {
+        Route::view('/attendance.html', 'panel.attendance');
+        Route::get('/api/attendance', [AttendanceController::class, 'index']);
+        foreach (['index', 'contributors', 'create', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
+            Route::view('/'.$page.'.html', 'panel.'.$page);
+        }
+        Route::get('/slip/live/{worker}', [PayslipController::class, 'live']);
+        Route::get('/slip/{payslip}', [PayslipController::class, 'page'])->whereNumber('payslip');
+        Route::get('/{type}/{path}', [PayslipController::class, 'file'])->where('type', 'evidence_images|pdf_slips')->where('path', '.+');
 
-    // Keep session authentication and CSRF on legacy-compatible JSON endpoints.
-    Route::prefix('api')->group(function () {
-        Route::get('/slips', [PayslipController::class, 'index']);
-        Route::get('/contributors', [ContributorController::class, 'index']);
-        Route::post('/contributors', [ContributorController::class, 'store']);
-        Route::put('/contributors/{contributor}', [ContributorController::class, 'update']);
-        Route::delete('/contributors/{contributor}', [ContributorController::class, 'destroy']);
-        Route::post('/upload-evidence', [PayslipController::class, 'upload']);
-        Route::post('/payslips', [PayslipController::class, 'store']);
-        Route::get('/payslips/{payslip}', [PayslipController::class, 'show'])->whereNumber('payslip');
-        Route::put('/payslips/{payslip}', [PayslipController::class, 'update']);
-        Route::delete('/payslips/{payslip}', [PayslipController::class, 'destroy']);
-        Route::patch('/payslips/{payslip}/status', [PayslipController::class, 'status']);
-        Route::get('/payslips/{payslip}/export', [PayslipController::class, 'export']);
-        Route::post('/payslips/{payslip}/email', [PayslipController::class, 'email'])->middleware('throttle:10,1');
-        Route::get('/studio-recordings', [RecordingController::class, 'index']);
-        Route::put('/studio-recordings/batch-assign', [RecordingController::class, 'assign']);
-        Route::get('/studio-accounts', [SettingController::class, 'accounts']);
-        Route::post('/studio-accounts', [SettingController::class, 'addAccounts']);
-        Route::delete('/studio-accounts/{email}', [SettingController::class, 'deleteAccount']);
-        Route::put('/studio-accounts/{email}/toggle', [SettingController::class, 'toggleAccount']);
-        Route::get('/shifts/config', [SettingController::class, 'shifts']);
-        Route::post('/shifts/config', [SettingController::class, 'saveShifts']);
-        Route::get('/payroll/periods', [PayrollController::class, 'periods']);
-        Route::get('/payroll/live-summary', [PayrollController::class, 'summary']);
-        Route::get('/payroll/worker-evidence', [PayrollController::class, 'evidence']);
-        Route::post('/payroll/status', [PayrollController::class, 'status']);
-        Route::get('/payroll/export-live/{worker}', [PayslipController::class, 'exportLive']);
-        Route::post('/studio-recordings/sync-now', [SyncController::class, 'requestSync']);
-        Route::get('/studio-recordings/sync-status', [SyncController::class, 'status']);
-        Route::post('/studio-recordings/auto-sync-toggle', [SyncController::class, 'toggle']);
-        Route::get('/finance/settings', [SettingController::class, 'finance']);
-        Route::post('/finance/settings', [SettingController::class, 'saveFinance']);
+        // Keep session authentication and CSRF on legacy-compatible JSON endpoints.
+        Route::prefix('api')->group(function () {
+            Route::get('/slips', [PayslipController::class, 'index']);
+            Route::get('/contributors', [ContributorController::class, 'index']);
+            Route::post('/contributors', [ContributorController::class, 'store']);
+            Route::put('/contributors/{contributor}', [ContributorController::class, 'update']);
+            Route::delete('/contributors/{contributor}', [ContributorController::class, 'destroy']);
+            Route::post('/upload-evidence', [PayslipController::class, 'upload']);
+            Route::post('/payslips', [PayslipController::class, 'store']);
+            Route::get('/payslips/{payslip}', [PayslipController::class, 'show'])->whereNumber('payslip');
+            Route::put('/payslips/{payslip}', [PayslipController::class, 'update']);
+            Route::delete('/payslips/{payslip}', [PayslipController::class, 'destroy']);
+            Route::patch('/payslips/{payslip}/status', [PayslipController::class, 'status']);
+            Route::get('/payslips/{payslip}/export', [PayslipController::class, 'export']);
+            Route::post('/payslips/{payslip}/email', [PayslipController::class, 'email'])->middleware('throttle:10,1');
+            Route::get('/studio-recordings', [RecordingController::class, 'index']);
+            Route::put('/studio-recordings/batch-assign', [RecordingController::class, 'assign']);
+            Route::get('/studio-accounts', [SettingController::class, 'accounts']);
+            Route::post('/studio-accounts', [SettingController::class, 'addAccounts']);
+            Route::delete('/studio-accounts/{email}', [SettingController::class, 'deleteAccount']);
+            Route::put('/studio-accounts/{email}/toggle', [SettingController::class, 'toggleAccount']);
+            Route::get('/shifts/config', [SettingController::class, 'shifts']);
+            Route::post('/shifts/config', [SettingController::class, 'saveShifts']);
+            Route::get('/shifts/days', [ShiftDayController::class, 'index']);
+            Route::put('/shifts/days/{date}', [ShiftDayController::class, 'save']);
+            Route::delete('/shifts/days/{date}', [ShiftDayController::class, 'destroy']);
+            Route::get('/payroll/periods', [PayrollController::class, 'periods']);
+            Route::get('/payroll/live-summary', [PayrollController::class, 'summary']);
+            Route::get('/payroll/worker-evidence', [PayrollController::class, 'evidence']);
+            Route::post('/payroll/status', [PayrollController::class, 'status']);
+            Route::get('/payroll/export-live/{worker}', [PayslipController::class, 'exportLive']);
+            Route::post('/studio-recordings/sync-now', [SyncController::class, 'requestSync']);
+            Route::get('/studio-recordings/sync-status', [SyncController::class, 'status']);
+            Route::post('/studio-recordings/auto-sync-toggle', [SyncController::class, 'toggle']);
+            Route::get('/finance/settings', [SettingController::class, 'finance']);
+            Route::post('/finance/settings', [SettingController::class, 'saveFinance']);
+        });
     });
 });

@@ -27,7 +27,13 @@ class CreatePanelAdmin extends Command
 
             return self::FAILURE;
         }
-        User::updateOrCreate(['email' => $email], ['name' => 'AIKu Administrator', 'password' => $password]);
+        $user = User::firstOrNew(['email' => $email]);
+        if ($user->exists && $user->role !== 'admin') {
+            $this->error('Email ini sudah digunakan kontributor; akun tidak diubah.');
+
+            return self::FAILURE;
+        }
+        $user->forceFill(['name' => 'AIKu Administrator', 'password' => $password, 'role' => 'admin', 'is_active' => true])->save();
         if ($this->option('generate')) {
             Storage::disk('local')->put('initial-admin.txt', 'Email: '.$email."\nPassword: ".$password."\n");
             $this->info('Credentials saved in storage/app/private/initial-admin.txt. Keep private.');

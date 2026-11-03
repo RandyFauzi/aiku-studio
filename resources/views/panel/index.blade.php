@@ -84,6 +84,7 @@
             </div>
         </div>
 
+        <div class="px-4 pb-3">@include('attendance.nav')</div>
         <!-- Sidebar Footer Admin -->
         <div class="p-4 border-t border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-3 truncate">

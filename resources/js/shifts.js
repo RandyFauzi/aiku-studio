@@ -1,4 +1,5 @@
-window.shiftsData = () => ({
+import attachCalendar from './shift-calendar';
+window.shiftsData = () => attachCalendar({
     sidebarOpen: window.innerWidth >= 768 && localStorage.getItem('aiku_sidebar_open') !== 'false',
     tab: 'tim', search: '', loading: true, saving: false, error: '', saved: '', baseline: '', contributors: [], addName: '',
     month: new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Makassar',year:'numeric',month:'2-digit'}).format(new Date()).replace('/', '-'),
@@ -12,6 +13,8 @@ window.shiftsData = () => ({
             this.config.karyawan = this.config.karyawan.map(k => ({...k,sessions:(k.sessions||[]).map(Number)}));
             const now = new Date(); this.month = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit'}).format(now);
             this.baseline = JSON.stringify(this.config);
+            await this.loadCalendar(this.month);
+            await this.openDate(this.today,true);
             window.addEventListener('beforeunload',event=>{if(this.dirty){event.preventDefault();event.returnValue='';}});
             window.addEventListener('resize',()=>{if(window.innerWidth<768)this.sidebarOpen=false;});
             this.$watch('sidebarOpen',v=>localStorage.setItem('aiku_sidebar_open',String(v)));
@@ -80,7 +83,9 @@ window.shiftsData = () => ({
             payload.karyawan=payload.karyawan.map(k=>({...k,daily_work_hrs:this.hours(k),daily_prod_hrs:this.production(k)}));
             const response=await fetch('/api/shifts/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
             const result=await response.json();if(!response.ok||!result.success)throw new Error(result.message||'Jadwal belum tersimpan.');
-            this.config=result.config||payload;this.baseline=JSON.stringify(this.config);this.saved='Semua perubahan sudah tersimpan.';
+            this.config=result.config||payload;this.baseline=JSON.stringify(this.config);
+            if(!this.dayDirty)await this.openDate(this.selectedDate,true);
+            this.saved='Pola rutin sudah tersimpan. Jadwal khusus per tanggal tetap sama.';
         }catch(e){this.error=e.message;}finally{this.saving=false;}
     },
 });

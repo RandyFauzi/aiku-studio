@@ -3,13 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contributor;
+use App\Models\User;
+use App\Services\ContributorAccess;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ContributorController extends Controller
 {
     public function index()
     {
-        return Contributor::orderBy('nama')->get();
+        $enabled = User::where('role', 'contributor')->where('is_active', true)->pluck('contributor_id')->all();
+
+        return Contributor::orderBy('nama')->get()->map(fn ($person) => $person->setAttribute('login_enabled', in_array($person->id, $enabled)));
     }
 
     private function fields(Request $request): array
@@ -21,19 +26,30 @@ class ContributorController extends Controller
 
     public function store(Request $request)
     {
-        return Contributor::create($this->fields($request));
+        return DB::transaction(function () use ($request) {
+            $person = Contributor::create($this->fields($request));
+            app(ContributorAccess::class)->sync($person);
+
+            return $person;
+        });
     }
 
     public function update(Request $request, Contributor $contributor)
     {
-        $contributor->update($this->fields($request));
+        return DB::transaction(function () use ($request, $contributor) {
+            $contributor->update($this->fields($request));
+            app(ContributorAccess::class)->sync($contributor);
 
-        return $contributor;
+            return $contributor;
+        });
     }
 
     public function destroy(Contributor $contributor)
     {
-        $contributor->delete();
+        DB::transaction(function () use ($contributor) {
+            User::where('contributor_id', $contributor->id)->update(['is_active' => false]);
+            $contributor->delete();
+        });
 
         return response()->json(['success' => true]);
     }
