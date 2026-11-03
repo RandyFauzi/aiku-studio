@@ -306,7 +306,7 @@
                     </button>
 
                     <!-- Primary Action: + Slip Gaji -->
-                    <a href="create.html" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-sm shadow-[#00B090]/25 flex items-center gap-2">
+                    <a href="/create" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-sm shadow-[#00B090]/25 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                         <span>Buat Slip Gaji</span>
                     </a>

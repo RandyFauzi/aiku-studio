@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::view('/login', 'auth.login')->name('login');
+    Route::view('/login.html', 'auth.login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 });
 
@@ -28,12 +29,16 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
     Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
     Route::middleware(EnsureAdministrator::class)->group(function () {
+        Route::view('/attendance', 'panel.attendance')->name('attendance');
         Route::view('/attendance.html', 'panel.attendance');
         Route::get('/api/attendance', [AttendanceController::class, 'index']);
+        Route::view('/work-reports', 'panel.work-reports')->name('work-reports');
         Route::view('/work-reports.html', 'panel.work-reports');
         Route::get('/api/work-reports', [DailyWorkReportController::class, 'index']);
         foreach (['index', 'contributors', 'create', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
-            Route::view('/'.$page.'.html', 'panel.'.$page);
+            $view = 'panel.'.$page;
+            Route::view('/'.$page, $view)->name($page);
+            Route::view('/'.$page.'.html', $view);
         }
         Route::get('/slip/live/{worker}', [PayslipController::class, 'live']);
         Route::get('/slip/{payslip}', [PayslipController::class, 'page'])->whereNumber('payslip');

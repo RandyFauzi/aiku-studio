@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}"><title>Slip {{ $employee_name }} — AIKu Studio</title><style>@include('slips.style') body{max-width:960px;margin:32px auto;padding:0 20px}</style></head><body>
-<nav class="toolbar"><a href="/payslips.html">Kembali</a><a href="{{ $editUrl }}">Edit slip</a><button id="export" type="button">Unduh PDF</button><button onclick="window.print()">Cetak</button></nav>
+<nav class="toolbar"><a href="/payslips">Kembali</a><a href="{{ $editUrl }}">Edit slip</a><button id="export" type="button">Unduh PDF</button><button onclick="window.print()">Cetak</button></nav>
 @include('slips.content')
 <script>
 document.getElementById('export').addEventListener('click', async function () {

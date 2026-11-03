@@ -33,7 +33,7 @@
 
             <!-- Right Header Controls -->
             <div class="flex items-center gap-3">
-                <a href="create.html" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                <a href="/create" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     <span class="hidden sm:inline">Buat Slip Manual</span>
                 </a>
@@ -224,7 +224,7 @@
                                             <p class="text-xs text-slate-400">
                                                 Worker yang ditandai namanya pada menu Task List (Rekaman) dalam rentang tanggal siklus ini akan langsung muncul dan dihitung secara otomatis di sini.
                                             </p>
-                                            <a href="recordings.html" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#00B090] text-white hover:bg-[#009B7E] transition shadow-xs">
+                                            <a href="/recordings" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#00B090] text-white hover:bg-[#009B7E] transition shadow-xs">
                                                 <span>Buka Task List & Tandai Worker</span>
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                             </a>
@@ -345,7 +345,7 @@
                                             </button>
 
                                             <!-- Edit Slip Button -->
-                                            <a :href="worker.slip_id ? ('create.html?id=' + worker.slip_id) : ('create.html?worker=' + encodeURIComponent(worker.worker_name) + '&periodId=' + encodeURIComponent(selectedPeriodId))"
+                                            <a :href="worker.slip_id ? ('/create?id=' + worker.slip_id) : ('/create?worker=' + encodeURIComponent(worker.worker_name) + '&periodId=' + encodeURIComponent(selectedPeriodId))"
                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold transition shadow-2xs"
                                                title="Edit / Buat Slip Gaji Worker Ini">
                                                 <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -477,7 +477,7 @@
                                             </button>
 
                                             <!-- Edit Button -->
-                                            <a :href="'create.html?id=' + item.id" 
+                                            <a :href="'/create?id=' + item.id" 
                                                class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" 
                                                title="Edit Slip">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -653,7 +653,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-2">
-                    <a :href="'create.html?worker=' + encodeURIComponent(selectedWorkerDaily?.worker_name || '') + '&periodId=' + encodeURIComponent(selectedPeriodId)"
+                    <a :href="'/create?worker=' + encodeURIComponent(selectedWorkerDaily?.worker_name || '') + '&periodId=' + encodeURIComponent(selectedPeriodId)"
                        class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-2xs">
                         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         <span>Edit Slip</span>

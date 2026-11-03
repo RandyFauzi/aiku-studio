@@ -47,7 +47,7 @@
                 </button>
 
                 <!-- Primary Action: Buat Slip Gaji -->
-                <a href="create.html" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                <a href="/create" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     <span class="hidden sm:inline">Buat Slip Gaji</span>
                 </a>
@@ -195,7 +195,7 @@
                             Terdapat tugas rekaman studio yang belum dihubungkan ke kontributor pekerja. Tandai sekarang untuk perhitungan penggajian akurat.
                         </p>
                     </div>
-                    <a href="recordings.html" class="inline-flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-amber-900 bg-amber-100/80 hover:bg-amber-200 transition">
+                    <a href="/recordings" class="inline-flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-amber-900 bg-amber-100/80 hover:bg-amber-200 transition">
                         <span>Buka & Tandai Tugas</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
@@ -215,7 +215,7 @@
                             Sebagian rekaman video masih menunggu konfirmasi kelulusan QC client. Pantau status QC secara berkala.
                         </p>
                     </div>
-                    <a href="recordings.html" class="inline-flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-blue-900 bg-blue-100/80 hover:bg-blue-200 transition">
+                    <a href="/recordings" class="inline-flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-blue-900 bg-blue-100/80 hover:bg-blue-200 transition">
                         <span>Cek Validasi QC</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
@@ -235,7 +235,7 @@
                             Seluruh rekaman tugas disetujui (Approved) siap digenerate menjadi dokumen slip gaji resmi beserta lampiran log video.
                         </p>
                     </div>
-                    <a href="create.html" class="inline-flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-100/80 hover:bg-emerald-200 transition">
+                    <a href="/create" class="inline-flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-100/80 hover:bg-emerald-200 transition">
                         <span>Buat Slip Gaji Baru</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
@@ -335,7 +335,7 @@
                                 <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Top Kontributor Tim</h2>
                                 <p class="text-xs text-slate-400 mt-0.5">Produktivitas jam approved tertinggi</p>
                             </div>
-                            <a href="contributors.html" class="text-xs font-semibold text-[#009B7E] hover:underline">
+                            <a href="/contributors" class="text-xs font-semibold text-[#009B7E] hover:underline">
                                 Kelola Tim →
                             </a>
                         </div>
@@ -365,7 +365,7 @@
 
                     <!-- Footer Link -->
                     <div class="pt-4 border-t border-slate-100 mt-4 text-center">
-                        <a href="contributors.html" class="text-xs font-semibold text-slate-600 hover:text-[#00B090] transition flex items-center justify-center gap-1.5">
+                        <a href="/contributors" class="text-xs font-semibold text-slate-600 hover:text-[#00B090] transition flex items-center justify-center gap-1.5">
                             <span>Lihat Semua Daftar Tim (<span x-text="contributors.length"></span> Pekerja)</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </a>
@@ -385,7 +385,7 @@
                         <p class="text-xs text-slate-400 mt-0.5">Riwayat penerbitan slip pembayaran kontributor paling baru</p>
                     </div>
 
-                    <a href="payslips.html" class="inline-flex items-center gap-2 text-xs font-bold text-[#009B7E] hover:text-[#007F67] transition">
+                    <a href="/payslips" class="inline-flex items-center gap-2 text-xs font-bold text-[#009B7E] hover:text-[#007F67] transition">
                         <span>Buka Riwayat Slip Gaji Lengkap</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
@@ -441,7 +441,7 @@
                                                 <svg class="w-3.5 h-3.5 text-[#00B090]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                                 <span>PDF</span>
                                             </button>
-                                            <a href="payslips.html" class="inline-flex items-center px-2 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition" title="Lihat di Riwayat">
+                                            <a href="/payslips" class="inline-flex items-center px-2 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition" title="Lihat di Riwayat">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                             </a>
                                         </div>
@@ -453,7 +453,7 @@
                 </div>
 
                 <div class="p-4 bg-slate-50/50 border-t border-slate-100 text-center">
-                    <a href="payslips.html" class="text-xs font-bold text-slate-600 hover:text-[#00B090] transition flex items-center justify-center gap-2">
+                    <a href="/payslips" class="text-xs font-bold text-slate-600 hover:text-[#00B090] transition flex items-center justify-center gap-2">
                         <span>Buka Riwayat Lengkap Slip Gaji</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                     </a>
