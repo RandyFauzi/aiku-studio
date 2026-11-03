@@ -6,6 +6,7 @@
         ['label' => 'Pengaturan Shift', 'path' => 'shifts', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
         ['label' => 'Buat Slip Gaji', 'path' => 'create', 'icon' => 'M12 8v8m-4-4h8m5 0a9 9 0 11-18 0 9 9 0 0118 0z'],
         ['label' => 'Teams & Kontributor', 'path' => 'contributors', 'icon' => 'M16 21v-2a4 4 0 00-8 0v2M12 11a4 4 0 100-8 4 4 0 000 8m8 10v-2a4 4 0 00-3-3.87M4 21v-2a4 4 0 013-3.87'],
+        ['label' => 'HP & Akun Studio', 'path' => 'devices', 'icon' => 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z'],
         ['label' => 'Absensi', 'path' => 'attendance', 'icon' => 'M9 5H5v16h14V5h-4M9 3h6v4H9V3m0 10l2 2 4-4'],
         ['label' => 'Laporan Harian', 'path' => 'work-reports', 'icon' => 'M14 3H5v18h14V8l-5-5v5h5M9 12h6m-6 4h6'],
         ['label' => 'Reporting & Profit', 'path' => 'profit', 'icon' => 'M12 3v9h9A9 9 0 1012 3zM16 3.5V8h4.5'],

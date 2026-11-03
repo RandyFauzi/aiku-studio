@@ -1,0 +1,140 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\DailyWorkReport;
+use App\Models\DeviceAccount;
+use App\Models\StudioAccount;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+
+class DeviceAccountController extends Controller
+{
+    private function ensureAdmin(Request $request): void
+    {
+        abort_unless($request->user()?->role === 'admin', 403, 'Akses terbatas untuk Administrator.');
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $phonesConfig = DailyWorkReport::PHONES;
+        $accounts = DeviceAccount::orderByDesc('is_active')
+            ->orderByDesc('activated_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $phones = [];
+        foreach ($phonesConfig as $key => $label) {
+            $phoneAccounts = $accounts->where('phone_key', $key);
+            $activeAccount = $phoneAccounts->firstWhere('is_active', true);
+
+            $phones[] = [
+                'key' => $key,
+                'label' => $label,
+                'active_email' => $activeAccount?->email,
+                'active_account_name' => $activeAccount?->account_name,
+                'activated_at' => $activeAccount?->activated_at?->format('Y-m-d H:i:s'),
+                'total_accounts' => $phoneAccounts->count(),
+            ];
+        }
+
+        return response()->json([
+            'phones' => $phones,
+            'accounts' => $accounts,
+        ]);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $allowedPhones = array_keys(DailyWorkReport::PHONES);
+        $data = $request->validate([
+            'phone_key' => ['required', 'string', Rule::in($allowedPhones)],
+            'email' => ['required', 'string', 'email', 'max:128'],
+            'account_name' => ['nullable', 'string', 'max:128'],
+        ]);
+
+        $email = strtolower(trim($data['email']));
+        $phoneKey = $data['phone_key'];
+        $name = trim($data['account_name'] ?? '') ?: null;
+
+        $account = DB::transaction(function () use ($phoneKey, $email, $name) {
+            // Deactivate any currently active account on this phone
+            DeviceAccount::where('phone_key', $phoneKey)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
+
+            $entry = DeviceAccount::updateOrCreate(
+                ['phone_key' => $phoneKey, 'email' => $email],
+                [
+                    'account_name' => $name,
+                    'is_active' => true,
+                    'activated_at' => now(),
+                ]
+            );
+
+            // Register in studio accounts so Atlas recordings can be linked
+            StudioAccount::firstOrCreate(
+                ['email' => $email],
+                ['name' => $name ?: $email, 'active' => true]
+            );
+
+            return $entry;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Akun {$email} berhasil didaftarkan dan diaktifkan pada {$account->phone_label}.",
+            'account' => $account,
+        ], 201);
+    }
+
+    public function activate(Request $request, DeviceAccount $deviceAccount): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        DB::transaction(function () use ($deviceAccount) {
+            // Deactivate other accounts for this phone
+            DeviceAccount::where('phone_key', $deviceAccount->phone_key)
+                ->where('id', '!=', $deviceAccount->id)
+                ->update(['is_active' => false]);
+
+            $deviceAccount->update([
+                'is_active' => true,
+                'activated_at' => now(),
+            ]);
+
+            StudioAccount::where('email', $deviceAccount->email)
+                ->update(['active' => true]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Akun {$deviceAccount->email} sekarang aktif di {$deviceAccount->phone_label}.",
+            'account' => $deviceAccount->fresh(),
+        ]);
+    }
+
+    public function destroy(Request $request, DeviceAccount $deviceAccount): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        if ($deviceAccount->is_active) {
+            abort(422, 'Akun yang sedang aktif tidak dapat dihapus. Silakan aktifkan akun lain terlebih dahulu.');
+        }
+
+        $email = $deviceAccount->email;
+        $label = $deviceAccount->phone_label;
+        $deviceAccount->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Akun {$email} berhasil dihapus dari daftar {$label}.",
+        ]);
+    }
+}

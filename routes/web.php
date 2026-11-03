@@ -4,6 +4,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContributorController;
 use App\Http\Controllers\DailyWorkReportController;
+use App\Http\Controllers\DeviceAccountController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\RecordingController;
@@ -35,6 +36,8 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::view('/work-reports', 'panel.work-reports')->name('work-reports');
         Route::view('/work-reports.html', 'panel.work-reports');
         Route::get('/api/work-reports', [DailyWorkReportController::class, 'index']);
+        Route::view('/devices', 'panel.devices')->name('devices');
+        Route::view('/devices.html', 'panel.devices');
         foreach (['index', 'contributors', 'create', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
             $view = 'panel.'.$page;
             Route::view('/'.$page, $view)->name($page);
@@ -46,6 +49,12 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
 
         // Keep session authentication and CSRF on legacy-compatible JSON endpoints.
         Route::prefix('api')->group(function () {
+            Route::prefix('devices')->group(function () {
+                Route::get('/', [DeviceAccountController::class, 'index']);
+                Route::post('/accounts', [DeviceAccountController::class, 'store']);
+                Route::patch('/accounts/{deviceAccount}/activate', [DeviceAccountController::class, 'activate']);
+                Route::delete('/accounts/{deviceAccount}', [DeviceAccountController::class, 'destroy']);
+            });
             Route::get('/slips', [PayslipController::class, 'index']);
             Route::get('/contributors', [ContributorController::class, 'index']);
             Route::post('/contributors', [ContributorController::class, 'store']);
