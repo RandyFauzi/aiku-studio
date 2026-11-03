@@ -1,0 +1,21 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # 1. Prevent direct access to sensitive hidden files (.env, .git, etc.)
+    RewriteRule (^|/)\.(?!well-known) - [F]
+
+    # 2. Prevent direct access to core Laravel code and packages
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|tests|vendor)(/.*)?$ - [F,L,NC]
+    RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|vite\.config\.js) - [F,L,NC]
+
+    # 3. Prevent direct access to private storage and logs
+    RewriteRule ^storage/(framework|logs|app/private)(/.*)?$ - [F,L,NC]
+
+    # 4. Rewrite all incoming web requests to the public directory
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

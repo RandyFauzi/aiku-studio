@@ -11,7 +11,7 @@ error_reporting(E_ALL);
 set_time_limit(300);
 
 $baseDir = '/home/u361393239/domains/aiku.appku.site';
-$laravelRoot = $baseDir . '/aiku-studio';
+$laravelRoot = $baseDir . '/public_html';
 $publicRoot = $baseDir . '/public_html';
 $statusFile = $publicRoot . '/deploy_status.json';
 
