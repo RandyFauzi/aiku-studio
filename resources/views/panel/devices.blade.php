@@ -58,12 +58,12 @@
             </div>
         </header>
 
-        <!-- CONTAINER -->
-        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <!-- CONTAINER (FULL WIDTH TO MATCH APP DASHBOARD STANDARD) -->
+        <div class="w-full max-w-full px-3 sm:px-5 lg:px-7 py-5 space-y-6">
 
             <!-- Title & Info Banner -->
-            <div style="background: linear-gradient(135deg, #065f46 0%, #0f766e 100%);" class="rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div class="max-w-2xl space-y-2">
+            <div style="background: linear-gradient(135deg, #065f46 0%, #0f766e 100%);" class="rounded-3xl p-6 sm:p-7 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="space-y-2">
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-emerald-100 text-xs font-semibold">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         <span>Manajemen Perangkat & Akun Login</span>
