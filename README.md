@@ -23,7 +23,8 @@ Untuk mengembangkan CSS/JavaScript gunakan composer dev. Sinkronisasi Atlas loka
 - Dashboard operasional, kontributor, dan filter/assignment massal rekaman.
 - Payroll cut-off 22–21 WITA, bonus, status pembayaran, slip historis dan live.
 - PDF dibuat langsung oleh PHP; bukti/PDF dilindungi login.
-- Pengaturan shift dan simulasi bulanan; profit dengan konfigurasi tersimpan di database.
+- Pengaturan shift per nama: beberapa sesi per anggota, pilihan alat, penambahan kontributor, dan deteksi bentrok. Jadwal harian serta simulasi bulanan mengikuti susunan tim yang disimpan.
+- Profit dengan konfigurasi tersimpan di database.
 - Akun studio dan sinkronisasi Atlas melalui HTTP/cron bertahap.
 - Pengiriman slip melalui SMTP yang dikonfigurasi pada .env.
 - Login session, CSRF, validasi input dan upload.

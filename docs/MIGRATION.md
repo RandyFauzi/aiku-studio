@@ -53,6 +53,8 @@ Assignment tidak memakai foreign key cascade, sehingga penghapusan kontributor t
 
 ## Shift dan profit
 
+Pembaruan 3 November 2026: halaman shift memakai daftar anggota yang dapat diedit per nama dan sesi. Roster, jumlah sesi, alat, durasi, serta hari libur menjadi sumber jadwal harian dan simulasi bulanan. Tidak ada lagi daftar nama tetap dalam kode simulasi. Backend memvalidasi bentrok alat/sesi dan menghitung ulang jam kerja/produksi saat menyimpan. Konfigurasi produksi lama dipertahankan saat deployment pembaruan.
+
 Konfigurasi default asli dipindahkan tanpa perubahan ke `resources/data/default-shifts.json`: `start_time`, `charging_duration_min`, `session_duration_min`, `sessions_count`, `tools_count`, `hp_per_tool`, `hourly_rate`, `day_off`, `qa_yield_rate`, `karyawan`.
 
 Setiap `karyawan` memiliki `name`, `short`, `role`, `daily_work_hrs`, `daily_prod_hrs`, `sessions`, `alat`. Simulasi kalender, hari libur, jam produksi, gaji bulanan, dan yield QA tetap dihitung di Alpine sebagaimana aplikasi asal. Tarif simulasi shift dapat berbeda dari tarif payroll aktual; mengubah simulasi tidak mengubah slip gaji.
