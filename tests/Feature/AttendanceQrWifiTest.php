@@ -133,6 +133,63 @@ class AttendanceQrWifiTest extends TestCase
         $this->assertDatabaseCount('attendances', 1);
     }
 
+    public function test_checkin_succeeds_on_same_subnet_cgnat(): void
+    {
+        $worker = $this->contributorUser();
+
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['140.213.216.5'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'token_subnet_test',
+            ]]
+        );
+
+        // Worker connects on same /24 router gateway pool: 140.213.216.25
+        $res = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.216.25'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'token_subnet_test',
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.checkin_method', 'qr_wifi');
+    }
+
+    public function test_contributor_without_prelinked_contributor_id_recovers_gracefully(): void
+    {
+        // Contributor user exists with role contributor, but contributor_id is null
+        $user = User::factory()->create([
+            'role' => 'contributor',
+            'name' => 'Afif Anshari',
+            'email' => 'afif@example.com',
+            'contributor_id' => null,
+        ]);
+
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['140.213.216.5'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'test_afif_token',
+            ]]
+        );
+
+        $res = $this->actingAs($user)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.216.5'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'test_afif_token',
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.contributor_name', 'Afif Anshari');
+
+        $this->assertNotNull($user->fresh()->contributor_id);
+    }
+
     public function test_checkin_is_rejected_if_qr_token_is_invalid(): void
     {
         $worker = $this->contributorUser();
