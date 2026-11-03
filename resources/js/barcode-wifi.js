@@ -1,3 +1,101 @@
+window.liveQrCard = () => ({
+    loading: true,
+    config: {},
+    currentIp: '',
+    qrUrl: '',
+    copied: false,
+    canvasId: 'attendance-page-qr-canvas',
+
+    async init(customCanvasId = 'attendance-page-qr-canvas') {
+        this.canvasId = customCanvasId;
+        await this.load();
+        window.addEventListener('wifi-config-updated', () => {
+            this.load();
+        });
+    },
+
+    async load() {
+        this.loading = true;
+        try {
+            const res = await fetch('/api/attendance/wifi-config', {
+                headers: { Accept: 'application/json' }
+            });
+            if (!res.ok) throw new Error('Gagal memuat QR');
+            const data = await res.json();
+            this.config = data.config || {};
+            if (!Array.isArray(this.config.wifi_ips)) {
+                this.config.wifi_ips = [];
+            }
+            this.currentIp = data.current_ip || '';
+            this.qrUrl = data.qr_url || '';
+            this.$nextTick(() => this.drawQr());
+        } catch (e) {
+            console.error('liveQrCard load error:', e);
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    drawQr() {
+        if (!this.qrUrl) return;
+        const canvas = document.getElementById(this.canvasId);
+        if (!canvas) return;
+
+        let attempts = 0;
+        const render = () => {
+            if (window.QRCode && canvas) {
+                window.QRCode.toCanvas(canvas, this.qrUrl, {
+                    width: 200,
+                    margin: 1,
+                    color: {
+                        dark: '#0f172a',
+                        light: '#ffffff'
+                    }
+                }, (error) => {
+                    if (error) console.error('QR Render Error:', error);
+                });
+            } else if (attempts < 20) {
+                attempts++;
+                setTimeout(render, 100);
+            }
+        };
+        render();
+    },
+
+    downloadPng() {
+        const canvas = document.getElementById(this.canvasId);
+        if (!canvas) return;
+        const link = document.createElement('a');
+        const studioSlug = (this.config.studio_name || 'AIKu-Studio').toLowerCase().replace(/[^a-z0-9]/g, '-');
+        link.download = `Barcode-Absensi-${studioSlug}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    },
+
+    downloadSvg() {
+        if (!window.QRCode || !this.qrUrl) return;
+        window.QRCode.toString(this.qrUrl, { type: 'svg', margin: 1 }, (err, svgString) => {
+            if (err) return;
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const studioSlug = (this.config.studio_name || 'AIKu-Studio').toLowerCase().replace(/[^a-z0-9]/g, '-');
+            a.href = url;
+            a.download = `Barcode-Absensi-${studioSlug}.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    },
+
+    copyQrUrl() {
+        if (!this.qrUrl) return;
+        navigator.clipboard.writeText(this.qrUrl).then(() => {
+            this.copied = true;
+            setTimeout(() => { this.copied = false; }, 2500);
+        });
+    }
+});
+
 window.barcodeWifiModal = () => ({
     open: false,
     tab: 'qr', // 'qr' | 'wifi'
@@ -185,6 +283,9 @@ window.barcodeWifiModal = () => ({
             this.currentIp = data.current_ip || this.currentIp;
             this.qrUrl = data.qr_url || this.qrUrl;
             this.$nextTick(() => this.renderQrCode());
+
+            // Dispatch global event so on-page live QR cards refresh immediately
+            window.dispatchEvent(new CustomEvent('wifi-config-updated'));
 
             if (window.Swal) {
                 window.Swal.fire({
