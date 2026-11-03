@@ -87,9 +87,12 @@ try {
         file_put_contents($targetPath, $content);
         $extractedCount++;
 
-        // If file is under public/, also sync to public_html
+        // If file is under public/, also sync to public_html (except index.php which has Hostinger-specific paths)
         if (str_starts_with($relPath, 'public/')) {
             $webRel = substr($relPath, strlen('public/'));
+            if ($webRel === 'index.php') {
+                continue;
+            }
             $webTarget = $publicRoot . '/' . $webRel;
             $webDir = dirname($webTarget);
             if (!is_dir($webDir)) {
