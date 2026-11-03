@@ -27,13 +27,16 @@ const formatPeriod = (period) => {
 
 // Shared Sidebar Persistence Helper
 const getInitialSidebarOpen = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        return false;
+    }
     try {
         const saved = localStorage.getItem('aiku_sidebar_open');
         if (saved !== null) {
             return saved === 'true';
         }
     } catch (e) {}
-    return typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
+    return true;
 };
 
 // Alpine Data
@@ -257,7 +260,7 @@ document.addEventListener('alpine:init', () => {
 
         async init() {
             // Watch sidebarOpen in dashboardData
-            this.$watch('sidebarOpen', val => { try { localStorage.setItem('aiku_sidebar_open', String(val)); } catch(e) {} });
+            this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });
             await this.fetchPeriods();
         },
 
@@ -653,7 +656,7 @@ document.addEventListener('alpine:init', () => {
                 if (res.ok && data.settings) Object.assign(this, data.settings);
             } catch (e) { console.error('Gagal memuat pengaturan profit', e); }
             // Watch sidebarOpen in profitData
-            this.$watch('sidebarOpen', val => { try { localStorage.setItem('aiku_sidebar_open', String(val)); } catch(e) {} });
+            this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });
             await this.fetchPeriods();
         },
 
@@ -919,7 +922,7 @@ document.addEventListener('alpine:init', () => {
 
         init() {
             // Watch sidebarOpen in contributorsListData
-            this.$watch('sidebarOpen', val => { try { localStorage.setItem('aiku_sidebar_open', String(val)); } catch(e) {} });
+            this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });
         },
         
         async fetchContributors() {

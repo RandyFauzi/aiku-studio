@@ -24,7 +24,7 @@
     <!-- MAIN APP CONTENT AREA -->
     <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#F4F6F8]">
         <!-- TOP APP HEADER -->
-        <header class="h-20 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
+        <header class="h-20 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
             <div class="flex items-center gap-3">
                 <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition" title="Toggle Sidebar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -577,8 +577,9 @@
             </div>
 
             <!-- Modal Daily Table Body -->
-            <div class="p-6 overflow-y-auto flex-1 max-h-[55vh]">
-                <table class="w-full text-left border-collapse">
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 max-h-[55vh]">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[540px]">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                             <th class="py-2.5 px-3">Tanggal Kerja</th>
@@ -642,7 +643,8 @@
                             </tr>
                         </template>
                     </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
 
             <!-- Modal Footer -->

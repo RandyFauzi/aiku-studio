@@ -24,7 +24,7 @@
     <!-- MAIN APP CONTENT AREA -->
     <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#F4F6F8]">
         <!-- TOP APP HEADER -->
-        <header class="h-20 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
+        <header class="h-20 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
             <div class="flex items-center gap-3">
                 <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition" title="Toggle Sidebar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -44,21 +44,21 @@
         <div class="w-full max-w-full px-3 sm:px-5 lg:px-7 py-5 space-y-6">
 
             <!-- Breadcrumb & Header -->
-            <div class="mb-8 border-b border-gray-100 pb-6 flex justify-between items-end">
+            <div class="mb-8 border-b border-gray-100 pb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
                 <div>
                     <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2" x-text="slipId ? 'Overview / Payslips / Edit' : 'Overview / Payslips / Create'"></p>
-                    <h2 class="text-3xl font-extrabold text-gray-900" x-text="slipId ? 'Edit Payslip' : 'Generate New Payslip'"></h2>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900" x-text="slipId ? 'Edit Payslip' : 'Generate New Payslip'"></h2>
                 </div>
-                <div class="text-right flex items-end gap-6">
+                <div class="flex items-center sm:items-end justify-between sm:justify-end gap-3 sm:gap-6">
                     <template x-if="slipId">
-                        <button type="button" @click="exportPdfFromEdit()" class="px-4 py-2 border-2 border-gray-800 rounded-lg text-gray-800 font-bold text-sm inline-flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm">
+                        <button type="button" @click="exportPdfFromEdit()" class="px-3.5 sm:px-4 py-2 border-2 border-gray-800 rounded-lg text-gray-800 font-bold text-xs sm:text-sm inline-flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Export PDF
+                            <span>Export PDF</span>
                         </button>
                     </template>
                     <div>
                         <p class="text-xs text-gray-500 font-medium mb-1">Live Estimated THP</p>
-                        <h3 class="text-2xl font-bold text-brand" x-text="formatRupiah(calculateTHP())"></h3>
+                        <h3 class="text-xl sm:text-2xl font-bold text-brand" x-text="formatRupiah(calculateTHP())"></h3>
                     </div>
                 </div>
             </div>

@@ -24,7 +24,7 @@
     <!-- MAIN APP CONTENT AREA -->
     <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#F4F6F8]">
         <!-- TOP APP HEADER -->
-        <header class="h-20 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
+        <header class="h-20 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
             <div class="flex items-center gap-3">
                 <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition" title="Toggle Sidebar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -44,12 +44,12 @@
             <!-- Breadcrumb & Header -->
             <div class="mb-8">
                 <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">Overview / Contributors / List</p>
-                <div class="flex justify-between items-end">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
                     <div>
-                        <h2 class="text-3xl font-extrabold text-gray-900">Contributors List</h2>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Contributors List</h2>
                         <p class="text-xs sm:text-sm text-slate-500 mt-1">Kelola data kontributor dan hak akses akun (Admin atau Pekerja).</p>
                     </div>
-                    <button @click="openModal()" class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                    <button @click="openModal()" class="self-start sm:self-auto bg-gray-900 hover:bg-black text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm flex items-center gap-2">
                         + Add Contributor
                     </button>
                 </div>
@@ -159,7 +159,7 @@
                             <!-- Role Selector -->
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 mb-1.5">Peran Akun (Role)</label>
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <label class="flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition"
                                            :class="formData.role === 'contributor' ? 'border-brand bg-brand-50/50 text-brand-900 ring-1 ring-brand' : 'border-gray-200 hover:bg-gray-50 text-gray-700'">
                                         <input type="radio" name="role" value="contributor" x-model="formData.role" class="mt-0.5 text-brand focus:ring-brand">
@@ -179,7 +179,7 @@
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-500 mb-1">No WhatsApp</label>
                                     <input type="text" x-model="formData.no_wa" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
@@ -196,7 +196,7 @@
                                 <input type="text" x-model="formData.domisili" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
                             </div>
                             
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-500 mb-1">Shift</label>
                                     <input type="text" x-model="formData.shift" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
@@ -213,11 +213,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3">
-                        <button type="submit" class="bg-brand hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                    <div class="bg-gray-50 px-6 py-4 flex flex-col-reverse sm:flex-row-reverse gap-2 sm:gap-3">
+                        <button type="submit" class="w-full sm:w-auto bg-brand hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
                             Save Changes
                         </button>
-                        <button type="button" @click="closeModal()" class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                        <button type="button" @click="closeModal()" class="w-full sm:w-auto bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
                             Cancel
                         </button>
                     </div>

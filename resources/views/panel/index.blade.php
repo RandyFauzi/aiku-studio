@@ -271,7 +271,7 @@
                             <div class="bg-amber-400 transition-all duration-500" :style="'width: ' + pendingPercentage + '%'" title="Pending"></div>
                         </div>
 
-                        <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-[#00B090]"></span>
                                 <span>Billable: <strong class="text-slate-700" x-text="billableHours + 'h (' + billablePercentage + '%)'"></strong></span>

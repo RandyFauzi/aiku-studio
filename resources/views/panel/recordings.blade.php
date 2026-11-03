@@ -130,7 +130,7 @@
     <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#F4F6F8]">
         
         <!-- TOP APP HEADER -->
-        <header class="h-20 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
+        <header class="h-20 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
             
             <!-- Left: Toggle Sidebar -->
             <div class="flex items-center gap-3">
@@ -175,9 +175,9 @@
                 <div class="relative flex items-center bg-slate-900 rounded-xl p-0.5 shadow-xs border border-slate-800">
                     <!-- Main Action: Jalankan Bot Sekarang -->
                     <button @click="triggerSyncAtlas()" :disabled="isSyncing" 
-                            class="flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-semibold text-white hover:text-emerald-300 transition disabled:opacity-50">
-                        <svg :class="isSyncing ? 'animate-spin text-emerald-400' : 'text-emerald-400'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <span x-text="isSyncing ? ('Sinkron: ' + (botProgress.percent || 0) + '%') : 'Bot AIKu Studio'"></span>
+                            class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 text-xs md:text-sm font-semibold text-white hover:text-emerald-300 transition disabled:opacity-50">
+                        <svg :class="isSyncing ? 'animate-spin text-emerald-400' : 'text-emerald-400'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span x-text="isSyncing ? ('Sinkron: ' + (botProgress.percent || 0) + '%') : (window.innerWidth < 640 ? 'Bot' : 'Bot AIKu Studio')"></span>
                     </button>
 
                     <!-- Divider -->
@@ -306,9 +306,10 @@
                     </button>
 
                     <!-- Primary Action: + Slip Gaji -->
-                    <a href="/create" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-sm shadow-[#00B090]/25 flex items-center gap-2">
+                    <a href="/create" class="bg-[#00B090] hover:bg-[#009B7E] text-white px-3 sm:px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-sm shadow-[#00B090]/25 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                        <span>Buat Slip Gaji</span>
+                        <span class="hidden sm:inline">Buat Slip Gaji</span>
+                        <span class="sm:hidden">+ Slip</span>
                     </a>
 
                 </div>
@@ -833,7 +834,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-6"
-         class="fixed bottom-6 inset-x-0 mx-auto w-max max-w-[95vw] bg-slate-900/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 z-40 text-xs"
+         class="fixed bottom-4 sm:bottom-6 inset-x-2 sm:inset-x-0 mx-auto w-auto sm:w-max max-w-[calc(100vw-1rem)] sm:max-w-[95vw] bg-slate-900/95 backdrop-blur-md text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 z-40 text-xs"
          x-data="{ dropdownOpen: false, searchWorker: '' }"
          x-cloak>
         
@@ -1363,7 +1364,7 @@
     <script>
         function modernRecordingsApp() {
             return {
-                sidebarOpen: (localStorage.getItem('aiku_sidebar_open') !== null ? localStorage.getItem('aiku_sidebar_open') === 'true' : window.innerWidth >= 768),
+                sidebarOpen: (window.innerWidth < 768 ? false : (localStorage.getItem('aiku_sidebar_open') !== null ? localStorage.getItem('aiku_sidebar_open') === 'true' : true)),
                 studioEmails: [
                     "hajisukur@kamerakitaid.site", "hajiwhite@kamerakitaid.site", "hajiputih@kamerakitaid.site",
                     "hajiputih4@kamerakitaid.site", "hajiwati@kamerakitaid.site", "hajiblack@kamerakitaid.site",
@@ -1734,7 +1735,7 @@
 
                 async initApp() {
                     // Watch sidebarOpen in recordingsApp
-                    this.$watch('sidebarOpen', val => { try { localStorage.setItem('aiku_sidebar_open', String(val)); } catch(e) {} });
+                    this.$watch('sidebarOpen', val => { if (window.innerWidth >= 768) { try { localStorage.setItem('aiku_sidebar_open', String(val)); } catch(e) {} } });
                     await this.fetchContributors();
                     this.fetchStudioAccounts();
                     await this.fetchRecordings(1);
