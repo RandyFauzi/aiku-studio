@@ -8,6 +8,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: { DEFAULT: '#00B090', 50: '#EDFAF8', 100: '#D5F4EF', 200: '#ADE8DF', 500: '#00B090', 600: '#009B7E', 700: '#007F67' }
+                    }
+                }
+            }
+        };
+    </script>
     <style>
         [x-cloak] { display: none !important; }
     </style>
@@ -46,24 +62,24 @@
         <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
             <!-- Title & Info Banner -->
-            <div class="bg-gradient-to-r from-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div style="background: linear-gradient(135deg, #065f46 0%, #0f766e 100%);" class="rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div class="max-w-2xl space-y-2">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/40 border border-emerald-400/30 text-emerald-100 text-xs font-semibold">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-emerald-100 text-xs font-semibold">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         <span>Manajemen Perangkat & Akun Login</span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Pengaturan HP & Akun</h1>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Pengaturan HP & Akun</h1>
                     <p class="text-emerald-100/90 text-sm leading-relaxed">
                         Pilih HP di bawah untuk melihat atau mengganti akun email aktifnya. Pekerja cukup lapor menggunakan nama HP tanpa perlu tahu email akun.
                     </p>
                 </div>
             </div>
 
-            <!-- MAIN SPLIT GRID -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- MAIN SPLIT FLEX LAYOUT -->
+            <div class="flex flex-col lg:flex-row gap-6 w-full items-start">
 
-                <!-- LEFT COLUMN: PHONE LIST (4 COLS) -->
-                <div class="lg:col-span-4 space-y-3">
+                <!-- LEFT COLUMN: PHONE LIST (FIXED WIDTH ON DESKTOP) -->
+                <div class="w-full lg:w-80 lg:shrink-0 space-y-3">
                     <div class="flex items-center justify-between px-1">
                         <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Daftar HP Studio</h2>
                         <span class="text-xs font-semibold text-slate-500" x-text="phones.length + ' Perangkat'"></span>
@@ -80,7 +96,7 @@
                                          :class="selectedPhoneKey === p.key ? 'bg-emerald-50 text-[#009B7E]' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200/70'">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                     </div>
-                                    <div class="min-w-0">
+                                    <div class="min-w-0 flex-1">
                                         <div class="text-sm font-bold text-slate-900 flex items-center gap-2">
                                             <span x-text="'HP ' + p.label"></span>
                                         </div>
@@ -100,8 +116,8 @@
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: SELECTED PHONE DETAILS & ACCOUNT MANAGER (8 COLS) -->
-                <div class="lg:col-span-8 space-y-6">
+                <!-- RIGHT COLUMN: SELECTED PHONE DETAILS & ACCOUNT MANAGER (EXPANDS TO FILL REMAINING SPACE) -->
+                <div class="w-full flex-1 min-w-0 space-y-6">
 
                     <!-- HERO: ACTIVE ACCOUNT ON SELECTED PHONE -->
                     <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs relative overflow-hidden">
@@ -160,8 +176,8 @@
                         </div>
 
                         <form @submit.prevent="registerAccount()" class="space-y-3.5">
-                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                                <div class="sm:col-span-7">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <div class="flex-1">
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Email Login HP *</label>
                                     <input type="email" 
                                            x-model="formEmail" 
@@ -169,7 +185,7 @@
                                            placeholder="contoh: akun.streamer1@gmail.com" 
                                            class="w-full h-11 px-3.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20 bg-slate-50/50 focus:bg-white transition">
                                 </div>
-                                <div class="sm:col-span-5">
+                                <div class="w-full sm:w-72">
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Label (Opsional)</label>
                                     <input type="text" 
                                            x-model="formName" 
