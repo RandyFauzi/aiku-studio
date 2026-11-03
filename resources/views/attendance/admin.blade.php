@@ -86,21 +86,45 @@
                 </div>
 
                 <!-- Status Badges & WiFi Control Button -->
-                <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-1">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 shadow-2xs">
-                        <span class="text-slate-400">Router Whitelist:</span>
-                        <strong class="font-bold text-slate-900" x-text="(config.wifi_ips ? config.wifi_ips.length : 0) + ' IP Kantor'"></strong>
-                    </div>
+                <div class="space-y-3 pt-1">
+                    <!-- If WiFi is NOT set yet -->
+                    <template x-if="!config.wifi_ips || config.wifi_ips.length === 0">
+                        <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left">
+                            <div class="text-xs">
+                                <span class="font-extrabold flex items-center gap-1.5 text-amber-900">
+                                    <svg class="w-4 h-4 text-amber-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                    <span>WiFi Kantor Belum Dikunci!</span>
+                                </span>
+                                <span class="block text-amber-800 text-[11px] mt-0.5">
+                                    HP pekerja tidak akan bisa absen sampai IP WiFi Kantor didaftarkan. IP Admin saat ini: <strong class="font-mono" x-text="currentIp"></strong>.
+                                </span>
+                            </div>
+                            <button type="button" @click="setOfficeIpNow()" :disabled="loading" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shrink-0 transition shadow-xs flex items-center gap-1">
+                                <span>Kunci IP Ini Sebagai WiFi Kantor</span>
+                            </button>
+                        </div>
+                    </template>
 
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 shadow-2xs">
-                        <span class="text-slate-400">IP Jaringan Anda:</span>
-                        <strong class="font-mono text-emerald-800" x-text="currentIp || '—'"></strong>
-                    </div>
+                    <!-- If WiFi IS set -->
+                    <template x-if="config.wifi_ips && config.wifi_ips.length > 0">
+                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-emerald-200 text-xs text-slate-700 shadow-2xs">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-slate-400">WiFi Terdaftar:</span>
+                                <strong class="font-mono text-emerald-900" x-text="config.wifi_ips.join(', ')"></strong>
+                            </div>
 
-                    <button type="button" @click="$dispatch('open-barcode-modal', { tab: 'wifi' })" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span>Atur WiFi Kantor & Reset Barcode</span>
-                    </button>
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 shadow-2xs">
+                                <span class="text-slate-400">IP Anda:</span>
+                                <strong class="font-mono" :class="config.wifi_ips.includes(currentIp) ? 'text-emerald-700' : 'text-slate-700'" x-text="currentIp || '—'"></strong>
+                            </div>
+
+                            <button type="button" @click="$dispatch('open-barcode-modal', { tab: 'wifi' })" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>Kelola WiFi & Reset Barcode</span>
+                            </button>
+                        </div>
+                    </template>
                 </div>
 
             </div>

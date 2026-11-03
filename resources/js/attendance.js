@@ -193,9 +193,9 @@ window.attendancePortalData = () => ({
 
             if (window.Swal) {
                 window.Swal.fire({
-                    icon: 'success',
-                    title: 'Absensi Berhasil!',
-                    text: data.message || 'Kehadiran Anda berhasil diverifikasi pada WiFi Studio.',
+                    icon: data.already_checked_in ? 'info' : 'success',
+                    title: data.already_checked_in ? 'Sudah Absen Hari Ini' : 'Absensi Berhasil!',
+                    text: data.message || (data.already_checked_in ? 'Anda sudah melakukan absensi hari ini.' : 'Kehadiran Anda berhasil diverifikasi pada WiFi Studio.'),
                     confirmButtonColor: '#009B7E'
                 });
             }

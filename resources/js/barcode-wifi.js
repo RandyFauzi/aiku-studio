@@ -93,6 +93,47 @@ window.liveQrCard = () => ({
             this.copied = true;
             setTimeout(() => { this.copied = false; }, 2500);
         });
+    },
+
+    async setOfficeIpNow() {
+        if (!this.currentIp) return;
+        this.loading = true;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const res = await fetch('/api/attendance/wifi-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    wifi_ips: [this.currentIp],
+                    wifi_check_enabled: true,
+                    studio_name: this.config.studio_name || 'AIKu Studio',
+                    regenerate_qr: false
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Gagal menyimpan IP WiFi');
+            this.config = data.config || {};
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'success',
+                    title: 'WiFi Kantor Terkunci!',
+                    text: `IP ${this.currentIp} berhasil didaftarkan sebagai WiFi resmi studio.`,
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            }
+            window.dispatchEvent(new CustomEvent('wifi-config-updated'));
+        } catch (e) {
+            if (window.Swal) {
+                window.Swal.fire({ icon: 'error', title: 'Gagal', text: e.message });
+            }
+        } finally {
+            this.loading = false;
+        }
     }
 });
 

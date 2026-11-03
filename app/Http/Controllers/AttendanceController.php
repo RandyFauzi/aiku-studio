@@ -111,22 +111,13 @@ class AttendanceController extends Controller
             $person = $this->contributor($request);
             $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
 
-            if ($existing = Attendance::where('user_id', $request->user()->id)->where('work_date', $today)->first()) {
-                return response()->json([
-                    'success' => true,
-                    'already_checked_in' => true,
-                    'attendance' => $existing,
-                    'message' => 'Anda sudah melakukan absensi masuk hari ini.',
-                ]);
-            }
-
             $data = $request->validate([
                 'qr_token' => 'required|string',
             ]);
 
-            $config = $this->getWifiQrConfig($request);
+            $config = $this->getWifiQrConfig();
 
-            // 1. Validate QR Token
+            // 1. Validate QR Token FIRST
             if (trim($data['qr_token']) !== trim($config['qr_secret'])) {
                 throw ValidationException::withMessages([
                     'qr_token' => 'Barcode absensi tidak valid atau telah diperbarui oleh Admin. Silakan scan ulang barcode resmi studio.',
@@ -138,19 +129,37 @@ class AttendanceController extends Controller
             $wifiCheckEnabled = (bool) ($config['wifi_check_enabled'] ?? true);
             $allowedIps = (array) ($config['wifi_ips'] ?? []);
 
-            if ($wifiCheckEnabled && !empty($allowedIps)) {
+            if ($wifiCheckEnabled) {
+                if (empty($allowedIps)) {
+                    throw ValidationException::withMessages([
+                        'wifi' => 'Gagal absensi: WiFi Kantor belum didaftarkan oleh Admin. Silakan hubungi Admin untuk mendaftarkan IP WiFi Studio pada menu Absensi.',
+                    ]);
+                }
+
                 $isLocal = app()->isLocal() && in_array($clientIp, ['127.0.0.1', '::1', 'localhost'], true);
                 $isAllowed = $isLocal || $this->isIpMatched($clientIp, $allowedIps);
 
                 if (!$isAllowed) {
                     $registeredStr = implode(', ', $allowedIps);
                     throw ValidationException::withMessages([
-                        'wifi' => "Gagal absensi: IP perangkat Anda ({$clientIp}) tidak cocok dengan WiFi Kantor/Studio yang terdaftar ({$registeredStr}). Pastikan HP Anda telah terhubung ke WiFi Studio, bukan data seluler.",
+                        'wifi' => "Gagal absensi: Anda terdeteksi menggunakan jaringan pribadi/seluler (IP: {$clientIp}), bukan WiFi Kantor/Studio yang terdaftar ({$registeredStr}). Matikan kuota data seluler dan hubungkan HP Anda ke WiFi Studio sebelum scan barcode.",
                     ]);
                 }
             }
 
-            // 3. Save attendance record safely with fallback fields to avoid MySQL NOT NULL errors
+            // 3. Check if already checked in today (AFTER WiFi verification to prevent bypassing)
+            if ($existing = Attendance::where('user_id', $request->user()->id)->where('work_date', $today)->first()) {
+                $formattedTime = CarbonImmutable::parse($existing->checked_in_at)->setTimezone('Asia/Makassar')->format('H:i');
+
+                return response()->json([
+                    'success' => true,
+                    'already_checked_in' => true,
+                    'attendance' => $existing,
+                    'message' => "Anda sudah tercatat melakukan absensi masuk hari ini pada pukul {$formattedTime} WITA.",
+                ]);
+            }
+
+            // 4. Save attendance record safely with fallback fields to avoid MySQL NOT NULL errors
             $row = DB::transaction(function () use ($request, $person, $today, $clientIp) {
                 User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
 
@@ -200,10 +209,13 @@ class AttendanceController extends Controller
     public function isIpMatched(string $clientIp, array $allowedIps): bool
     {
         if (empty($allowedIps)) {
-            return true;
+            return false;
         }
 
         $clientIp = trim($clientIp);
+        if ($clientIp === '') {
+            return false;
+        }
 
         foreach ($allowedIps as $allowed) {
             $allowed = trim((string) $allowed);
@@ -216,7 +228,15 @@ class AttendanceController extends Controller
                 return true;
             }
 
-            // 2. Subnet /24 match for IPv4 (handles dynamic CGNAT pool from cellular routers / Orbit / IndiHome)
+            // 2. Wildcard match (e.g. 140.213.216.*)
+            if (str_contains($allowed, '*')) {
+                $pattern = '/^' . str_replace(['.', '*'], ['\.', '.*'], $allowed) . '$/';
+                if (preg_match($pattern, $clientIp)) {
+                    return true;
+                }
+            }
+
+            // 3. Subnet /24 match for IPv4 (e.g. 140.213.216.5 vs 140.213.216.99 on the same router)
             if (filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && filter_var($allowed, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                 $clientParts = explode('.', $clientIp);
                 $allowedParts = explode('.', $allowed);
@@ -227,7 +247,7 @@ class AttendanceController extends Controller
                 }
             }
 
-            // 3. IPv6 /64 prefix match
+            // 4. IPv6 /64 prefix match
             if (filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) && filter_var($allowed, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                 $clientBin = @inet_pton($clientIp);
                 $allowedBin = @inet_pton($allowed);
@@ -252,10 +272,10 @@ class AttendanceController extends Controller
 
     public function getWifiConfig(Request $request)
     {
-        $config = $this->getWifiQrConfig($request);
+        $config = $this->getWifiQrConfig();
         $currentIp = $this->getClientIp($request);
 
-        // Auto-enroll current IP if no IPs have been registered yet
+        // Auto-enroll current IP if no IPs have been registered yet by admin
         if (empty($config['wifi_ips']) && $currentIp && !in_array($currentIp, ['127.0.0.1', '::1', 'localhost'], true)) {
             $config['wifi_ips'] = [$currentIp];
             ShiftSetting::updateOrCreate(
@@ -283,7 +303,7 @@ class AttendanceController extends Controller
             'regenerate_qr' => 'nullable|boolean',
         ]);
 
-        $current = $this->getWifiQrConfig($request);
+        $current = $this->getWifiQrConfig();
 
         $ips = [];
         if (!empty($data['wifi_ips'])) {
@@ -324,7 +344,7 @@ class AttendanceController extends Controller
 
     public function barcodePoster(Request $request)
     {
-        $config = $this->getWifiQrConfig($request);
+        $config = $this->getWifiQrConfig();
         $qrUrl = url('/me?qr_token=' . $config['qr_secret']);
 
         return view('attendance.poster', [
@@ -333,16 +353,13 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function getWifiQrConfig(?Request $request = null): array
+    public function getWifiQrConfig(): array
     {
         $val = ShiftSetting::where('setting_key', self::SETTING_KEY)->value('setting_value');
 
         if (empty($val) || !is_array($val) || empty($val['qr_secret'])) {
-            $currentIp = $request ? $this->getClientIp($request) : '';
-            $defaultIps = ($currentIp && !in_array($currentIp, ['127.0.0.1', '::1', 'localhost'], true)) ? [$currentIp] : [];
-
             $default = [
-                'wifi_ips' => $defaultIps,
+                'wifi_ips' => [],
                 'wifi_check_enabled' => true,
                 'qr_secret' => 'aiku_qr_' . Str::random(24),
                 'studio_name' => 'AIKu Studio',
