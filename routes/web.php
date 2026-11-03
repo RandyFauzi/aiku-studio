@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContributorController;
+use App\Http\Controllers\DailyWorkReportController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\RecordingController;
@@ -24,9 +25,13 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/me', fn () => auth()->user()->role === 'admin' ? redirect('/') : view('portal.index'));
     Route::get('/api/me/attendance', [AttendanceController::class, 'mine']);
     Route::post('/api/me/attendance', [AttendanceController::class, 'checkIn'])->middleware('throttle:20,1');
+    Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
+    Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
     Route::middleware(EnsureAdministrator::class)->group(function () {
         Route::view('/attendance.html', 'panel.attendance');
         Route::get('/api/attendance', [AttendanceController::class, 'index']);
+        Route::view('/work-reports.html', 'panel.work-reports');
+        Route::get('/api/work-reports', [DailyWorkReportController::class, 'index']);
         foreach (['index', 'contributors', 'create', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
             Route::view('/'.$page.'.html', 'panel.'.$page);
         }

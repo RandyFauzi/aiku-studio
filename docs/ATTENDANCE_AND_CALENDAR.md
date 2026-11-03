@@ -26,6 +26,16 @@ Admin melihat rekap pada `/attendance.html`, memilih tanggal dan mencari nama. D
 
 Endpoint pribadi: GET `/api/me/attendance?month=YYYY-MM`, POST `/api/me/attendance`. Endpoint admin: GET `/api/attendance?date=YYYY-MM-DD`.
 
+## Laporan kerja harian
+
+Portal `/me` memiliki form total durasi (jam dan menit) serta pilihan HP yang dipakai: Putih, Pink, Biru, Hijau, Hitam, Pink ST. Pilihan HP boleh lebih dari satu; Pink dan Pink ST adalah perangkat berbeda. Tidak diperlukan unggahan berkas untuk form ini.
+
+Satu akun menyimpan satu laporan per tanggal WITA dalam `daily_work_reports`. Identitas berasal dari sesi, bukan payload. Tanggal harus sama dengan hari ini pada server; laporan hari ini dapat diperbarui, sedangkan riwayat bulan lain hanya dibaca. Durasi disimpan sebagai menit bulat positif (maksimal 8640 menit, kapasitas teoretis enam HP selama 24 jam). Pilihan HP wajib valid dan tidak boleh duplikat. Revision mencegah penimpaan dari sesi lama dan lock akun mengatasi kiriman bersamaan.
+
+GET `/api/me/work-reports?month=YYYY-MM` mengambil riwayat pribadi serta laporan hari ini; PUT `/api/me/work-report` mengirim perubahan dengan `work_date`, `total_duration_minutes`, `phones`, `expected_revision`. Admin melihat seluruh laporan tanggal terpilih pada `/work-reports.html` melalui GET `/api/work-reports?date=YYYY-MM-DD`. Akun kontributor tidak dapat mengakses rekap admin atau laporan orang lain. Laporan ini tidak mengubah hitungan payroll berdasarkan menit approved.
+
+Pembaruan diuji dengan 31 tes / 221 assertion, termasuk kirim/perbarui, batas WITA, akses, pilihan HP, revision, dan browser mobile. Laporan uji hanya dibuat pada akun lokal sementara dan dihapus setelah pengujian; pemeriksaan live tidak mengirim laporan palsu.
+
 ## Deployment dan verifikasi
 
 Migration menambahkan `shift_days`, role/link kontributor/status aktif pada `users`, serta tabel `attendances`. Data payroll, primary administrator, password utama, dan pola shift lama dipertahankan. Jalankan migration sebelum menyinkronkan login. Deployment memakai maintenance singkat dan menyimpan backup privat konfigurasi serta akun sebelum perubahan.

@@ -26,6 +26,7 @@ Untuk mengembangkan CSS/JavaScript gunakan composer dev. Sinkronisasi Atlas loka
 - Pengaturan shift per nama: beberapa sesi per anggota, pilihan alat, penambahan kontributor, dan deteksi bentrok. Jadwal harian serta simulasi bulanan mengikuti susunan tim yang disimpan.
 - Kalender shift per tanggal dengan pola rutin sebagai dasar, jadwal khusus harian, dan hari libur.
 - Login kontributor dari email terdaftar, portal jadwal pribadi, serta absensi Masuk dengan GPS dan waktu WITA tanpa checkout.
+- Laporan kerja harian melalui akun kontributor: total durasi jam/menit, pilihan beberapa HP, riwayat pribadi, dan rekap admin.
 - Profit dengan konfigurasi tersimpan di database.
 - Akun studio dan sinkronisasi Atlas melalui HTTP/cron bertahap.
 - Pengiriman slip melalui SMTP yang dikonfigurasi pada .env.
