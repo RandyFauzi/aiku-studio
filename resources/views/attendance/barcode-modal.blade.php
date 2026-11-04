@@ -219,6 +219,39 @@
                         <input type="text" x-model="config.studio_name" placeholder="AIKu Studio" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs sm:text-sm focus:border-emerald-500 focus:outline-none">
                     </div>
 
+                    <!-- Geolocation / Geofence Section -->
+                    <div class="space-y-3 pt-3 border-t border-slate-100">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Titik Koordinat Studio (GPS & Radius Opsional)
+                                </label>
+                                <p class="text-[11px] text-slate-500 mt-0.5">
+                                    Setiap kontributor yang scan barcode otomatis dicatat posisi GPS-nya. Jika koordinat studio diisi, sistem juga memvalidasi radius jarak fisik.
+                                </p>
+                            </div>
+                            <button type="button" @click="captureAdminCoordinates()" class="shrink-0 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>Ambil GPS Saya</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Latitude</label>
+                                <input type="number" step="any" x-model="config.studio_lat" placeholder="Contoh: -8.512345" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Longitude</label>
+                                <input type="number" step="any" x-model="config.studio_lng" placeholder="Contoh: 115.123456" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Radius Toleransi (Meter)</label>
+                                <input type="number" min="20" max="5000" x-model="config.geofence_radius_m" placeholder="150" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-500 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Save Button -->
                     <div class="pt-3">
                         <button type="button" @click="saveSettings(false)" :disabled="saving" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50">

@@ -277,6 +277,42 @@ window.barcodeWifiModal = () => ({
         this.config.wifi_ips.splice(index, 1);
     },
 
+    async captureAdminCoordinates() {
+        if (!navigator.geolocation) {
+            alert('Browser tidak mendukung GPS');
+            return;
+        }
+        try {
+            const pos = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+            this.config.studio_lat = Number(pos.coords.latitude.toFixed(7));
+            this.config.studio_lng = Number(pos.coords.longitude.toFixed(7));
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'success',
+                    title: 'Titik Lokasi Terbaca',
+                    text: `Koordinat ${this.config.studio_lat}, ${this.config.studio_lng} berhasil diambil. Klik 'Simpan Pengaturan' untuk menerapkan.`,
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            }
+        } catch (e) {
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'warning',
+                    title: 'Gagal Membaca GPS',
+                    text: 'Pastikan GPS HP/Laptop aktif dan izinkan akses lokasi pada browser.',
+                    confirmButtonColor: '#009B7E'
+                });
+            }
+        }
+    },
+
     async saveSettings(regenerate = false) {
         if (regenerate) {
             if (window.Swal) {
@@ -310,6 +346,9 @@ window.barcodeWifiModal = () => ({
                     wifi_ips: this.config.wifi_ips,
                     wifi_check_enabled: !!this.config.wifi_check_enabled,
                     studio_name: this.config.studio_name || 'AIKu Studio',
+                    studio_lat: (this.config.studio_lat !== null && this.config.studio_lat !== '' && !isNaN(this.config.studio_lat)) ? Number(this.config.studio_lat) : null,
+                    studio_lng: (this.config.studio_lng !== null && this.config.studio_lng !== '' && !isNaN(this.config.studio_lng)) ? Number(this.config.studio_lng) : null,
+                    geofence_radius_m: (this.config.geofence_radius_m !== null && this.config.geofence_radius_m !== '' && !isNaN(this.config.geofence_radius_m)) ? Number(this.config.geofence_radius_m) : 150,
                     regenerate_qr: regenerate
                 })
             });

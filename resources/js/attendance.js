@@ -166,6 +166,67 @@ window.attendancePortalData = () => ({
         if (this.checking || this.todayAttendance) return;
         this.checking = true;
         this.error = '';
+        this.message = 'Membaca koordinat GPS HP Anda…';
+
+        const payload = {
+            qr_token: qrToken,
+            latitude: null,
+            longitude: null,
+            accuracy_m: null,
+            captured_at: null,
+        };
+
+        // Capture GPS location concurrently
+        if (navigator.geolocation) {
+            try {
+                // Try high accuracy first (outdoor / window) with 6s timeout
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 6000,
+                        maximumAge: 15000,
+                    });
+                });
+                payload.latitude = pos.coords.latitude;
+                payload.longitude = pos.coords.longitude;
+                payload.accuracy_m = pos.coords.accuracy;
+                payload.captured_at = new Date(pos.timestamp).toISOString();
+            } catch (geoErr) {
+                console.warn('High accuracy GPS error, trying fallback:', geoErr);
+                if (geoErr && geoErr.code === 1) { // PERMISSION_DENIED
+                    this.checking = false;
+                    const permMsg = 'Akses Lokasi (GPS) ditolak pada browser HP Anda. Harap aktifkan izin lokasi agar absensi dapat dicatat bersama verifikasi WiFi Studio.';
+                    this.error = permMsg;
+                    if (window.Swal) {
+                        window.Swal.fire({
+                            icon: 'warning',
+                            title: 'Izin Lokasi Dibutuhkan',
+                            text: permMsg,
+                            confirmButtonColor: '#009B7E'
+                        });
+                    }
+                    return;
+                }
+
+                // Try low-accuracy fallback (indoor cell tower / wifi positioning) with 4s timeout
+                try {
+                    const fallbackPos = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, {
+                            enableHighAccuracy: false,
+                            timeout: 4000,
+                            maximumAge: 60000,
+                        });
+                    });
+                    payload.latitude = fallbackPos.coords.latitude;
+                    payload.longitude = fallbackPos.coords.longitude;
+                    payload.accuracy_m = fallbackPos.coords.accuracy;
+                    payload.captured_at = new Date(fallbackPos.timestamp).toISOString();
+                } catch (fallbackErr) {
+                    console.warn('GPS indoor fallback unavailable:', fallbackErr);
+                }
+            }
+        }
+
         this.message = 'Memvalidasi barcode & memeriksa jaringan WiFi Kantor…';
 
         try {
@@ -177,7 +238,7 @@ window.attendancePortalData = () => ({
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 },
-                body: JSON.stringify({ qr_token: qrToken })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
@@ -192,10 +253,17 @@ window.attendancePortalData = () => ({
                 : 'Absensi masuk via Barcode & WiFi Studio berhasil!';
 
             if (window.Swal) {
+                const hasGpsCaptured = data.attendance && data.attendance.latitude && Number(data.attendance.latitude) !== 0;
+                const detailText = data.already_checked_in
+                    ? (data.message || 'Anda sudah melakukan absensi hari ini.')
+                    : (hasGpsCaptured
+                        ? 'Kehadiran Anda berhasil diverifikasi pada WiFi Studio & titik lokasi GPS Anda telah tercatat.'
+                        : 'Kehadiran Anda berhasil diverifikasi pada WiFi Studio.');
+
                 window.Swal.fire({
                     icon: data.already_checked_in ? 'info' : 'success',
                     title: data.already_checked_in ? 'Sudah Absen Hari Ini' : 'Absensi Berhasil!',
-                    text: data.message || (data.already_checked_in ? 'Anda sudah melakukan absensi hari ini.' : 'Kehadiran Anda berhasil diverifikasi pada WiFi Studio.'),
+                    text: detailText,
                     confirmButtonColor: '#009B7E'
                 });
             }

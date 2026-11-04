@@ -113,6 +113,10 @@ class AttendanceController extends Controller
 
             $data = $request->validate([
                 'qr_token' => 'required|string',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
+                'accuracy_m' => 'nullable|numeric|min:0|max:10000',
+                'captured_at' => 'nullable|date',
             ]);
 
             $config = $this->getWifiQrConfig();
@@ -147,7 +151,25 @@ class AttendanceController extends Controller
                 }
             }
 
-            // 3. Check if already checked in today (AFTER WiFi verification to prevent bypassing)
+            // 3. Optional Geofence validation if Studio coordinates are set
+            $hasGps = isset($data['latitude'], $data['longitude']) && $data['latitude'] !== null && $data['longitude'] !== null && ((float) $data['latitude'] != 0.0 || (float) $data['longitude'] != 0.0);
+            if (!empty($config['studio_lat']) && !empty($config['studio_lng']) && $hasGps) {
+                $studioLat = (float) $config['studio_lat'];
+                $studioLng = (float) $config['studio_lng'];
+                $radiusM = (float) ($config['geofence_radius_m'] ?? 150);
+                $accuracy = isset($data['accuracy_m']) ? (float) $data['accuracy_m'] : 0.0;
+                $distance = $this->calculateDistanceMeters((float) $data['latitude'], (float) $data['longitude'], $studioLat, $studioLng);
+                $effectiveRadius = max($radiusM, $radiusM + ($accuracy / 2));
+
+                if ($distance > $effectiveRadius) {
+                    $distInt = round($distance);
+                    throw ValidationException::withMessages([
+                        'location' => "Gagal absensi: Posisi GPS Anda terdeteksi di luar area Studio AIKu ({$distInt} meter dari titik kantor, batas radius {$radiusM} meter). Harap lakukan scan barcode di dalam studio.",
+                    ]);
+                }
+            }
+
+            // 4. Check if already checked in today (AFTER WiFi and location verification to prevent bypassing)
             if ($existing = Attendance::where('user_id', $request->user()->id)->where('work_date', $today)->first()) {
                 $formattedTime = CarbonImmutable::parse($existing->checked_in_at)->setTimezone('Asia/Makassar')->format('H:i');
 
@@ -159,18 +181,23 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            // 4. Save attendance record safely with fallback fields to avoid MySQL NOT NULL errors
-            $row = DB::transaction(function () use ($request, $person, $today, $clientIp) {
+            // 5. Save attendance record safely with real GPS coordinates and WiFi metadata
+            $row = DB::transaction(function () use ($request, $person, $today, $clientIp, $data, $hasGps) {
                 User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+
+                $lat = $hasGps ? (float) $data['latitude'] : 0.0;
+                $lng = $hasGps ? (float) $data['longitude'] : 0.0;
+                $acc = isset($data['accuracy_m']) ? (float) $data['accuracy_m'] : 0.0;
+                $capturedAt = !empty($data['captured_at']) ? CarbonImmutable::parse($data['captured_at']) : now();
 
                 $attributes = [
                     'contributor_id' => $person->id,
                     'contributor_name' => $person->nama,
                     'checked_in_at' => now(),
-                    'latitude' => 0.0,
-                    'longitude' => 0.0,
-                    'accuracy_m' => 0.0,
-                    'gps_captured_at' => now(),
+                    'latitude' => $lat,
+                    'longitude' => $lng,
+                    'accuracy_m' => $acc,
+                    'gps_captured_at' => $capturedAt,
                 ];
 
                 if (Schema::hasColumn('attendances', 'checkin_method')) {
@@ -204,6 +231,19 @@ class AttendanceController extends Controller
                 'message' => 'Gagal absensi: ' . $e->getMessage(),
             ], 422);
         }
+    }
+
+    public function calculateDistanceMeters(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6371000; // in meters
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     public function isIpMatched(string $clientIp, array $allowedIps): bool
@@ -300,6 +340,9 @@ class AttendanceController extends Controller
             'wifi_ips.*' => 'string|max:45',
             'wifi_check_enabled' => 'required|boolean',
             'studio_name' => 'nullable|string|max:100',
+            'studio_lat' => 'nullable|numeric|between:-90,90',
+            'studio_lng' => 'nullable|numeric|between:-180,180',
+            'geofence_radius_m' => 'nullable|integer|min:20|max:10000',
             'regenerate_qr' => 'nullable|boolean',
         ]);
 
@@ -320,11 +363,26 @@ class AttendanceController extends Controller
             $qrSecret = 'aiku_qr_' . Str::random(24);
         }
 
+        $studioLat = array_key_exists('studio_lat', $data)
+            ? ($data['studio_lat'] !== null ? (float) $data['studio_lat'] : null)
+            : ($current['studio_lat'] ?? null);
+
+        $studioLng = array_key_exists('studio_lng', $data)
+            ? ($data['studio_lng'] !== null ? (float) $data['studio_lng'] : null)
+            : ($current['studio_lng'] ?? null);
+
+        $geofenceRadius = array_key_exists('geofence_radius_m', $data)
+            ? ($data['geofence_radius_m'] !== null ? (int) $data['geofence_radius_m'] : 150)
+            : ($current['geofence_radius_m'] ?? 150);
+
         $updated = [
             'wifi_ips' => array_values(array_unique($ips)),
             'wifi_check_enabled' => (bool) $data['wifi_check_enabled'],
             'qr_secret' => $qrSecret,
             'studio_name' => $data['studio_name'] ?: 'AIKu Studio',
+            'studio_lat' => $studioLat,
+            'studio_lng' => $studioLng,
+            'geofence_radius_m' => $geofenceRadius,
             'updated_at' => now()->toIso8601String(),
         ];
 
@@ -363,6 +421,9 @@ class AttendanceController extends Controller
                 'wifi_check_enabled' => true,
                 'qr_secret' => 'aiku_qr_' . Str::random(24),
                 'studio_name' => 'AIKu Studio',
+                'studio_lat' => null,
+                'studio_lng' => null,
+                'geofence_radius_m' => 150,
                 'updated_at' => now()->toIso8601String(),
             ];
 

@@ -75,19 +75,38 @@
                             <div>
                                 <p class="text-xs font-semibold text-emerald-800/80">Jam Masuk (WITA)</p>
                                 <p class="mt-1 text-base font-extrabold text-emerald-950" x-text="time(todayAttendance.checked_in_at)"></p>
+                                <span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    ✓ Terverifikasi WiFi Studio
+                                </span>
                             </div>
                             <div>
-                                <p class="text-xs font-semibold text-emerald-800/80">Metode & Router</p>
+                                <p class="text-xs font-semibold text-emerald-800/80">Metode & Jaringan</p>
                                 <p class="mt-1 font-bold text-emerald-900 flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                                     <span>Barcode WiFi Studio</span>
                                 </p>
                                 <p class="mt-0.5 text-xs text-emerald-700 font-mono" x-text="'IP: ' + (todayAttendance.client_ip || 'Terverifikasi')"></p>
+
+                                <template x-if="todayAttendance.latitude && Number(todayAttendance.latitude) !== 0">
+                                    <div class="mt-1.5 pt-1.5 border-t border-emerald-200/60">
+                                        <p class="text-[11px] font-semibold text-emerald-800">Koordinat GPS:</p>
+                                        <p class="font-mono text-[11px] text-emerald-900" x-text="todayAttendance.latitude + ', ' + todayAttendance.longitude"></p>
+                                        <p class="text-[10px] text-emerald-700" x-text="todayAttendance.accuracy_m ? ('Akurasi ±' + Math.round(todayAttendance.accuracy_m) + ' meter') : ''"></p>
+                                    </div>
+                                </template>
                             </div>
                             <div class="flex items-center sm:justify-end">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                    ✓ Terverifikasi WiFi Kantor
-                                </span>
+                                <template x-if="todayAttendance.latitude && Number(todayAttendance.latitude) !== 0">
+                                    <a :href="mapUrl(todayAttendance)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 transition shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        <span>Lihat lokasi di peta ↗</span>
+                                    </a>
+                                </template>
+                                <template x-if="!todayAttendance.latitude || Number(todayAttendance.latitude) === 0">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        ✓ Presensi Sah
+                                    </span>
+                                </template>
                             </div>
                         </div>
                     </template>
@@ -169,10 +188,13 @@
                             <span>Terverifikasi Scan Barcode WiFi Studio</span>
                         </p>
                     </template>
-                    <template x-if="selectedAttendance.checkin_method !== 'qr_wifi' && selectedAttendance.latitude">
-                        <div>
-                            <p class="mt-2 break-all text-slate-500" x-text="'GPS '+selectedAttendance.latitude+', '+selectedAttendance.longitude+' · akurasi ±'+Math.round(selectedAttendance.accuracy_m)+' m'"></p>
-                            <a :href="mapUrl(selectedAttendance)" target="_blank" rel="noopener noreferrer" class="mt-3 inline-block text-brand-700 underline">Lihat lokasi ↗</a>
+                    <template x-if="selectedAttendance.latitude && Number(selectedAttendance.latitude) !== 0">
+                        <div class="mt-2">
+                            <p class="break-all text-xs text-slate-500" x-text="'GPS '+selectedAttendance.latitude+', '+selectedAttendance.longitude+' · akurasi ±'+Math.round(selectedAttendance.accuracy_m || 0)+' m'"></p>
+                            <a :href="mapUrl(selectedAttendance)" target="_blank" rel="noopener noreferrer" class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 underline">
+                                <span>Lihat lokasi di peta</span>
+                                <span>↗</span>
+                            </a>
                         </div>
                     </template>
                 </div>

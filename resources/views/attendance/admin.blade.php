@@ -179,10 +179,20 @@
                                 <td class="p-4 tabular-nums" x-text="time(row.checked_in_at)"></td>
                                 <td class="p-4">
                                     <template x-if="row.checkin_method === 'qr_wifi'">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                                            <span>WiFi Studio</span>
-                                        </span>
+                                        <div>
+                                            <template x-if="row.latitude && Number(row.latitude) !== 0">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                                    <span>WiFi Studio + GPS</span>
+                                                </span>
+                                            </template>
+                                            <template x-if="!row.latitude || Number(row.latitude) === 0">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                                    <span>WiFi Studio</span>
+                                                </span>
+                                            </template>
+                                        </div>
                                     </template>
                                     <template x-if="row.checkin_method !== 'qr_wifi'">
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800">
@@ -195,6 +205,12 @@
                                     <template x-if="row.checkin_method === 'qr_wifi'">
                                         <div>
                                             <p class="font-mono text-xs font-semibold text-slate-700" x-text="'IP: ' + (row.client_ip || 'Terverifikasi')"></p>
+                                            <template x-if="row.latitude && Number(row.latitude) !== 0">
+                                                <div class="mt-1">
+                                                    <p class="font-mono text-[11px] text-slate-600" x-text="'GPS: ' + row.latitude + ', ' + row.longitude"></p>
+                                                    <p class="text-[10px] text-slate-400" x-text="row.accuracy_m ? ('±' + Math.round(row.accuracy_m) + ' meter') : ''"></p>
+                                                </div>
+                                            </template>
                                             <p class="text-[11px] text-emerald-600 font-medium mt-0.5">Router WiFi Kantor</p>
                                         </div>
                                     </template>
@@ -206,13 +222,14 @@
                                     </template>
                                 </td>
                                 <td class="p-4">
-                                    <template x-if="row.checkin_method === 'qr_wifi'">
-                                        <span class="text-xs font-medium text-slate-400">Scan Barcode</span>
-                                    </template>
-                                    <template x-if="row.checkin_method !== 'qr_wifi' && row.latitude">
-                                        <a :href="mapUrl(row)" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-700 underline text-xs">
-                                            Lihat peta ↗
+                                    <template x-if="row.latitude && Number(row.latitude) !== 0">
+                                        <a :href="mapUrl(row)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold text-xs transition shadow-2xs">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            <span>Lihat peta ↗</span>
                                         </a>
+                                    </template>
+                                    <template x-if="!row.latitude || Number(row.latitude) === 0">
+                                        <span class="text-xs text-slate-400">Tidak ada GPS</span>
                                     </template>
                                 </td>
                             </tr>

@@ -283,4 +283,110 @@ class AttendanceQrWifiTest extends TestCase
             ->assertJsonPath('attendances.0.checkin_method', 'qr_wifi')
             ->assertJsonPath('attendances.0.client_ip', '114.122.99.88');
     }
+
+    public function test_contributor_can_checkin_with_qr_and_gps_coordinates_stored(): void
+    {
+        $worker = $this->contributorUser('gps_worker@example.com');
+        $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
+
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['140.213.216.5'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'qr_gps_token_secret',
+            ]]
+        );
+
+        $res = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.216.5'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'qr_gps_token_secret',
+                'latitude' => -8.5123456,
+                'longitude' => 115.1234567,
+                'accuracy_m' => 12.4,
+                'captured_at' => now()->toISOString(),
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.checkin_method', 'qr_wifi')
+            ->assertJsonPath('attendance.client_ip', '140.213.216.5')
+            ->assertJsonPath('attendance.latitude', -8.5123456)
+            ->assertJsonPath('attendance.longitude', 115.1234567);
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $worker->id,
+            'work_date' => $today,
+            'checkin_method' => 'qr_wifi',
+            'latitude' => -8.5123456,
+            'longitude' => 115.1234567,
+        ]);
+    }
+
+    public function test_checkin_validates_geofence_distance_when_studio_coordinates_configured(): void
+    {
+        $worker = $this->contributorUser('geofence_worker@example.com');
+
+        // Studio is at Monas, Jakarta: -6.175392, 106.827153, radius 100m
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['140.213.216.5'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'geofence_token_123',
+                'studio_lat' => -6.175392,
+                'studio_lng' => 106.827153,
+                'geofence_radius_m' => 100,
+            ]]
+        );
+
+        // 1. Worker is far away in Bandung (-6.917464, 107.619123) -> Should fail
+        $farRes = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.216.5'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'geofence_token_123',
+                'latitude' => -6.917464,
+                'longitude' => 107.619123,
+                'accuracy_m' => 10.0,
+                'captured_at' => now()->toISOString(),
+            ]);
+
+        $farRes->assertUnprocessable()
+            ->assertJsonValidationErrors(['location']);
+
+        // 2. Worker is right at the studio (-6.175400, 106.827160 ~ 1 meter away) -> Should succeed
+        $nearRes = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.216.5'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'geofence_token_123',
+                'latitude' => -6.175400,
+                'longitude' => 106.827160,
+                'accuracy_m' => 10.0,
+                'captured_at' => now()->toISOString(),
+            ]);
+
+        $nearRes->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.checkin_method', 'qr_wifi');
+    }
+
+    public function test_admin_can_save_studio_gps_and_geofence_settings(): void
+    {
+        $admin = $this->adminUser();
+
+        $res = $this->actingAs($admin)->postJson('/api/attendance/wifi-config', [
+            'wifi_ips' => ['140.213.216.5'],
+            'wifi_check_enabled' => true,
+            'studio_name' => 'AIKu Studio Bali',
+            'studio_lat' => -8.512345,
+            'studio_lng' => 115.123456,
+            'geofence_radius_m' => 200,
+        ]);
+
+        $res->assertOk()
+            ->assertJsonPath('config.studio_lat', -8.512345)
+            ->assertJsonPath('config.studio_lng', 115.123456)
+            ->assertJsonPath('config.geofence_radius_m', 200);
+    }
 }
