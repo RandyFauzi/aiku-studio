@@ -74,4 +74,122 @@ class DailyWorkReportTest extends TestCase
         $this->getJson('/api/me/work-reports?month=2026-11')->assertUnauthorized();
         $this->getJson('/api/work-reports?date=2026-11-03')->assertUnauthorized();
     }
+
+    public function test_employee_can_submit_per_phone_durations_in_minutes(): void
+    {
+        $user = $this->employee('durations_user@example.com');
+        $this->actingAs($user);
+
+        $today = now('Asia/Makassar')->toDateString();
+
+        $res = $this->putJson('/api/me/work-report', [
+            'work_date' => $today,
+            'expected_revision' => 0,
+            'phone_durations' => [
+                'putih' => 120,
+                'pink' => 180,
+            ],
+        ]);
+
+        $res->assertOk()
+            ->assertJsonPath('report.total_duration_minutes', 300)
+            ->assertJsonPath('report.phones', ['putih', 'pink'])
+            ->assertJsonPath('report.phone_durations.putih', 120)
+            ->assertJsonPath('report.phone_durations.pink', 180);
+
+        $this->assertDatabaseHas('daily_work_reports', [
+            'user_id' => $user->id,
+            'work_date' => $today,
+            'total_duration_minutes' => 300,
+        ]);
+    }
+
+    public function test_admin_can_get_assist_matches_and_assign_candidate_recordings(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $worker = $this->employee('afif_assist@example.com');
+        $today = now('Asia/Makassar')->toDateString();
+
+        // Worker submits report: HP Putih 120m, HP Pink 180m
+        $this->actingAs($worker)->putJson('/api/me/work-report', [
+            'work_date' => $today,
+            'expected_revision' => 0,
+            'phone_durations' => [
+                'putih' => 120,
+                'pink' => 180,
+            ],
+        ])->assertOk();
+
+        // Register HP Putih to account email
+        \App\Models\DeviceAccount::create([
+            'phone_key' => 'putih',
+            'email' => 'device_putih@studio.test',
+            'is_active' => true,
+        ]);
+
+        // Create 2 candidate recordings on HP Putih on today's WITA date
+        $nowWita = \Carbon\CarbonImmutable::now('Asia/Makassar')->setTime(10, 0);
+        \App\Models\StudioRecording::create([
+            'record_id' => 'rec_putih_001',
+            'participant_email' => 'device_putih@studio.test',
+            'task_title' => 'Task Putih A',
+            'recorded_at' => $nowWita->utc()->format('Y-m-d H:i:s'),
+            'duration_min' => 60,
+            'billable_min' => 60,
+            'manual_payment_status' => 'Belum Rekap',
+        ]);
+        \App\Models\StudioRecording::create([
+            'record_id' => 'rec_putih_002',
+            'participant_email' => 'device_putih@studio.test',
+            'task_title' => 'Task Putih B',
+            'recorded_at' => $nowWita->addMinutes(70)->utc()->format('Y-m-d H:i:s'),
+            'duration_min' => 58,
+            'billable_min' => 58,
+            'manual_payment_status' => 'Belum Rekap',
+        ]);
+
+        // 1. Admin gets assist matches
+        $res = $this->actingAs($admin)->getJson("/api/work-reports/assist-matches?date={$today}");
+        $res->assertOk()
+            ->assertJsonStructure(['date', 'assist_data'])
+            ->assertJsonPath('assist_data.0.contributor_name', $worker->name);
+
+        $putihMatch = collect($res->json('assist_data.0.phones'))->firstWhere('phone_key', 'putih');
+        $this->assertNotNull($putihMatch);
+        $this->assertEquals(120, $putihMatch['reported_minutes']);
+        $this->assertEquals(2, $putihMatch['unassigned_count']);
+        $this->assertEquals(118.0, $putihMatch['unassigned_minutes']);
+        $this->assertEquals('exact_match', $putihMatch['status']);
+
+        // 2. Admin 1-click assigns the matched recordings to Afif
+        $assignRes = $this->actingAs($admin)->postJson('/api/work-reports/assist-assign', [
+            'contributor_id' => $worker->contributor_id,
+            'worker_name' => $worker->name,
+            'record_ids' => ['rec_putih_001', 'rec_putih_002'],
+        ]);
+
+        $assignRes->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('updated_count', 2);
+
+        $this->assertDatabaseHas('studio_recordings', [
+            'record_id' => 'rec_putih_001',
+            'assigned_contributor_id' => $worker->contributor_id,
+            'assigned_worker_name' => $worker->name,
+        ]);
+
+        // 3. Admin can unassign if needed
+        $unassignRes = $this->actingAs($admin)->postJson('/api/work-reports/assist-unassign', [
+            'record_ids' => ['rec_putih_001'],
+        ]);
+
+        $unassignRes->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('updated_count', 1);
+
+        $this->assertDatabaseHas('studio_recordings', [
+            'record_id' => 'rec_putih_001',
+            'assigned_worker_name' => null,
+        ]);
+    }
 }

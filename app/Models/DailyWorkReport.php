@@ -12,6 +12,11 @@ class DailyWorkReport extends Model
 
     protected function casts(): array
     {
-        return ['phones' => 'array', 'total_duration_minutes' => 'integer', 'revision' => 'integer'];
+        return [
+            'phones' => 'array',
+            'phone_durations' => 'array',
+            'total_duration_minutes' => 'integer',
+            'revision' => 'integer',
+        ];
     }
 }
