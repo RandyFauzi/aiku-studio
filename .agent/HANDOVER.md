@@ -1,5 +1,10 @@
 # Agent Collaboration Log (Antigravity & CODEX)
 
+### [2026-11-05 12:33] — Antigravity
+- **Selesai**: Redesain Login Page dinamis untuk tampilan Mobile & Desktop sesuai referensi visual. Menggunakan aset `public/assets/object/Login page.gif`, styling form pill rounded-full dengan aksen radiant lime, toggle password visibility, remember me, dan modal bantuan kata sandi.
+- **Penyesuaian**: Menghapus tombol login Google dan pendaftaran akun (hanya akun terdaftar yang dapat login). Controller mendukung login via email maupun nama/username.
+- **Status**: 93/93 PHPUnit tests (535 assertions) PASS, Vite build PASS. Ter-push ke origin/main.
+
 ### [2026-11-05 12:26] — Antigravity
 - **Selesai**: Menambahkan fitur Edit (modal pop-up) dan Hapus pada tabel Laporan Kerja admin (`/work-reports`). Admin dapat mengubah pilihan HP dan durasi menit per-HP dengan kalkulasi live total durasi, serta menghapus laporan kerja dengan konfirmasi dialog.
 - **Backend & Tests**: Endpoint `PUT /api/work-reports/{report}` & `DELETE /api/work-reports/{report}` di `DailyWorkReportController`. 88/88 PHPUnit tests (513 assertions) PASS, Vite build PASS. Ter-push ke origin/main.
