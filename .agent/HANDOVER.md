@@ -1,5 +1,10 @@
 # Agent Collaboration Log (Antigravity & CODEX)
 
+### [2026-11-05 13:10] — Antigravity
+- **Selesai**: Implementasi sistem Bank / Saldo Pending dari selisih rekaman aktual vs slip terkunci (`PayrollCalculator::detectPendingCarryOver` & `summary`). Menghitung selisih jam dan nominal per kontributor (contoh Muhamad Zikri: +7.39 jam / Rp 369.525).
+- **UI Form & Checkbox**: Di form Buat/Edit Slip (`create.blade.php`), tersedia kartu Bank Saldo Pending dengan checkbox interaktif `[x] Cairkan Saldo ke Slip Ini` yang otomatis menambah THP dan rincian selisih. Desain tampilan slip web dan PDF dikembalikan ke tata letak asli yang bersih (`slips/content.blade.php`).
+- **Status**: 93/93 PHPUnit tests (535 assertions) PASS, Vite build PASS. Graphify diperbarui; lock dilepas ke IDLE.
+
 ### [2026-11-05 12:40] — Antigravity
 - **Selesai**: Perbaikan kontras dan pewarnaan halaman laporan user (`portal/work-reports.blade.php` & `work-reports/form.blade.php`). Kartu akumulasi durasi hari ini kini menggunakan gradasi lime-mint segar dengan tipografi Deep Forest Ink berkontras tinggi (WCAG AAA), menghilangkan teks 'Menit' dan badge yang sebelumnya pudar/tidak terbaca.
 - **UI & Button**: Status badge pill kontras tinggi (amber pulse & emerald check), tombol submit bertransisi interaktif, border HP terpilih lebih tegas, dan riwayat laporan lebih rapi.

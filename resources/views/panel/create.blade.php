@@ -234,45 +234,77 @@
                                 <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">Isi nominal bonus manual (hanya akan muncul di slip PDF jika diisi > 0).</p>
                             </div>
 
-                            <!-- SISA PENDING PERIODE SEBELUMNYA (CARRY-OVER) -->
+                            <!-- BANK SALDO PENDING (SISA PERIODE SEBELUMNYA) -->
                             <div class="pt-4 mt-4 border-t border-gray-200">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-semibold text-gray-600">Sisa Pending Periode Sebelumnya</span>
-                                    <span x-show="pendingCarryOver.available" 
-                                          class="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full" 
-                                          x-text="'Tersedia +' + formatRupiah(pendingCarryOver.total_amount || 0)"></span>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-gray-800">Bank Saldo Pending</span>
+                                        <span class="text-[10px] text-gray-400 font-normal">(Sisa Periode Lalu)</span>
+                                    </div>
+                                    <span x-show="pendingCarryOver && pendingCarryOver.available" 
+                                          class="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200" 
+                                          x-text="'Saldo: +' + formatRupiah(pendingCarryOver.total_amount || 0)"></span>
                                 </div>
 
-                                <template x-if="isLoadingCarryOver">
-                                    <div class="py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-400 flex items-center justify-center gap-2 animate-pulse">
-                                        <svg class="animate-spin h-3.5 w-3.5 text-brand" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        <span>Mengecek pending periode sebelumnya...</span>
-                                    </div>
-                                </template>
+                                <!-- Loading Indicator -->
+                                <div x-show="isLoadingCarryOver" 
+                                     class="py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-500 flex items-center justify-center gap-2">
+                                    <svg class="animate-spin h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <span>Mengecek bank saldo pending...</span>
+                                </div>
 
-                                <template x-if="!isLoadingCarryOver && pendingCarryOver.available">
-                                    <div class="space-y-1.5">
-                                        <button type="button" 
-                                                @click="togglePendingCarryOver()" 
-                                                class="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition flex items-center justify-between border shadow-2xs"
-                                                :class="formData.include_pending_carry_over 
-                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600' 
-                                                    : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200'">
-                                            <div class="flex items-center gap-2">
-                                                <span x-text="formData.include_pending_carry_over ? '✓' : '+'"></span>
-                                                <span x-text="formData.include_pending_carry_over ? 'Sisa Pending Dimasukkan' : 'Masukkan Sisa Pending'"></span>
+                                <!-- Available Carry-Over Card & Checkbox -->
+                                <div x-show="!isLoadingCarryOver && pendingCarryOver && pendingCarryOver.available" 
+                                     class="space-y-2.5 p-3.5 rounded-2xl border transition-all"
+                                     :class="formData.include_pending_carry_over 
+                                         ? 'bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-400/30' 
+                                         : 'bg-white border-gray-200 shadow-2xs'">
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-gray-700">Saldo Pending Tersedia:</span>
+                                        <span class="text-sm font-black text-emerald-700" x-text="'+ ' + formatRupiah(pendingCarryOver.total_amount || 0)"></span>
+                                    </div>
+
+                                    <!-- Breakdown -->
+                                    <div class="text-[11px] text-gray-600 bg-black/5 rounded-xl p-2.5 space-y-1">
+                                        <template x-for="(task, idx) in (pendingCarryOver.tasks || [])" :key="idx">
+                                            <div class="flex items-start justify-between gap-2">
+                                                <div>
+                                                    <span class="font-bold text-gray-800" x-text="task.source_period"></span>
+                                                    <div class="text-[10px] text-gray-500" x-text="'Slip Lock: ' + (task.locked_hours || 0) + ' Jam | Aktual: ' + (task.actual_hours || 0) + ' Jam'"></div>
+                                                </div>
+                                                <span class="font-extrabold text-emerald-700 whitespace-nowrap" x-text="'+' + (task.delta_hours || 0) + ' Jam'"></span>
                                             </div>
-                                            <span class="font-extrabold" x-text="'+ ' + formatRupiah(pendingCarryOver.total_amount || 0)"></span>
-                                        </button>
-                                        <p class="text-[10px] text-emerald-700" x-text="'Terdapat ' + (pendingCarryOver.tasks_count || 0) + ' tugas (' + (pendingCarryOver.total_hours || 0) + ' jam) yang disetujui susulan dari periode lalu.'"></p>
+                                        </template>
                                     </div>
-                                </template>
 
-                                <template x-if="!isLoadingCarryOver && !pendingCarryOver.available">
-                                    <div class="py-2 px-3 rounded-xl bg-gray-50/80 border border-gray-100 text-[11px] text-gray-400 text-center">
-                                        Tidak ada sisa pending dari periode sebelumnya.
-                                    </div>
-                                </template>
+                                    <!-- Checkbox to Include in Slip -->
+                                    <label class="flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none"
+                                           :class="formData.include_pending_carry_over 
+                                               ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' 
+                                               : 'bg-white text-gray-800 border-gray-300 hover:border-emerald-500 hover:bg-emerald-50/40'">
+                                        <input type="checkbox" 
+                                               x-model="formData.include_pending_carry_over" 
+                                               @change="onToggleCarryOverCheckbox()"
+                                               class="rounded w-4 h-4 cursor-pointer"
+                                               :class="formData.include_pending_carry_over ? 'accent-white' : 'text-emerald-600'">
+                                        <div class="flex-1 min-w-0">
+                                            <span class="text-xs font-extrabold block" 
+                                                  x-text="formData.include_pending_carry_over ? 'Cairkan Saldo ke Slip Ini' : 'Centang untuk Cairkan Saldo'"></span>
+                                            <span class="text-[10px] block opacity-85"
+                                                  x-text="'Tambahkan ' + (pendingCarryOver.total_hours || 0) + ' jam ke Take Home Pay'"></span>
+                                        </div>
+                                        <span class="text-xs font-black whitespace-nowrap" 
+                                              :class="formData.include_pending_carry_over ? 'text-white' : 'text-emerald-700'"
+                                              x-text="'+ ' + formatRupiah(pendingCarryOver.total_amount || 0)"></span>
+                                    </label>
+                                </div>
+
+                                <!-- Empty / Not Available State -->
+                                <div x-show="!isLoadingCarryOver && (!pendingCarryOver || !pendingCarryOver.available)" 
+                                     class="py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-500 text-center">
+                                    Bank Saldo Pending: <span class="font-bold text-gray-700">Rp 0</span> (Semua selisih periode lalu sudah tercairkan atau tidak ada pending).
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -476,6 +508,6 @@
         </div>
     </main>
 
-    <script src="/assets/app.js"></script>
+    <script src="/assets/app.js?v={{ filemtime(public_path('assets/app.js')) }}"></script>
 </body>
 </html>

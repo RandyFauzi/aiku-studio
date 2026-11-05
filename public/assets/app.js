@@ -1129,6 +1129,23 @@ document.addEventListener('alpine:init', () => {
                 if (periodParam) this.formData.period = periodParam;
                 await this.loadWorkerEvidence(targetWorker, this.formData.period, periodIdParam);
             }
+
+            // Always check pending carry over on startup if both fields present
+            if (this.formData.employee_name && this.formData.period && !this.formData.pending_carry_over_amount) {
+                await this.checkPendingCarryOver();
+            }
+
+            // Watch for changes on employee_name or period
+            this.$watch('formData.employee_name', async (val) => {
+                if (val && this.formData.period) {
+                    await this.checkPendingCarryOver();
+                }
+            });
+            this.$watch('formData.period', async (val) => {
+                if (val && this.formData.employee_name) {
+                    await this.checkPendingCarryOver();
+                }
+            });
         },
 
         async loadSavedSlip(slipId) {
@@ -1192,11 +1209,7 @@ document.addEventListener('alpine:init', () => {
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.existingSlipId) {
-                        this.slipId = data.existingSlipId;
-                    } else if (!this.slipId || String(this.slipId).startsWith('LIVE-')) {
-                        this.slipId = null;
-                    }
+                    this.slipId = data.existingSlipId || null;
                     if (data.period) this.formData.period = data.period;
                     if (data.bonus !== undefined) this.formData.bonus = data.bonus;
                     if (data.pending_carry_over_amount > 0) {
@@ -1407,17 +1420,22 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        togglePendingCarryOver() {
-            this.formData.include_pending_carry_over = !this.formData.include_pending_carry_over;
-            if (this.formData.include_pending_carry_over && this.pendingCarryOver.available) {
+        onToggleCarryOverCheckbox() {
+            if (this.formData.include_pending_carry_over && this.pendingCarryOver && this.pendingCarryOver.available) {
                 this.formData.pending_carry_over_amount = this.pendingCarryOver.total_amount;
                 this.formData.pending_carry_over_hours = this.pendingCarryOver.total_hours;
                 this.formData.pending_carry_over_data = this.pendingCarryOver.tasks;
             } else {
+                this.formData.include_pending_carry_over = false;
                 this.formData.pending_carry_over_amount = 0;
                 this.formData.pending_carry_over_hours = 0;
                 this.formData.pending_carry_over_data = null;
             }
+        },
+
+        togglePendingCarryOver() {
+            this.formData.include_pending_carry_over = !this.formData.include_pending_carry_over;
+            this.onToggleCarryOverCheckbox();
         },
 
         calculateTHP() {

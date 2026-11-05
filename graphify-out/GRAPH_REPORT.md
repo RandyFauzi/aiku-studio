@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fc45e3cd`
+- Built from commit: `bd447ef1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -28,7 +28,6 @@
 - Community 11
 - Community 12
 - Community 13
-- Community 14
 - Community 15
 - Community 16
 - Community 17
@@ -41,6 +40,7 @@
 - Community 24
 - Community 25
 - Community 26
+- Community 27
 - Community 28
 - Community 29
 - Community 30
@@ -50,7 +50,7 @@
 - Community 34
 - Community 35
 - Community 36
-- Community 38
+- Community 37
 - Community 39
 - Community 40
 - Community 41
@@ -84,22 +84,22 @@
 4. `PayrollMigrationTest` - 19 edges
 5. `PayslipController` - 18 edges
 6. `Robotics1618Sync` - 18 edges
-7. `Payslip` - 17 edges
-8. `AttendanceQrWifiTest` - 17 edges
-9. `TestCase` - 16 edges
-10. `AttendanceController` - 16 edges
+7. `AttendanceQrWifiTest` - 17 edges
+8. `TestCase` - 16 edges
+9. `AttendanceController` - 16 edges
+10. `Payslip` - 15 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `DeviceAccountTest` --references--> `User`  [EXTRACTED]
-  tests/Feature/DeviceAccountTest.php → app/Models/User.php
 - `Robotics1618SyncTest` --references--> `User`  [EXTRACTED]
   tests/Feature/Robotics1618SyncTest.php → app/Models/User.php
-- `PayrollController` --inherits--> `Controller`  [EXTRACTED]
-  app/Http/Controllers/PayrollController.php → app/Http/Controllers/Controller.php
-- `PayslipController` --inherits--> `Controller`  [EXTRACTED]
-  app/Http/Controllers/PayslipController.php → app/Http/Controllers/Controller.php
-- `DeviceAccountController` --inherits--> `Controller`  [EXTRACTED]
-  app/Http/Controllers/DeviceAccountController.php → app/Http/Controllers/Controller.php
+- `DeviceAccountTest` --references--> `User`  [EXTRACTED]
+  tests/Feature/DeviceAccountTest.php → app/Models/User.php
+- `ContributorPayslipTest` --inherits--> `TestCase`  [EXTRACTED]
+  tests/Feature/ContributorPayslipTest.php → tests/TestCase.php
+- `ContributorRoleManagementTest` --inherits--> `TestCase`  [EXTRACTED]
+  tests/Feature/ContributorRoleManagementTest.php → tests/TestCase.php
+- `DeviceAccountTest` --inherits--> `TestCase`  [EXTRACTED]
+  tests/Feature/DeviceAccountTest.php → tests/TestCase.php
 
 ## Import Cycles
 - None detected.
@@ -107,40 +107,40 @@
 ## Communities (91 total, 70 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.06
-Nodes (11): PayrollController, {closure#1}(), {closure#2}(), PayslipController, PayrollStatus, Payslip, {closure#2}(), PayrollCalculator (+3 more)
-
-### Community 1 - "Community 1"
 Cohesion: 0.05
 Nodes (29): {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}(), {closure#2}(), {closure#1}(), {closure#2}(), {closure#3}() (+21 more)
 
-### Community 2 - "Community 2"
+### Community 1 - "Community 1"
 Cohesion: 0.06
 Nodes (51): "attendances", attendances_contributor_id_index, attendances_user_id_index, attendances_user_id_work_date_unique, attendances_work_date_index, "cache", cache_expiration_index, "cache_locks" (+43 more)
 
-### Community 3 - "Community 3"
+### Community 2 - "Community 2"
 Cohesion: 0.06
 Nodes (37): dependencies, alpinejs@^3.17.5, html5-qrcode@^2.3.8, qrcode@^1.5.4, sweetalert2@^11.26.25, devDependencies, autoprefixer@^10.6.2, axios@^1.11.0 (+29 more)
 
-### Community 4 - "Community 4"
+### Community 3 - "Community 3"
 Cohesion: 0.04
 Nodes (47): pestphp/pest-plugin, php-http/discovery, autoload, autoload-dev, psr-4, psr-4, config, allow-plugins (+39 more)
+
+### Community 4 - "Community 4"
+Cohesion: 0.08
+Nodes (8): {closure#1}(), DailyWorkReportController, {closure#2}(), {closure#3}(), {closure#4}(), DeviceAccountController, DailyWorkReport, DeviceAccount
 
 ### Community 5 - "Community 5"
 Cohesion: 0.07
 Nodes (22): checkIn(), checkInWithQr(), closeScanner(), handleQrScanned(), init(), load(), loadReportStatus(), loadSlips() (+14 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.14
-Nodes (5): SyncController, AtlasSync, {closure#1}(), {closure#2}(), Robotics1618Sync
+Cohesion: 0.10
+Nodes (6): SyncController, AtlasParser, AtlasSync, {closure#1}(), {closure#2}(), Robotics1618Sync
 
 ### Community 7 - "Community 7"
-Cohesion: 0.09
-Nodes (9): AtlasTick, AuditDataIntegrity, CreatePanelAdmin, ImportLegacyPayroll, {closure#1}(), SyncContributorLogins, SyncRobotics1618, VerifyLegacyPayroll (+1 more)
+Cohesion: 0.07
+Nodes (8): AtlasTick, AuditDataIntegrity, CreatePanelAdmin, ImportLegacyPayroll, {closure#1}(), SyncContributorLogins, SyncRobotics1618, VerifyLegacyPayroll
 
 ### Community 8 - "Community 8"
 Cohesion: 0.07
-Nodes (5): {closure#2}(), EnsureActiveAccount, EnsureAdministrator, ShiftDay, ShiftConfiguration
+Nodes (6): {closure#2}(), ShiftDayController, EnsureActiveAccount, EnsureAdministrator, ShiftDay, ShiftConfiguration
 
 ### Community 9 - "Community 9"
 Cohesion: 0.10
@@ -151,44 +151,44 @@ Cohesion: 0.09
 Nodes (7): attachCalendar(), conflicts(), dailyHours(), hours(), peopleAt(), production(), saveConfig()
 
 ### Community 12 - "Community 12"
-Cohesion: 0.20
-Nodes (4): {closure#2}(), {closure#3}(), {closure#4}(), DeviceAccountController
+Cohesion: 0.13
+Nodes (5): StudioRecording, ExampleTest, Robotics1618SyncTest, ShiftRosterTest, TestCase
 
-### Community 14 - "Community 14"
+### Community 13 - "Community 13"
 Cohesion: 0.16
-Nodes (3): User, ContributorIdentity, PendingCarryOverTest
+Nodes (3): Attendance, ShiftSetting, StudioAccount
 
-### Community 16 - "Community 16"
-Cohesion: 0.18
-Nodes (3): {closure#1}(), DailyWorkReportController, DailyWorkReport
-
-### Community 17 - "Community 17"
+### Community 15 - "Community 15"
 Cohesion: 0.12
 Nodes (11): credentials, legacyRequire, puppeteer, report, root, {createRequire}, fs, mysql (+3 more)
 
-### Community 19 - "Community 19"
+### Community 18 - "Community 18"
+Cohesion: 0.18
+Nodes (3): User, ContributorIdentity, PendingCarryOverTest
+
+### Community 20 - "Community 20"
 Cohesion: 0.23
 Nodes (5): {closure#3}(), {closure#4}(), {closure#5}(), {closure#6}(), ContributorController
 
-### Community 20 - "Community 20"
-Cohesion: 0.17
-Nodes (4): Attendance, DeviceAccount, StudioAccount, StudioRecording
+### Community 22 - "Community 22"
+Cohesion: 0.15
+Nodes (3): {closure#1}(), {closure#2}(), PayslipPdf
 
-### Community 21 - "Community 21"
+### Community 23 - "Community 23"
 Cohesion: 0.22
 Nodes (3): fingerprints(), main(), run()
 
-### Community 22 - "Community 22"
-Cohesion: 0.15
-Nodes (4): ExampleTest, Robotics1618SyncTest, ShiftRosterTest, TestCase
-
 ### Community 25 - "Community 25"
-Cohesion: 0.17
-Nodes (3): AuthController, Controller, RecordingController
+Cohesion: 0.14
+Nodes (3): AuthController, Controller, SettingController
+
+### Community 29 - "Community 29"
+Cohesion: 0.24
+Nodes (3): Contributor, ContributorAccess, ShiftSchedule
 
 ### Community 30 - "Community 30"
 Cohesion: 0.22
-Nodes (3): Contributor, ShiftSetting, ShiftSchedule
+Nodes (3): PayrollStatus, {closure#2}(), PayrollPaymentStatus
 
 ## Knowledge Gaps
 - **29 isolated node(s):** `work-reports.form`, `attendance.admin`, `layouts.sidebar`, `portal.navigation`, `portal.icon` (+24 more)
@@ -198,17 +198,17 @@ Nodes (3): Contributor, ShiftSetting, ShiftSchedule
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `Community 14` to `Community 32`, `Community 0`, `Community 34`, `Community 38`, `Community 7`, `Community 39`, `Community 13`, `Community 20`, `Community 22`, `Community 26`, `Community 30`?**
+- **Why does `User` connect `Community 18` to `Community 32`, `Community 35`, `Community 37`, `Community 39`, `Community 7`, `Community 12`, `Community 26`, `Community 29`?**
   _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **What connects `work-reports.form`, `attendance.admin`, `layouts.sidebar` to the rest of the system?**
   _29 weakly-connected nodes found - possible missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.0629399585921325 - nodes in this community are weakly interconnected._
-- **Why does `SystemAuditRegressionTest` connect `Community 11` to `Community 13`?**
+  _Cohesion score 0.050724637681159424 - nodes in this community are weakly interconnected._
+- **Why does `SystemAuditRegressionTest` connect `Community 11` to `Community 12`, `Community 13`, `Community 31`?**
   _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.050724637681159424 - nodes in this community are weakly interconnected._
-- **Why does `PayrollMigrationTest` connect `Community 18` to `Community 0`, `Community 13`, `Community 22`?**
+  _Cohesion score 0.06259426847662142 - nodes in this community are weakly interconnected._
+- **Why does `PayrollMigrationTest` connect `Community 19` to `Community 12`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.06259426847662142 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05647058823529412 - nodes in this community are weakly interconnected._

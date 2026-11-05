@@ -301,6 +301,18 @@
                                                 <span>+<span x-text="formatRupiah(worker.bonus)"></span> (Bonus)</span>
                                             </div>
                                         </template>
+                                        <template x-if="worker.pending_carry_over_amount > 0">
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 mt-0.5">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                                <span>+<span x-text="formatRupiah(worker.pending_carry_over_amount)"></span> (Sisa Pending)</span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!worker.pending_carry_over_amount && worker.available_pending_balance > 0">
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Tersedia saldo pending ' + worker.available_pending_hours + ' jam dari periode lalu'">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                <span>Bank: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
+                                            </div>
+                                        </template>
                                     </td>
 
                                     <!-- Status Bayar Button (Pilihan: Belum | Sudah) -->
