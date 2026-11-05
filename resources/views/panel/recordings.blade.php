@@ -572,13 +572,19 @@
                     </select>
 
                     <!-- View Toggle: List / Grid -->
-                    <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60">
-                        <button class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-800 shadow-2xs flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-[#00B090]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                    <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shadow-2xs">
+                        <button type="button"
+                                @click="viewMode = 'list'"
+                                :class="viewMode === 'list' ? 'bg-white text-slate-800 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                                class="px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
+                            <svg class="w-3.5 h-3.5" :class="viewMode === 'list' ? 'text-[#00B090]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                             <span>List</span>
                         </button>
-                        <button class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <button type="button"
+                                @click="viewMode = 'grid'"
+                                :class="viewMode === 'grid' ? 'bg-white text-slate-800 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                                class="px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
+                            <svg class="w-3.5 h-3.5" :class="viewMode === 'grid' ? 'text-[#00B090]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                             <span>Grid</span>
                         </button>
                     </div>
@@ -595,7 +601,7 @@
             <!-- TABLE CONTAINER (EXACT DRIBBLE STYLE) -->
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                 
-                <div class="overflow-x-auto custom-scrollbar w-full">
+                <div x-show="viewMode === 'list'" class="overflow-x-auto custom-scrollbar w-full">
                     <table class="w-full min-w-[980px] text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-50/95 border-b border-slate-200/90 text-slate-500 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10 backdrop-blur-md whitespace-nowrap">
@@ -784,6 +790,252 @@
                             </template>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- GRID VIEW CONTAINER -->
+                <div x-show="viewMode === 'grid'" x-cloak class="p-4 sm:p-5 bg-slate-50/40">
+                    
+                    <!-- Grid View Toolbar (Select All & Quick Count) -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pb-3.5 mb-4 border-b border-slate-200/70">
+                        <div class="flex items-center gap-3">
+                            <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none hover:text-slate-900 transition">
+                                <input type="checkbox" 
+                                       @change="toggleSelectAll($event)" 
+                                       :checked="isAllSelected" 
+                                       class="rounded text-[#00B090] focus:ring-[#00B090] w-4 h-4 cursor-pointer accent-[#00B090]">
+                                <span>Pilih Semua di Halaman Ini</span>
+                            </label>
+                            <span x-show="selectedIds.length > 0" class="text-xs px-2.5 py-0.5 rounded-full bg-[#00B090]/15 text-[#008970] font-extrabold shadow-2xs">
+                                <span x-text="selectedIds.length"></span> terpilih
+                            </span>
+                        </div>
+                        <div class="text-xs text-slate-500 font-medium">
+                            Menampilkan <span class="font-bold text-slate-800" x-text="recordings.length"></span> kartu rekaman
+                        </div>
+                    </div>
+
+                    <!-- Grid Skeleton Loader -->
+                    <div x-show="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <template x-for="i in 8" :key="i">
+                            <div class="animate-pulse bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <div class="w-4 h-4 bg-slate-200 rounded"></div>
+                                    <div class="flex gap-1.5">
+                                        <div class="w-14 h-5 bg-slate-200 rounded-lg"></div>
+                                        <div class="w-16 h-5 bg-slate-200 rounded-lg"></div>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5 py-1">
+                                    <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                                    <div class="h-3 bg-slate-100 rounded w-1/2"></div>
+                                </div>
+                                <div class="h-2 bg-slate-100 rounded-full w-full"></div>
+                                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                                    <div class="w-24 h-6 bg-slate-200 rounded-xl"></div>
+                                    <div class="w-14 h-4 bg-slate-200 rounded"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Grid Empty State -->
+                    <div x-show="!isLoading && recordings.length === 0" class="p-16 text-center text-slate-400">
+                        <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <span class="text-sm font-bold text-slate-700 mb-1">Tidak Ada Rekaman</span>
+                            <span class="text-xs text-slate-500">Coba ubah filter atau jalankan "Sinkronkan Atlas" untuk menarik data baru.</span>
+                        </div>
+                    </div>
+
+                    <!-- Grid Cards Loop -->
+                    <div x-show="!isLoading && recordings.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <template x-for="(rec, index) in recordings" :key="rec.record_id">
+                            <div @click="toggleRowSelection(rec.record_id, index, $event)"
+                                 :class="isRowSelected(rec.record_id) 
+                                    ? 'bg-[#EDFAF8] border-[#00B090] ring-2 ring-[#00B090]/30 shadow-md' 
+                                    : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-md shadow-xs'"
+                                 class="group relative rounded-2xl border p-4 transition-all duration-150 cursor-pointer flex flex-col justify-between select-none">
+                                
+                                <!-- Card Main Content -->
+                                <div>
+                                    <!-- Header: Checkbox, Record ID & Status Badges -->
+                                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                                        <!-- Selection Checkbox & ID -->
+                                        <div class="flex items-center gap-1.5" @click.stop>
+                                            <input type="checkbox"
+                                                   :value="String(rec.record_id)"
+                                                   :checked="isRowSelected(rec.record_id)"
+                                                   @change="toggleRowSelection(rec.record_id, index, $event)"
+                                                   class="rounded text-[#00B090] focus:ring-[#00B090] w-4 h-4 cursor-pointer accent-[#00B090]">
+                                            <span class="text-[10px] font-mono text-slate-400" x-text="'#' + rec.record_id"></span>
+                                        </div>
+
+                                        <!-- Badges: QC Status & Payment Status -->
+                                        <div class="flex items-center gap-1" @click.stop>
+                                            <!-- QC Status Badge -->
+                                            <span :class="rec.processing_status === 'processed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'" 
+                                                  class="px-2 py-0.5 rounded-lg text-[10px] font-bold border" 
+                                                  x-text="rec.processing_status || '-'"></span>
+
+                                            <!-- Payment Status Toggle Button -->
+                                            <button type="button"
+                                                    @click="cyclePaymentStatus(rec.record_id, rec.manual_payment_status)"
+                                                    :title="'Klik untuk ganti status bayar'"
+                                                    :class="{
+                                                        'bg-emerald-50 text-emerald-700 border-emerald-300/80 hover:bg-emerald-100': rec.manual_payment_status === 'Paid',
+                                                        'bg-amber-50 text-amber-700 border-amber-300/80 hover:bg-amber-100': rec.manual_payment_status === 'Belum',
+                                                        'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/80': !rec.manual_payment_status || rec.manual_payment_status === 'Belum Rekap'
+                                                    }"
+                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border transition shadow-2xs cursor-pointer">
+                                                <span class="w-1.5 h-1.5 rounded-full"
+                                                      :class="{
+                                                          'bg-emerald-500': rec.manual_payment_status === 'Paid',
+                                                          'bg-amber-500': rec.manual_payment_status === 'Belum',
+                                                          'bg-slate-400': !rec.manual_payment_status || rec.manual_payment_status === 'Belum Rekap'
+                                                      }"></span>
+                                                <span x-text="rec.manual_payment_status || 'Belum Rekap'"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Task Title -->
+                                    <div class="mb-3">
+                                        <h4 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2 group-hover:text-brand-900 transition-colors"
+                                            :title="rec.task_title"
+                                            x-text="rec.task_title || 'Tugas Tanpa Judul'"></h4>
+                                    </div>
+
+                                    <!-- Account & Timestamp Box -->
+                                    <div class="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 mb-3 space-y-1.5">
+                                        <!-- Studio Account -->
+                                        <div class="flex items-center justify-between text-xs">
+                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                                <span class="font-bold text-slate-800 truncate" x-text="getAccountName(rec.participant_email)"></span>
+                                            </div>
+                                            <span class="font-mono text-[10px] text-slate-400 shrink-0 truncate max-w-[120px]" :title="rec.participant_email" x-text="rec.participant_email"></span>
+                                        </div>
+
+                                        <!-- Timestamp WITA -->
+                                        <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
+                                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span x-text="formatWita(rec.recorded_at, rec.recorded_utc)"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Duration & Quality Breakdown -->
+                                    <div class="mb-4">
+                                        <!-- Total Duration Header -->
+                                        <div class="flex items-baseline justify-between mb-1.5">
+                                            <span class="text-[11px] font-semibold text-slate-500">Durasi Pengerjaan:</span>
+                                            <div class="text-right">
+                                                <span class="text-sm font-extrabold font-mono text-slate-900" x-text="(rec.duration_min || 0).toFixed(2) + 'm'"></span>
+                                                <span class="text-[10px] font-mono text-slate-400 ml-1" x-text="'(' + (rec.duration_sec || 0).toFixed(0) + 's)'"></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Visual Quality Segmented Bar -->
+                                        <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex mb-2 border border-slate-200/60">
+                                            <!-- Approved Segment -->
+                                            <div class="bg-emerald-500 h-full transition-all duration-300"
+                                                 :style="'width: ' + (((rec.billable_min || 0) / Math.max(rec.duration_min || 0.01, 0.01)) * 100) + '%'"
+                                                 :title="'Billable: ' + (rec.billable_min || 0).toFixed(2) + 'm'"></div>
+                                            <!-- Rejected Segment -->
+                                            <div class="bg-rose-500 h-full transition-all duration-300"
+                                                 :style="'width: ' + (((rec.rejected_min || 0) / Math.max(rec.duration_min || 0.01, 0.01)) * 100) + '%'"
+                                                 :title="'Reject: ' + (rec.rejected_min || 0).toFixed(2) + 'm'"></div>
+                                            <!-- Pending Segment -->
+                                            <div class="bg-amber-400 h-full transition-all duration-300"
+                                                 :style="'width: ' + (((getPendingMin(rec) || 0) / Math.max(rec.duration_min || 0.01, 0.01)) * 100) + '%'"
+                                                 :title="'Pending: ' + getPendingMin(rec).toFixed(2) + 'm'"></div>
+                                        </div>
+
+                                        <!-- Mini Metric Chips -->
+                                        <div class="grid grid-cols-3 gap-1 text-[10px] font-mono text-center">
+                                            <div class="bg-emerald-50 text-emerald-800 rounded-md py-0.5 px-1 border border-emerald-100" title="Durasi Approved (Billable)">
+                                                <span class="font-bold" x-text="(rec.billable_min || 0).toFixed(1) + 'm'"></span>
+                                                <span class="text-[9px] block text-emerald-600 font-sans font-semibold">Appr</span>
+                                            </div>
+                                            <div class="bg-rose-50 text-rose-800 rounded-md py-0.5 px-1 border border-rose-100" title="Durasi Reject">
+                                                <span class="font-bold" x-text="(rec.rejected_min || 0).toFixed(1) + 'm'"></span>
+                                                <span class="text-[9px] block text-rose-600 font-sans font-semibold">Rej</span>
+                                            </div>
+                                            <div class="bg-amber-50 text-amber-800 rounded-md py-0.5 px-1 border border-amber-100" title="Durasi Pending">
+                                                <span class="font-bold" x-text="(getPendingMin(rec) || 0).toFixed(1) + 'm'"></span>
+                                                <span class="text-[9px] block text-amber-600 font-sans font-semibold">Pend</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card Footer: Assigned Worker -->
+                                <div class="pt-3 border-t border-slate-100 relative" @click.stop>
+                                    <div>
+                                        <!-- Assigned Pill -->
+                                        <button type="button"
+                                                x-show="rec.assigned_worker_name"
+                                                @click="togglePopover(rec.record_id)"
+                                                class="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold shadow-2xs hover:shadow-sm border transition cursor-pointer"
+                                                :class="getWorkerStyle(rec.assigned_worker_name)">
+                                            <div class="flex items-center gap-1.5 truncate">
+                                                <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black uppercase shrink-0"
+                                                      :class="getWorkerAvatarStyle(rec.assigned_worker_name)"
+                                                      x-text="getWorkerInitials(rec.assigned_worker_name)"></span>
+                                                <span class="truncate" x-text="getWorkerShortName(rec.assigned_worker_name)"></span>
+                                            </div>
+                                            <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </button>
+
+                                        <!-- Unassigned Action Pill -->
+                                        <button type="button"
+                                                x-show="!rec.assigned_worker_name"
+                                                @click="togglePopover(rec.record_id)"
+                                                class="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100/80 border border-dashed border-amber-300 transition cursor-pointer">
+                                            <span class="w-4 h-4 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-[10px]">+</span>
+                                            <span>Tandai Pekerja</span>
+                                        </button>
+
+                                        <!-- Popover Picker Menu for Card -->
+                                        <div x-show="activePopover === rec.record_id"
+                                             x-cloak
+                                             @click.outside="activePopover = null"
+                                             class="absolute left-0 bottom-full mb-1 w-full min-w-[220px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-50 p-2 text-xs">
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">Pilih Pekerja:</div>
+                                            <div class="max-h-56 overflow-y-auto custom-scrollbar space-y-0.5">
+                                                <!-- Option Unassign -->
+                                                <button type="button"
+                                                        @click="assignWorker(rec.record_id, null); activePopover = null"
+                                                        class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2 cursor-pointer">
+                                                    <span class="w-4 h-4 rounded-md bg-rose-100 flex items-center justify-center text-[10px]">✕</span>
+                                                    <span>Hapus Tanda</span>
+                                                </button>
+                                                
+                                                <!-- List of Contributors -->
+                                                <template x-for="c in contributors" :key="c.contributor_id || c.id">
+                                                    <button type="button"
+                                                            @click="assignWorker(rec.record_id, (c.name || c.nama)); activePopover = null"
+                                                            :class="rec.assigned_worker_name === (c.name || c.nama) ? 'bg-indigo-50 font-bold text-indigo-700' : 'hover:bg-slate-100 text-slate-700'"
+                                                            class="w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between transition cursor-pointer">
+                                                        <div class="flex items-center gap-2 truncate">
+                                                            <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black"
+                                                                  :class="getWorkerAvatarStyle((c.name || c.nama))"
+                                                                  x-text="getWorkerInitials((c.name || c.nama))"></span>
+                                                            <span class="truncate" x-text="(c.name || c.nama)"></span>
+                                                        </div>
+                                                        <span x-show="rec.assigned_worker_name === (c.name || c.nama)" class="text-indigo-600 font-black">✓</span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </template>
+                    </div>
+
                 </div>
 
                 <!-- PAGINATION FOOTER -->
@@ -1367,6 +1619,7 @@
         function modernRecordingsApp() {
             return {
                 sidebarOpen: (window.innerWidth < 768 ? false : (localStorage.getItem('aiku_sidebar_open') !== null ? localStorage.getItem('aiku_sidebar_open') === 'true' : true)),
+                viewMode: (localStorage.getItem('aiku_recordings_view_mode') || 'list'),
                 studioEmails: [
                     "hajisukur@kamerakitaid.site", "hajiwhite@kamerakitaid.site", "hajiputih@kamerakitaid.site",
                     "hajiputih4@kamerakitaid.site", "hajiwati@kamerakitaid.site", "hajiblack@kamerakitaid.site",
@@ -1738,6 +1991,7 @@
                 async initApp() {
                     // Watch sidebarOpen in recordingsApp
                     this.$watch('sidebarOpen', val => { if (window.innerWidth >= 768) { try { localStorage.setItem('aiku_sidebar_open', String(val)); } catch(e) {} } });
+                    this.$watch('viewMode', val => { try { localStorage.setItem('aiku_recordings_view_mode', String(val)); } catch(e) {} });
                     await this.fetchContributors();
                     this.fetchStudioAccounts();
                     await this.fetchRecordings(1);

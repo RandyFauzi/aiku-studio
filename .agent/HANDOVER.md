@@ -1,3 +1,8 @@
+### [2026-11-05 18:31] — Antigravity
+- Mengimplementasikan tampilan Grid interaktif pada halaman Task List Rekaman (/recordings) dengan viewMode toggle (List/Grid) tersimpan di localStorage.
+- Kartu grid dilengkapi checkbox seleksi, status QC, tombol siklus status bayar (Paid/Belum/Belum Rekap), segmented quality progress bar (Approved vs Rejected vs Pending), mini chips durasi, penanda pekerja (assigned avatar & popover picker), toolbar pilih semua, loading skeleton, dan empty state.
+- Validasi: Robotics1618SyncTest 9/9 PASS, DailyWorkReportTest 14/14 PASS, view:cache PASS, build Vite PASS; lock koordinasi dilepas ke IDLE.
+
 ### [2026-11-05 18:18] — Antigravity
 - Menambahkan fitur pencarian instan (search bar) dan filter multi-kriteria pada halaman Contributors List (/contributors) berdasarkan nama, email, WA, domisili, shift, nomor rekening, ID, filter peran (Pekerja/Admin), dan filter status kinerja (Sangat Baik, Bagus, Cukup, Perlu Evaluasi) serta integrasi klik pada pill statistik banner.
 - Ditambahkan visual indikator filter aktif, empty state informatif saat hasil pencarian nihil dengan tombol reset, dan penghitung dinamis total kontributor yang tampil.
