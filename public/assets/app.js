@@ -920,9 +920,19 @@ document.addEventListener('alpine:init', () => {
         isEditing: false,
         formData: { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor' },
 
+        // Performance & Evaluation State
+        studioSummary: null,
+        isLoadingSummary: false,
+        perfModalOpen: false,
+        isLoadingPerf: false,
+        selectedPerf: null,
+        perfLookup: {},
+
         init() {
             // Watch sidebarOpen in contributorsListData
             this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });
+            this.fetchContributors();
+            this.fetchStudioSummary();
         },
         
         async fetchContributors() {
@@ -936,6 +946,47 @@ document.addEventListener('alpine:init', () => {
             } finally {
                 this.isLoading = false;
             }
+        },
+
+        async fetchStudioSummary() {
+            this.isLoadingSummary = true;
+            try {
+                const response = await fetch('/api/contributors/studio-summary');
+                if (response.ok) {
+                    const data = await response.json();
+                    this.studioSummary = data.studio || null;
+                    const lookup = {};
+                    (data.contributors_summary || []).forEach(item => {
+                        lookup[item.id] = item;
+                    });
+                    this.perfLookup = lookup;
+                }
+            } catch (error) {
+                console.error("Error fetching studio summary:", error);
+            } finally {
+                this.isLoadingSummary = false;
+            }
+        },
+
+        async openPerfModal(contributor) {
+            this.perfModalOpen = true;
+            this.isLoadingPerf = true;
+            this.selectedPerf = null;
+            try {
+                const response = await fetch(`/api/contributors/${contributor.id}/performance`);
+                if (response.ok) {
+                    this.selectedPerf = await response.json();
+                }
+            } catch (error) {
+                console.error("Error fetching contributor performance:", error);
+            } finally {
+                this.isLoadingPerf = false;
+            }
+        },
+
+        closePerfModal() {
+            this.perfModalOpen = false;
+            this.selectedPerf = null;
         },
 
         openModal(contributor = null) {
@@ -975,6 +1026,7 @@ document.addEventListener('alpine:init', () => {
                 }
                 this.closeModal();
                 this.fetchContributors();
+                this.fetchStudioSummary();
             } catch (error) {
                 console.error("Error saving contributor:", error);
             }
@@ -1017,6 +1069,7 @@ document.addEventListener('alpine:init', () => {
                         });
                     }
                     this.fetchContributors();
+                    this.fetchStudioSummary();
                 }
             } catch (error) {
                 console.error("Error updating role:", error);
@@ -1042,6 +1095,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 await fetch(`/api/contributors/${id}`, { method: 'DELETE' });
                 this.fetchContributors();
+                this.fetchStudioSummary();
             } catch (error) {
                 console.error("Error deleting contributor:", error);
             }

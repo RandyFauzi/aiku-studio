@@ -1,3 +1,8 @@
+### [2026-11-05 16:30] — Antigravity
+- Menampilkan nama akun studio aktif dan email pada rincian HP di tabel laporan harian, pop-up modal detail laporan dengan aksi edit langsung, serta integrasi akun device.
+- Menambahkan statistik kinerja per user dan studio di halaman Contributors: approval rate %, total jam billable vs reject, frekuensi hadir & izin, sistem pintar evaluasi skor (0-100) dan rekomendasi perbaikan/pembelajaran berbasis data.
+- Validasi: DailyWorkReportTest 9/9 PASS, ContributorRoleManagementTest 6/6 PASS, PayrollMigrationTest 15/15 PASS, Vite build PASS. Lock dilepas ke IDLE.
+
 ### [2026-11-05 15.32] — CODEX
 - Tema admin disamakan dengan portal putih–lime/Manrope: sidebar Blade bersama, 10 menu admin vs 5 worker, kartu/tombol/header konsisten, kontras dan pemilih periode mobile dirapikan. Seluruh script halaman, endpoint, akses dan fungsi bisnis dipertahankan.
 - Validasi: render 10 halaman admin + jadwal worker, 25 tes/234 assertion, build Vite, browser 10 halaman desktop/mobile + menu drawer/dock worker lulus tanpa error JS atau overflow. Graphify diperbarui untuk relasi komponen sidebar baru; QA memakai fixture.

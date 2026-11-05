@@ -165,4 +165,33 @@ class ContributorRoleManagementTest extends TestCase
         $this->actingAs($freshUser)->get('/')->assertOk();
         $this->actingAs($freshUser)->get('/recordings.html')->assertOk();
     }
+
+    public function test_admin_can_view_contributor_performance_and_studio_summary(): void
+    {
+        $admin = $this->createAdmin();
+        $person = $this->createContributor('Ghina', 'ghina@example.com', 'contributor');
+
+        // Studio summary
+        $summaryRes = $this->actingAs($admin)->getJson('/api/contributors/studio-summary');
+        $summaryRes->assertOk()
+            ->assertJsonStructure([
+                'studio' => ['total_contributors', 'total_hours', 'studio_approval_rate', 'grade_distribution'],
+                'contributors_summary',
+            ]);
+
+        // Contributor performance detail
+        $perfRes = $this->actingAs($admin)->getJson('/api/contributors/'.$person->id.'/performance');
+        $perfRes->assertOk()
+            ->assertJsonStructure([
+                'contributor' => ['id', 'nama', 'email', 'role'],
+                'recordings' => ['total_count', 'total_duration_hours', 'approval_rate', 'reject_rate'],
+                'attendance' => ['verified_attendances', 'leave_count', 'sick_count'],
+                'evaluation' => ['score', 'grade', 'badge_color', 'summary', 'reasons', 'recommendations'],
+            ]);
+
+        // Non-admin cannot access
+        $user = User::where('contributor_id', $person->id)->first();
+        $this->actingAs($user)->getJson('/api/contributors/'.$person->id.'/performance')->assertForbidden();
+        $this->actingAs($user)->getJson('/api/contributors/studio-summary')->assertForbidden();
+    }
 }

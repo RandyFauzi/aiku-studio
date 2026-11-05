@@ -110,25 +110,48 @@
                                 <div class="flex flex-wrap gap-1.5">
                                     <template x-if="report.phone_durations && Object.keys(report.phone_durations).length > 0">
                                         <template x-for="(mins, pkey) in report.phone_durations" :key="pkey">
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
-                                                <span class="text-slate-500 font-semibold" x-text="'HP ' + (options[pkey] || pkey) + ':'"></span>
-                                                <span class="font-mono text-emerald-800" x-text="mins + 'm'"></span>
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200/90 shadow-2xs hover:border-emerald-300 transition">
+                                                <span class="w-2 h-2 rounded-full shrink-0" :class="getPhoneInfo(pkey)?.active_account_name ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                                                <span class="text-slate-800 font-extrabold" x-text="'HP ' + (phoneOptions[pkey] || pkey)"></span>
+                                                <template x-if="getPhoneInfo(pkey)?.active_account_name">
+                                                    <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold" x-text="getPhoneInfo(pkey).active_account_name"></span>
+                                                </template>
+                                                <span class="font-mono text-emerald-900 font-black" x-text="mins + 'm'"></span>
                                             </span>
                                         </template>
                                     </template>
                                     <template x-if="!report.phone_durations || Object.keys(report.phone_durations).length === 0">
-                                        <span class="text-xs text-slate-500 font-medium" x-text="phoneNames(report.phones)"></span>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            <template x-for="pkey in (report.phones || [])" :key="pkey">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200/90 shadow-2xs">
+                                                    <span class="w-2 h-2 rounded-full shrink-0" :class="getPhoneInfo(pkey)?.active_account_name ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                                                    <span class="text-slate-800 font-extrabold" x-text="'HP ' + (phoneOptions[pkey] || pkey)"></span>
+                                                    <template x-if="getPhoneInfo(pkey)?.active_account_name">
+                                                        <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold" x-text="getPhoneInfo(pkey).active_account_name"></span>
+                                                    </template>
+                                                </span>
+                                            </template>
+                                        </div>
                                     </template>
                                 </div>
                             </td>
 
-                            <!-- Action Buttons: Edit, Delete, Assist -->
+                            <!-- Action Buttons: Detail, Edit, Delete, Assist -->
                             <td class="p-4 text-right">
                                 <div class="inline-flex items-center gap-1.5 justify-end">
+                                    <!-- Detail Button (Pop-up) -->
+                                    <button type="button" 
+                                            @click="openDetailModal(report)" 
+                                            class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:text-emerald-800 hover:bg-emerald-50 border border-slate-200 transition shadow-2xs cursor-pointer" 
+                                            title="Lihat Detail Laporan & Akun Terhubung">
+                                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <span>Detail</span>
+                                    </button>
+
                                     <!-- Edit Button (Pop-up) -->
                                     <button type="button" 
                                             @click="openEditModal(report)" 
-                                            class="p-2 rounded-xl text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition" 
+                                            class="p-2 rounded-xl text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition cursor-pointer" 
                                             title="Edit Laporan (Pop-up)">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </button>
@@ -291,6 +314,124 @@
         <p x-show="!loading && !filtered.length" class="p-8 text-center text-sm text-slate-500">Belum ada laporan kerja pada tanggal ini.</p>
     </div>
 
+    <!-- DETAIL REPORT & CONNECTED ACCOUNTS MODAL (POP-UP) -->
+    <div x-show="detailModalOpen" x-cloak 
+         x-transition:enter="ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs"
+         @keydown.escape.window="closeDetailModal()">
+        
+        <div class="bg-white rounded-[28px] border border-slate-200 w-full max-w-xl overflow-hidden shadow-2xl flex flex-col"
+             @click.outside="closeDetailModal()">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-2">
+                        <span>Detail Laporan Kerja & Akun Terhubung</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        <span class="text-white font-bold" x-text="selectedReport?.contributor_name"></span> · <span x-text="dateLabel(selectedReport?.work_date)"></span>
+                    </p>
+                </div>
+                <button type="button" @click="closeDetailModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                <!-- Ringkasan Info Banner -->
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Total Durasi Kerja Dilaporkan</span>
+                        <div class="flex items-baseline gap-2 mt-0.5">
+                            <span class="font-mono text-2xl font-black text-emerald-950" x-text="(selectedReport?.total_duration_minutes || 0) + ' Menit'"></span>
+                            <span class="text-xs text-emerald-700 font-semibold" x-text="'(' + duration(selectedReport?.total_duration_minutes || 0) + ')'"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-white text-emerald-800 border border-emerald-200 shadow-2xs"
+                              x-text="'Rev: #' + (selectedReport?.revision || 1)"></span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300"
+                              x-text="(selectedReport?.phones?.length || 0) + ' HP Digunakan'"></span>
+                    </div>
+                </div>
+
+                <!-- Daftar Rincian HP & Akun Terhubung -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Rincian HP & Akun Studio Terhubung</h4>
+                    <div class="space-y-2.5">
+                        <template x-for="pkey in (selectedReport?.phones || [])" :key="pkey">
+                            <div class="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 hover:bg-slate-50 transition space-y-3">
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-700 shadow-2xs">
+                                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h5 class="text-sm font-black text-slate-900" x-text="'HP ' + (phoneOptions[pkey] || pkey)"></h5>
+                                            <span class="text-[11px] text-slate-500 font-medium">Perangkat Studio</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="font-mono text-sm font-black text-emerald-900 block"
+                                              x-text="(selectedReport?.phone_durations?.[pkey] || 0) + ' Menit'"></span>
+                                        <span class="text-[11px] text-slate-500 font-medium"
+                                              x-text="duration(selectedReport?.phone_durations?.[pkey] || 0)"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Akun Studio yang Terhubung ke HP ini -->
+                                <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-slate-500 font-semibold">Akun Terhubung:</span>
+                                        <template x-if="getPhoneInfo(pkey)?.active_account_name">
+                                            <div class="inline-flex items-center gap-1.5">
+                                                <span class="font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200"
+                                                      x-text="getPhoneInfo(pkey).active_account_name"></span>
+                                                <span class="text-slate-500 font-mono text-[11px]" x-text="'(' + getPhoneInfo(pkey).active_email + ')'"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!getPhoneInfo(pkey)?.active_account_name">
+                                            <span class="text-slate-400 italic">Belum ada akun aktif di perangkat ini</span>
+                                        </template>
+                                    </div>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                          :class="getPhoneInfo(pkey)?.active_account_name ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'"
+                                          x-text="getPhoneInfo(pkey)?.active_account_name ? 'Status: Terhubung Aktif' : 'Status: Akun Standby'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Bantuan Penyesuaian -->
+                <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p>Jika ada ketidaksesuaian durasi atau perangkat HP yang dilaporkan oleh pekerja, admin dapat langsung menekan tombol <strong>Edit Laporan Ini</strong> untuk menyesuaikan data.</p>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2.5">
+                <button type="button" @click="closeDetailModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                    Tutup
+                </button>
+                <button type="button" 
+                        @click="const r = selectedReport; closeDetailModal(); openEditModal(r);" 
+                        class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span>Edit Laporan Ini</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- EDIT REPORT MODAL (POP-UP) -->
     <div x-show="editModalOpen" x-cloak 
          x-transition:enter="ease-out duration-200"
@@ -350,7 +491,12 @@
                                              :class="editForm.phones.includes(key) ? 'bg-emerald-600 border-emerald-600 text-white font-bold' : 'border-slate-300 bg-white'">
                                             <span x-show="editForm.phones.includes(key)">✓</span>
                                         </div>
-                                        <span class="text-xs font-bold text-slate-800" x-text="'HP ' + label"></span>
+                                        <div>
+                                            <span class="text-xs font-bold text-slate-800" x-text="'HP ' + label"></span>
+                                            <template x-if="getPhoneInfo(key)?.active_account_name">
+                                                <span class="block text-[10px] text-emerald-800 font-mono font-bold" x-text="'Akun: ' + getPhoneInfo(key).active_account_name"></span>
+                                            </template>
+                                        </div>
                                     </div>
                                     <span x-show="editForm.phones.includes(key)" class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">Aktif</span>
                                 </button>
@@ -459,7 +605,12 @@
                                          :class="createForm.phones.includes(key) ? 'bg-emerald-600 border-emerald-600 text-white font-black' : 'border-slate-300 bg-white'">
                                         <svg x-show="createForm.phones.includes(key)" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     </div>
-                                    <span class="text-xs sm:text-sm font-black text-slate-900" x-text="'HP ' + label"></span>
+                                    <div>
+                                        <span class="text-xs sm:text-sm font-black text-slate-900" x-text="'HP ' + label"></span>
+                                        <template x-if="getPhoneInfo(key)?.active_account_name">
+                                            <span class="block text-[10px] text-emerald-800 font-mono font-bold" x-text="'Akun: ' + getPhoneInfo(key).active_account_name"></span>
+                                        </template>
+                                    </div>
                                 </div>
                                 <span x-show="createForm.phones.includes(key)" class="text-[10px] font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
                                     Dipakai

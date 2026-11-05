@@ -252,6 +252,23 @@ window.adminWorkReportsData = () => ({
         hitam: 'Hitam',
         pink_st: 'Pink ST'
     },
+    phonesInfo: {},
+    detailModalOpen: false,
+    selectedReport: null,
+
+    getPhoneInfo(pkey) {
+        return this.phonesInfo[pkey] || null;
+    },
+
+    openDetailModal(report) {
+        this.selectedReport = report;
+        this.detailModalOpen = true;
+    },
+
+    closeDetailModal() {
+        this.detailModalOpen = false;
+        this.selectedReport = null;
+    },
     createModalOpen: false,
     contributorsList: [],
     createForm: {
@@ -472,8 +489,12 @@ window.adminWorkReportsData = () => ({
             if (idx !== -1 && data.report) {
                 this.rows[idx] = data.report;
             }
+            if (this.selectedReport && this.selectedReport.id === this.editingReport.id && data.report) {
+                this.selectedReport = data.report;
+            }
             this.total = this.rows.reduce((s, r) => s + (parseInt(r.total_duration_minutes) || 0), 0);
             this.closeEditModal();
+            this.reloadAssistOnly();
 
             if (window.Swal) {
                 window.Swal.fire({
@@ -577,6 +598,12 @@ window.adminWorkReportsData = () => ({
             const repData = await repRes.json();
             this.rows = repData.reports || [];
             this.total = repData.total_duration_minutes || 0;
+            if (repData.phone_options) {
+                this.phoneOptions = repData.phone_options;
+            }
+            if (repData.phones_info) {
+                this.phonesInfo = repData.phones_info;
+            }
             if (repData.contributors && Array.isArray(repData.contributors)) {
                 this.contributorsList = repData.contributors;
             } else if (!this.contributorsList.length) {

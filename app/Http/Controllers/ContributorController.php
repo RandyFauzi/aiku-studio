@@ -8,6 +8,7 @@ use App\Models\Payslip;
 use App\Models\StudioRecording;
 use App\Models\User;
 use App\Services\ContributorAccess;
+use App\Services\ContributorPerformanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -145,5 +146,19 @@ class ContributorController extends Controller
         });
 
         return response()->json(['success' => true]);
+    }
+
+    public function studioSummary(Request $request, ContributorPerformanceService $service)
+    {
+        $this->ensureAdmin($request);
+
+        return response()->json($service->getStudioPerformanceSummary());
+    }
+
+    public function performance(Request $request, Contributor $contributor, ContributorPerformanceService $service)
+    {
+        $this->ensureAdmin($request);
+
+        return response()->json($service->getContributorPerformance($contributor));
     }
 }

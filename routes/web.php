@@ -81,8 +81,10 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
                 Route::delete('/accounts/{deviceAccount}', [DeviceAccountController::class, 'destroy']);
             });
             Route::get('/slips', [PayslipController::class, 'index']);
+            Route::get('/contributors/studio-summary', [ContributorController::class, 'studioSummary']);
             Route::get('/contributors', [ContributorController::class, 'index']);
             Route::post('/contributors', [ContributorController::class, 'store']);
+            Route::get('/contributors/{contributor}/performance', [ContributorController::class, 'performance'])->whereNumber('contributor');
             Route::put('/contributors/{contributor}', [ContributorController::class, 'update']);
             Route::patch('/contributors/{contributor}/role', [ContributorController::class, 'updateRole']);
             Route::delete('/contributors/{contributor}', [ContributorController::class, 'destroy']);

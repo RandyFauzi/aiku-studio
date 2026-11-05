@@ -113,9 +113,31 @@ class DailyWorkReportController extends Controller
         $data = $request->validate(['date' => 'required|date_format:Y-m-d']);
         $rows = DailyWorkReport::where('work_date', $data['date'])->orderBy('contributor_name')->get();
 
+        $phonesConfig = DailyWorkReport::PHONES;
+        $deviceAccounts = DeviceAccount::all();
+        $phonesWithActive = [];
+        foreach ($phonesConfig as $key => $label) {
+            $phoneAccounts = $deviceAccounts->where('phone_key', $key);
+            $activeAccount = $phoneAccounts->firstWhere('is_active', true);
+            $phonesWithActive[$key] = [
+                'key' => $key,
+                'label' => $label,
+                'active_account_name' => $activeAccount?->account_name ?: ($activeAccount?->email ? explode('@', $activeAccount->email)[0] : null),
+                'active_email' => $activeAccount?->email,
+                'total_accounts' => $phoneAccounts->count(),
+                'accounts' => $phoneAccounts->map(fn ($a) => [
+                    'id' => $a->id,
+                    'account_name' => $a->account_name,
+                    'email' => $a->email,
+                    'is_active' => (bool) $a->is_active,
+                ])->values()->all(),
+            ];
+        }
+
         return response()->json([
             'reports' => $rows,
             'phone_options' => DailyWorkReport::PHONES,
+            'phones_info' => $phonesWithActive,
             'total_duration_minutes' => $rows->sum('total_duration_minutes'),
             'contributors' => Contributor::orderBy('nama')->get(['id', 'nama', 'email', 'role']),
         ]);
@@ -152,13 +174,20 @@ class DailyWorkReportController extends Controller
             foreach ($durations as $phoneKey => $reportedMinutes) {
                 $phoneLabel = DailyWorkReport::PHONES[$phoneKey] ?? ucfirst($phoneKey);
 
+                $phoneAccounts = $deviceAccounts->where('phone_key', $phoneKey);
+                $activeAccount = $phoneAccounts->firstWhere('is_active', true);
+                $activeAccountName = $activeAccount?->account_name ?: ($activeAccount?->email ? explode('@', $activeAccount->email)[0] : null);
+                $activeEmail = $activeAccount?->email;
+
                 // Get all emails linked to this phone
-                $phoneEmails = $deviceAccounts->where('phone_key', $phoneKey)->pluck('email')->unique()->all();
+                $phoneEmails = $phoneAccounts->pluck('email')->unique()->all();
 
                 if (empty($phoneEmails)) {
                     $phoneDetails[] = [
                         'phone_key' => $phoneKey,
                         'phone_label' => $phoneLabel,
+                        'active_account_name' => $activeAccountName,
+                        'active_email' => $activeEmail,
                         'reported_minutes' => (int) $reportedMinutes,
                         'emails' => [],
                         'status' => 'no_device_account',
@@ -218,6 +247,8 @@ class DailyWorkReportController extends Controller
                 $phoneDetails[] = [
                     'phone_key' => $phoneKey,
                     'phone_label' => $phoneLabel,
+                    'active_account_name' => $activeAccountName,
+                    'active_email' => $activeEmail,
                     'reported_minutes' => (int) $reportedMinutes,
                     'emails' => $phoneEmails,
                     'status' => $status,
