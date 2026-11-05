@@ -1,5 +1,9 @@
 # Agent Collaboration Log (Antigravity & CODEX)
 
+### [2026-11-05 13:34] — Antigravity
+- **Selesai**: Memperbarui kolom 'Akun Studio' pada tabel Task List Rekaman (`panel/recordings.blade.php`) agar menampilkan Nama Akun Studio (bold) dan Email lengkap akun (`font-mono text-[11px]`) menggantikan tampilan id rekaman terpotong. Dilengkapi helper `getAccountName(email)` yang membaca data akun dari `accountsList`.
+- **Status**: 97/97 PHPUnit tests (546 assertions) PASS, Vite build PASS. Graphify diperbarui; lock dilepas ke IDLE.
+
 ### [2026-11-05 13:20] — Antigravity
 - **Selesai**: Menambahkan fitur Ganti Password di halaman Profil Kontributor (`portal/profile.blade.php`) dengan kartu keamanan interaktif collapsible (kata sandi lama, kata sandi baru, konfirmasi, toggle show/hide mata, SweetAlert2 sukses/gagal).
 - **Backend & Tests**: Endpoint `PUT /api/me/password` di `AuthController::updatePassword` dengan validasi Hash check dan min 6 karakter. 97/97 PHPUnit tests (546 assertions) PASS, Vite build PASS. Graphify diperbarui; lock dilepas ke IDLE.

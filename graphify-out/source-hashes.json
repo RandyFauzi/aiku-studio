@@ -97,7 +97,7 @@
   "resources/views/panel/index.blade.php": "4d8d3a18e42cf442510aa4062031bd443abbd96ce98ceae372b59b933245eae8",
   "resources/views/panel/payslips.blade.php": "6e725342bc559d4b5f09f1c41d59bb39255c44f2e431870b398463e93947ec50",
   "resources/views/panel/profit.blade.php": "bc7e7e9c2df7d50f9b6f21a7dd7c62d2765c7fb28300a906fb19260063c6eb97",
-  "resources/views/panel/recordings.blade.php": "78b796840dbcc4f2a05482c32827a4a308e8ffe456f6d40d6623fcf72d817af7",
+  "resources/views/panel/recordings.blade.php": "b170314818fe05e111397c7467458e135447417cf282876264e20226d4c29ca7",
   "resources/views/panel/shifts.blade.php": "0702102033bcc549aaefb5b33bc2a62e3a792bc68a60dd6b66d39448c6a3a341",
   "resources/views/panel/work-reports.blade.php": "ea44b8c82bbb84a83df4a2c99d5933f8bd4b69b832cedc752bd05424fc82e24f",
   "resources/views/portal/home.blade.php": "82feab90f53d773878655575bda1daaaac7287258019e7316e40e7a8c6b546f0",

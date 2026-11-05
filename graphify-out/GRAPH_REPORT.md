@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 955 nodes · 1670 edges · 83 communities (18 shown, 65 thin omitted)
+- 955 nodes · 1670 edges · 82 communities (18 shown, 64 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 31 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1b0c5973`
+- Built from commit: `fe4f7d8f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -44,11 +44,11 @@
 - Community 27
 - Community 28
 - Community 29
-- Community 30
+- Community 31
 - Community 32
 - Community 33
 - Community 34
-- Community 35
+- Community 36
 - Community 37
 - Community 38
 - Community 39
@@ -68,7 +68,6 @@
 - Community 53
 - Community 54
 - Community 55
-- Community 56
 
 ## God Nodes (most connected - your core abstractions)
 1. `SystemAuditRegressionTest` - 28 edges
@@ -97,7 +96,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (83 total, 65 thin omitted)
+## Communities (82 total, 64 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.05
@@ -124,24 +123,24 @@ Cohesion: 0.04
 Nodes (47): pestphp/pest-plugin, php-http/discovery, autoload, autoload-dev, psr-4, psr-4, config, allow-plugins (+39 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.07
-Nodes (22): checkIn(), checkInWithQr(), closeScanner(), handleQrScanned(), init(), load(), loadReportStatus(), loadSlips() (+14 more)
+Cohesion: 0.09
+Nodes (6): SyncController, AtlasParser, AtlasSync, {closure#1}(), {closure#2}(), Robotics1618Sync
 
 ### Community 7 - "Community 7"
 Cohesion: 0.07
-Nodes (6): {closure#2}(), ShiftDayController, EnsureActiveAccount, EnsureAdministrator, ShiftDay, ShiftConfiguration
+Nodes (22): checkIn(), checkInWithQr(), closeScanner(), handleQrScanned(), init(), load(), loadReportStatus(), loadSlips() (+14 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (30): dependencies, alpinejs@^3.17.5, html5-qrcode@^2.3.8, qrcode@^1.5.4, sweetalert2@^11.26.25, devDependencies, autoprefixer@^10.6.2, axios@^1.11.0 (+22 more)
+Cohesion: 0.07
+Nodes (6): {closure#2}(), ShiftDayController, EnsureActiveAccount, EnsureAdministrator, ShiftDay, ShiftConfiguration
 
 ### Community 9 - "Community 9"
 Cohesion: 0.09
-Nodes (7): AtlasTick, AuditDataIntegrity, CreatePanelAdmin, ImportLegacyPayroll, SyncRobotics1618, VerifyLegacyPayroll, PayrollFiles
+Nodes (30): dependencies, alpinejs@^3.17.5, html5-qrcode@^2.3.8, qrcode@^1.5.4, sweetalert2@^11.26.25, devDependencies, autoprefixer@^10.6.2, axios@^1.11.0 (+22 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.14
-Nodes (5): SyncController, AtlasSync, {closure#1}(), {closure#2}(), Robotics1618Sync
+Cohesion: 0.09
+Nodes (7): AtlasTick, AuditDataIntegrity, CreatePanelAdmin, ImportLegacyPayroll, SyncRobotics1618, VerifyLegacyPayroll, PayrollFiles
 
 ### Community 11 - "Community 11"
 Cohesion: 0.10
@@ -174,12 +173,12 @@ Nodes (3): fingerprints(), main(), run()
 ## Knowledge Gaps
 - **28 isolated node(s):** `work-reports.form`, `attendance.admin`, `layouts.sidebar`, `portal.navigation`, `portal.icon` (+23 more)
   These have ≤1 connection - possible missing edges. (Counts symbols only; 366 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **65 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **64 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `Community 19` to `Community 32`, `Community 0`, `Community 34`, `Community 2`, `Community 9`, `Community 17`, `Community 18`, `Community 22`, `Community 24`, `Community 29`?**
+- **Why does `User` connect `Community 19` to `Community 0`, `Community 33`, `Community 2`, `Community 10`, `Community 17`, `Community 18`, `Community 22`, `Community 23`, `Community 28`, `Community 31`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **What connects `work-reports.form`, `attendance.admin`, `layouts.sidebar` to the rest of the system?**
   _28 weakly-connected nodes found - possible missing edges._

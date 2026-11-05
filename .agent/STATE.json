@@ -1,7 +1,7 @@
 {
   "active_agent": "IDLE",
   "locked_files": [],
-  "task": "Add change password feature to contributor profile page",
-  "updated_at": "2026-11-05T13:21:25+08:00",
-  "last_commit": "5fc70f9"
+  "task": "Display studio account name and full email in Task List (Recordings) table",
+  "updated_at": "2026-11-05T13:34:40+08:00",
+  "last_commit": "fe4f7d8"
 }

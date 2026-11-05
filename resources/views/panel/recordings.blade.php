@@ -602,7 +602,7 @@
                                 </th>
                                 <th class="py-2.5 px-2 min-w-[130px]">Pekerja (Ditandai)</th>
                                 <th class="py-2.5 px-1.5 w-20">Status Bayar</th>
-                                <th class="py-2.5 px-2 min-w-[100px]">Akun Studio</th>
+                                <th class="py-2.5 px-2.5 min-w-[140px]">Akun Studio</th>
                                 <th class="py-2.5 px-2 min-w-[140px] max-w-[240px]">Nama Tugas (Task)</th>
                                 <th class="py-2.5 px-1.5 min-w-[125px]">Waktu Rekam (WITA)</th>
                                 <th class="py-2.5 px-1.5 w-18 text-right">Durasi Total</th>
@@ -729,8 +729,8 @@
 
                                     <!-- Akun Studio -->
                                     <td class="py-2.5 px-2.5">
-                                        <div class="font-bold text-slate-900" x-text="rec.participant_email.split('@')[0]"></div>
-                                        <div class="text-[10px] text-slate-400 font-mono" x-text="rec.record_id.substring(0, 10) + '...'"></div>
+                                        <div class="font-bold text-slate-900 leading-tight" x-text="getAccountName(rec.participant_email)"></div>
+                                        <div class="text-[11px] text-slate-500 font-mono truncate max-w-[190px]" :title="rec.participant_email + ' (' + rec.record_id + ')'" x-text="rec.participant_email"></div>
                                     </td>
 
                                     <!-- Nama Tugas -->
@@ -1805,6 +1805,16 @@
                         (w.name && w.name.toLowerCase().includes(q)) || 
                         (w.team && w.team.toLowerCase().includes(q))
                     );
+                },
+
+                getAccountName(email) {
+                    if (!email) return '-';
+                    const cleanEmail = String(email).trim().toLowerCase();
+                    const found = (this.accountsList || []).find(a => a.email && a.email.toLowerCase() === cleanEmail);
+                    if (found && found.name) {
+                        return found.name;
+                    }
+                    return cleanEmail.split('@')[0];
                 },
 
                 async fetchStudioAccounts() {
