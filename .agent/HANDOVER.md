@@ -1,3 +1,7 @@
+### [2026-11-05 17.21] — CODEX
+- Laporan worker/admin kini mendukung HP Sendiri dengan email manual opsional tersimpan di phone_emails; load/edit/dirty/reset mengikuti email. Opsi laporan dipisahkan dari 6 HP master; HP Sendiri tidak membuat akun atau masuk pencocokan otomatis.
+- Validasi: full suite 108 tes/688 assertion, browser worker mobile + admin desktop (pilih, simpan email, perubahan email saja, hapus pilihan), UTF-8/diff, build Vite dan refresh Graphify lulus. Tidak memerlukan migrasi baru.
+
 ### [2026-11-05 17.07] — CODEX
 - Tombol Analisis Kinerja: versi file JS pada halaman kontributor, pesan gagal + Coba lagi, guard respons terlambat/aksi edit, Escape/dialog, serta tautan laporan ke /work-reports. Lock Antigravity ditunggu hingga IDLE sebelum perubahan.
 - Validasi: 4 tes regresi JS, browser desktop/mobile untuk popup/gagal/retry/edit/link/Escape tanpa error, service + render memakai SQLite :memory:, build Vite dan refresh Graphify lulus. Tidak mengubah kalkulasi kinerja atau data produksi.

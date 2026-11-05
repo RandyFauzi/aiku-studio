@@ -237,6 +237,9 @@
                                                                 Belum Ada Data Bot
                                                             </span>
                                                         </template>
+                                                        <template x-if="pMatch.status === 'personal_phone'">
+                                                            <span class="text-xs text-slate-500">HP Sendiri · tidak terintegrasi akun studio</span>
+                                                        </template>
                                                         <template x-if="pMatch.status === 'no_device_account'">
                                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-red-50 text-red-700">
                                                                 Email HP Belum Terdaftar
@@ -368,7 +371,7 @@
 
                 <!-- Daftar Rincian HP & Akun Terhubung -->
                 <div class="space-y-3">
-                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Rincian HP & Akun Studio Terhubung</h4>
+                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Rincian HP & Email Laporan</h4>
                     <div class="space-y-2.5">
                         <template x-for="pkey in (selectedReport?.phones || [])" :key="pkey">
                             <div class="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 hover:bg-slate-50 transition space-y-3">
@@ -394,14 +397,14 @@
                                 <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs flex-wrap gap-2">
                                     <div class="space-y-1">
                                         <div class="flex items-center gap-1.5 flex-wrap">
-                                            <span class="text-slate-500 font-semibold">Email Terhubung:</span>
+                                            <span class="text-slate-500 font-semibold" x-text="pkey === 'sendiri' ? 'Email laporan (opsional):' : 'Email Terhubung:'"></span>
                                             <template x-if="getReportPhoneEmail(selectedReport, pkey)">
                                                 <div class="inline-flex items-center gap-1.5">
                                                     <span class="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]"
                                                           x-text="getReportPhoneEmail(selectedReport, pkey)"></span>
                                                     <template x-if="isPhoneEmailOverridden(selectedReport, pkey)">
                                                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200">
-                                                            Override Laporan
+                                                            <span x-text="pkey === 'sendiri' ? 'Email manual' : 'Override Laporan'"></span>
                                                         </span>
                                                     </template>
                                                     <template x-if="!isPhoneEmailOverridden(selectedReport, pkey)">
@@ -412,7 +415,7 @@
                                                 </div>
                                             </template>
                                             <template x-if="!getReportPhoneEmail(selectedReport, pkey)">
-                                                <span class="text-slate-400 italic">Belum ada email akun di perangkat ini</span>
+                                                <span class="text-slate-400 italic" x-text="pkey === 'sendiri' ? 'Tidak diisi (opsional)' : 'Belum ada email akun di perangkat ini'"></span>
                                             </template>
                                         </div>
                                         <template x-if="isPhoneEmailOverridden(selectedReport, pkey) && getPhoneInfo(pkey)?.active_email">
@@ -423,7 +426,7 @@
                                     </div>
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
                                           :class="getReportPhoneAccount(selectedReport, pkey) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'"
-                                          x-text="getReportPhoneAccount(selectedReport, pkey) ? 'Status: Terhubung' : 'Status: Standby'"></span>
+                                          x-text="pkey === 'sendiri' ? 'Tanpa integrasi akun' : (getReportPhoneAccount(selectedReport, pkey) ? 'Status: Terhubung' : 'Status: Standby')"></span>
                                 </div>
                             </div>
                         </template>
@@ -547,11 +550,11 @@
                                     <!-- Email Akun Terhubung Input -->
                                     <div class="pt-2 border-t border-slate-200/50">
                                         <div class="flex items-center justify-between mb-1">
-                                            <label class="block text-[10px] font-bold text-slate-600">Email Akun Terhubung:</label>
+                                            <label class="block text-[10px] font-bold text-slate-600"><span x-text="key === 'sendiri' ? 'Email HP Sendiri (opsional):' : 'Email Akun Terhubung:'"></span></label>
                                             <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">Khusus Laporan Ini</span>
                                         </div>
                                         <input type="text" 
-                                               x-model="editForm.phone_emails[key]" 
+                                               x-model.trim="editForm.phone_emails[key]" :type="key === 'sendiri' ? 'email' : 'text'" :aria-label="key === 'sendiri' ? 'Email HP Sendiri (opsional)' : 'Email HP ' + label" maxlength="100"
                                                :placeholder="getPhoneInfo(key)?.active_email || 'email@gmail.com'"
                                                class="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs text-slate-800 focus:border-emerald-500 focus:outline-none">
                                         
@@ -570,7 +573,7 @@
                                         </template>
 
                                         <p class="text-[10px] text-slate-400 mt-1 leading-tight">
-                                            Perubahan email hanya tersimpan untuk laporan ini dan <strong>tidak</strong> mengubah akun master aktif di HP.
+                                            <span x-text="key === 'sendiri' ? 'Email opsional, hanya untuk laporan ini. Tidak terhubung ke akun studio.' : 'Perubahan email hanya untuk laporan ini dan tidak mengubah akun master HP.'"></span>
                                         </p>
                                     </div>
                                 </div>
@@ -707,11 +710,11 @@
                                 <!-- Email Akun Terhubung Input -->
                                 <div class="pt-2 border-t border-slate-200/50">
                                     <div class="flex items-center justify-between mb-1">
-                                        <label class="block text-[10px] font-bold text-slate-600">Email Akun Terhubung:</label>
+                                        <label class="block text-[10px] font-bold text-slate-600"><span x-text="key === 'sendiri' ? 'Email HP Sendiri (opsional):' : 'Email Akun Terhubung:'"></span></label>
                                         <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">Khusus Laporan Ini</span>
                                     </div>
                                     <input type="text" 
-                                           x-model="createForm.phone_emails[key]" 
+                                           x-model.trim="createForm.phone_emails[key]" :type="key === 'sendiri' ? 'email' : 'text'" :aria-label="key === 'sendiri' ? 'Email HP Sendiri (opsional)' : 'Email HP ' + label" maxlength="100"
                                            :placeholder="getPhoneInfo(key)?.active_email || 'email@gmail.com'"
                                            class="w-full h-8 px-2.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800 focus:border-emerald-500 focus:outline-none">
                                     
@@ -730,7 +733,7 @@
                                     </template>
 
                                     <p class="text-[10px] text-slate-400 mt-1 leading-tight">
-                                        Email ini hanya tersimpan di laporan dan tidak mengubah master HP.
+                                        <span x-text="key === 'sendiri' ? 'Email opsional, hanya untuk laporan ini. Tidak terhubung ke akun studio.' : 'Email ini hanya tersimpan di laporan dan tidak mengubah master HP.'"></span>
                                     </p>
                                 </div>
                             </div>

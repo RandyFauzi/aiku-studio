@@ -53,6 +53,12 @@
 
                         <!-- Duration Input Section (Expands when selected) -->
                         <div x-show="phones.includes(key)" x-transition class="mt-3.5 pt-3.5 border-t border-slate-200 space-y-2.5">
+                            <template x-if="key === 'sendiri'">
+                                <label class="block text-xs font-semibold text-slate-600">Email HP Sendiri (opsional)
+                                    <input type="email" maxlength="100" x-model.trim="phoneEmails[key]" placeholder="nama@email.com" class="mt-2 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 text-sm">
+                                    <span class="mt-2 block text-xs leading-5 text-slate-500">Hanya untuk laporan ini. Tidak terhubung ke akun studio.</span>
+                                </label>
+                            </template>
                             <div class="flex items-center gap-2">
                                 <input type="number"
                                        :aria-label="'Durasi HP ' + label + ' dalam menit'"

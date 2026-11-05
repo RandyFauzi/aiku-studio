@@ -7,6 +7,7 @@ use App\Models\DailyWorkReport;
 use App\Models\DeviceAccount;
 use App\Models\StudioRecording;
 use App\Models\User;
+use App\Services\ContributorAccess;
 use App\Services\ContributorIdentity;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class DailyWorkReportController extends Controller
 
         return response()->json([
             'today' => $today,
-            'phone_options' => DailyWorkReport::PHONES,
+            'phone_options' => DailyWorkReport::REPORT_PHONES,
             'today_report' => DailyWorkReport::where('user_id', $request->user()->id)->where('work_date', $today)->first(),
             'reports' => DailyWorkReport::where('user_id', $request->user()->id)->whereBetween('work_date', [$start->toDateString(), $start->endOfMonth()->toDateString()])->orderByDesc('work_date')->get(),
         ]);
@@ -40,18 +41,19 @@ class DailyWorkReportController extends Controller
     public function save(Request $request)
     {
         $person = $this->contributor($request);
-        $allowedKeys = array_keys(DailyWorkReport::PHONES);
+        $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
 
         $fields = $request->validate([
             'work_date' => 'required|date_format:Y-m-d',
             'expected_revision' => 'required|integer|min:0',
-            'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
-            'phones' => 'nullable|array|max:6',
+            'total_duration_minutes' => 'nullable|integer|min:1|max:10080',
+            'phones' => 'nullable|array|max:7',
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
-            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_durations.*' => 'integer|min:1|max:1440',
-            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_emails.*' => 'nullable|string|max:100',
+            'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
         ]);
 
         $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
@@ -77,8 +79,8 @@ class DailyWorkReportController extends Controller
         } elseif (! empty($fields['phones'])) {
             $phones = array_values($fields['phones']);
             $totalMinutes = (int) ($fields['total_duration_minutes'] ?? 0);
-            if ($totalMinutes <= 0 || $totalMinutes > 8640) {
-                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 8640 menit.']);
+            if ($totalMinutes <= 0 || $totalMinutes > 10080) {
+                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 10080 menit.']);
             }
         } else {
             throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP yang digunakan hari ini.']);
@@ -130,8 +132,8 @@ class DailyWorkReportController extends Controller
         $data = $request->validate(['date' => 'required|date_format:Y-m-d']);
         $rows = DailyWorkReport::where('work_date', $data['date'])->orderBy('contributor_name')->get();
 
-        $phonesConfig = DailyWorkReport::PHONES;
-        $deviceAccounts = DeviceAccount::all();
+        $phonesConfig = DailyWorkReport::REPORT_PHONES;
+        $deviceAccounts = DeviceAccount::whereIn('phone_key', array_keys(DailyWorkReport::PHONES))->get();
         $phonesWithActive = [];
         foreach ($phonesConfig as $key => $label) {
             $phoneAccounts = $deviceAccounts->where('phone_key', $key);
@@ -153,7 +155,7 @@ class DailyWorkReportController extends Controller
 
         return response()->json([
             'reports' => $rows,
-            'phone_options' => DailyWorkReport::PHONES,
+            'phone_options' => DailyWorkReport::REPORT_PHONES,
             'phones_info' => $phonesWithActive,
             'total_duration_minutes' => $rows->sum('total_duration_minutes'),
             'contributors' => Contributor::orderBy('nama')->get(['id', 'nama', 'email', 'role']),
@@ -169,7 +171,7 @@ class DailyWorkReportController extends Controller
         $witaEnd = CarbonImmutable::parse($workDate, 'Asia/Makassar')->endOfDay()->utc();
 
         $reports = DailyWorkReport::where('work_date', $workDate)->orderBy('contributor_name')->get();
-        $deviceAccounts = DeviceAccount::all();
+        $deviceAccounts = DeviceAccount::whereIn('phone_key', array_keys(DailyWorkReport::PHONES))->get();
 
         $assistData = [];
 
@@ -189,7 +191,7 @@ class DailyWorkReportController extends Controller
             }
 
             foreach ($durations as $phoneKey => $reportedMinutes) {
-                $phoneLabel = DailyWorkReport::PHONES[$phoneKey] ?? ucfirst($phoneKey);
+                $phoneLabel = DailyWorkReport::REPORT_PHONES[$phoneKey] ?? ucfirst($phoneKey);
 
                 $phoneAccounts = $deviceAccounts->where('phone_key', $phoneKey);
                 $activeAccount = $phoneAccounts->firstWhere('is_active', true);
@@ -201,7 +203,11 @@ class DailyWorkReportController extends Controller
                 $isEmailOverridden = ! empty($reportPhoneEmails[$phoneKey]);
                 $effectiveEmail = $isEmailOverridden ? trim($reportPhoneEmails[$phoneKey]) : $activeEmail;
 
-                if ($isEmailOverridden && $effectiveEmail) {
+                if ($phoneKey === 'sendiri') {
+                    $activeEmail = $effectiveEmail;
+                    $activeAccountName = null;
+                    $phoneEmails = [];
+                } elseif ($isEmailOverridden && $effectiveEmail) {
                     $matchingAcct = $deviceAccounts->firstWhere('email', $effectiveEmail);
                     $activeAccountName = $matchingAcct?->account_name ?: explode('@', $effectiveEmail)[0];
                     $activeEmail = $effectiveEmail;
@@ -219,7 +225,7 @@ class DailyWorkReportController extends Controller
                         'is_email_overridden' => $isEmailOverridden,
                         'reported_minutes' => (int) $reportedMinutes,
                         'emails' => [],
-                        'status' => 'no_device_account',
+                        'status' => $phoneKey === 'sendiri' ? 'personal_phone' : 'no_device_account',
                         'unassigned_count' => 0,
                         'unassigned_minutes' => 0,
                         'already_assigned_count' => 0,
@@ -314,7 +320,7 @@ class DailyWorkReportController extends Controller
     {
         $data = $request->validate([
             'record_ids' => 'required|array|min:1|max:1000',
-            'record_ids.*' => 'required|string|max:64',
+            'record_ids.*' => 'required|string|max:74',
             'contributor_id' => 'required|integer|exists:contributors,id',
             'worker_name' => 'required|string|max:100',
         ]);
@@ -339,7 +345,7 @@ class DailyWorkReportController extends Controller
     {
         $data = $request->validate([
             'record_ids' => 'required|array|min:1|max:1000',
-            'record_ids.*' => 'required|string|max:64',
+            'record_ids.*' => 'required|string|max:74',
         ]);
 
         $updated = StudioRecording::whereIn('record_id', $data['record_ids'])->update([
@@ -357,25 +363,26 @@ class DailyWorkReportController extends Controller
 
     public function adminStore(Request $request)
     {
-        $allowedKeys = array_keys(DailyWorkReport::PHONES);
+        $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
 
         $fields = $request->validate([
             'contributor_id' => 'required|integer|exists:contributors,id',
             'work_date' => 'required|date_format:Y-m-d',
-            'phones' => 'nullable|array|max:6',
+            'phones' => 'nullable|array|max:7',
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
-            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_durations.*' => 'integer|min:1|max:1440',
-            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_emails.*' => 'nullable|string|max:100',
-            'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
+            'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
+            'total_duration_minutes' => 'nullable|integer|min:1|max:10080',
         ]);
 
         $contributor = Contributor::findOrFail($fields['contributor_id']);
 
         $user = User::where('contributor_id', $contributor->id)->first();
         if (! $user) {
-            $user = app(\App\Services\ContributorAccess::class)->sync($contributor);
+            $user = app(ContributorAccess::class)->sync($contributor);
         }
         if (! $user) {
             $email = $contributor->email ?: ('contributor_'.$contributor->id.'@aikustudio.id');
@@ -402,8 +409,8 @@ class DailyWorkReportController extends Controller
         } elseif (! empty($fields['phones'])) {
             $phones = array_values($fields['phones']);
             $totalMinutes = (int) ($fields['total_duration_minutes'] ?? 0);
-            if ($totalMinutes <= 0 || $totalMinutes > 8640) {
-                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 8640 menit.']);
+            if ($totalMinutes <= 0 || $totalMinutes > 10080) {
+                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 10080 menit.']);
             }
         } else {
             throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP.']);
@@ -472,16 +479,17 @@ class DailyWorkReportController extends Controller
 
     public function adminUpdate(Request $request, DailyWorkReport $report)
     {
-        $allowedKeys = array_keys(DailyWorkReport::PHONES);
+        $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
 
         $fields = $request->validate([
-            'phones' => 'nullable|array|max:6',
+            'phones' => 'nullable|array|max:7',
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
-            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_durations.*' => 'integer|min:1|max:1440',
-            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_emails.*' => 'nullable|string|max:100',
-            'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
+            'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
+            'total_duration_minutes' => 'nullable|integer|min:1|max:10080',
         ]);
 
         $phoneDurations = null;
@@ -501,8 +509,8 @@ class DailyWorkReportController extends Controller
         } elseif (! empty($fields['phones'])) {
             $phones = array_values($fields['phones']);
             $totalMinutes = (int) ($fields['total_duration_minutes'] ?? 0);
-            if ($totalMinutes <= 0 || $totalMinutes > 8640) {
-                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 8640 menit.']);
+            if ($totalMinutes <= 0 || $totalMinutes > 10080) {
+                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 10080 menit.']);
             }
         } else {
             throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP.']);

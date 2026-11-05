@@ -3,8 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Contributor;
+use App\Models\DailyWorkReport;
+use App\Models\DeviceAccount;
+use App\Models\StudioRecording;
 use App\Models\User;
 use App\Services\ContributorAccess;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -40,7 +44,7 @@ class DailyWorkReportTest extends TestCase
     public function test_validation_rejects_empty_duration_invalid_or_duplicate_phone_and_wrong_date(): void
     {
         $this->actingAs($this->employee());
-        foreach ([['total_duration_minutes' => 0], ['total_duration_minutes' => -5], ['total_duration_minutes' => 8641], ['phones' => []], ['phones' => ['ungu']], ['phones' => ['pink', 'pink']], ['work_date' => now('Asia/Makassar')->subDay()->toDateString()]] as $change) {
+        foreach ([['total_duration_minutes' => 0], ['total_duration_minutes' => -5], ['total_duration_minutes' => 10081], ['phones' => []], ['phones' => ['ungu']], ['phones' => ['pink', 'pink']], ['work_date' => now('Asia/Makassar')->subDay()->toDateString()]] as $change) {
             $this->putJson('/api/me/work-report', array_replace($this->payload(), $change))->assertUnprocessable();
         }
         $this->assertDatabaseCount('daily_work_reports', 0);
@@ -121,15 +125,15 @@ class DailyWorkReportTest extends TestCase
         ])->assertOk();
 
         // Register HP Putih to account email
-        \App\Models\DeviceAccount::create([
+        DeviceAccount::create([
             'phone_key' => 'putih',
             'email' => 'device_putih@studio.test',
             'is_active' => true,
         ]);
 
         // Create 2 candidate recordings on HP Putih on today's WITA date
-        $nowWita = \Carbon\CarbonImmutable::now('Asia/Makassar')->setTime(10, 0);
-        \App\Models\StudioRecording::create([
+        $nowWita = CarbonImmutable::now('Asia/Makassar')->setTime(10, 0);
+        StudioRecording::create([
             'record_id' => 'rec_putih_001',
             'participant_email' => 'device_putih@studio.test',
             'task_title' => 'Task Putih A',
@@ -138,7 +142,7 @@ class DailyWorkReportTest extends TestCase
             'billable_min' => 60,
             'manual_payment_status' => 'Belum Rekap',
         ]);
-        \App\Models\StudioRecording::create([
+        StudioRecording::create([
             'record_id' => 'rec_putih_002',
             'participant_email' => 'device_putih@studio.test',
             'task_title' => 'Task Putih B',
@@ -203,7 +207,7 @@ class DailyWorkReportTest extends TestCase
             'phone_durations' => ['putih' => 120],
         ])->assertOk();
 
-        $report = \App\Models\DailyWorkReport::first();
+        $report = DailyWorkReport::first();
         $this->assertNotNull($report);
         $this->assertEquals(120, $report->total_duration_minutes);
 
@@ -304,7 +308,7 @@ class DailyWorkReportTest extends TestCase
             'role' => 'contributor',
         ]);
 
-        $masterDevice = \App\Models\DeviceAccount::create([
+        $masterDevice = DeviceAccount::create([
             'phone_key' => 'putih',
             'email' => 'master_putih@gmail.com',
             'account_name' => 'aikuputih_master',
@@ -339,7 +343,7 @@ class DailyWorkReportTest extends TestCase
         ]);
 
         // Verify report in database has the overridden email
-        $report = \App\Models\DailyWorkReport::find($reportId);
+        $report = DailyWorkReport::find($reportId);
         $this->assertEquals('override_khusus_laporan@gmail.com', $report->phone_emails['putih'] ?? null);
 
         // Admin updates report with another email
@@ -362,5 +366,51 @@ class DailyWorkReportTest extends TestCase
         $phoneData = $assistRes->json('assist_data.0.phones.0');
         $this->assertEquals('updated_override@gmail.com', $phoneData['active_email']);
         $this->assertTrue($phoneData['is_email_overridden']);
+    }
+
+    public function test_personal_phone_optional_email_persists_for_worker_and_can_be_cleared(): void
+    {
+        $user = $this->employee();
+        $this->actingAs($user);
+        $data = ['work_date' => now('Asia/Makassar')->toDateString(), 'expected_revision' => 0, 'phone_durations' => ['sendiri' => 90]];
+        $this->putJson('/api/me/work-report', $data)->assertOk()->assertJsonPath('report.phones', ['sendiri'])->assertJsonPath('report.phone_emails', null);
+        $data['expected_revision'] = 1;
+        $data['phone_emails'] = ['sendiri' => 'pribadi@example.test'];
+        $this->putJson('/api/me/work-report', $data)->assertOk()->assertJsonPath('report.phone_emails.sendiri', 'pribadi@example.test');
+        $this->getJson('/api/me/work-reports?month='.now('Asia/Makassar')->format('Y-m'))->assertOk()
+            ->assertJsonPath('phone_options.sendiri', 'Sendiri')->assertJsonPath('today_report.phone_emails.sendiri', 'pribadi@example.test');
+        $data['expected_revision'] = 2;
+        $data['phone_emails']['sendiri'] = 'bukan-email';
+        $this->putJson('/api/me/work-report', $data)->assertUnprocessable();
+        $data['phone_emails']['sendiri'] = '';
+        $this->putJson('/api/me/work-report', $data)->assertOk()->assertJsonPath('report.phone_emails', null);
+        $this->assertDatabaseCount('device_accounts', 0);
+        $this->assertDatabaseCount('studio_accounts', 0);
+    }
+
+    public function test_admin_can_create_and_edit_personal_phone_without_studio_account_integration(): void
+    {
+        $worker = $this->employee();
+        $this->actingAs(User::factory()->create());
+        $date = now('Asia/Makassar')->toDateString();
+        $response = $this->postJson('/api/work-reports', ['contributor_id' => $worker->contributor_id, 'work_date' => $date,
+            'phone_durations' => ['sendiri' => 120], 'phone_emails' => ['sendiri' => 'manual@example.test']])->assertOk();
+        $id = $response->json('report.id');
+        $this->putJson('/api/work-reports/'.$id, ['phone_durations' => ['sendiri' => 180], 'phone_emails' => ['sendiri' => 'edit@example.test']])
+            ->assertOk()->assertJsonPath('report.phone_emails.sendiri', 'edit@example.test');
+        $this->getJson('/api/work-reports/assist-matches?date='.$date)->assertOk()
+            ->assertJsonPath('assist_data.0.phones.0.status', 'personal_phone')
+            ->assertJsonPath('assist_data.0.phones.0.candidate_record_ids', []);
+        $this->getJson('/api/devices')->assertOk()->assertJsonCount(6, 'phones');
+        $this->postJson('/api/devices/accounts', ['phone_key' => 'sendiri', 'email' => 'manual@example.test'])->assertUnprocessable();
+        $this->assertDatabaseCount('device_accounts', 0);
+    }
+
+    public function test_all_seven_report_phone_options_are_accepted_together(): void
+    {
+        $this->actingAs($this->employee());
+        $this->putJson('/api/me/work-report', ['work_date' => now('Asia/Makassar')->toDateString(), 'expected_revision' => 0,
+            'phone_durations' => array_fill_keys(array_keys(DailyWorkReport::REPORT_PHONES), 1440)])
+            ->assertOk()->assertJsonCount(7, 'report.phones')->assertJsonPath('report.total_duration_minutes', 10080);
     }
 }

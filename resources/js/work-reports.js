@@ -5,7 +5,7 @@ const duration = value => {
     const m = mins % 60;
     return (h > 0 ? h + ' jam ' : '') + m + ' menit (' + mins + 'm)';
 };
-const labels = { putih: 'Putih', pink: 'Pink', biru: 'Biru', hijau: 'Hijau', hitam: 'Hitam', pink_st: 'Pink ST' };
+const labels = { putih: 'Putih', pink: 'Pink', biru: 'Biru', hijau: 'Hijau', hitam: 'Hitam', pink_st: 'Pink ST', sendiri: 'Sendiri' };
 const phoneNames = phones => (phones || []).map(phone => labels[phone] || phone).join(', ');
 const phoneDurationsText = report => {
     if (report.phone_durations && Object.keys(report.phone_durations).length > 0) {
@@ -53,6 +53,7 @@ window.dailyWorkReportData = () => ({
     month: today().slice(0, 7),
     phones: [],
     phoneDurations: {},
+    phoneEmails: {},
     options: labels,
     revision: 0,
     reports: [],
@@ -76,7 +77,7 @@ window.dailyWorkReportData = () => ({
 
     get dirty() {
         if (this.baseline === '') return false;
-        const current = JSON.stringify([[...this.phones].sort(), this.phoneDurations]);
+        const current = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails]);
         return current !== this.baseline;
     },
 
@@ -84,6 +85,7 @@ window.dailyWorkReportData = () => ({
         if (this.phones.includes(key)) {
             this.phones = this.phones.filter(k => k !== key);
             delete this.phoneDurations[key];
+            delete this.phoneEmails[key];
         } else {
             this.phones.push(key);
             if (!this.phoneDurations[key] || Number(this.phoneDurations[key]) <= 0) {
@@ -129,6 +131,7 @@ window.dailyWorkReportData = () => ({
                 this.date = data.today;
                 this.phones = [...(report?.phones || [])];
                 this.phoneDurations = {};
+                this.phoneEmails = { ...(report?.phone_emails || {}) };
 
                 if (report?.phone_durations && typeof report.phone_durations === 'object') {
                     this.phoneDurations = { ...report.phone_durations };
@@ -140,7 +143,7 @@ window.dailyWorkReportData = () => ({
                 }
 
                 this.revision = report?.revision || 0;
-                this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations]);
+                this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails]);
             }
 
             const isSubmitted = !!(data.today_report && Number(data.today_report.revision) > 0);
@@ -182,6 +185,7 @@ window.dailyWorkReportData = () => ({
                     total_duration_minutes: this.totalMinutes,
                     phones: this.phones,
                     phone_durations: this.phoneDurations,
+                    phone_emails: this.phoneEmails,
                     expected_revision: this.revision
                 })
             });
@@ -195,7 +199,8 @@ window.dailyWorkReportData = () => ({
             this.revision = report.revision;
             this.phones = [...(report.phones || [])];
             this.phoneDurations = { ...(report.phone_durations || this.phoneDurations) };
-            this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations]);
+            this.phoneEmails = { ...(report.phone_emails || {}) };
+            this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails]);
             this.message = 'Laporan kerja tanggal ' + dateLabel(this.date) + ' berhasil disimpan (' + this.totalMinutes + ' menit).';
 
             window.dispatchEvent(new CustomEvent('report-status-updated', {
@@ -250,14 +255,14 @@ window.adminWorkReportsData = () => ({
         biru: 'Biru',
         hijau: 'Hijau',
         hitam: 'Hitam',
-        pink_st: 'Pink ST'
+        pink_st: 'Pink ST', sendiri: 'Sendiri'
     },
     phonesInfo: {},
     detailModalOpen: false,
     selectedReport: null,
 
     getPhoneInfo(pkey) {
-        return this.phonesInfo[pkey] || null;
+        return pkey === 'sendiri' ? null : this.phonesInfo[pkey] || null;
     },
 
     formatPhoneName(pkey) {
@@ -272,7 +277,7 @@ window.adminWorkReportsData = () => ({
             biru: 'Biru',
             hijau: 'Hijau',
             hitam: 'Hitam',
-            pink_st: 'Pink ST'
+            pink_st: 'Pink ST', sendiri: 'Sendiri'
         };
         return 'HP ' + (map[clean] || (clean.charAt(0).toUpperCase() + clean.slice(1)));
     },

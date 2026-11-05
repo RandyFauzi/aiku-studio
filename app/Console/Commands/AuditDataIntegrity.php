@@ -40,7 +40,7 @@ class AuditDataIntegrity extends Command
         DailyWorkReport::query()->chunkById(200, function ($reports) use (&$issues) {
             foreach ($reports as $report) {
                 if ($report->phone_durations !== null && (array_sum($report->phone_durations) !== $report->total_duration_minutes
-                    || array_diff(array_keys($report->phone_durations), array_keys(DailyWorkReport::PHONES)))) {
+                    || array_diff(array_keys($report->phone_durations), array_keys(DailyWorkReport::REPORT_PHONES)))) {
                     $issues['daily_report_duration_mismatch']++;
                 }
             }
