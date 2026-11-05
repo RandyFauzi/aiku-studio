@@ -7,9 +7,10 @@ uses the same components in two columns with a persistent sidebar.
 
 ## Visual decisions
 
-- Canvas: white with pale green radial gradients (`#daf2d8`, `#e2f4e8`).
-- Primary action / summary: forest green `#174c39`; highlighted action: mint
-  `#d8efb8`. Primary text `#172c25`, secondary text `#64746c`.
+- Canvas: clean white (`#f7f8f5`) with a subtle pale lime radial gradient.
+- Primary action / summary: lime gradients (`#c9fa3f`, `#dbff83`, `#d4ff5c`)
+  following the newer supplied reference. Dark text (`#1b2c17`) remains readable
+  on the bright accents; supporting labels use muted olive.
 - [Manrope](https://fonts.google.com/specimen/Manrope), self-hosted Latin variable
   WOFF2 (24.5 kB), with its SIL Open Font License in `public/fonts/Manrope-OFL.txt`.
   The screenshot does not establish an exact typeface; Manrope was selected for
@@ -21,6 +22,10 @@ uses the same components in two columns with a persistent sidebar.
   aria-current; icon-only actions have labels. Form phone selectors are native
   buttons and duration inputs have accessible labels. Focus and reduced-motion
   styles are included. Numeric values use tabular figures.
+- Refined dock: translucent white-to-pale-green surface, soft shadow, larger
+  icons, a rounded lime active tile and a small active underline. Inactive label
+  contrast is approximately 4.99:1 against the light green surface. Safe-area
+  spacing and the existing content bottom padding are retained.
 
 ## Implementation
 
@@ -42,7 +47,7 @@ Node remains a local asset build tool; hosting serves PHP and compiled assets.
 
 ## Verification
 
-85 PHPUnit tests / 481 assertions pass. Vite production build passes. Browser
+87 PHPUnit tests / 501 assertions pass. Vite production build passes. Browser
 checks cover all five pages at 320, 390, 768 and 1440 px with no horizontal
 overflow or JavaScript errors, local font loading and one active navigation item.
 Timer presets/start/pause/reset/modal and phone duration input were exercised
