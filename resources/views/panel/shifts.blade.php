@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIKu Studio - Pengaturan Shift & Simulasi Produksi</title>
+    <meta name="theme-color" content="#edf6d9">
+    <link rel="preload" href="/fonts/manrope-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
@@ -22,14 +24,14 @@
     <script src="/assets/session.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F4F6F8] text-[#1E293B] h-screen overflow-hidden font-sans flex antialiased" x-data="shiftsData()" x-init="initData()" @keydown.escape.window="sidebarOpen=false" x-cloak>
+<body class="portal admin-theme bg-[#F4F6F8] text-[#1E293B] h-screen overflow-hidden font-sans flex antialiased" x-data="shiftsData()" x-init="initData()" @keydown.escape.window="sidebarOpen=false" x-cloak>
 
     
 
     <!-- LEFT SIDEBAR -->
     @include('layouts.sidebar')
 
-    <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#F4F6F8]">
+    <main id="admin-content" class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#F4F6F8]">
         @include('shifts.workspace')
     </main>
 </body>

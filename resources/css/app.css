@@ -8,7 +8,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     outline-offset: 3px;
 }
 
-/* Contributor portal. Scoped so the administrator panel keeps its own styles. */
+/* Shared portal foundations; admin layout adjustments are scoped below. */
 @font-face { font-family: 'Manrope'; src: url('/fonts/manrope-latin-variable.woff2') format('woff2'); font-weight: 200 800; font-style: normal; font-display: swap; }
 .portal { --ink:#172c25; --muted:#64746c; --green:#174c39; --mint:#d8efb8; color:var(--ink); font-family:'Manrope',sans-serif; font-size:14px; -webkit-font-smoothing:antialiased; background:radial-gradient(ellipse at 0 0,#daf2d8,transparent 48%),radial-gradient(ellipse at 90% 8%,#e2f4e8,transparent 46%),#f3f5f2; min-height:100dvh; }
 .portal .portal-icon { width:21px; height:21px; flex:0 0 auto; }
@@ -159,7 +159,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media(prefers-reduced-motion:reduce) { .portal *, .portal *::before, .portal *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
 
 /* White and lime palette from the supplied reference. */
-/* Spotbank reference: clean white with energetic lime accents. Preview only. */
+/* Workspace palette: clean white with lime accents. */
 .portal { --ink:#1b2c17; --muted:#67735f; --green:#c9fa3f; --mint:#d3fc66; background:radial-gradient(ellipse at 3% 0,#edf6d9,transparent 42%),#f7f8f5; }
 .portal .portal-sidebar { background:#ffffffc9; border-right-color:#edf0e8; }
 .portal .portal-brand-mark { background:#ceff48; color:#203b18; }
@@ -247,4 +247,126 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     }
     .portal .portal-mobile-nav .portal-nav-link:active { transform:scale(.95); }
     .portal .portal-mobile-nav .portal-nav-link:focus-visible { outline-offset:1px; }
+}
+
+/* Shared workspace chrome. Navigation and actions keep their existing routes. */
+.portal .workspace-brand-row { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-shrink:0; }
+.portal .workspace-sidebar { min-height:0; }
+.portal .workspace-navigation { min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#c9d8bd transparent; }
+.portal .workspace-sidebar > .portal-sidebar-bottom { flex-shrink:0; }
+.portal .workspace-sidebar-close { width:44px; height:44px; align-items:center; justify-content:center; border-radius:50%; color:#53675d; background:#f2f7eb; flex-shrink:0; }
+.workspace-skip { position:fixed; top:12px; left:12px; z-index:100; padding:12px 18px; border-radius:999px; background:#203b18; color:white; transform:translateY(-160%); }
+.workspace-skip:focus { transform:translateY(0); }
+
+/* Use the portal's white/lime palette and Manrope throughout the admin panel. */
+.portal.admin-theme {
+    font-family:'Manrope',sans-serif;
+    color:var(--ink);
+    height:100dvh;
+    min-height:100dvh;
+    overflow:hidden;
+}
+.portal.admin-theme .font-sans { font-family:'Manrope',sans-serif; }
+.portal.admin-theme > main { height:100dvh; background:transparent; scrollbar-width:thin; scrollbar-color:#c8d5bf transparent; }
+.portal.admin-theme .workspace-sidebar {
+    display:flex;
+    position:sticky;
+    top:0;
+    height:100dvh;
+    width:248px;
+    padding:30px 20px 20px;
+    z-index:50;
+    background:#ffffffed;
+    border-right:1px solid #e7ecdf;
+    box-shadow:none;
+}
+.portal.admin-theme .portal-brand { font-size:18px; white-space:nowrap; }
+.portal.admin-theme .portal-nav-label { margin:28px 14px 16px; flex-shrink:0; }
+.portal.admin-theme .workspace-navigation { display:block; flex:1 1 auto; padding:0 1px 4px; }
+.portal.admin-theme .workspace-nav-group { display:grid; gap:5px; margin-bottom:19px; }
+.portal.admin-theme .workspace-nav-section { margin:0 15px 5px; font-size:10px; font-weight:600; color:#7a866e; letter-spacing:1px; text-transform:uppercase; }
+.portal.admin-theme .portal-nav-link { padding:12px 15px; min-height:46px; font-size:12px; gap:11px; }
+.portal.admin-theme .portal-nav-link .portal-icon { width:19px; height:19px; }
+.portal.admin-theme .portal-sidebar-bottom { flex-shrink:0; padding-top:14px; }
+.portal.admin-theme .portal-sidebar-note { padding:14px 16px; margin-bottom:16px; border-radius:22px; }
+.portal.admin-theme .portal-sidebar-note > .portal-icon { display:none; }
+.portal.admin-theme .portal-sidebar-note p { margin:0 0 9px; font-size:15px; }
+.portal.admin-theme .portal-sidebar-person { margin-bottom:12px; }
+.portal.admin-theme .portal-logout { min-height:44px; }
+.portal.admin-theme > main > header {
+    min-height:88px;
+    height:auto;
+    padding:20px 32px;
+    border-bottom:1px solid #e6ecdf;
+    background:#f7f8f5ed;
+    backdrop-filter:blur(18px);
+}
+.portal.admin-theme > main > :is(div,section) { width:100%; max-width:1600px; margin-left:auto; margin-right:auto; }
+.portal.admin-theme :is(h1,h2) { letter-spacing:-.035em; }
+.portal.admin-theme :is(.font-black,.font-extrabold) { font-weight:700; }
+.portal.admin-theme :is(.text-slate-900,.text-slate-800) { color:#1b2c17; }
+.portal.admin-theme :is(.text-slate-500,.text-gray-500) { color:#67735f; }
+.portal.admin-theme .text-slate-400 { color:#67735f; }
+.portal.admin-theme :is(.bg-slate-900,.bg-slate-800) .text-slate-400 { color:#c5d3bc; }
+.portal.admin-theme :is(.text-brand,.text-brand-500,.text-brand-600,.text-brand-700,.text-brand-800,[class~="text-[#009B7E]"],[class~="text-[#00B090]"]) { color:#3f642b; }
+.portal.admin-theme :is(.bg-brand-50,.bg-emerald-50) { background-color:#f0f8e6; }
+.portal.admin-theme :is(.bg-brand-100,.bg-emerald-100) { background-color:#e3f6c8; }
+.portal.admin-theme :is(.border-brand-100,.border-brand-200,.border-emerald-100) { border-color:#deebce; }
+.portal.admin-theme :is(.border-brand-500,.border-brand-600,.border-brand-700) { border-color:#8eae61; }
+.portal.admin-theme svg [fill='#ECFDF5'] { fill:#f0f9dd; }
+.portal.admin-theme svg [fill='#D1FAE5'] { fill:#e8f8c9; }
+.portal.admin-theme svg [fill='#A7F3D0'] { fill:#d9f7a3; }
+.portal.admin-theme svg [fill='#6EE7B7'] { fill:#c9ef76; }
+.portal.admin-theme svg [fill='#047857'] { fill:#467d24; }
+.portal.admin-theme svg [stroke='#047857'] { stroke:#467d24; }
+.portal.admin-theme :is(.bg-brand,.bg-brand-500,.bg-brand-600,.bg-brand-700,[class~="bg-[#00B090]"],[class~="bg-[#009B7E]"]) {
+    background:linear-gradient(125deg,#ddff83,#c9fa3f);
+    color:#203b18;
+    border-color:#cce88d;
+}
+.portal.admin-theme :is(button,a).bg-slate-900 { background:linear-gradient(125deg,#ddff83,#c9fa3f); color:#203b18; }
+.portal.admin-theme :is(.bg-brand-600,.bg-brand-700,[class~="bg-[#00B090]"],[class~="bg-[#009B7E]"]):hover:not(:disabled) { background:linear-gradient(125deg,#d4f978,#bdec38); }
+.portal.admin-theme :is(.bg-brand-600,.bg-brand-700,[class~="bg-[#00B090]"],[class~="bg-[#009B7E]"]) .text-white { color:inherit; }
+.portal.admin-theme :is(section,article,aside,div).bg-white:is(.rounded-xl,.rounded-2xl,.rounded-3xl) {
+    border-color:#e6ecdf;
+    box-shadow:0 4px 20px #274b2b03;
+}
+.portal.admin-theme :is(section,article,aside,div).bg-white.rounded-2xl { border-radius:26px; }
+.portal.admin-theme :is(section,article,div).bg-white.rounded-3xl { border-radius:30px; }
+.portal.admin-theme :is(input,select,textarea) { border-color:#dde5d5; accent-color:#467d24; }
+.portal.admin-theme .flex:has(> select) { min-width:0; max-width:100%; }
+.portal.admin-theme .flex > select { min-width:0; flex-shrink:1; text-overflow:ellipsis; }
+.portal.admin-theme :is(input,select):not([type='checkbox']):not([type='radio']):not([type='hidden']) { min-height:44px; }
+.portal.admin-theme :is(button,a)[class*="rounded-xl"] { border-radius:999px; }
+.portal.admin-theme button { min-height:44px; }
+.portal.admin-theme :is(button,input,select,textarea,a):focus-visible { outline:2px solid #467d24; outline-offset:3px; }
+.portal.admin-theme :is(input,select,textarea):focus { border-color:#8eae61; --tw-ring-color:#b6d58b; }
+.portal.admin-theme :is(.ring-brand-500,.ring-brand-600) { --tw-ring-color:#8eae61; }
+.portal.admin-theme :is(.from-slate-900,.via-slate-800).bg-gradient-to-r { background:linear-gradient(115deg,#e7f8c8,#dcff8b 65%,#d4f873); color:#203b18; }
+.portal.admin-theme .from-slate-900.bg-gradient-to-r :is(.text-white,.text-emerald-400) { color:#203b18; }
+.portal.admin-theme .from-slate-900.bg-gradient-to-r :is(.text-slate-200,.text-slate-300,.text-slate-400,.text-emerald-100,.text-emerald-200) { color:#4e683c; }
+.portal.admin-theme .from-slate-900.bg-gradient-to-r :is(.bg-white\/10,.bg-slate-800\/50) { background:#ffffff80; border-color:#ffffff90; }
+.portal.admin-theme thead.bg-slate-50 { background:#f3f7ed; }
+.portal.admin-theme ::-webkit-scrollbar-thumb { background:#c8d5bf; }
+.portal.admin-theme ::-webkit-scrollbar-track { background:transparent; }
+@media(max-height:1050px) and (min-width:768px) {
+    .portal.admin-theme .portal-sidebar-note { display:none; }
+}
+@media(max-width:1100px) and (min-width:768px) {
+    .portal.admin-theme .workspace-sidebar { width:224px; padding:26px 15px 18px; }
+    .portal.admin-theme > main > header { padding-left:24px; padding-right:24px; }
+}
+@media(max-width:767px) {
+    .portal.admin-theme .workspace-sidebar { position:fixed; inset:0 auto 0 0; width:min(300px,calc(100vw - 48px)); padding:24px 18px 18px; }
+    .portal.admin-theme .workspace-sidebar-close { display:flex; }
+    .portal.admin-theme > main > header { min-height:80px; padding:16px; gap:12px; }
+    .portal.admin-theme .portal-sidebar-note { display:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+    .portal.admin-theme *, .portal.admin-theme *::before, .portal.admin-theme *::after { transition-duration:.01ms !important; animation-duration:.01ms !important; }
+}
+@media print {
+    .portal.admin-theme { height:auto; overflow:visible; background:white !important; }
+    .portal.admin-theme > main { height:auto; overflow:visible; background:white !important; }
+    .portal.admin-theme .workspace-sidebar,.portal.admin-theme .workspace-backdrop,.workspace-skip { display:none !important; }
 }

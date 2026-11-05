@@ -1,3 +1,7 @@
+### [2026-11-05 15.32] — CODEX
+- Tema admin disamakan dengan portal putih–lime/Manrope: sidebar Blade bersama, 10 menu admin vs 5 worker, kartu/tombol/header konsisten, kontras dan pemilih periode mobile dirapikan. Seluruh script halaman, endpoint, akses dan fungsi bisnis dipertahankan.
+- Validasi: render 10 halaman admin + jadwal worker, 25 tes/234 assertion, build Vite, browser 10 halaman desktop/mobile + menu drawer/dock worker lulus tanpa error JS atau overflow. Graphify diperbarui untuk relasi komponen sidebar baru; QA memakai fixture.
+
 ### [2026-11-05 15.19] — CODEX
 - Atur Shift: papan drag-and-drop + formulir, maksimal 3 orang, durasi per shift, pola periode 22–21, revisi/izin/sakit harian, analitik dan ringkasan salin; jadwal worker terhubung berdasarkan contributor_id. Data lama tetap terbaca; tidak ada migrasi atau perubahan kalkulasi gaji.
 - Validasi: full suite 103 tes/620 assertion, 3 tes JS, browser desktop 1440 & mobile 390 (drag asli, kapasitas, simpan pola/revisi, izin/sakit, ringkasan; tanpa error/overflow), build Vite dan refresh Graphify lulus. QA memakai fixture, bukan data operasional.
