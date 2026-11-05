@@ -8,6 +8,7 @@ public/
 .git/
 .codex/
 .agents/
+.agent/
 graphify-out/
 database/*.sqlite*
 *.sql

@@ -1,3 +1,16 @@
+## Coordination with Antigravity
+
+Before each task, run `git pull origin main` and read `.agent/STATE.json`.
+Do not edit files locked by another agent. Claim the files needed for the task
+in STATE.json with active_agent CODEX, locked_files, task and an ISO updated_at.
+Include generated assets/graphs in the lock when rebuilding them. Stage only
+your own files; never use an indiscriminate `git add .` in this shared workspace.
+
+Before completion, run `php vendor/bin/phpunit` and `npm run build`. Prepend a
+2–3 line handover to `.agent/HANDOVER.md`, set active_agent to IDLE and
+locked_files to [], then commit and immediately push to origin/main.
+Preserve existing handover entries and other agents' changes.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

@@ -33,6 +33,7 @@ no conclusion relies on an inferred graph edge alone.
 | 1618 ingestion | Invalid/missing dates could overwrite historical dates with today or null | Invalid rows skipped; calendar date and duration validated; UTC interpreted explicitly; record IDs normalized |
 | Sync response | Missing source or failed 1618 operation could be reported as completed | Explicit failure when no source succeeded or started |
 | Payroll input | Array-valued periods or incomplete date bounds could trigger 500 or silently use another period | Structured validation returns 422 |
+| Hosting scheduler | Cron still invoked the legacy sibling installation after the active app moved | Replaced only the AIKu cron with PHP 8.3 running public_html/artisan schedule:run every minute; verified the new account cron listing |
 
 ## Verification and limits
 
@@ -45,6 +46,13 @@ personal APIs. Contributor access to admin data, another person's slip and
 another person's raw PDF returned 403. No business records were created by those
 live browser checks. These results describe the deployed snapshot, not all
 future inputs or database changes.
+`php vendor/bin/phpunit --no-progress` and `npm run build` also passed during the
+coordinated handover. Build warnings remain for the local `#` directory name and
+a JavaScript bundle above 500 kB; they did not prevent the production build.
+The active production layout currently forwards requests through
+`public_html/public/`; the replaced scheduler UID is `TV9nyHgDON`. Other sites'
+cron jobs were preserved. The scheduler configuration was read back; external
+sync was not manually triggered as an audit test.
 
 Regression suite: `tests/Feature/SystemAuditRegressionTest.php`. Full suite runs
 against SQLite in-memory, not operational MySQL. PHP formatting is checked only
