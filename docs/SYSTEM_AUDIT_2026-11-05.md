@@ -26,6 +26,7 @@ no conclusion relies on an inferred graph edge alone.
 | Recording assignment | Submitted contributor ID and name could disagree | Canonical name derived from the database; clearing assignment clears both values |
 | Assisted assignment | Stale candidate lists overwrote another person's assignment | Only still-unassigned records are assigned atomically |
 | Daily reports | Unknown per-phone keys were silently dropped from totals | Unknown phone keys produce validation errors |
+| Shift identity | Saving an old schedule after a name change discarded its stable contributor ID; aliases could duplicate one person | Valid ID resolves the canonical name; duplicate identities and missing referenced IDs are rejected |
 | Device accounts | Moving an active account could leave two active accounts on one phone | Target phone's other accounts deactivated; mutations serialized through a shared cache lock |
 | Studio identities | Editing email renamed a shared studio account, caused unique-key failures and retained another account's participant_id | Register/reuse the target email without mutating the old external identity |
 | Payment state | Slip create/edit/status could disagree with payroll_statuses or other versions of a slip | Writes synchronize all saved versions and canonical worker/period payment state in one transaction |

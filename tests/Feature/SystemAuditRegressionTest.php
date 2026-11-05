@@ -257,4 +257,16 @@ class SystemAuditRegressionTest extends TestCase
         $this->actingAs(User::factory()->create())->withServerVariables(['REMOTE_ADDR' => '198.51.100.20'])
             ->getJson('/api/attendance/wifi-config')->assertOk()->assertJsonPath('config.wifi_ips', []);
     }
+
+    public function test_shift_identity_survives_name_change_and_cannot_be_duplicated_under_an_alias(): void
+    {
+        $person = Contributor::create(['nama' => 'Current Name']);
+        $config = config('shifts');
+        $worker = ['name' => 'Old Name', 'contributor_id' => $person->id, 'alat' => 'Alat 1', 'sessions' => [1]];
+        $config['karyawan'] = [$worker];
+        $this->actingAs(User::factory()->create())->postJson('/api/shifts/config', $config)->assertOk()
+            ->assertJsonPath('config.karyawan.0.name', 'Current Name')->assertJsonPath('config.karyawan.0.contributor_id', $person->id);
+        $config['karyawan'][] = array_merge($worker, ['name' => 'Alias', 'alat' => 'Alat 2']);
+        $this->postJson('/api/shifts/config', $config)->assertUnprocessable();
+    }
 }

@@ -22,8 +22,27 @@ class ShiftConfiguration
             'karyawan.*.sessions' => 'present|array|max:50',
             'karyawan.*.sessions.*' => 'integer|min:1|max:'.(int) ($input['sessions_count'] ?? 0)])->validate();
         $occupied = [];
+        $identities = [];
         foreach ($data['karyawan'] as $index => &$worker) {
-            $worker['contributor_id'] = Contributor::where('nama', $worker['name'])->value('id');
+            if (! empty($worker['contributor_id'])) {
+                $person = Contributor::find($worker['contributor_id']);
+                if (! $person) {
+                    throw ValidationException::withMessages(["karyawan.$index.contributor_id" => 'Kontributor tidak tersedia. Hapus atau pilih ulang anggota ini.']);
+                }
+                $worker['name'] = $person->nama;
+            } else {
+                $people = Contributor::where('nama', $worker['name'])->get();
+                if ($people->count() > 1) {
+                    throw ValidationException::withMessages(["karyawan.$index.name" => 'Nama kontributor tidak unik. Pilih anggota berdasarkan ID.']);
+                }
+                $person = $people->first();
+            }
+            $worker['contributor_id'] = $person?->id;
+            $identity = $person ? 'id:'.$person->id : 'name:'.mb_strtolower(trim($worker['name']));
+            if (isset($identities[$identity])) {
+                throw ValidationException::withMessages(["karyawan.$index.name" => 'Kontributor yang sama tidak boleh muncul dua kali dalam jadwal.']);
+            }
+            $identities[$identity] = true;
             $sessions = array_map('intval', $worker['sessions']);
             if (count(array_unique($sessions)) !== count($sessions)) {
                 throw ValidationException::withMessages(["karyawan.$index.sessions" => 'Sesi yang sama tidak boleh dipilih dua kali.']);

@@ -19,3 +19,8 @@ Rules:
 - Graphify is development-only. Do not deploy graphs, skills or developer scripts into public_html, install Python on shared hosting, or expose the graph through a public route.
 - Preserve `.graphifyignore` exclusions for private data and generated dependencies. Export schema only with `scripts/graphify-schema.php`, which uses SQLite :memory:, never the operational database.
 - Run the relevant existing feature tests for behavior changes; SQLite test databases must remain isolated from real data. Never import or restore production data to refresh a graph.
+
+## Multi-Agent Co-Working (Antigravity & CODEX)
+
+- **Start of task**: Run `git pull origin main`, read `.agent/STATE.json`. If a target file is in `locked_files` by another agent, DO NOT edit it. Otherwise, set `"active_agent"`, `"task"`, and list your `"locked_files"` in `.agent/STATE.json`.
+- **End of task**: Verify with `vendor/bin/phpunit` and `npm run build`. Set `"active_agent": "IDLE"` and `"locked_files": []` in `.agent/STATE.json`. Append a concise summary in `.agent/HANDOVER.md`. Commit and `git push origin main`.

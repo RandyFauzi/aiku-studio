@@ -26,7 +26,7 @@ class AttendanceCalendarTest extends TestCase
         $user = $this->employee();
         $this->assertTrue(Hash::check('password', $user->password));
         $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect('/me');
-        $this->get('/me')->assertOk()->assertSee('Absensi');
+        $this->get('/me')->assertOk()->assertViewIs('portal.home');
         foreach (['/api/slips', '/api/contributors', '/api/attendance?date=2026-11-03', '/api/shifts/days?month=2026-11', '/shifts.html', '/contributors.html'] as $path) {
             $this->getJson($path)->assertForbidden();
         }
