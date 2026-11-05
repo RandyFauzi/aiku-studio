@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contributor;
 use App\Models\PayrollStatus;
 use App\Models\Payslip;
+use App\Services\ContributorIdentity;
 use App\Services\PayrollCalculator;
+use App\Services\PayrollFiles;
+use App\Services\PayrollPaymentStatus;
 use App\Services\PayrollPeriod;
 use App\Services\PayslipPdf;
 use Illuminate\Http\Request;
@@ -18,18 +20,15 @@ class PayslipController extends Controller
     private function validateSlipOwner(Request $request, string $employeeName): void
     {
         if ($request->user()->role === 'contributor') {
-            $person = Contributor::find($request->user()->contributor_id);
-            $validNames = array_unique(array_filter([$request->user()->name, $person?->nama]));
-            abort_unless(in_array($employeeName, $validNames, true), 403, 'Anda tidak berhak mengakses slip ini.');
+            abort_unless($employeeName === app(ContributorIdentity::class)->payrollName($request->user()), 403, 'Anda tidak berhak mengakses slip ini.');
         }
     }
 
     public function mine(Request $request, PayrollPeriod $resolver, PayrollCalculator $calculator)
     {
         abort_unless($request->user()->role === 'contributor', 403);
-        $person = Contributor::find($request->user()->contributor_id);
-        $workerName = $person?->nama ?: $request->user()->name;
-        $validNames = array_unique(array_filter([$request->user()->name, $person?->nama]));
+        $workerName = app(ContributorIdentity::class)->payrollName($request->user());
+        $validNames = [$workerName];
 
         $slips = Payslip::whereIn('employee_name', $validNames)
             ->orderByDesc('id')
@@ -50,6 +49,7 @@ class PayslipController extends Controller
             'live_slip' => $liveSlip,
         ]);
     }
+
     public function index()
     {
         return Payslip::orderByDesc('created_at')->get();
@@ -77,8 +77,14 @@ class PayslipController extends Controller
     public function store(Request $request, PayrollCalculator $calculator)
     {
         $fields = $this->fields($request);
-        $slip = Payslip::create(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
-            'status' => $fields['status'] ?? 'belum'] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? 0)));
+        $slip = DB::transaction(function () use ($fields, $request, $calculator) {
+            $status = $fields['status'] ?? PayrollStatus::where('worker_name', $fields['employee_name'])->where('period', $fields['period'])->value('status') ?? 'belum';
+            $slip = Payslip::create(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
+                'status' => $status] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? 0)));
+            app(PayrollPaymentStatus::class)->set($slip->employee_name, $slip->period, $status);
+
+            return $slip;
+        });
 
         return response()->json(['success' => true, 'message' => 'Slip saved successfully', 'data' => ['id' => $slip->id]]);
     }
@@ -86,8 +92,11 @@ class PayslipController extends Controller
     public function update(Request $request, Payslip $payslip, PayrollCalculator $calculator)
     {
         $fields = $this->fields($request);
-        $payslip->update(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
-            'status' => $fields['status'] ?? $payslip->status, 'file_path' => null] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? $payslip->bonus)));
+        DB::transaction(function () use ($fields, $request, $payslip, $calculator) {
+            $payslip->update(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
+                'status' => $fields['status'] ?? $payslip->status, 'file_path' => null] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? $payslip->bonus)));
+            app(PayrollPaymentStatus::class)->set($payslip->employee_name, $payslip->period, $payslip->status);
+        });
 
         // Images may be shared by historical slips. Retain files rather than delete references from another slip.
         return response()->json(['success' => true, 'id' => $payslip->id]);
@@ -104,8 +113,8 @@ class PayslipController extends Controller
     {
         $data = $request->validate(['status' => 'required|in:belum,sudah']);
         DB::transaction(function () use ($data, $payslip) {
-            $payslip->update($data);
-            PayrollStatus::updateOrCreate(['worker_name' => $payslip->employee_name, 'period' => $payslip->period], $data);
+            app(PayrollPaymentStatus::class)->set($payslip->employee_name, $payslip->period, $data['status']);
+            $payslip->refresh();
         });
 
         return response()->json(['success' => true, 'id' => $payslip->id, 'status' => $payslip->status]);
@@ -158,12 +167,26 @@ class PayslipController extends Controller
         return response()->json(['success' => true, 'urls' => $urls]);
     }
 
-    public function file(string $type, string $path)
+    public function file(Request $request, string $type, string $path)
     {
         abort_unless(in_array($type, ['pdf_slips', 'evidence_images']) && ! str_contains($path, '..') && preg_match('#^[a-zA-Z0-9_./ -]+$#D', $path), 404);
         $disk = Storage::disk('local');
         $key = 'payroll/'.$type.'/'.$path;
         abort_unless($disk->exists($key), 404);
+        if ($request->user()->role !== 'admin') {
+            $name = app(ContributorIdentity::class)->payrollName($request->user());
+            $url = '/'.$type.'/'.$path;
+            $slips = Payslip::where('employee_name', $name)->get();
+            $allowed = $type === 'pdf_slips'
+                ? $slips->contains('file_path', $url)
+                : $slips->contains(fn ($slip) => in_array($url, app(PayrollFiles::class)->evidenceUrls($slip->evidence_data ?? []), true));
+            if (! $allowed && $type === 'pdf_slips' && $disk->exists($key.'.owner.json')) {
+                $owner = json_decode($disk->get($key.'.owner.json'), true);
+                $allowed = ($owner['employee_name'] ?? null) === $name
+                    && ($owner['contributor_id'] ?? null) === $request->user()->contributor_id;
+            }
+            abort_unless($allowed, 403, 'Anda tidak berhak mengakses file ini.');
+        }
         $mime = $disk->mimeType($key);
         abort_unless(in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp']), 404);
 

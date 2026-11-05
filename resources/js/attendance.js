@@ -4,7 +4,11 @@ const dateLabel = value => value ? new Date(value + 'T12:00:00').toLocaleDateStr
 const mapUrl = row => 'https://www.openstreetmap.org/?mlat=' + row.latitude + '&mlon=' + row.longitude + '#map=18/' + row.latitude + '/' + row.longitude;
 
 window.attendancePortalData = () => ({
-    activeTab: 'absensi',
+    activeTab: window.location.pathname.includes('/laporan') ? 'laporan' 
+             : (window.location.pathname.includes('/jadwal') ? 'jadwal' 
+             : (window.location.pathname.includes('/slip') ? 'slip' 
+             : (window.location.pathname.includes('/profil') ? 'akun' : 'absensi'))),
+    mobileSidebarOpen: false,
     todayReportSubmitted: null,
     today: witaDate(),
     month: witaDate().slice(0, 7),
@@ -353,6 +357,19 @@ window.attendancePortalData = () => ({
     },
 
     setTab(tab) {
+        const routes = {
+            'absensi': '/me',
+            'home': '/me',
+            'laporan': '/me/laporan',
+            'jadwal': '/me/jadwal',
+            'slip': '/me/slip',
+            'akun': '/me/profil',
+            'profil': '/me/profil'
+        };
+        if (routes[tab] && window.location.pathname !== routes[tab]) {
+            window.location.href = routes[tab];
+            return;
+        }
         if (!['absensi', 'laporan', 'jadwal', 'slip', 'akun'].includes(tab)) return;
         this.activeTab = tab;
         if (window.history && window.history.replaceState) {

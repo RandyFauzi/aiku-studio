@@ -48,6 +48,9 @@ External account emails and name-based matching are lookup rules, not enforced j
 - Contributor identity comes from the authenticated account, never a submitted
   user_id/name. Admin routes require EnsureAdministrator and active-account checks.
   Personal payslip/file routes require ownership validation as well as login.
+  ContributorIdentity resolves the shared identity by linked ID or unambiguous
+  email only. Duplicate payroll names fail closed. Ordinary contributor edits
+  cannot rename a name already referenced by payroll/recording history.
 - Business dates and payroll periods use Asia/Makassar (WITA); timestamps may be
   UTC. Payroll cutoff is 22–21; check PayrollPeriod and payroll config.
 - Payroll uses approved recording minutes and bonus; attendance/report durations
@@ -61,6 +64,8 @@ External account emails and name-based matching are lookup rules, not enforced j
 - Never index .env, storage, credentials, account records, GPS records, SQL data
   dumps, PDFs/evidence or production logs. No seed/import/sync/restore on live data
   as part of graph maintenance.
+- Run `php artisan panel:audit-data` for read-only aggregate integrity checks.
+  See `docs/SYSTEM_AUDIT_2026-11-05.md` for confirmed defects and regression coverage.
 
 Graphify cannot prove the absence of bugs. Its AST may miss Laravel facade calls,
 dynamic routes, container resolution, Blade/Alpine bindings and logical JSON/name

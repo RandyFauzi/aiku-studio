@@ -15,18 +15,21 @@ class SyncController extends Controller
         try {
             // First trigger 1618 sync if credentials are configured
             $result1618 = null;
+            $error1618 = null;
             if (config('payroll.robotics_1618_username') && config('payroll.robotics_1618_password')) {
                 try {
                     $result1618 = $sync1618->sync();
                 } catch (\Throwable $e) {
                     // Log and continue to Atlas
                     report($e);
+                    $error1618 = $e->getMessage();
                 }
             }
 
             // Also trigger Atlas sync if cookie exists
             if ($sync->cookie() !== '') {
                 $atlasRes = $sync->request();
+
                 return response()->json([
                     'status' => 'started',
                     'message' => 'Sinkronisasi rekaman berhasil diproses.',
@@ -39,7 +42,7 @@ class SyncController extends Controller
                 return response()->json($result1618);
             }
 
-            return response()->json(['status' => 'completed', 'message' => 'Sinkronisasi selesai.']);
+            return response()->json(['status' => 'failed', 'error' => $error1618 ?? 'Tidak ada sumber sinkronisasi yang dikonfigurasi.'], 422);
         } catch (\RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Contributor;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Support\Facades\File;
@@ -26,6 +27,11 @@ class PayslipPdf
         $pdf->render();
         $name = 'Payslip_'.preg_replace('/[^a-zA-Z0-9_-]/', '_', $data['employee_name']).'_'.bin2hex(random_bytes(12)).'.pdf';
         Storage::disk('local')->put('payroll/pdf_slips/'.$name, $pdf->output());
+        $people = Contributor::where('nama', $data['employee_name'])->get();
+        Storage::disk('local')->put('payroll/pdf_slips/'.$name.'.owner.json', json_encode([
+            'employee_name' => $data['employee_name'],
+            'contributor_id' => $people->count() === 1 ? $people->first()->id : null,
+        ], JSON_THROW_ON_ERROR));
 
         return ['success' => true, 'url' => '/pdf_slips/'.$name, 'fileName' => $name];
     }

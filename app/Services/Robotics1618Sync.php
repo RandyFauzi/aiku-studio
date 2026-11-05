@@ -33,7 +33,7 @@ class Robotics1618Sync
     {
         $lock = Cache::lock('robotics-1618-sync-lock', 180);
 
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             $current = $this->state();
             if ($current['isRunning'] ?? false) {
                 return [
@@ -86,7 +86,7 @@ class Robotics1618Sync
             }
 
             $allowedLookup = array_flip($allowedEmails);
-            $this->logProgress('Memproses rekaman CSV untuk ' . count($allowedEmails) . ' email studio...', 55, 'processing');
+            $this->logProgress('Memproses rekaman CSV untuk '.count($allowedEmails).' email studio...', 55, 'processing');
 
             // 4. Stream & Parse CSV row-by-row
             $stats = $this->processCsvStream($tempCsv, $allowedLookup);
@@ -117,15 +117,15 @@ class Robotics1618Sync
 
         } catch (\Throwable $e) {
             $err = $e->getMessage();
-            Log::error('1618 Robotics sync error: ' . $err, ['trace' => $e->getTraceAsString()]);
+            Log::error('1618 Robotics sync error: '.$err, ['trace' => $e->getTraceAsString()]);
 
             $this->saveState([
                 'isRunning' => false,
                 'stage' => 'failed',
                 'percent' => 0,
-                'message' => 'Gagal: ' . $err,
+                'message' => 'Gagal: '.$err,
                 'error' => $err,
-                'recent_logs' => array_merge($this->state()['recent_logs'] ?? [], [$this->logMsg('ERROR: ' . $err)]),
+                'recent_logs' => array_merge($this->state()['recent_logs'] ?? [], [$this->logMsg('ERROR: '.$err)]),
             ]);
 
             throw $e;
@@ -172,7 +172,7 @@ class Robotics1618Sync
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_USERAGENT => 'AIKuStudioSync/1.0',
-            CURLOPT_SSL_VERIFYPEER => !app()->isLocal(),
+            CURLOPT_SSL_VERIFYPEER => ! app()->isLocal(),
         ]);
 
         $response = curl_exec($ch);
@@ -192,7 +192,7 @@ class Robotics1618Sync
     private function downloadCsv(string $csvUrl, string $cookieFile, string $destinationPath, int $timeout): void
     {
         $fp = fopen($destinationPath, 'w+b');
-        if (!$fp) {
+        if (! $fp) {
             throw new RuntimeException('Tidak dapat membuka file penyimpanan sementara untuk unduhan CSV.');
         }
 
@@ -204,7 +204,7 @@ class Robotics1618Sync
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_USERAGENT => 'AIKuStudioSync/1.0',
-            CURLOPT_SSL_VERIFYPEER => !app()->isLocal(),
+            CURLOPT_SSL_VERIFYPEER => ! app()->isLocal(),
         ]);
 
         $success = curl_exec($ch);
@@ -213,7 +213,7 @@ class Robotics1618Sync
         curl_close($ch);
         fclose($fp);
 
-        if (!$success || $info['http_code'] !== 200) {
+        if (! $success || $info['http_code'] !== 200) {
             throw new RuntimeException("Gagal mengunduh recordings.csv (HTTP {$info['http_code']}): {$curlErr}");
         }
 
@@ -225,13 +225,13 @@ class Robotics1618Sync
     private function processCsvStream(string $csvPath, array $allowedLookup): array
     {
         $handle = fopen($csvPath, 'r');
-        if (!$handle) {
+        if (! $handle) {
             throw new RuntimeException('Gagal membuka file CSV yang telah diunduh.');
         }
 
         // Read header row
         $header = fgetcsv($handle);
-        if (!$header || !is_array($header)) {
+        if (! $header || ! is_array($header)) {
             fclose($handle);
             throw new RuntimeException('Format CSV tidak memiliki baris header yang valid.');
         }
@@ -250,7 +250,7 @@ class Robotics1618Sync
         // Validate essential columns
         $required = ['recording_id', 'email', 'task', 'created_utc', 'duration_s'];
         foreach ($required as $req) {
-            if (!isset($colIndex[$req])) {
+            if (! isset($colIndex[$req])) {
                 fclose($handle);
                 throw new RuntimeException("Kolom penting '{$req}' tidak ditemukan dalam CSV 1618.");
             }
@@ -268,17 +268,23 @@ class Robotics1618Sync
             }
 
             $email = strtolower(trim((string) ($row[$colIndex['email']] ?? '')));
-            if ($email === '' || !isset($allowedLookup[$email])) {
+            if ($email === '' || ! isset($allowedLookup[$email])) {
                 continue; // Skip any email that does NOT belong to AIKu Studio!
             }
 
-            $recordingId = trim((string) ($row[$colIndex['recording_id']] ?? ''));
-            if ($recordingId === '') {
+            $recordingId = strtolower(trim((string) ($row[$colIndex['recording_id']] ?? '')));
+            if ($recordingId === '' || strlen($recordingId) > 64) {
                 continue;
             }
 
             $task = trim((string) ($row[$colIndex['task']] ?? ''));
             $createdUtc = trim((string) ($row[$colIndex['created_utc']] ?? ''));
+            if (! preg_match('/^(\d{4})-(\d{2})-(\d{2})[T ]/', $createdUtc, $dateParts)
+                || ! checkdate((int) $dateParts[2], (int) $dateParts[3], (int) $dateParts[1])
+                || ! is_numeric($row[$colIndex['duration_s']] ?? null)
+                || (float) $row[$colIndex['duration_s']] < 0) {
+                continue;
+            }
             $durationSec = (float) ($row[$colIndex['duration_s']] ?? 0);
             $status = trim((string) ($row[$colIndex['status'] ?? null] ?? ''));
             $billableRaw = strtolower(trim((string) ($row[$colIndex['billable'] ?? null] ?? '')));
@@ -294,20 +300,24 @@ class Robotics1618Sync
             $formattedWita = null;
             if ($createdUtc !== '') {
                 try {
-                    $dt = CarbonImmutable::parse($createdUtc);
+                    $dt = CarbonImmutable::parse($createdUtc, 'UTC');
                     $recordedAt = $dt->utc()->format('Y-m-d H:i:s');
-                    $formattedWita = $dt->setTimezone('Asia/Makassar')->format('M j, Y, g:i A') . ' WITA';
+                    $formattedWita = $dt->setTimezone('Asia/Makassar')->format('M j, Y, g:i A').' WITA';
                 } catch (\Throwable $e) {
-                    $recordedAt = now()->format('Y-m-d H:i:s');
+                    continue; // Never move malformed historical records into today's payroll.
                 }
+            }
+            if ($recordedAt === null) {
+                continue;
             }
 
             $formattedReviewed = null;
             if ($reviewedUtc !== '') {
                 try {
-                    $rDt = CarbonImmutable::parse($reviewedUtc);
-                    $formattedReviewed = $rDt->setTimezone('Asia/Makassar')->format('M j, Y, g:i A') . ' WITA';
-                } catch (\Throwable $e) {}
+                    $rDt = CarbonImmutable::parse($reviewedUtc, 'UTC');
+                    $formattedReviewed = $rDt->setTimezone('Asia/Makassar')->format('M j, Y, g:i A').' WITA';
+                } catch (\Throwable $e) {
+                }
             }
 
             $billableStatus = null;
@@ -369,7 +379,7 @@ class Robotics1618Sync
 
     private function logMsg(string $msg): string
     {
-        return '[' . now('Asia/Makassar')->format('H:i:s') . '] ' . $msg;
+        return '['.now('Asia/Makassar')->format('H:i:s').'] '.$msg;
     }
 
     private function saveState(array $data): void

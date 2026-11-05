@@ -7,6 +7,7 @@ use App\Models\DailyWorkReport;
 use App\Models\DeviceAccount;
 use App\Models\StudioRecording;
 use App\Models\User;
+use App\Services\ContributorIdentity;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +19,7 @@ class DailyWorkReportController extends Controller
 {
     private function contributor(Request $request): Contributor
     {
-        abort_unless($request->user()->role === 'contributor', 403);
-
-        return Contributor::findOrFail($request->user()->contributor_id);
+        return app(ContributorIdentity::class)->resolve($request->user());
     }
 
     public function mine(Request $request)
@@ -49,7 +48,7 @@ class DailyWorkReportController extends Controller
             'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
             'phones' => 'nullable|array|max:6',
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
-            'phone_durations' => 'nullable|array|max:6',
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
             'phone_durations.*' => 'integer|min:1|max:1440',
         ]);
 
@@ -60,7 +59,7 @@ class DailyWorkReportController extends Controller
 
         // Process phone_durations or fallback to phones + total_duration_minutes
         $phoneDurations = null;
-        if (!empty($fields['phone_durations'])) {
+        if (! empty($fields['phone_durations'])) {
             $cleanedDurations = [];
             foreach ($fields['phone_durations'] as $key => $mins) {
                 if (in_array($key, $allowedKeys, true) && (int) $mins > 0) {
@@ -73,7 +72,7 @@ class DailyWorkReportController extends Controller
             $phoneDurations = $cleanedDurations;
             $phones = array_values(array_unique(array_keys($cleanedDurations)));
             $totalMinutes = array_sum($cleanedDurations);
-        } elseif (!empty($fields['phones'])) {
+        } elseif (! empty($fields['phones'])) {
             $phones = array_values($fields['phones']);
             $totalMinutes = (int) ($fields['total_duration_minutes'] ?? 0);
             if ($totalMinutes <= 0 || $totalMinutes > 8640) {
@@ -141,7 +140,7 @@ class DailyWorkReportController extends Controller
 
             // If phone_durations exists, use it; otherwise fallback from phones array
             $durations = $report->phone_durations;
-            if (empty($durations) && !empty($report->phones)) {
+            if (empty($durations) && ! empty($report->phones)) {
                 $durations = [];
                 $evenSplit = count($report->phones) > 0 ? (int) round($report->total_duration_minutes / count($report->phones)) : 0;
                 foreach ($report->phones as $pk) {
@@ -171,6 +170,7 @@ class DailyWorkReportController extends Controller
                         'my_record_ids' => [],
                         'tasks' => [],
                     ];
+
                     continue;
                 }
 
@@ -182,7 +182,7 @@ class DailyWorkReportController extends Controller
 
                 $unassignedRecs = $recs->filter(fn ($r) => empty($r->assigned_worker_name));
                 $myAssignedRecs = $recs->filter(fn ($r) => $r->assigned_contributor_id == $contributorId || strtolower(trim($r->assigned_worker_name ?? '')) === strtolower(trim($workerName)));
-                $otherAssignedRecs = $recs->filter(fn ($r) => !empty($r->assigned_worker_name) && $r->assigned_contributor_id != $contributorId && strtolower(trim($r->assigned_worker_name ?? '')) !== strtolower(trim($workerName)));
+                $otherAssignedRecs = $recs->filter(fn ($r) => ! empty($r->assigned_worker_name) && $r->assigned_contributor_id != $contributorId && strtolower(trim($r->assigned_worker_name ?? '')) !== strtolower(trim($workerName)));
 
                 $unassignedMinutes = round($unassignedRecs->sum('duration_min'), 1);
                 $myAssignedMinutes = round($myAssignedRecs->sum('duration_min'), 1);
@@ -257,11 +257,14 @@ class DailyWorkReportController extends Controller
             'worker_name' => 'required|string|max:100',
         ]);
 
-        $updated = StudioRecording::whereIn('record_id', $data['record_ids'])->update([
-            'assigned_contributor_id' => $data['contributor_id'],
-            'assigned_worker_name' => $data['worker_name'],
-            'assigned_at' => now(),
-        ]);
+        $person = Contributor::findOrFail($data['contributor_id']);
+        $updated = StudioRecording::whereIn('record_id', $data['record_ids'])
+            ->where(fn ($query) => $query->whereNull('assigned_worker_name')->orWhere('assigned_worker_name', ''))
+            ->whereNull('assigned_contributor_id')->update([
+                'assigned_contributor_id' => $data['contributor_id'],
+                'assigned_worker_name' => $person->nama,
+                'assigned_at' => now(),
+            ]);
 
         return response()->json([
             'success' => true,
@@ -290,4 +293,3 @@ class DailyWorkReportController extends Controller
         ]);
     }
 }
-

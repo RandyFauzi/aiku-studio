@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Contributor;
 use App\Models\ShiftSetting;
 use App\Models\User;
+use App\Services\ContributorIdentity;
 use App\Services\ShiftSchedule;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class AttendanceController extends Controller
 {
@@ -21,33 +23,7 @@ class AttendanceController extends Controller
 
     private function contributor(Request $request): Contributor
     {
-        abort_unless($request->user()->role === 'contributor', 403);
-
-        if ($request->user()->contributor_id) {
-            $person = Contributor::find($request->user()->contributor_id);
-            if ($person) {
-                return $person;
-            }
-        }
-
-        $person = Contributor::where('email', $request->user()->email)
-            ->orWhere('nama', $request->user()->name)
-            ->first();
-
-        if ($person) {
-            $request->user()->forceFill(['contributor_id' => $person->id])->saveQuietly();
-
-            return $person;
-        }
-
-        $person = Contributor::create([
-            'nama' => $request->user()->name ?: 'Contributor',
-            'email' => $request->user()->email,
-            'role' => 'contributor',
-        ]);
-        $request->user()->forceFill(['contributor_id' => $person->id])->saveQuietly();
-
-        return $person;
+        return app(ContributorIdentity::class)->resolve($request->user());
     }
 
     public function mine(Request $request, ShiftSchedule $schedule)
@@ -81,7 +57,7 @@ class AttendanceController extends Controller
         ]);
 
         $captured = CarbonImmutable::parse($data['captured_at']);
-        if ($captured->diffInMinutes(now()) > 30) {
+        if (abs($captured->diffInMinutes(now())) > 30) {
             throw ValidationException::withMessages(['captured_at' => 'Data lokasi kedaluwarsa. Silakan coba lagi.']);
         }
 
@@ -122,7 +98,7 @@ class AttendanceController extends Controller
             $config = $this->getWifiQrConfig();
 
             // 1. Validate QR Token FIRST
-            if (trim($data['qr_token']) !== trim($config['qr_secret'])) {
+            if (! hash_equals(trim($config['qr_secret']), trim($data['qr_token']))) {
                 throw ValidationException::withMessages([
                     'qr_token' => 'Barcode absensi tidak valid atau telah diperbarui oleh Admin. Silakan scan ulang barcode resmi studio.',
                 ]);
@@ -143,7 +119,7 @@ class AttendanceController extends Controller
                 $isLocal = app()->isLocal() && in_array($clientIp, ['127.0.0.1', '::1', 'localhost'], true);
                 $isAllowed = $isLocal || $this->isIpMatched($clientIp, $allowedIps);
 
-                if (!$isAllowed) {
+                if (! $isAllowed) {
                     $registeredStr = implode(', ', $allowedIps);
                     throw ValidationException::withMessages([
                         'wifi' => "Gagal absensi: Anda terdeteksi menggunakan jaringan pribadi/seluler (IP: {$clientIp}), bukan WiFi Kantor/Studio yang terdaftar ({$registeredStr}). Matikan kuota data seluler dan hubungkan HP Anda ke WiFi Studio sebelum scan barcode.",
@@ -152,14 +128,24 @@ class AttendanceController extends Controller
             }
 
             // 3. Optional Geofence validation if Studio coordinates are set
-            $hasGps = isset($data['latitude'], $data['longitude']) && $data['latitude'] !== null && $data['longitude'] !== null && ((float) $data['latitude'] != 0.0 || (float) $data['longitude'] != 0.0);
-            if (!empty($config['studio_lat']) && !empty($config['studio_lng']) && $hasGps) {
+            $hasGps = isset($data['latitude'], $data['longitude']);
+            $geofenceEnabled = isset($config['studio_lat'], $config['studio_lng']);
+            if ($geofenceEnabled && (! $hasGps || ! isset($data['accuracy_m'], $data['captured_at']))) {
+                throw ValidationException::withMessages(['location' => 'GPS diperlukan untuk memverifikasi lokasi studio.']);
+            }
+            if (isset($data['captured_at']) && abs(CarbonImmutable::parse($data['captured_at'])->diffInMinutes(now())) > 30) {
+                throw ValidationException::withMessages(['captured_at' => 'Data lokasi kedaluwarsa. Silakan coba lagi.']);
+            }
+            if ($geofenceEnabled) {
                 $studioLat = (float) $config['studio_lat'];
                 $studioLng = (float) $config['studio_lng'];
                 $radiusM = (float) ($config['geofence_radius_m'] ?? 150);
                 $accuracy = isset($data['accuracy_m']) ? (float) $data['accuracy_m'] : 0.0;
                 $distance = $this->calculateDistanceMeters((float) $data['latitude'], (float) $data['longitude'], $studioLat, $studioLng);
-                $effectiveRadius = max($radiusM, $radiusM + ($accuracy / 2));
+                if ($accuracy > max($radiusM, 100)) {
+                    throw ValidationException::withMessages(['location' => 'Akurasi GPS belum cukup. Silakan coba lagi di area terbuka.']);
+                }
+                $effectiveRadius = $radiusM + min($accuracy / 2, 50);
 
                 if ($distance > $effectiveRadius) {
                     $distInt = round($distance);
@@ -182,13 +168,13 @@ class AttendanceController extends Controller
             }
 
             // 5. Save attendance record safely with real GPS coordinates and WiFi metadata
-            $row = DB::transaction(function () use ($request, $person, $today, $clientIp, $data, $hasGps) {
+            $row = DB::transaction(function () use ($request, $person, $today, $clientIp, $data, $hasGps, $wifiCheckEnabled) {
                 User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
 
-                $lat = $hasGps ? (float) $data['latitude'] : 0.0;
-                $lng = $hasGps ? (float) $data['longitude'] : 0.0;
-                $acc = isset($data['accuracy_m']) ? (float) $data['accuracy_m'] : 0.0;
-                $capturedAt = !empty($data['captured_at']) ? CarbonImmutable::parse($data['captured_at']) : now();
+                $lat = $hasGps ? (float) $data['latitude'] : null;
+                $lng = $hasGps ? (float) $data['longitude'] : null;
+                $acc = $hasGps && isset($data['accuracy_m']) ? (float) $data['accuracy_m'] : null;
+                $capturedAt = $hasGps && ! empty($data['captured_at']) ? CarbonImmutable::parse($data['captured_at']) : null;
 
                 $attributes = [
                     'contributor_id' => $person->id,
@@ -207,7 +193,7 @@ class AttendanceController extends Controller
                     $attributes['client_ip'] = $clientIp;
                 }
                 if (Schema::hasColumn('attendances', 'wifi_verified')) {
-                    $attributes['wifi_verified'] = true;
+                    $attributes['wifi_verified'] = $wifiCheckEnabled;
                 }
 
                 return Attendance::firstOrCreate(
@@ -224,11 +210,13 @@ class AttendanceController extends Controller
             ]);
         } catch (ValidationException $e) {
             throw $e;
+        } catch (HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            Log::error('CheckInQr error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            Log::error('CheckInQr error: '.$e->getMessage()."\n".$e->getTraceAsString());
 
             return response()->json([
-                'message' => 'Gagal absensi: ' . $e->getMessage(),
+                'message' => 'Gagal menyimpan absensi. Silakan coba lagi atau hubungi admin.',
             ], 422);
         }
     }
@@ -270,33 +258,13 @@ class AttendanceController extends Controller
 
             // 2. Wildcard match (e.g. 140.213.216.*)
             if (str_contains($allowed, '*')) {
-                $pattern = '/^' . str_replace(['.', '*'], ['\.', '.*'], $allowed) . '$/';
+                $pattern = '/^'.str_replace('\*', '[0-9]{1,3}', preg_quote($allowed, '/')).'$/D';
                 if (preg_match($pattern, $clientIp)) {
                     return true;
                 }
             }
 
-            // 3. Subnet /24 match for IPv4 (e.g. 140.213.216.5 vs 140.213.216.99 on the same router)
-            if (filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && filter_var($allowed, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                $clientParts = explode('.', $clientIp);
-                $allowedParts = explode('.', $allowed);
-                if (count($clientParts) === 4 && count($allowedParts) === 4) {
-                    if ($clientParts[0] === $allowedParts[0] && $clientParts[1] === $allowedParts[1] && $clientParts[2] === $allowedParts[2]) {
-                        return true;
-                    }
-                }
-            }
-
-            // 4. IPv6 /64 prefix match
-            if (filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) && filter_var($allowed, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                $clientBin = @inet_pton($clientIp);
-                $allowedBin = @inet_pton($allowed);
-                if ($clientBin !== false && $allowedBin !== false) {
-                    if (substr($clientBin, 0, 8) === substr($allowedBin, 0, 8)) {
-                        return true;
-                    }
-                }
-            }
+            // Wider network ranges must be configured explicitly by an administrator.
         }
 
         return false;
@@ -315,16 +283,7 @@ class AttendanceController extends Controller
         $config = $this->getWifiQrConfig();
         $currentIp = $this->getClientIp($request);
 
-        // Auto-enroll current IP if no IPs have been registered yet by admin
-        if (empty($config['wifi_ips']) && $currentIp && !in_array($currentIp, ['127.0.0.1', '::1', 'localhost'], true)) {
-            $config['wifi_ips'] = [$currentIp];
-            ShiftSetting::updateOrCreate(
-                ['setting_key' => self::SETTING_KEY],
-                ['setting_value' => $config]
-            );
-        }
-
-        $qrUrl = url('/me?qr_token=' . $config['qr_secret']);
+        $qrUrl = url('/me?qr_token='.$config['qr_secret']);
 
         return response()->json([
             'config' => $config,
@@ -337,7 +296,11 @@ class AttendanceController extends Controller
     {
         $data = $request->validate([
             'wifi_ips' => 'nullable|array',
-            'wifi_ips.*' => 'string|max:45',
+            'wifi_ips.*' => ['string', 'max:45', function ($attribute, $value, $fail) {
+                if (! filter_var($value, FILTER_VALIDATE_IP) && ! preg_match('/^(?:[0-9]{1,3}|\*)(?:\.(?:[0-9]{1,3}|\*)){3}$/D', $value)) {
+                    $fail('Gunakan alamat IP atau pola IPv4 wildcard yang valid.');
+                }
+            }],
             'wifi_check_enabled' => 'required|boolean',
             'studio_name' => 'nullable|string|max:100',
             'studio_lat' => 'nullable|numeric|between:-90,90',
@@ -349,7 +312,7 @@ class AttendanceController extends Controller
         $current = $this->getWifiQrConfig();
 
         $ips = [];
-        if (!empty($data['wifi_ips'])) {
+        if (! empty($data['wifi_ips'])) {
             foreach ($data['wifi_ips'] as $ip) {
                 $clean = trim((string) $ip);
                 if ($clean !== '') {
@@ -358,9 +321,9 @@ class AttendanceController extends Controller
             }
         }
 
-        $qrSecret = $current['qr_secret'] ?? 'aiku_qr_' . Str::random(24);
-        if (!empty($data['regenerate_qr'])) {
-            $qrSecret = 'aiku_qr_' . Str::random(24);
+        $qrSecret = $current['qr_secret'] ?? 'aiku_qr_'.Str::random(24);
+        if (! empty($data['regenerate_qr'])) {
+            $qrSecret = 'aiku_qr_'.Str::random(24);
         }
 
         $studioLat = array_key_exists('studio_lat', $data)
@@ -379,7 +342,7 @@ class AttendanceController extends Controller
             'wifi_ips' => array_values(array_unique($ips)),
             'wifi_check_enabled' => (bool) $data['wifi_check_enabled'],
             'qr_secret' => $qrSecret,
-            'studio_name' => $data['studio_name'] ?: 'AIKu Studio',
+            'studio_name' => ($data['studio_name'] ?? null) ?: 'AIKu Studio',
             'studio_lat' => $studioLat,
             'studio_lng' => $studioLng,
             'geofence_radius_m' => $geofenceRadius,
@@ -396,14 +359,14 @@ class AttendanceController extends Controller
             'message' => 'Pengaturan WiFi & Barcode Absensi berhasil disimpan.',
             'config' => $updated,
             'current_ip' => $this->getClientIp($request),
-            'qr_url' => url('/me?qr_token=' . $qrSecret),
+            'qr_url' => url('/me?qr_token='.$qrSecret),
         ]);
     }
 
     public function barcodePoster(Request $request)
     {
         $config = $this->getWifiQrConfig();
-        $qrUrl = url('/me?qr_token=' . $config['qr_secret']);
+        $qrUrl = url('/me?qr_token='.$config['qr_secret']);
 
         return view('attendance.poster', [
             'config' => $config,
@@ -415,11 +378,11 @@ class AttendanceController extends Controller
     {
         $val = ShiftSetting::where('setting_key', self::SETTING_KEY)->value('setting_value');
 
-        if (empty($val) || !is_array($val) || empty($val['qr_secret'])) {
+        if (empty($val) || ! is_array($val) || empty($val['qr_secret'])) {
             $default = [
                 'wifi_ips' => [],
                 'wifi_check_enabled' => true,
-                'qr_secret' => 'aiku_qr_' . Str::random(24),
+                'qr_secret' => 'aiku_qr_'.Str::random(24),
                 'studio_name' => 'AIKu Studio',
                 'studio_lat' => null,
                 'studio_lng' => null,
@@ -440,25 +403,7 @@ class AttendanceController extends Controller
 
     public function getClientIp(Request $request): string
     {
-        $headers = [
-            'CF-Connecting-IP',
-            'True-Client-IP',
-            'X-Real-IP',
-            'X-Forwarded-For',
-            'X-Client-IP',
-        ];
-
-        foreach ($headers as $header) {
-            $val = $request->header($header);
-            if ($val) {
-                $parts = explode(',', $val);
-                $ip = trim($parts[0]);
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
-
+        // Only the framework's explicitly trusted proxies may interpret IP headers.
         return (string) $request->ip();
     }
 }

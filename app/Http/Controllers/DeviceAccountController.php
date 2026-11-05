@@ -7,11 +7,19 @@ use App\Models\DeviceAccount;
 use App\Models\StudioAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class DeviceAccountController extends Controller
 {
+    private function mutate(callable $callback): mixed
+    {
+        // Serialize the empty-phone case too; locking only existing rows cannot
+        // prevent two simultaneous registrations from both becoming active.
+        return Cache::lock('device-account-write', 30)->block(5, fn () => DB::transaction($callback, 3));
+    }
+
     private function ensureAdmin(Request $request): void
     {
         abort_unless($request->user()?->role === 'admin', 403, 'Akses terbatas untuk Administrator.');
@@ -63,7 +71,7 @@ class DeviceAccountController extends Controller
         $phoneKey = $data['phone_key'];
         $name = trim($data['account_name'] ?? '') ?: null;
 
-        $account = DB::transaction(function () use ($phoneKey, $email, $name) {
+        $account = $this->mutate(function () use ($phoneKey, $email, $name) {
             // Deactivate any currently active account on this phone
             DeviceAccount::where('phone_key', $phoneKey)
                 ->where('is_active', true)
@@ -98,7 +106,8 @@ class DeviceAccountController extends Controller
     {
         $this->ensureAdmin($request);
 
-        DB::transaction(function () use ($deviceAccount) {
+        $this->mutate(function () use ($deviceAccount) {
+            $deviceAccount->refresh();
             // Deactivate other accounts for this phone
             DeviceAccount::where('phone_key', $deviceAccount->phone_key)
                 ->where('id', '!=', $deviceAccount->id)
@@ -109,8 +118,10 @@ class DeviceAccountController extends Controller
                 'activated_at' => now(),
             ]);
 
-            StudioAccount::where('email', $deviceAccount->email)
-                ->update(['active' => true]);
+            StudioAccount::updateOrCreate(['email' => $deviceAccount->email], [
+                'active' => true,
+                'name' => $deviceAccount->account_name ?: $deviceAccount->email,
+            ]);
         });
 
         return response()->json([
@@ -123,6 +134,10 @@ class DeviceAccountController extends Controller
     public function update(Request $request, DeviceAccount $deviceAccount): JsonResponse
     {
         $this->ensureAdmin($request);
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email', ''))),
+            'phone_key' => $request->input('phone_key') ?? $deviceAccount->phone_key,
+        ]);
 
         $allowedPhones = array_keys(DailyWorkReport::PHONES);
         $data = $request->validate([
@@ -139,25 +154,26 @@ class DeviceAccountController extends Controller
             'account_name' => ['nullable', 'string', 'max:128'],
         ]);
 
-        $oldEmail = $deviceAccount->email;
         $newEmail = strtolower(trim($data['email']));
         $phoneKey = $data['phone_key'] ?? $deviceAccount->phone_key;
         $name = trim($data['account_name'] ?? '') ?: null;
 
-        DB::transaction(function () use ($deviceAccount, $phoneKey, $newEmail, $name, $oldEmail) {
+        $this->mutate(function () use ($deviceAccount, $phoneKey, $newEmail, $name) {
+            $deviceAccount->refresh();
+            if ($deviceAccount->is_active) {
+                DeviceAccount::where('phone_key', $phoneKey)->whereKeyNot($deviceAccount->id)->update(['is_active' => false]);
+            }
             $deviceAccount->update([
                 'phone_key' => $phoneKey,
                 'email' => $newEmail,
                 'account_name' => $name,
             ]);
 
-            // Sync with StudioAccount if email was updated
-            if ($oldEmail !== $newEmail) {
-                StudioAccount::where('email', $oldEmail)->update(['email' => $newEmail]);
-            }
-            if ($name) {
-                StudioAccount::where('email', $newEmail)->update(['name' => $name]);
-            }
+            // Studio accounts are shared references. Never rename an old email
+            // or carry its external participant_id over to a different account.
+            StudioAccount::firstOrCreate(['email' => $newEmail], [
+                'name' => $name ?: $newEmail, 'active' => true,
+            ]);
         });
 
         return response()->json([
@@ -171,13 +187,13 @@ class DeviceAccountController extends Controller
     {
         $this->ensureAdmin($request);
 
-        if ($deviceAccount->is_active) {
-            abort(422, 'Akun yang sedang aktif tidak dapat dihapus. Silakan aktifkan akun lain terlebih dahulu.');
-        }
-
         $email = $deviceAccount->email;
         $label = $deviceAccount->phone_label;
-        $deviceAccount->delete();
+        $this->mutate(function () use ($deviceAccount) {
+            $deviceAccount->refresh();
+            abort_if($deviceAccount->is_active, 422, 'Akun yang sedang aktif tidak dapat dihapus. Silakan aktifkan akun lain terlebih dahulu.');
+            $deviceAccount->delete();
+        });
 
         return response()->json([
             'success' => true,

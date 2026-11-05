@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class PayrollPeriod
@@ -45,6 +46,12 @@ class PayrollPeriod
 
     public function resolve(array $input): array
     {
+        $input = Validator::make($input, [
+            'period' => 'sometimes|nullable|string|max:255',
+            'periodId' => 'sometimes|nullable|string|max:255',
+            'startDate' => 'required_with:endDate|nullable|date_format:Y-m-d',
+            'endDate' => 'required_with:startDate|nullable|date_format:Y-m-d',
+        ])->validate();
         $name = $input['period'] ?? '';
         $id = $input['periodId'] ?? '';
         if (! empty($input['startDate']) && ! empty($input['endDate'])) {

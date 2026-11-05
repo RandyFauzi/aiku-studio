@@ -24,7 +24,14 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/', fn () => auth()->user()->role === 'contributor' ? redirect('/me') : view('panel.index'));
-    Route::get('/me', fn () => auth()->user()->role === 'admin' ? redirect('/') : view('portal.index'));
+
+    // Contributor Portal (Separate Blade Pages for Each Function)
+    Route::get('/me', fn () => view('portal.home'))->name('portal.home');
+    Route::get('/me/laporan', fn () => view('portal.work-reports'))->name('portal.work-reports');
+    Route::get('/me/jadwal', fn () => view('portal.schedule'))->name('portal.schedule');
+    Route::get('/me/slip', fn () => view('portal.payslips'))->name('portal.payslips');
+    Route::get('/me/profil', fn () => view('portal.profile'))->name('portal.profile');
+    Route::get('/me/profile', fn () => redirect('/me/profil'));
     Route::get('/api/me/attendance', [AttendanceController::class, 'mine']);
     Route::post('/api/me/attendance', [AttendanceController::class, 'checkIn'])->middleware('throttle:20,1');
     Route::post('/api/me/attendance/qr', [AttendanceController::class, 'checkInQr'])->middleware('throttle:20,1');
@@ -81,7 +88,6 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::put('/payslips/{payslip}', [PayslipController::class, 'update']);
             Route::delete('/payslips/{payslip}', [PayslipController::class, 'destroy']);
             Route::patch('/payslips/{payslip}/status', [PayslipController::class, 'status']);
-            Route::get('/payslips/{payslip}/export', [PayslipController::class, 'export']);
             Route::post('/payslips/{payslip}/email', [PayslipController::class, 'email'])->middleware('throttle:10,1');
             Route::get('/studio-recordings', [RecordingController::class, 'index']);
             Route::put('/studio-recordings/batch-assign', [RecordingController::class, 'assign']);
@@ -98,7 +104,6 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::get('/payroll/live-summary', [PayrollController::class, 'summary']);
             Route::get('/payroll/worker-evidence', [PayrollController::class, 'evidence']);
             Route::post('/payroll/status', [PayrollController::class, 'status']);
-            Route::get('/payroll/export-live/{worker}', [PayslipController::class, 'exportLive']);
             Route::post('/studio-recordings/sync-now', [SyncController::class, 'requestSync']);
             Route::post('/studio-recordings/sync-1618', [SyncController::class, 'sync1618']);
             Route::get('/studio-recordings/1618-status', [SyncController::class, 'status1618']);

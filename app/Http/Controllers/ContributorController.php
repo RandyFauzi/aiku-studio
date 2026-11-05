@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contributor;
+use App\Models\PayrollStatus;
+use App\Models\Payslip;
+use App\Models\StudioRecording;
 use App\Models\User;
 use App\Services\ContributorAccess;
 use Illuminate\Http\Request;
@@ -32,10 +35,24 @@ class ContributorController extends Controller
         });
     }
 
-    private function fields(Request $request): array
+    private function fields(Request $request, ?Contributor $person = null): array
     {
+        $request->merge(['nama' => trim((string) $request->input('nama', ''))]);
+        $duplicate = Contributor::whereRaw('LOWER(TRIM(nama)) = ?', [mb_strtolower($request->input('nama'))])
+            ->when($person, fn ($query) => $query->whereKeyNot($person->id))->exists();
+        if ($duplicate) {
+            throw ValidationException::withMessages(['nama' => 'Nama sudah digunakan kontributor lain. Gunakan nama yang unik untuk menjaga pemetaan payroll.']);
+        }
+        if ($person && $person->nama !== $request->input('nama') && (
+            Payslip::where('employee_name', $person->nama)->exists()
+            || PayrollStatus::where('worker_name', $person->nama)->exists()
+            || StudioRecording::where('assigned_worker_name', $person->nama)->exists()
+        )) {
+            throw ValidationException::withMessages(['nama' => 'Nama terhubung dengan riwayat payroll/rekaman dan belum dapat diganti. Data lain tetap dapat diperbarui.']);
+        }
+
         return $request->validate([
-            'nama' => 'required|string|max:255',
+            'nama' => 'required|string|max:100',
             'no_wa' => 'nullable|string|max:255',
             'domisili' => 'nullable|string|max:255',
             'no_rek' => 'nullable|string|max:255',
@@ -68,12 +85,15 @@ class ContributorController extends Controller
         $this->ensureAdmin($request);
 
         return DB::transaction(function () use ($request, $contributor) {
-            $fields = $this->fields($request);
+            $fields = $this->fields($request, $contributor);
             $user = User::where('contributor_id', $contributor->id)->first();
             $targetRole = $fields['role'] ?? $contributor->role ?? $user?->role ?? 'contributor';
 
             if ($user && $request->user()?->id === $user->id && $targetRole !== 'admin') {
                 throw ValidationException::withMessages(['role' => 'Anda tidak dapat mengubah role akun Anda sendiri menjadi Pekerja.']);
+            }
+            if ($user && $request->user()?->id === $user->id && array_key_exists('email', $fields) && empty($fields['email'])) {
+                throw ValidationException::withMessages(['email' => 'Email akun Anda sendiri tidak dapat dikosongkan.']);
             }
 
             $contributor->update(array_merge($fields, ['role' => $targetRole]));
@@ -118,6 +138,7 @@ class ContributorController extends Controller
     public function destroy(Request $request, Contributor $contributor)
     {
         $this->ensureAdmin($request);
+        abort_if((int) $request->user()->contributor_id === $contributor->id, 422, 'Anda tidak dapat menghapus akun Anda sendiri.');
         DB::transaction(function () use ($contributor) {
             User::where('contributor_id', $contributor->id)->update(['is_active' => false]);
             $contributor->delete();

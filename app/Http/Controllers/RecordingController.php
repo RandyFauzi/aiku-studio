@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contributor;
 use App\Models\StudioRecording;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class RecordingController extends Controller
 {
@@ -63,6 +65,17 @@ class RecordingController extends Controller
         if (array_key_exists('worker_name', $data)) {
             $update['assigned_worker_name'] = trim($data['worker_name'] ?? '') ?: null;
             $update['assigned_contributor_id'] = $data['contributor_id'] ?? null;
+            if ($update['assigned_worker_name'] === null) {
+                $update['assigned_contributor_id'] = null;
+            } elseif ($update['assigned_contributor_id'] !== null) {
+                $update['assigned_worker_name'] = Contributor::findOrFail($update['assigned_contributor_id'])->nama;
+            } else {
+                $people = Contributor::where('nama', $update['assigned_worker_name'])->get();
+                if ($people->count() > 1) {
+                    throw ValidationException::withMessages(['worker_name' => 'Nama tidak unik. Pilih kontributor berdasarkan ID.']);
+                }
+                $update['assigned_contributor_id'] = $people->first()?->id;
+            }
             $update['assigned_at'] = $update['assigned_worker_name'] ? now() : null;
         }
         if (array_key_exists('payment_status', $data)) {

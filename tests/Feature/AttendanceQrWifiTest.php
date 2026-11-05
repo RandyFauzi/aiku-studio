@@ -133,14 +133,14 @@ class AttendanceQrWifiTest extends TestCase
         $this->assertDatabaseCount('attendances', 1);
     }
 
-    public function test_checkin_succeeds_on_same_subnet_cgnat(): void
+    public function test_checkin_succeeds_on_explicitly_configured_subnet_wildcard(): void
     {
         $worker = $this->contributorUser();
 
         ShiftSetting::updateOrCreate(
             ['setting_key' => AttendanceController::SETTING_KEY],
             ['setting_value' => [
-                'wifi_ips' => ['140.213.216.5'],
+                'wifi_ips' => ['140.213.216.*'],
                 'wifi_check_enabled' => true,
                 'qr_secret' => 'token_subnet_test',
             ]]
