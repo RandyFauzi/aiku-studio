@@ -1,3 +1,7 @@
+### [2026-11-05 15.19] — CODEX
+- Atur Shift: papan drag-and-drop + formulir, maksimal 3 orang, durasi per shift, pola periode 22–21, revisi/izin/sakit harian, analitik dan ringkasan salin; jadwal worker terhubung berdasarkan contributor_id. Data lama tetap terbaca; tidak ada migrasi atau perubahan kalkulasi gaji.
+- Validasi: full suite 103 tes/620 assertion, 3 tes JS, browser desktop 1440 & mobile 390 (drag asli, kapasitas, simpan pola/revisi, izin/sakit, ringkasan; tanpa error/overflow), build Vite dan refresh Graphify lulus. QA memakai fixture, bukan data operasional.
+
 # Agent Collaboration Log (Antigravity & CODEX)
 
 ### [2026-11-05 14:58] — Antigravity

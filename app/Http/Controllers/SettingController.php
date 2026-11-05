@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ShiftSetting;
 use App\Models\StudioAccount;
 use App\Services\ShiftConfiguration;
+use App\Services\ShiftPatterns;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -24,13 +25,28 @@ class SettingController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function shifts()
+    public function shifts(Request $request, ShiftPatterns $patterns)
     {
+        if ($request->has('periodId')) {
+            $request->validate(['periodId' => 'required|string|max:64']);
+            $period = $patterns->period($request->query('periodId'));
+
+            return response()->json(['success' => true, 'period' => $period, ...$patterns->read($period)]);
+        }
+
         return response()->json(['success' => true, 'config' => ShiftSetting::where('setting_key', 'main_shift_config')->value('setting_value') ?? config('shifts')]);
     }
 
     public function saveShifts(Request $request)
     {
+        if ($request->has('periodId')) {
+            $fields = $request->validate(['periodId' => 'required|string|max:64', 'expected_revision' => 'required|integer|min:0', 'config' => 'required|array']);
+            $patterns = app(ShiftPatterns::class);
+            $period = $patterns->period($fields['periodId']);
+            $config = app(ShiftConfiguration::class)->normalize($fields['config'], true);
+
+            return response()->json(['success' => true, 'period' => $period, ...$patterns->save($period, $config, $fields['expected_revision'])]);
+        }
         $data = app(ShiftConfiguration::class)->normalize($request->all());
         ShiftSetting::updateOrCreate(['setting_key' => 'main_shift_config'], ['setting_value' => $data]);
 

@@ -1,91 +1,123 @@
-import attachCalendar from './shift-calendar';
-window.shiftsData = () => attachCalendar({
-    sidebarOpen: window.innerWidth >= 768 && localStorage.getItem('aiku_sidebar_open') !== 'false',
-    tab: 'tim', search: '', loading: true, saving: false, error: '', saved: '', baseline: '', contributors: [], addName: '',
-    month: new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Makassar',year:'numeric',month:'2-digit'}).format(new Date()).replace('/', '-'),
-    config: {start_time:'08:00',charging_duration_min:60,session_duration_min:120,sessions_count:5,tools_count:3,hp_per_tool:2,hourly_rate:50000,day_off:'monday',qa_yield_rate:90,karyawan:[]},
-    async initData() {
-        try {
-            const [settings, people] = await Promise.all([fetch('/api/shifts/config'),fetch('/api/contributors')]);
-            if (!settings.ok || !people.ok) throw new Error('Pengaturan shift belum berhasil dimuat. Muat ulang halaman.');
-            const data = await settings.json(); this.contributors = await people.json();
-            this.config = {...this.config,...data.config};
-            this.config.karyawan = this.config.karyawan.map(k => ({...k,sessions:(k.sessions||[]).map(Number)}));
-            const now = new Date(); this.month = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit'}).format(now);
-            this.baseline = JSON.stringify(this.config);
-            await this.loadCalendar(this.month);
-            await this.openDate(this.today,true);
-            window.addEventListener('beforeunload',event=>{if(this.dirty){event.preventDefault();event.returnValue='';}});
-            window.addEventListener('resize',()=>{if(window.innerWidth<768)this.sidebarOpen=false;});
+import {clone,statusLabels,prepareConfig,sessionRows,workHours,members,problems,dateRange,patternForDate,aggregate} from './shift-planner';
+
+window.shiftsData=()=>({
+    sidebarOpen:window.innerWidth>=768&&localStorage.getItem('aiku_sidebar_open')!=='false',
+    loading:true,saving:false,error:'',saved:'',mode:'period',view:'board',search:'',
+    config:null,baseline:'',revision:0,inherited:false,period:null,contributors:[],
+    days:{},selectedDate:'',dayDraft:null,dayBaseline:'',dayRevision:0,drag:null,dropTarget:null,chosenPerson:'',chosenShift:1,
+    today:new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),statuses:statusLabels,
+    async request(url,options={}){
+        const response=await fetch(url,{...options,headers:{Accept:'application/json','Content-Type':'application/json',...options.headers}});
+        const result=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error(Object.values(result.errors||{}).flat().join(' ')||result.message||'Permintaan gagal. Silakan coba lagi.');return result;
+    },
+    async initData(){
+        try{this.contributors=await this.request('/api/contributors');await this.loadPeriod('current');
+            window.addEventListener('beforeunload',e=>{if(this.dirty){e.preventDefault();e.returnValue='';}});
             this.$watch('sidebarOpen',v=>localStorage.setItem('aiku_sidebar_open',String(v)));
-        } catch(e) { this.error=e.message; } finally {this.loading=false;}
+        }catch(e){this.error=e.message;}finally{this.loading=false;}
     },
-    get dirty() {return this.baseline !== '' && JSON.stringify(this.config)!==this.baseline;},
-    get tools() {return Array.from({length:Number(this.config.tools_count)||0},(_,i)=>'Alat '+(i+1));},
-    get sessions() {
-        const [h,m]=this.config.start_time.split(':').map(Number);
-        return Array.from({length:Number(this.config.sessions_count)||0},(_,i)=>{
-            const start=h*60+m+i*(Number(this.config.session_duration_min)+Number(this.config.charging_duration_min));
-            const end=start+Number(this.config.session_duration_min);
-            const fmt=n=>String(Math.floor(n/60)%24).padStart(2,'0')+':'+String(n%60).padStart(2,'0')+(n>=1440?' +1 hari':'');
-            return {id:i+1,start:fmt(start),end:fmt(end)};
-        });
+    async loadPeriod(id){
+        const result=await this.request('/api/shifts/config?periodId='+encodeURIComponent(id));
+        const dates=await this.request('/api/shifts/days?startDate='+result.period.startDate+'&endDate='+result.period.endDate);
+        this.period=result.period;this.config=prepareConfig(result.config,this.contributors);this.revision=result.revision;this.inherited=result.inherited;
+        this.baseline=JSON.stringify(this.config);this.days=dates.days||{};Object.values(this.days).forEach(d=>d.config=prepareConfig(d.config,this.contributors));
+        this.chosenShift=1;this.selectDate(this.today>=this.period.startDate&&this.today<=this.period.endDate?this.today:this.period.startDate);
     },
-    get visibleWorkers() {return this.config.karyawan.map((person,index)=>({person,index})).filter(row=>row.person.name.toLowerCase().includes(this.search.toLowerCase()));},
-    get availablePeople() {const used=new Set(this.config.karyawan.map(k=>k.name));return this.contributors.filter(k=>!used.has(k.nama));},
-    namesFor(worker) {return [...new Set([worker.name,...this.contributors.map(c=>c.nama)])].sort((a,b)=>a.localeCompare(b,'id'));},
-    toggleSession(worker,id) {worker.sessions=worker.sessions.includes(id)?worker.sessions.filter(s=>s!==id):[...worker.sessions,id].sort((a,b)=>a-b);this.saved='';},
-    hours(worker) {return worker.sessions.length*Number(this.config.session_duration_min)/60;},
-    production(worker) {return this.hours(worker)*Number(this.config.hp_per_tool);},
-    peopleAt(session,tool) {return this.config.karyawan.filter(k=>k.alat===tool&&k.sessions.includes(session));},
-    get conflicts() {
-        const messages=[]; const names=new Set();
-        this.config.karyawan.forEach(k=>{
-            if(names.has(k.name))messages.push(k.name+' terdaftar lebih dari sekali.'); names.add(k.name);
-            if(!this.tools.includes(k.alat))messages.push('Pilih alat yang tersedia untuk '+k.name+'.');
-            if(k.sessions.some(s=>s<1||s>Number(this.config.sessions_count)))messages.push('Perbarui sesi '+k.name+' sesuai jumlah sesi.');
-        });
-        this.sessions.forEach(s=>this.tools.forEach(tool=>{const people=this.peopleAt(s.id,tool);if(people.length>1)messages.push(tool+', sesi '+s.id+': '+people.map(k=>k.name).join(' dan ')+'.');}));
-        return messages;
+    get periodDirty(){return !!this.config&&this.baseline!==JSON.stringify(this.config);},
+    get dayDirty(){return !!this.dayDraft&&this.dayBaseline!==JSON.stringify(this.dayDraft);},
+    get dirty(){return this.periodDirty||this.dayDirty;},get daily(){return this.mode==='day';},
+    get activeConfig(){return this.daily?this.dayDraft:this.config;},
+    get activeDirty(){return this.daily?this.dayDirty:this.periodDirty||this.inherited;},
+    get conflicts(){return problems(this.activeConfig);},get shifts(){return sessionRows(this.activeConfig);},
+    get dates(){return this.period?dateRange(this.period.startDate,this.period.endDate):[];},
+    get roster(){
+        const cfg=this.activeConfig;if(!cfg)return [];
+        const rows=this.contributors.map(c=>({id:c.id,name:c.nama,linked:c.login_enabled,person:cfg.karyawan.find(p=>Number(p.contributor_id)===Number(c.id))}));
+        cfg.karyawan.filter(p=>!this.contributors.some(c=>Number(c.id)===Number(p.contributor_id))).forEach(p=>rows.push({id:'legacy:'+p.name,name:p.name,linked:false,person:p}));
+        return rows.filter(p=>p.name.toLowerCase().includes(this.search.toLowerCase()));
     },
-    get dailyHours() {return this.config.karyawan.reduce((n,k)=>n+this.production(k),0);},
-    get assignedSlots() {return this.config.karyawan.reduce((n,k)=>n+k.sessions.length,0);},
-    get activeDays() {
-        if(!/^\d{4}-\d{2}$/.test(this.month))return 0;
-        const [year,month]=this.month.split('-').map(Number), days=new Date(year,month,0).getDate();
-        const off=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].indexOf(this.config.day_off);
-        let active=0;for(let day=1;day<=days;day++)if(new Date(year,month-1,day).getDay()!==off)active++;
-        return active;
+    get unlinked(){return this.activeConfig?.karyawan.filter(p=>!p.contributor_id)||[];},
+    get dayHours(){return(this.activeConfig?.karyawan||[]).reduce((s,p)=>s+workHours(p,this.activeConfig),0);},
+    get filledSlots(){return this.shifts.reduce((n,s)=>n+this.shiftMembers(s.id).length,0);},
+    get summary(){return this.config?aggregate(this.dates,d=>this.effectiveDate(d),this.config.hourly_rate):{rows:[]};},
+    get calendarCells(){
+        if(!this.dates.length)return [];
+        const offset=(new Date(this.dates[0]+'T12:00:00Z').getUTCDay()+6)%7;
+        return [...Array.from({length:offset},(_,i)=>({key:'blank'+i})),...this.dates.map(date=>{
+            const cfg=this.effectiveDate(date),hours=cfg.karyawan.reduce((s,p)=>s+workHours(p,cfg),0);
+            return {key:date,date,day:Number(date.slice(-2)),month:date.slice(5,7),hours,custom:!!this.days[date],absence:cfg.karyawan.filter(p=>['izin','sakit'].includes(p.status)).length};
+        })];
     },
-    get monthlyProduction() {return this.dailyHours*this.activeDays;},
-    get monthlyCost() {return this.monthlyProduction*Number(this.config.hourly_rate);},
-    number(value) {return new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(value||0);},
-    money(value) {return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(value||0);},
-    initials(name) {return name.split(' ').filter(Boolean).slice(0,2).map(s=>s[0]).join('');},
-    addWorker() {
-        if(!this.addName)return;
-        this.config.karyawan.push({name:this.addName,short:this.addName.split(' ')[0],role:'Reguler',sessions:[],alat:this.tools[0]||'Alat 1',daily_work_hrs:0,daily_prod_hrs:0});
-        this.addName='';this.search='';this.saved='';
+    effectiveDate(date){if(this.dayDirty&&date===this.selectedDate)return this.dayDraft;return this.days[date]?.config||patternForDate(this.config,date);},
+    selectDate(date){this.selectedDate=date;this.dayDraft=clone(this.days[date]?.config||patternForDate(this.config,date));this.dayBaseline=JSON.stringify(this.dayDraft);this.dayRevision=this.days[date]?.revision||0;},
+    async confirmDiscard(message){const r=await window.Swal.fire({title:'Perubahan belum disimpan',text:message,icon:'question',showCancelButton:true,confirmButtonText:'Buang perubahan',cancelButtonText:'Tetap mengedit'});return r.isConfirmed;},
+    async openDate(date){
+        if(this.saving||this.loading)return;
+        if(this.periodDirty){this.error='Simpan atau batalkan pola periode dahulu sebelum merevisi harian.';return;}
+        if(this.dayDirty&&!(await this.confirmDiscard('Perubahan tanggal ini akan dibuang.')))return;
+        this.selectDate(date);this.mode='day';this.view='board';this.clearFeedback();
     },
-    async removeWorker(index) {
-        const result=await window.Swal.fire({title:'Hapus dari jadwal?',text:this.config.karyawan[index].name+' akan dilepas dari jadwal ini. Data kontributor dan payroll tetap tersimpan.',icon:'question',showCancelButton:true,confirmButtonText:'Hapus dari jadwal',cancelButtonText:'Batal',confirmButtonColor:'#009B7E'});
-        if(result.isConfirmed)this.config.karyawan.splice(index,1);
+    async switchMode(mode){if(this.saving||mode===this.mode)return;if(mode==='day'&&this.periodDirty){this.error='Simpan atau batalkan pola periode dahulu sebelum merevisi harian.';return;}if(mode==='period'&&this.dayDirty){this.error='Simpan atau batalkan revisi harian dahulu sebelum mengubah pola periode.';return;}this.mode=mode;this.clearFeedback();},
+    async movePeriod(offset){
+        if(this.saving||this.loading)return;if(this.dirty&&!(await this.confirmDiscard('Perubahan pola dan harian akan dibuang saat berganti periode.')))return;
+        const anchor=new Date(this.period.startDate+'T12:00:00Z');anchor.setUTCMonth(anchor.getUTCMonth()+offset);const start=anchor.toISOString().slice(0,10),end=new Date(anchor);end.setUTCMonth(end.getUTCMonth()+1);end.setUTCDate(21);
+        this.loading=true;this.clearFeedback();try{await this.loadPeriod(start+'_'+end.toISOString().slice(0,10));}catch(e){this.error=e.message;}finally{this.loading=false;}
     },
-    async discard() {
-        const result=await window.Swal.fire({title:'Batalkan perubahan?',text:'Jadwal akan kembali ke versi yang terakhir disimpan.',icon:'question',showCancelButton:true,confirmButtonText:'Batalkan perubahan',cancelButtonText:'Lanjut mengedit'});
-        if(result.isConfirmed){this.config=JSON.parse(this.baseline);this.saved='';this.error='';}
+    async reload(){
+        if(this.dirty&&!(await this.confirmDiscard('Muat ulang akan membuang seluruh perubahan yang belum disimpan.')))return;
+        this.loading=true;this.clearFeedback();try{await this.loadPeriod(this.period?.id||'current');}catch(e){this.error=e.message;}finally{this.loading=false;}
     },
-    async saveConfig() {
-        if(this.saving||this.loading||!this.dirty||this.conflicts.length)return;
-        this.saving=true;this.error='';this.saved='';
-        try {
-            const payload=JSON.parse(JSON.stringify(this.config));
-            payload.karyawan=payload.karyawan.map(k=>({...k,daily_work_hrs:this.hours(k),daily_prod_hrs:this.production(k)}));
-            const response=await fetch('/api/shifts/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-            const result=await response.json();if(!response.ok||!result.success)throw new Error(result.message||'Jadwal belum tersimpan.');
-            this.config=result.config||payload;this.baseline=JSON.stringify(this.config);
-            if(!this.dayDirty)await this.openDate(this.selectedDate,true);
-            this.saved='Pola rutin sudah tersimpan. Jadwal khusus per tanggal tetap sama.';
+    shiftMembers(id){return this.activeConfig?members(this.activeConfig,id):[];},personKey(p){return p.contributor_id||'legacy:'+p.name;},
+    ensurePerson(id){
+        const cfg=this.activeConfig;let p=cfg.karyawan.find(p=>String(this.personKey(p))===String(id));
+        if(!p){const c=this.contributors.find(c=>String(c.id)===String(id));if(!c)return null;p={contributor_id:c.id,name:c.nama,short:c.nama.split(' ')[0],role:'Reguler',alat:'Alat 1',sessions:[],status:'scheduled',note:''};cfg.karyawan.push(p);}return p;
+    },
+    assign(id,target,source=0){
+        if(this.saving||this.loading||!this.activeConfig)return;target=Number(target);source=Number(source);this.clearFeedback();
+        const existing=this.activeConfig.karyawan.find(p=>String(this.personKey(p))===String(id));
+        if(existing?.sessions.includes(target)&&target>0){this.error='Anggota ini sudah ada di shift tersebut.';return;}
+        if(target>0&&this.shiftMembers(target).length>=3){this.error=`Shift ${target} sudah berisi 3 orang. Pilih shift lain.`;return;}
+        if(target>0&&!this.shifts.some(s=>s.id===target))return;
+        const p=this.ensurePerson(id);if(!p)return;
+        if(target>0&&p.status!=='scheduled'){this.error='Ubah status anggota menjadi Terjadwal sebelum menambahkan shift.';return;}
+        if(source)p.sessions=p.sessions.filter(s=>s!==source);if(target>0)p.sessions=[...p.sessions,target].sort((a,b)=>a-b);
+        this.saved=target>0?`${p.name} ditempatkan di Shift ${target}. Simpan untuk menerapkan.`:`${p.name} dilepas dari Shift ${source}.`;
+    },
+    startDrag(e,id,source=0){this.drag={id,source};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',JSON.stringify(this.drag));},
+    drop(e,target){e.preventDefault();if(this.drag)this.assign(this.drag.id,target,this.drag.source);this.drag=null;this.dropTarget=null;},
+    setStatus(id,status){
+        if(!this.daily||this.saving)return;this.clearFeedback();const p=this.ensurePerson(id);if(!p)return;
+        if(status==='scheduled'&&p.status!=='scheduled'&&p.sessions.some(s=>this.shiftMembers(s).length>=3)){this.error='Shift asal sudah penuh. Lepas shift anggota ini dahulu sebelum menjadwalkan kembali.';return;}p.status=status;
+    },
+    clearAssignments(id){const p=this.activeConfig.karyawan.find(p=>String(this.personKey(p))===String(id));if(p&&!this.saving){p.sessions=[];this.clearFeedback();}},
+    removePerson(id){if(this.saving)return;this.activeConfig.karyawan=this.activeConfig.karyawan.filter(p=>String(this.personKey(p))!==String(id));this.clearFeedback();},
+    linkPerson(oldId,newId){
+        if(!newId||this.saving)return;if(this.activeConfig.karyawan.some(p=>Number(p.contributor_id)===Number(newId))){this.error='Kontributor ini sudah ada di pola.';return;}
+        const c=this.contributors.find(p=>Number(p.id)===Number(newId)),p=this.activeConfig.karyawan.find(p=>this.personKey(p)===oldId);if(c&&p){p.contributor_id=c.id;p.name=c.nama;this.clearFeedback();}
+    },
+    addShift(){if(this.saving||this.shifts.length>=12)return;this.activeConfig.session_durations.push(120);this.activeConfig.sessions_count=this.activeConfig.session_durations.length;this.clearFeedback();},
+    async removeShift(){
+        if(this.saving||this.shifts.length<=1)return;const last=this.shifts.length;
+        if(this.activeConfig.karyawan.some(p=>p.sessions.includes(last))&&!(await this.confirmDiscard(`Penugasan pada Shift ${last} akan dilepas.`)))return;
+        this.activeConfig.session_durations.pop();this.activeConfig.sessions_count--;this.chosenShift=Math.min(this.chosenShift,this.activeConfig.sessions_count);this.activeConfig.karyawan.forEach(p=>p.sessions=p.sessions.filter(s=>s!==last));this.clearFeedback();
+    },
+    async discard(){if(!(await this.confirmDiscard('Rancangan aktif akan kembali ke versi tersimpan.')))return;if(this.daily)this.dayDraft=JSON.parse(this.dayBaseline);else{this.config=JSON.parse(this.baseline);if(!this.dayDirty)this.selectDate(this.selectedDate);}this.clearFeedback();},
+    async save(){
+        if(this.saving||this.loading||!this.activeDirty||this.conflicts.length)return;this.saving=true;this.clearFeedback();
+        try{
+            const payload=clone(this.activeConfig),result=await this.request(this.daily?'/api/shifts/days/'+this.selectedDate:'/api/shifts/config',{method:this.daily?'PUT':'POST',body:JSON.stringify(this.daily?{config:payload,expected_revision:this.dayRevision}:{periodId:this.period.id,config:payload,expected_revision:this.revision})});
+            if(this.daily){const day=result.day;this.days[this.selectedDate]={config:prepareConfig(day.config,this.contributors),revision:day.revision};this.selectDate(this.selectedDate);}
+            else{this.config=prepareConfig(result.config,this.contributors);this.baseline=JSON.stringify(this.config);this.revision=result.revision;this.inherited=false;if(!this.dayDirty)this.selectDate(this.selectedDate);}
+            this.saved=this.daily?'Revisi harian tersimpan dan tersedia di akun worker.':'Pola periode tersimpan dan tersedia di akun worker.';
         }catch(e){this.error=e.message;}finally{this.saving=false;}
     },
+    async resetDate(){
+        if(this.saving||!this.daily)return;const r=await window.Swal.fire({title:'Kembali ke pola periode?',text:'Revisi, izin, sakit, dan catatan tanggal ini akan dihapus.',icon:'question',showCancelButton:true,confirmButtonText:'Gunakan pola periode',cancelButtonText:'Batal'});
+        if(!r.isConfirmed)return;this.saving=true;this.clearFeedback();try{if(this.dayRevision)await this.request('/api/shifts/days/'+this.selectedDate,{method:'DELETE',body:JSON.stringify({expected_revision:this.dayRevision})});delete this.days[this.selectedDate];this.selectDate(this.selectedDate);this.saved='Tanggal ini kembali mengikuti pola periode.';}catch(e){this.error=e.message;}finally{this.saving=false;}
+    },
+    get narrative(){if(!this.period)return '';const s=this.summary;return `Ringkasan jadwal ${this.period.name}\n${this.dirty||this.inherited?'RANCANGAN — belum seluruhnya disimpan.\n':''}${s.activeDays} hari aktif · ${this.number(s.hours)} jam kerja tim · ${this.number(s.production)} jam video.\nIzin/sakit: ${s.absences} orang-hari. Estimasi lolos QA ${this.number(s.production*this.config.qa_yield_rate/100)} jam.\nEstimasi biaya kapasitas penuh ${this.money(s.cost)} (bukan gaji aktual).\n\n`+s.rows.map(p=>`${p.name}: ${p.days} hari, ${this.number(p.hours)} jam kerja, ${this.number(p.production)} jam video; izin ${p.izin}, sakit ${p.sakit}.`).join('\n');},
+    async copySummary(){try{await navigator.clipboard.writeText(this.narrative);this.saved='Ringkasan disalin.';}catch{this.error='Pilih dan salin teks ringkasan secara manual.';}},
+    clearFeedback(){this.error='';this.saved='';},dateLabel(date){return date?new Date(date+'T12:00:00Z').toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}):'';},
+    initials(name){return name.split(' ').filter(Boolean).slice(0,2).map(p=>p[0]).join('');},number(n){return new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n||0);},money(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);},hours(p){return workHours(p,this.activeConfig);},
 });

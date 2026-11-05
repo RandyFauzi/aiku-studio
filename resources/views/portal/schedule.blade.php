@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Jadwal Shift</h1>
-            <p class="text-xs text-slate-400 font-medium mt-0.5">Kalender sesi kerja bulanan dan shift aktif</p>
+            <p class="text-xs text-slate-400 font-medium mt-0.5">Jadwal periode 22–21, revisi harian, dan izin/sakit dari admin</p>
         </div>
         <input type="month" aria-label="Bulan jadwal shift" x-model="month" @change="load()" :disabled="loading" class="h-9 rounded-2xl border border-slate-200 px-3 text-xs font-bold text-slate-800 bg-white shadow-2xs">
     </div>
@@ -74,7 +74,7 @@
 
                                 <span class="mt-1.5 block text-[9px] sm:text-[10px] leading-tight font-semibold"
                                       :class="selectedDate === cell.date ? 'text-slate-300' : (cell.attendance ? 'text-emerald-700' : (cell.sessions?.length ? 'text-slate-700' : 'text-slate-400'))"
-                                      x-text="cell.attendance ? '✓ Masuk' : (cell.sessions?.length ? cell.sessions.length + ' sesi' : 'Libur')"></span>
+                                      x-text="cell.attendance ? '✓ Masuk' : (['izin','sakit'].includes(cell.status) ? (cell.status==='izin'?'Izin':'Sakit') : (cell.sessions?.length ? cell.sessions.length + ' shift' : 'Libur'))"></span>
                             </button>
                             <span x-show="!cell.date" class="block min-h-[72px] bg-slate-50/40 sm:min-h-[84px]"></span>
                         </div>
@@ -92,6 +92,10 @@
                 </div>
 
                 <h3 class="text-base font-semibold text-slate-900" x-text="dateLabel(selectedDate)"></h3>
+                <p class="text-xs text-slate-500" x-text="selectedDay.custom?'Revisi khusus dari admin':'Mengikuti pola periode dan hari libur'"></p>
+                <p x-show="['izin','sakit'].includes(selectedDay.status)" class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900" x-text="selectedDay.status==='izin'?'Izin — tidak dijadwalkan bekerja':'Sakit — tidak dijadwalkan bekerja'"></p>
+                <p x-show="selectedDay.note" class="break-words rounded-xl bg-slate-50 p-3 text-sm text-slate-600" x-text="selectedDay.note"></p>
+                <p x-show="selectedDay.sessions.length" class="text-xs font-semibold text-emerald-800" x-text="new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(selectedDay.work_hours||0)+' jam kerja'"></p>
 
                 <!-- Sessions List -->
                 <div class="space-y-2.5">
@@ -100,11 +104,11 @@
                             <div class="flex items-center gap-3">
                                 <div class="text-center w-12 shrink-0">
                                     <span class="text-xs font-semibold text-slate-900 block font-mono" x-text="session.start"></span>
-                                    <span class="text-[10px] font-bold text-slate-400 block font-mono" x-text="session.end"></span>
+                                    <span class="text-[10px] font-bold text-slate-400 block font-mono" x-text="session.end+(session.end_at?.slice(0,10)>selectedDate?' +1 hari':'')"></span>
                                 </div>
                                 <div class="h-6 w-px bg-slate-200"></div>
                                 <div>
-                                    <p class="font-semibold text-xs text-slate-900" x-text="'Sesi ' + session.id"></p>
+                                    <p class="font-semibold text-xs text-slate-900" x-text="'Shift ' + session.id"></p>
                                     <p class="text-[11px] text-emerald-700 font-bold" x-text="session.tool"></p>
                                 </div>
                             </div>
