@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 952 nodes · 1664 edges · 93 communities (19 shown, 74 thin omitted)
+- 951 nodes · 1664 edges · 91 communities (21 shown, 70 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 31 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `585df89d`
+- Built from commit: `fc45e3cd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -41,7 +41,6 @@
 - Community 24
 - Community 25
 - Community 26
-- Community 27
 - Community 28
 - Community 29
 - Community 30
@@ -51,7 +50,7 @@
 - Community 34
 - Community 35
 - Community 36
-- Community 37
+- Community 38
 - Community 39
 - Community 40
 - Community 41
@@ -77,8 +76,6 @@
 - Community 62
 - Community 63
 - Community 64
-- Community 65
-- Community 66
 
 ## God Nodes (most connected - your core abstractions)
 1. `SystemAuditRegressionTest` - 28 edges
@@ -107,11 +104,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (93 total, 74 thin omitted)
+## Communities (91 total, 70 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
-Nodes (10): PayrollController, {closure#1}(), {closure#2}(), PayslipController, Payslip, {closure#2}(), PayrollCalculator, PayrollFiles (+2 more)
+Nodes (11): PayrollController, {closure#1}(), {closure#2}(), PayslipController, PayrollStatus, Payslip, {closure#2}(), PayrollCalculator (+3 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.05
@@ -122,16 +119,16 @@ Cohesion: 0.06
 Nodes (51): "attendances", attendances_contributor_id_index, attendances_user_id_index, attendances_user_id_work_date_unique, attendances_work_date_index, "cache", cache_expiration_index, "cache_locks" (+43 more)
 
 ### Community 3 - "Community 3"
+Cohesion: 0.06
+Nodes (37): dependencies, alpinejs@^3.17.5, html5-qrcode@^2.3.8, qrcode@^1.5.4, sweetalert2@^11.26.25, devDependencies, autoprefixer@^10.6.2, axios@^1.11.0 (+29 more)
+
+### Community 4 - "Community 4"
 Cohesion: 0.04
 Nodes (47): pestphp/pest-plugin, php-http/discovery, autoload, autoload-dev, psr-4, psr-4, config, allow-plugins (+39 more)
 
-### Community 4 - "Community 4"
+### Community 5 - "Community 5"
 Cohesion: 0.07
 Nodes (22): checkIn(), checkInWithQr(), closeScanner(), handleQrScanned(), init(), load(), loadReportStatus(), loadSlips() (+14 more)
-
-### Community 5 - "Community 5"
-Cohesion: 0.09
-Nodes (30): dependencies, alpinejs@^3.17.5, html5-qrcode@^2.3.8, qrcode@^1.5.4, sweetalert2@^11.26.25, devDependencies, autoprefixer@^10.6.2, axios@^1.11.0 (+22 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.14
@@ -154,56 +151,64 @@ Cohesion: 0.09
 Nodes (7): attachCalendar(), conflicts(), dailyHours(), hours(), peopleAt(), production(), saveConfig()
 
 ### Community 12 - "Community 12"
-Cohesion: 0.21
+Cohesion: 0.20
 Nodes (4): {closure#2}(), {closure#3}(), {closure#4}(), DeviceAccountController
 
-### Community 13 - "Community 13"
+### Community 14 - "Community 14"
 Cohesion: 0.16
-Nodes (5): Contributor, ContributorPayslipTest, ExampleTest, ShiftRosterTest, TestCase
+Nodes (3): User, ContributorIdentity, PendingCarryOverTest
 
-### Community 15 - "Community 15"
+### Community 16 - "Community 16"
+Cohesion: 0.18
+Nodes (3): {closure#1}(), DailyWorkReportController, DailyWorkReport
+
+### Community 17 - "Community 17"
 Cohesion: 0.12
 Nodes (11): credentials, legacyRequire, puppeteer, report, root, {createRequire}, fs, mysql (+3 more)
 
-### Community 17 - "Community 17"
-Cohesion: 0.17
-Nodes (7): drawQr(), init(), load(), loadConfig(), openModal(), renderQrCode(), saveSettings()
-
 ### Community 19 - "Community 19"
-Cohesion: 0.18
-Nodes (4): PayrollStatus, StudioAccount, StudioRecording, PayrollPaymentStatus
+Cohesion: 0.23
+Nodes (5): {closure#3}(), {closure#4}(), {closure#5}(), {closure#6}(), ContributorController
 
 ### Community 20 - "Community 20"
-Cohesion: 0.19
-Nodes (4): {closure#3}(), {closure#4}(), {closure#5}(), {closure#6}()
+Cohesion: 0.17
+Nodes (4): Attendance, DeviceAccount, StudioAccount, StudioRecording
 
-### Community 22 - "Community 22"
+### Community 21 - "Community 21"
 Cohesion: 0.22
 Nodes (3): fingerprints(), main(), run()
 
-### Community 24 - "Community 24"
-Cohesion: 0.14
-Nodes (3): AuthController, Controller, SettingController
+### Community 22 - "Community 22"
+Cohesion: 0.15
+Nodes (4): ExampleTest, Robotics1618SyncTest, ShiftRosterTest, TestCase
+
+### Community 25 - "Community 25"
+Cohesion: 0.17
+Nodes (3): AuthController, Controller, RecordingController
+
+### Community 30 - "Community 30"
+Cohesion: 0.22
+Nodes (3): Contributor, ShiftSetting, ShiftSchedule
 
 ## Knowledge Gaps
-- **31 isolated node(s):** `attendance.admin`, `layouts.sidebar`, `portal.navigation`, `portal.icon`, `layouts.sidebar` (+26 more)
-  These have ≤1 connection - possible missing edges. (Counts symbols only; 365 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **74 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **29 isolated node(s):** `work-reports.form`, `attendance.admin`, `layouts.sidebar`, `portal.navigation`, `portal.icon` (+24 more)
+  These have ≤1 connection - possible missing edges. (Counts symbols only; 363 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **70 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `Community 25` to `Community 0`, `Community 34`, `Community 39`, `Community 7`, `Community 41`, `Community 13`, `Community 16`, `Community 19`, `Community 29`, `Community 30`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **What connects `attendance.admin`, `layouts.sidebar`, `portal.navigation` to the rest of the system?**
-  _31 weakly-connected nodes found - possible missing edges._
+- **Why does `User` connect `Community 14` to `Community 32`, `Community 0`, `Community 34`, `Community 38`, `Community 7`, `Community 39`, `Community 13`, `Community 20`, `Community 22`, `Community 26`, `Community 30`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **What connects `work-reports.form`, `attendance.admin`, `layouts.sidebar` to the rest of the system?**
+  _29 weakly-connected nodes found - possible missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.06351236146632566 - nodes in this community are weakly interconnected._
-- **Why does `SystemAuditRegressionTest` connect `Community 11` to `Community 16`, `Community 19`, `Community 13`?**
+  _Cohesion score 0.0629399585921325 - nodes in this community are weakly interconnected._
+- **Why does `SystemAuditRegressionTest` connect `Community 11` to `Community 13`?**
   _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.050724637681159424 - nodes in this community are weakly interconnected._
-- **Why does `PayrollMigrationTest` connect `Community 18` to `Community 0`, `Community 13`?**
+- **Why does `PayrollMigrationTest` connect `Community 18` to `Community 0`, `Community 13`, `Community 22`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.06259426847662142 - nodes in this community are weakly interconnected._

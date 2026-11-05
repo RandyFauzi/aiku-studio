@@ -180,7 +180,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .portal .portal-preset.is-selected { background:#e3fbb6; border-color:#d5f394; color:#304d20; }
 .portal .portal-sidebar-note,.portal .portal-report-shortcut { background:linear-gradient(120deg,#e5f8c5,#f5fbe9); }
 .portal .portal-dark-card .text-white { color:#203b18; }
-.portal .portal-dark-card .text-slate-300,.portal .portal-content .portal-dark-card .text-slate-400 { color:#4e683c; }
+.portal .portal-dark-card .text-slate-200,.portal .portal-dark-card .text-slate-300,.portal .portal-content .portal-dark-card .text-slate-400 { color:#4e683c; }
 .portal .portal-dark-card .text-emerald-400 { color:#315b19; }
 .portal .portal-title span { color:#6b805c; }
 .portal .portal-round-button.primary { background:linear-gradient(125deg,#ddff83,#c9fa3f); color:#233b16; }

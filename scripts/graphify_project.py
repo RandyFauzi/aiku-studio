@@ -37,7 +37,7 @@ def main():
         print('Graph source fingerprints are current.')
         return 0
     run('php', 'scripts/graphify-schema.php')
-    run('graphify', 'extract', '.', '--code-only', '--max-workers', '4')
+    run('graphify', 'extract', '.', '--code-only', '--max-workers', '4', '--allow-dedup-shrink')
     run('graphify', 'cluster-only', '.', '--no-label')
     run('graphify', 'export', 'wiki')
     manifest.write_text(json.dumps(fingerprints(), indent=2) + '\n', encoding='utf-8')
