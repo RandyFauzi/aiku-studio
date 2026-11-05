@@ -10,7 +10,6 @@
         ['label' => 'Absensi', 'path' => 'attendance', 'icon' => 'M9 5H5v16h14V5h-4M9 3h6v4H9V3m0 10l2 2 4-4'],
         ['label' => 'Laporan Harian', 'path' => 'work-reports', 'icon' => 'M14 3H5v18h14V8l-5-5v5h5M9 12h6m-6 4h6'],
         ['label' => 'Reporting & Profit', 'path' => 'profit', 'icon' => 'M12 3v9h9A9 9 0 1012 3zM16 3.5V8h4.5'],
-        ['label' => 'Portal User (/me)', 'path' => 'me', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
     ];
     $initials = collect(explode(' ', auth()->user()->name))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('');
 @endphp

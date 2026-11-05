@@ -17,6 +17,37 @@ const phoneDurationsText = report => {
 };
 const dateLabel = date => new Date(date + 'T12:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+let reportRewardAudio;
+const unlockReportRewardAudio = () => {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        reportRewardAudio ??= new AudioContext();
+        if (reportRewardAudio.state === 'suspended') reportRewardAudio.resume().catch(() => {});
+    } catch { /* Audio is optional and must not interrupt saving. */ }
+};
+const playReportCoin = () => {
+    try {
+        const context = reportRewardAudio;
+        if (!context || context.state !== 'running') return;
+        [988, 1976].forEach((frequency, index) => {
+            const start = context.currentTime + index * 0.09;
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(frequency, start);
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.07, start + 0.008);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.16);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+            oscillator.start(start);
+            oscillator.stop(start + 0.17);
+        });
+    } catch { /* Unsupported or blocked audio leaves the success popup intact. */ }
+};
+
 window.dailyWorkReportData = () => ({
     date: today(),
     month: today().slice(0, 7),
@@ -131,6 +162,8 @@ window.dailyWorkReportData = () => ({
 
     async submit() {
         if (this.loading || this.saving || !this.isComplete) return;
+        // Unlock inside the submit gesture, before the network request, for mobile browsers.
+        unlockReportRewardAudio();
         this.saving = true;
         this.error = '';
         this.message = '';
@@ -177,12 +210,15 @@ window.dailyWorkReportData = () => ({
                     html: '<div style="padding: 6px 12px 2px;"><p style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.55; margin: 0;">Terimakasih sudah berkontribusi untuk masa depan hari ini, semangat rekaman besok!</p></div>',
                     confirmButtonText: 'Sama-sama',
                     confirmButtonColor: '#00B090',
+                    didOpen: playReportCoin,
                     customClass: {
                         popup: 'rounded-[32px] p-6 shadow-2xl border border-slate-100',
                         image: 'rounded-2xl mx-auto object-contain max-w-full',
                         confirmButton: 'rounded-full px-8 py-2.5 text-xs font-black tracking-wide shadow-sm'
                     }
                 });
+            } else {
+                playReportCoin();
             }
 
             await this.load(false);

@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="border-b border-slate-100 p-5 sm:p-6 flex items-center justify-between gap-3 bg-white">
         <div class="flex items-center gap-3">
-            <button type="button" @click="window.location.assign('/me')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition" title="Kembali">
+            <button type="button" @click="$dispatch('close-report-form')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition" aria-label="Tutup form laporan">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
             <div>

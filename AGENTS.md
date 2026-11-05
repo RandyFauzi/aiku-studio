@@ -1,39 +1,41 @@
-## Coordination with Antigravity
+# AIKu Studio — aturan agen
 
-Before each task, run `git pull origin main` and read `.agent/STATE.json`.
-Do not edit files locked by another agent. Claim the files needed for the task
-in STATE.json with active_agent CODEX, locked_files, task and an ISO updated_at.
-Include generated assets/graphs in the lock when rebuilding them. Stage only
-your own files; never use an indiscriminate `git add .` in this shared workspace.
+## Hemat token
+- Jawab singkat dalam bahasa Indonesia. Baca hanya file dan bagian yang relevan.
+- Perubahan kecil: cek bagian terkait saja. Hindari audit atau pengujian berulang.
+- Dokumentasi/menu statis: cukup review diff, format, dan render bila relevan;
+  tidak perlu seluruh test suite, build aset, atau rebuild Graphify.
+- Jalankan tes terarah jika perilaku berubah. Build hanya jika CSS/JS/aset atau
+  konfigurasi build berubah. Cek tampilan hanya pada halaman/ukuran terdampak.
+- Full suite untuk perubahan lintas modul, autentikasi/otorisasi, kalkulasi
+  payroll, migrasi, atau risiko regresi luas. Jangan menjalankan PHPUnit bersamaan
+  dengan build yang menghapus/menulis ulang manifest.
+- Setelah pemeriksaan yang relevan lulus, commit dan langsung push. Ulangi
+  pemeriksaan hanya jika ada perubahan relevan, kegagalan, atau masalah terbuka.
 
-Before completion, run `php vendor/bin/phpunit` and `npm run build`. Prepend a
-2–3 line handover to `.agent/HANDOVER.md`, set active_agent to IDLE and
-locked_files to [], then commit and immediately push to origin/main.
-Preserve existing handover entries and other agents' changes.
+## Koordinasi dengan Antigravity
+- Awal task: git pull origin main, lalu baca .agent/STATE.json.
+- Jangan sentuh file terkunci oleh agen lain, termasuk file koordinasi. Tunggu
+  lock dilepas; jangan menimpa atau membuat lock alternatif tanpa izin pengguna.
+- Klaim file di STATE.json: active_agent, locked_files, task, updated_at ISO.
+  Sertakan aset/graph yang benar-benar akan dihasilkan.
+- Pertahankan perubahan agen lain. Stage hanya file task sendiri secara eksplisit;
+  jangan gunakan git add . atau ikut commit pekerjaan orang lain.
+- Akhir task: tulis 2–3 baris serah terima di atas .agent/HANDOVER.md tanpa
+  menghapus riwayat, set active_agent IDLE dan locked_files [], lalu commit dan
+  langsung git push origin main. Tes/build mengikuti dampak perubahan di atas.
 
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
-
-Rules:
-- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code or migrations, run `python scripts/graphify_project.py build` to refresh the isolated schema, AST graph, report and wiki (no API cost). Before trusting an existing graph run `python scripts/graphify_project.py check`.
-- A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.
-
-## AIKu project rules
-
-- Read `docs/AI_CONTEXT.md` for logical database joins, subsystem entry points, invariants and test mapping. Graph edges do not replace runtime verification or authorization checks.
-- Start queries with `--budget 1200`; narrow by exact symbol before increasing the budget. Never load the entire graph JSON into the model context.
-- Graphify is development-only. Do not deploy graphs, skills or developer scripts into public_html, install Python on shared hosting, or expose the graph through a public route.
-- Preserve `.graphifyignore` exclusions for private data and generated dependencies. Export schema only with `scripts/graphify-schema.php`, which uses SQLite :memory:, never the operational database.
-- Run the relevant existing feature tests for behavior changes; SQLite test databases must remain isolated from real data. Never import or restore production data to refresh a graph.
-
-## Multi-Agent Co-Working (Antigravity & CODEX)
-
-- **Start of task**: Run `git pull origin main`, read `.agent/STATE.json`. If a target file is in `locked_files` by another agent, DO NOT edit it. Otherwise, set `"active_agent"`, `"task"`, and list your `"locked_files"` in `.agent/STATE.json`.
-- **End of task**: Verify with `vendor/bin/phpunit` and `npm run build`. Set `"active_agent": "IDLE"` and `"locked_files": []` in `.agent/STATE.json`. Append a concise summary in `.agent/HANDOVER.md`. Commit and `git push origin main`.
+## Graphify dan data
+- Gunakan Graphify untuk arsitektur, relasi lintas file, investigasi kompleks,
+  atau permintaan eksplisit. Edit kecil pada file yang sudah diketahui boleh
+  langsung memakai pencarian/bacaan terarah.
+- Mulai query dengan budget 800–1200 token. Jangan memuat seluruh graph JSON.
+  Verifikasi temuan pada source; baca docs/AI_CONTEXT.md hanya bila relevan.
+- Refresh graph dengan python scripts/graphify_project.py build untuk perubahan
+  struktur, relasi, migrasi, atau permintaan eksplisit. Kosmetik/dokumentasi
+  tidak perlu rebuild. Cek kesegaran sebelum mengandalkan graph yang tersimpan.
+- Graphify hanya alat pengembangan. Jangan membuka graph/skill/script developer
+  lewat public_html. Pertahankan .graphifyignore.
+- Jangan indeks .env, kredensial, payroll/GPS pribadi, dump atau log produksi.
+  Ekspor skema memakai scripts/graphify-schema.php (SQLite :memory:). Tes memakai
+  database terisolasi; jangan import/restore data produksi untuk pengecekan.

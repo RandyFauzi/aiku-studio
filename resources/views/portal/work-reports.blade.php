@@ -1,7 +1,8 @@
 @extends('portal.layout', ['currentPage' => 'laporan', 'pageTitle' => 'Laporan Kerja Harian'])
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ reportFormOpen: false }"
+     @close-report-form="reportFormOpen = false; $nextTick(() => $refs.reportLauncher.focus())">
 
     <!-- Subheader Title -->
     <div class="flex items-center justify-between gap-3">
@@ -15,8 +16,18 @@
         </a>
     </div>
 
-    <!-- Form Input Laporan Kerja -->
-    @include('work-reports.form')
+    <section x-show="!reportFormOpen" class="rounded-[32px] border border-slate-200 bg-white p-6 sm:p-8 space-y-4">
+        <h2 class="text-lg font-semibold text-slate-900">Laporan hari ini</h2>
+        <p class="text-sm text-slate-600">Catat durasi kerja dan HP yang kamu gunakan setelah selesai bekerja.</p>
+        <button type="button" x-ref="reportLauncher" @click="reportFormOpen = true; $nextTick(() => $refs.reportForm.focus())"
+                :aria-expanded="reportFormOpen" aria-controls="daily-report-entry" class="portal-primary-button">
+            @include('portal.icon', ['name' => 'plus'])
+            <span x-text="todayReportSubmitted ? 'Lihat atau ubah laporan hari ini' : 'Buat laporan hari ini'"></span>
+        </button>
+    </section>
+    <div id="daily-report-entry" x-ref="reportForm" tabindex="-1" x-show="reportFormOpen" x-cloak>
+        @include('work-reports.form')
+    </div>
 
 </div>
 @endsection
