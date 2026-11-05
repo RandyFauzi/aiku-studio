@@ -1,5 +1,9 @@
 # Agent Collaboration Log (Antigravity & CODEX)
 
+### [2026-11-05 13:20] — Antigravity
+- **Selesai**: Menambahkan fitur Ganti Password di halaman Profil Kontributor (`portal/profile.blade.php`) dengan kartu keamanan interaktif collapsible (kata sandi lama, kata sandi baru, konfirmasi, toggle show/hide mata, SweetAlert2 sukses/gagal).
+- **Backend & Tests**: Endpoint `PUT /api/me/password` di `AuthController::updatePassword` dengan validasi Hash check dan min 6 karakter. 97/97 PHPUnit tests (546 assertions) PASS, Vite build PASS. Graphify diperbarui; lock dilepas ke IDLE.
+
 ### [2026-11-05 13:14] — Antigravity
 - **Selesai**: Memperbesar ukuran tampilan animasi ilustrasi gif (`Login page.gif`) pada halaman Login (`auth/login.blade.php`) baik di mobile (dari max 320px menjadi 440px) maupun di desktop (grid 7-kolom hingga max 700px) lengkap dengan aura hijau organik yang proporsional.
 - **Status**: 93/93 PHPUnit tests (535 assertions) PASS, Vite build PASS. Graphify diperbarui; lock dilepas ke IDLE.

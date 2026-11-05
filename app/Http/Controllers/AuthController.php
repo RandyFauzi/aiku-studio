@@ -61,4 +61,34 @@ class AuthController extends Controller
 
         return redirect('/login');
     }
+
+    public function updatePassword(Request $request)
+    {
+        $fields = $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'current_password.required' => 'Kata sandi saat ini wajib diisi.',
+            'new_password.required' => 'Kata sandi baru wajib diisi.',
+            'new_password.min' => 'Kata sandi baru minimal 6 karakter.',
+            'new_password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($fields['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => 'Kata sandi saat ini salah.',
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($fields['new_password']),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kata sandi berhasil diperbarui.',
+        ]);
+    }
 }

@@ -93,4 +93,81 @@ class AuthLoginTest extends TestCase
         $response->assertSessionHasErrors('email');
         $this->assertGuest();
     }
+
+    public function test_authenticated_user_can_change_password(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'ghina@aiku.test',
+            'password' => Hash::make('oldsecret123'),
+            'role' => 'contributor',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->putJson('/api/me/password', [
+            'current_password' => 'oldsecret123',
+            'new_password' => 'newsecret456',
+            'new_password_confirmation' => 'newsecret456',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Kata sandi berhasil diperbarui.',
+        ]);
+
+        $user->refresh();
+        $this->assertTrue(Hash::check('newsecret456', $user->password));
+    }
+
+    public function test_user_cannot_change_password_with_wrong_current_password(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'ghina2@aiku.test',
+            'password' => Hash::make('oldsecret123'),
+            'role' => 'contributor',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->putJson('/api/me/password', [
+            'current_password' => 'wrongpassword',
+            'new_password' => 'newsecret456',
+            'new_password_confirmation' => 'newsecret456',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('current_password');
+
+        $user->refresh();
+        $this->assertTrue(Hash::check('oldsecret123', $user->password));
+    }
+
+    public function test_user_cannot_change_password_with_mismatched_confirmation(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'ghina3@aiku.test',
+            'password' => Hash::make('oldsecret123'),
+            'role' => 'contributor',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->putJson('/api/me/password', [
+            'current_password' => 'oldsecret123',
+            'new_password' => 'newsecret456',
+            'new_password_confirmation' => 'different456',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('new_password');
+    }
+
+    public function test_guest_cannot_change_password(): void
+    {
+        $response = $this->putJson('/api/me/password', [
+            'current_password' => 'oldsecret123',
+            'new_password' => 'newsecret456',
+            'new_password_confirmation' => 'newsecret456',
+        ]);
+
+        $response->assertStatus(401);
+    }
 }

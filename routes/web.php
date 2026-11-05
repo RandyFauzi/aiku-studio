@@ -38,6 +38,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
     Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
     Route::get('/api/me/payslips', [PayslipController::class, 'mine']);
+    Route::put('/api/me/password', [AuthController::class, 'updatePassword'])->middleware('throttle:10,1');
 
     // Web view of payslips and download endpoints (accessible to admin and the owner contributor)
     Route::get('/slip/live/{worker}', [PayslipController::class, 'live']);
