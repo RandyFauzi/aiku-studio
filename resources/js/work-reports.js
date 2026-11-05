@@ -111,6 +111,11 @@ window.dailyWorkReportData = () => ({
                 this.revision = report?.revision || 0;
                 this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations]);
             }
+
+            const isSubmitted = !!(data.today_report && Number(data.today_report.revision) > 0);
+            window.dispatchEvent(new CustomEvent('report-status-updated', {
+                detail: { submitted: isSubmitted, revision: data.today_report?.revision || 0 }
+            }));
         } catch (e) {
             this.error = e.message;
         } finally {
@@ -159,6 +164,10 @@ window.dailyWorkReportData = () => ({
             this.phoneDurations = { ...(report.phone_durations || this.phoneDurations) };
             this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations]);
             this.message = 'Laporan kerja tanggal ' + dateLabel(this.date) + ' berhasil disimpan (' + this.totalMinutes + ' menit).';
+
+            window.dispatchEvent(new CustomEvent('report-status-updated', {
+                detail: { submitted: true, revision: this.revision }
+            }));
 
             if (window.Swal) {
                 window.Swal.fire({

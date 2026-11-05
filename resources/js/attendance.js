@@ -4,6 +4,8 @@ const dateLabel = value => value ? new Date(value + 'T12:00:00').toLocaleDateStr
 const mapUrl = row => 'https://www.openstreetmap.org/?mlat=' + row.latitude + '&mlon=' + row.longitude + '#map=18/' + row.latitude + '/' + row.longitude;
 
 window.attendancePortalData = () => ({
+    activeTab: 'absensi',
+    todayReportSubmitted: null,
     today: witaDate(),
     month: witaDate().slice(0, 7),
     selectedDate: witaDate(),
@@ -21,7 +23,50 @@ window.attendancePortalData = () => ({
     dateLabel,
     mapUrl,
 
+    get todaySchedule() {
+        return this.schedule.find(day => day.date === this.today) || { sessions: [] };
+    },
+
+    get totalMonthSessions() {
+        return this.schedule.reduce((acc, day) => acc + (day.sessions?.length || 0), 0);
+    },
+
+    get totalMonthAttendances() {
+        return this.attendances.length;
+    },
+
+    setTab(tab) {
+        if (!['absensi', 'laporan', 'jadwal', 'akun'].includes(tab)) return;
+        this.activeTab = tab;
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', '#' + tab);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
     async init() {
+        const initialHash = window.location.hash.replace('#', '');
+        if (['absensi', 'laporan', 'jadwal', 'akun'].includes(initialHash)) {
+            this.activeTab = initialHash;
+        } else if (initialHash === 'laporan-harian') {
+            this.activeTab = 'laporan';
+        }
+
+        window.addEventListener('hashchange', () => {
+            const h = window.location.hash.replace('#', '');
+            if (['absensi', 'laporan', 'jadwal', 'akun'].includes(h)) {
+                this.activeTab = h;
+            } else if (h === 'laporan-harian') {
+                this.activeTab = 'laporan';
+            }
+        });
+
+        window.addEventListener('report-status-updated', (e) => {
+            if (e.detail && typeof e.detail.submitted === 'boolean') {
+                this.todayReportSubmitted = e.detail.submitted;
+            }
+        });
+
         await this.load();
 
         // Auto-checkin if URL has ?qr_token=... (e.g. from native phone camera scanning poster)
