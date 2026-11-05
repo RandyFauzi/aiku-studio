@@ -36,6 +36,32 @@ window.attendancePortalData = () => ({
         return this.schedule.find(day => day.date === this.today) || { sessions: [] };
     },
 
+    get weekDays() {
+        const todayObj = new Date(this.today + 'T12:00:00');
+        const dayOfWeek = (todayObj.getDay() + 6) % 7; // 0 = Mon, 6 = Sun
+        const monday = new Date(todayObj);
+        monday.setDate(todayObj.getDate() - dayOfWeek);
+
+        const days = [];
+        const names = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+            days.push({
+                name: names[i],
+                date: dateStr,
+                dayNum: d.getDate(),
+                isToday: dateStr === this.today,
+                hasSession: (this.schedule.find(s => s.date === dateStr)?.sessions?.length || 0) > 0,
+            });
+        }
+        return days;
+    },
+
     get totalMonthSessions() {
         return this.schedule.reduce((acc, day) => acc + (day.sessions?.length || 0), 0);
     },

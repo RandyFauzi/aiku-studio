@@ -10,42 +10,43 @@
 </head>
 <body class="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900 relative" x-data="attendancePortalData()">
 
-    <!-- AMBIENT TOP GRADIENT MESH (Dribbble Style) -->
-    <div class="fixed top-0 inset-x-0 h-80 bg-gradient-to-b from-orange-100/50 via-purple-100/30 to-transparent pointer-events-none -z-10"></div>
+    <!-- LIGHT GREEN AMBIENT TOP GRADIENT (Clean Light Green Gradient Palette) -->
+    <div class="fixed top-0 inset-x-0 h-[420px] bg-gradient-to-b from-emerald-100/60 via-teal-50/30 to-transparent pointer-events-none -z-10"></div>
+    <div class="fixed top-0 right-0 w-80 h-80 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none -z-10"></div>
 
-    <!-- TOP HEADER -->
+    <!-- TOP APP HEADER -->
     <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-2xs">
         <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
             
-            <!-- MOBILE TOP HEADER (md:hidden) -->
+            <!-- MOBILE TOP HEADER (Screen 1 & 2 Style) -->
             <div class="flex items-center justify-between w-full md:hidden">
                 <!-- User Avatar & Greeting -->
                 <div class="flex items-center gap-3">
-                    <button type="button" @click="setTab('akun')" class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 text-white font-black flex items-center justify-center text-sm shadow-xs shrink-0 ring-2 ring-white">
+                    <button type="button" @click="setTab('akun')" class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 text-white font-black flex items-center justify-center text-sm shadow-xs shrink-0 ring-2 ring-white">
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </button>
                     <div>
-                        <p class="text-[11px] font-semibold text-slate-400 leading-none">Halo,</p>
-                        <h2 class="text-sm font-extrabold text-slate-900 leading-tight mt-0.5 truncate max-w-[140px]">{{ auth()->user()->name }}</h2>
+                        <p class="text-[11px] font-semibold text-slate-400 leading-none">Selamat Datang,</p>
+                        <h2 class="text-sm font-extrabold text-slate-900 leading-tight mt-0.5 truncate max-w-[150px]">{{ auth()->user()->name }}</h2>
                     </div>
                 </div>
 
                 <!-- Circular Action Buttons (Matching Dribbble Screen 1) -->
                 <div class="flex items-center gap-2">
-                    <!-- Quick Scan Barcode Button -->
+                    <!-- Quick Scan Barcode Button (+) -->
                     <button type="button" 
                             @click="openScanner()" 
                             :disabled="checking || loading || !!todayAttendance"
-                            class="w-10 h-10 rounded-full bg-[#18181B] text-white flex items-center justify-center shadow-xs hover:scale-105 active:scale-95 transition disabled:opacity-50"
+                            class="w-10 h-10 rounded-full bg-[#1C1C1E] text-white flex items-center justify-center shadow-xs hover:scale-105 active:scale-95 transition disabled:opacity-50"
                             title="Scan Barcode WiFi">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     </button>
 
-                    <!-- Account / Info Button -->
+                    <!-- Account Button -->
                     <button type="button" 
                             @click="setTab('akun')" 
                             class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-700 flex items-center justify-center shadow-2xs hover:bg-slate-50 active:scale-95 transition"
-                            title="Profil & Pengaturan">
+                            title="Profil">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </button>
                 </div>
@@ -56,12 +57,12 @@
                 <!-- Brand Logo -->
                 <div class="flex items-center gap-3">
                     <a href="/me" class="flex items-center gap-2.5 group">
-                        <div class="w-9 h-9 rounded-2xl bg-[#18181B] text-white flex items-center justify-center font-black text-sm shadow-xs group-hover:scale-105 transition">
+                        <div class="w-9 h-9 rounded-2xl bg-[#1C1C1E] text-white flex items-center justify-center font-black text-sm shadow-xs group-hover:scale-105 transition">
                             AI
                         </div>
                         <div>
                             <span class="font-black text-slate-900 text-lg tracking-tight">AIKu Studio</span>
-                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Contributor App</span>
+                            <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Contributor Portal</span>
                         </div>
                     </a>
                 </div>
@@ -71,7 +72,7 @@
                     <!-- Tab 1: Absensi -->
                     <button type="button" 
                             @click="setTab('absensi')" 
-                            :class="activeTab === 'absensi' ? 'bg-[#18181B] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                            :class="activeTab === 'absensi' ? 'bg-[#1C1C1E] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
                             class="relative min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
                         <svg class="w-4 h-4" :class="activeTab === 'absensi' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                         <span>Utama</span>
@@ -164,25 +165,25 @@
              x-transition:enter-end="opacity-100 translate-y-0" 
              class="space-y-5">
 
-            <!-- Bold Catchy Hero Headline (Matching Dribbble "Let's Make Today Productive") -->
+            <!-- Bold Catchy Hero Headline (Matching "Let's Make Today Productive") -->
             <div class="pt-1">
-                <h1 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                    Kerja Produktif<br><span class="text-slate-400">Hari Ini</span>
+                <h1 class="text-[28px] sm:text-[34px] font-black text-slate-900 tracking-tight leading-[1.15]">
+                    Maksimalkan<br><span class="text-slate-400">Sesi Kerjamu</span>
                 </h1>
             </div>
 
-            <!-- DARK CONTRAST HERO CARD ("TODAY'S PROGRESS" - SCREEN 1 INSPIRATION) -->
-            <section class="rounded-[32px] bg-[#18181B] text-white p-5 sm:p-7 shadow-xl relative overflow-hidden">
+            <!-- DARK CONTRAST HERO CARD ("TODAY'S PROGRESS" - EXACT SCREEN 1 MATCH) -->
+            <section class="rounded-[32px] bg-[#161618] text-white p-5 sm:p-7 shadow-2xl relative overflow-hidden">
                 <!-- Top Row: Card Title & Date Pill -->
-                <div class="flex items-center justify-between gap-3 pb-5 border-b border-white/10">
-                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Status Hari Ini</span>
+                <div class="flex items-center justify-between gap-3 pb-4 border-b border-white/10">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Today's Progress</span>
                     <span class="text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-slate-200 border border-white/10" x-text="dateLabel(today)"></span>
                 </div>
 
-                <!-- Middle Row: Circular Gauge & Stats Column -->
-                <div class="py-5 flex items-center justify-between gap-5 sm:gap-8">
+                <!-- Middle Row: Circular Ring Gauge & Stats Column (Exact Screen 1 proportions) -->
+                <div class="py-5 flex items-center justify-between gap-6 sm:gap-10">
                     
-                    <!-- Circular SVG Ring Gauge (Inspired by Dribbble Screen 1) -->
+                    <!-- Circular SVG Ring Gauge (Screen 1 Style) -->
                     <div class="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                             <path class="text-white/10" stroke-width="3.5" stroke="currentColor" fill="none"
@@ -199,77 +200,91 @@
                         <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
                             <template x-if="todayAttendance">
                                 <div>
-                                    <span class="text-lg sm:text-xl font-black text-emerald-400 block leading-none">100%</span>
-                                    <span class="text-[9px] font-bold text-slate-300 uppercase tracking-wider block mt-0.5">Hadir</span>
+                                    <span class="text-xl sm:text-2xl font-black text-emerald-400 block leading-none">100%</span>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">Hadir</span>
                                 </div>
                             </template>
                             <template x-if="!todayAttendance">
                                 <div>
-                                    <span class="text-base sm:text-lg font-black text-amber-400 block leading-none">0%</span>
+                                    <span class="text-lg sm:text-xl font-black text-amber-400 block leading-none">0%</span>
                                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">Absen</span>
                                 </div>
                             </template>
                         </div>
                     </div>
 
-                    <!-- 3 Stats Rows (Matching 12 Total Task, 12 Completed, etc.) -->
+                    <!-- 3 Stacked Metric Rows (Matching Screen 1 layout exactly) -->
                     <div class="flex-1 space-y-3">
-                        <!-- Stat 1: Absensi -->
-                        <div class="flex items-center justify-between text-xs">
-                            <div class="flex items-center gap-2 text-slate-400">
-                                <span class="w-2 h-2 rounded-full" :class="todayAttendance ? 'bg-emerald-400' : 'bg-amber-400'"></span>
-                                <span class="font-bold">Kehadiran</span>
+                        <!-- Stat 1: Total Sesi Hari Ini -->
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-slate-300 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </div>
-                            <span class="font-extrabold text-xs" :class="todayAttendance ? 'text-emerald-400' : 'text-amber-400'" x-text="todayAttendance ? '✓ Hadir' : 'Belum Absen'"></span>
+                            <div>
+                                <p class="text-sm font-black text-white leading-tight font-mono" x-text="todaySchedule.sessions ? todaySchedule.sessions.length : 0"></p>
+                                <p class="text-[10px] font-semibold text-slate-400 leading-tight">Total Sesi</p>
+                            </div>
                         </div>
 
-                        <!-- Stat 2: Laporan -->
-                        <div class="flex items-center justify-between text-xs">
-                            <div class="flex items-center gap-2 text-slate-400">
-                                <span class="w-2 h-2 rounded-full" :class="todayReportSubmitted ? 'bg-emerald-400' : 'bg-slate-500'"></span>
-                                <span class="font-bold">Laporan HP</span>
+                        <!-- Stat 2: Kehadiran -->
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             </div>
-                            <span class="font-extrabold text-xs" :class="todayReportSubmitted ? 'text-emerald-400' : 'text-slate-400'" x-text="todayReportSubmitted ? '✓ Terkirim' : 'Belum Kirim'"></span>
+                            <div>
+                                <p class="text-sm font-black leading-tight" :class="todayAttendance ? 'text-emerald-400' : 'text-amber-400'" x-text="todayAttendance ? '1 / 1' : '0 / 1'"></p>
+                                <p class="text-[10px] font-semibold text-slate-400 leading-tight">Presensi Hadir</p>
+                            </div>
                         </div>
 
-                        <!-- Stat 3: Sesi Shift -->
-                        <div class="flex items-center justify-between text-xs">
-                            <div class="flex items-center gap-2 text-slate-400">
-                                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                                <span class="font-bold">Sesi Kerja</span>
+                        <!-- Stat 3: Laporan HP -->
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-slate-300 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             </div>
-                            <span class="font-extrabold text-xs text-white" x-text="todaySchedule.sessions ? todaySchedule.sessions.length + ' Sesi' : '0 Sesi'"></span>
+                            <div>
+                                <p class="text-sm font-black leading-tight" :class="todayReportSubmitted ? 'text-emerald-400' : 'text-slate-300'" x-text="todayReportSubmitted ? 'Terkirim' : 'Pending'"></p>
+                                <p class="text-[10px] font-semibold text-slate-400 leading-tight">Laporan Harian</p>
+                            </div>
                         </div>
                     </div>
 
                 </div>
 
-                <!-- Bottom Row: Direct Action Buttons (No Text Bloat!) -->
+                <!-- Bottom Row: Direct Action Buttons (Light Green Gradient Accent) -->
                 <div class="pt-4 border-t border-white/10 flex flex-wrap items-center gap-2.5">
                     <!-- Scan Barcode Button -->
                     <button type="button" 
                             @click="openScanner()" 
                             :disabled="checking || loading || !!todayAttendance" 
-                            class="flex-1 min-h-[46px] rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-98 px-4 py-2.5 text-xs font-black text-white shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                        <span x-text="todayAttendance ? 'Sudah Presensi Masuk' : 'Scan Barcode WiFi'"></span>
+                            class="flex-1 min-h-[48px] rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:brightness-105 active:scale-98 px-4 py-2.5 text-xs font-black text-slate-950 shadow-md shadow-emerald-950/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        <span x-text="todayAttendance ? 'Presensi Masuk Berhasil' : 'Scan Barcode WiFi'"></span>
                     </button>
 
                     <!-- GPS Button -->
                     <button type="button" 
                             @click="checkIn()" 
                             :disabled="checking || loading || !!todayAttendance" 
-                            class="min-h-[46px] rounded-2xl bg-white/10 hover:bg-white/20 active:scale-98 px-3.5 py-2.5 text-xs font-bold text-white transition border border-white/10 flex items-center justify-center gap-1.5 disabled:opacity-50">
+                            class="min-h-[48px] rounded-2xl bg-white/10 hover:bg-white/20 active:scale-98 px-4 py-2.5 text-xs font-bold text-white transition border border-white/10 flex items-center justify-center gap-1.5 disabled:opacity-50">
                         <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span x-text="checking ? 'Membaca…' : (todayAttendance ? 'GPS' : 'GPS')"></span>
+                        <span x-text="checking ? 'Membaca…' : 'GPS'"></span>
+                    </button>
+                </div>
+                    <button type="button" 
+                            @click="checkIn()" 
+                            :disabled="checking || loading || !!todayAttendance" 
+                            class="min-h-[48px] rounded-2xl bg-white/10 hover:bg-white/20 active:scale-98 px-4 py-2.5 text-xs font-bold text-white transition border border-white/10 flex items-center justify-center gap-1.5 disabled:opacity-50">
+                        <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span x-text="checking ? 'Membaca…' : 'GPS'"></span>
                     </button>
                 </div>
 
-                <!-- Minimalist Check-In Verification Strip (if checked in) -->
+                <!-- Minimalist Verification Strip (if attended) -->
                 <template x-if="todayAttendance">
                     <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-300">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-emerald-400 font-bold">✓ Masuk:</span>
+                            <span class="text-emerald-400 font-bold">✓ Jam Masuk:</span>
                             <span class="font-mono text-white font-bold" x-text="time(todayAttendance.checked_in_at)"></span>
                             <span class="text-slate-400 ml-1" x-text="todayAttendance.checkin_method === 'qr_wifi' ? '(WiFi Studio)' : '(GPS)'"></span>
                         </div>
@@ -283,70 +298,96 @@
                 </template>
             </section>
 
-            <!-- TODAY'S SESSIONS (TIMELINE STYLE - DRIBBBLE SCREEN 1 & 2 INSPIRATION) -->
-            <section class="space-y-3">
+            <!-- TODAY'S TASKS / SESSIONS SECTION (MATCHING SCREEN 1 & 2) -->
+            <section class="space-y-3.5">
+                <!-- Section Header with View All -->
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-base font-black text-slate-900">Sesi Hari Ini</h3>
-                        <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-700" x-text="todaySchedule.sessions ? todaySchedule.sessions.length : 0"></span>
-                    </div>
-                    <button type="button" @click="setTab('jadwal')" class="text-xs font-bold text-slate-500 hover:text-slate-900 transition">
-                        Lihat Kalender →
+                    <h3 class="text-base font-black text-slate-900 tracking-tight">Jadwal Sesi Hari Ini</h3>
+                    <button type="button" @click="setTab('jadwal')" class="text-xs font-bold text-slate-400 hover:text-slate-800 transition">
+                        Lihat Semua ↗
                     </button>
                 </div>
 
-                <!-- Session Cards -->
-                <div class="space-y-2.5">
+                <!-- Horizontal Filter Pills (Matching Screen 1) -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                    <div class="rounded-full bg-white border border-slate-200/80 px-3 py-1 text-xs font-extrabold text-slate-800 flex items-center gap-1.5 shadow-2xs shrink-0">
+                        <span class="w-4 h-4 rounded-full bg-[#1C1C1E] text-white flex items-center justify-center text-[10px]" x-text="todaySchedule.sessions ? todaySchedule.sessions.length : 0"></span>
+                        <span>Sesi Hari Ini</span>
+                    </div>
+                    <div class="rounded-full bg-emerald-50 border border-emerald-200/80 px-3 py-1 text-xs font-extrabold text-emerald-800 flex items-center gap-1.5 shrink-0">
+                        <span class="w-1.5 h-1.5 rounded-full" :class="todayAttendance ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                        <span x-text="todayAttendance ? 'Presensi Masuk' : 'Belum Presensi'"></span>
+                    </div>
+                    <div class="rounded-full bg-white border border-slate-200/80 px-3 py-1 text-xs font-extrabold text-slate-600 flex items-center gap-1.5 shrink-0">
+                        <span>WiFi Studio</span>
+                    </div>
+                </div>
+
+                <!-- Task Cards List (Screen 1 "Design Landing Page" Card Style) -->
+                <div class="space-y-3">
                     <template x-if="todaySchedule.sessions && todaySchedule.sessions.length > 0">
-                        <div class="space-y-2.5">
+                        <div class="space-y-3">
                             <template x-for="session in todaySchedule.sessions" :key="session.id">
-                                <div class="rounded-3xl bg-white p-4 border border-slate-100 shadow-2xs flex items-center justify-between gap-3 hover:border-slate-200 transition">
-                                    <div class="flex items-center gap-3.5">
-                                        <!-- Time Box -->
-                                        <div class="text-center w-14 shrink-0">
-                                            <span class="text-xs font-black text-slate-900 block font-mono" x-text="session.start"></span>
-                                            <span class="text-[10px] font-bold text-slate-400 block font-mono" x-text="session.end"></span>
-                                        </div>
-                                        <div class="h-8 w-px bg-slate-100"></div>
-                                        <div>
-                                            <h4 class="text-sm font-extrabold text-slate-900" x-text="'Sesi ' + session.id"></h4>
-                                            <span class="text-[11px] font-bold text-emerald-700" x-text="session.tool"></span>
-                                        </div>
+                                <div class="rounded-[28px] bg-white p-5 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:border-emerald-300 transition flex flex-col gap-3">
+                                    <!-- Top Row: Priority Pill & Angled Arrow Circle (Matching Screen 1) -->
+                                    <div class="flex items-center justify-between">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-100">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                            <span>High Priority</span>
+                                        </span>
+                                        <button type="button" @click="setTab('jadwal')" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 hover:bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-900 transition" title="Lihat Sesi">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7m0 0H7m10 0v10"/></svg>
+                                        </button>
                                     </div>
 
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                                        Shift Aktif
-                                    </span>
+                                    <!-- Middle: Task Title -->
+                                    <div>
+                                        <h4 class="text-base font-black text-slate-900" x-text="'Sesi ' + session.id + ' — Rekaman Studio'"></h4>
+                                    </div>
+
+                                    <!-- Bottom: Time & Avatars Stack (Matching Screen 1 Bottom Row) -->
+                                    <div class="pt-1 flex items-center justify-between text-xs text-slate-500">
+                                        <div class="flex items-center gap-1.5 font-mono font-bold text-slate-600">
+                                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span x-text="session.start + ' – ' + session.end + ' WITA'"></span>
+                                        </div>
+                                        
+                                        <!-- Avatars Stack -->
+                                        <div class="flex items-center -space-x-1.5">
+                                            <div class="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[8px] font-black text-white shadow-2xs" x-text="session.tool ? session.tool.substring(0,2).toUpperCase() : 'HP'"></div>
+                                            <div class="w-6 h-6 rounded-full bg-teal-500 border-2 border-white flex items-center justify-center text-[8px] font-black text-white shadow-2xs">ST</div>
+                                            <div class="w-6 h-6 rounded-full bg-[#1C1C1E] border-2 border-white flex items-center justify-center text-[7px] font-black text-white shadow-2xs">+2</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
                         </div>
                     </template>
 
                     <template x-if="!todaySchedule.sessions || todaySchedule.sessions.length === 0">
-                        <div class="p-6 text-center rounded-3xl bg-white border border-slate-100 shadow-2xs">
-                            <span class="text-2xl block mb-1">☕</span>
-                            <p class="text-xs font-extrabold text-slate-700">Tidak ada sesi rekaman hari ini.</p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">Hari ini libur atau belum ada jadwal terdaftar.</p>
+                        <div class="p-8 text-center rounded-[28px] bg-white border border-slate-100 shadow-2xs">
+                            <p class="text-sm font-black text-slate-800">Tidak ada jadwal sesi rekaman hari ini.</p>
+                            <p class="text-xs text-slate-400 mt-1">Hari ini libur atau belum ada shift terdaftar.</p>
                         </div>
                     </template>
                 </div>
             </section>
 
-            <!-- QUICK SHORTCUT: LAPORAN HARIAN CARD -->
-            <section class="rounded-3xl bg-white p-4 sm:p-5 border border-slate-100 shadow-2xs flex items-center justify-between gap-3 cursor-pointer hover:border-slate-300 transition" @click="setTab('laporan')">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-lg shrink-0">
-                        📋
+            <!-- SHORTCUT CARD: LAPORAN KERJA HARIAN -->
+            <section class="rounded-[28px] bg-white p-5 border border-slate-100 shadow-2xs flex items-center justify-between gap-3 cursor-pointer hover:border-emerald-300 transition" @click="setTab('laporan')">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-100">
+                        <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
                     <div>
-                        <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">Laporan Kerja Harian</h4>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Input durasi menit HP yang digunakan</p>
+                        <h4 class="text-sm font-black text-slate-900">Laporan Kerja Harian</h4>
+                        <p class="text-[11px] font-medium text-slate-400 mt-0.5">Input durasi menit per HP yang digunakan</p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-1.5">
-                    <span class="text-xs font-bold text-emerald-700">Isi Sekarang</span>
-                    <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">→</span>
+                    <span class="text-xs font-extrabold text-emerald-700">Isi Sekarang</span>
+                    <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 text-xs font-bold">→</span>
                 </div>
             </section>
 
@@ -364,7 +405,7 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 3: KALENDER JADWAL (SCREEN 2 STYLE)   -->
+        <!-- TAB 3: KALENDER JADWAL (SCREEN 2 MATCH)   -->
         <!-- ========================================== -->
         <div x-show="activeTab === 'jadwal'" 
              x-transition:enter="transition ease-out duration-150" 
@@ -375,20 +416,50 @@
             <!-- Title & Month Switcher -->
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Jadwal Shift</span>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">Kalender Bulanan</h2>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900">Jadwal Shift</h2>
+                    <p class="text-xs text-slate-400 font-medium mt-0.5">Kalender sesi kerja bulanan</p>
                 </div>
                 <input type="month" x-model="month" @change="load()" :disabled="loading" class="h-9 rounded-2xl border border-slate-200 px-3 text-xs font-bold text-slate-800 bg-white shadow-2xs">
             </div>
 
-            <!-- 2-Column Responsive Layout -->
+            <!-- HORIZONTAL 7-DAY STRIP (EXACT SCREEN 2 LAYOUT) -->
+            <div class="grid grid-cols-7 gap-1.5 sm:gap-2">
+                <template x-for="d in weekDays" :key="d.date">
+                    <button type="button" 
+                            @click="selectedDate = d.date"
+                            class="rounded-2xl p-2.5 flex flex-col items-center justify-between gap-2 border transition shadow-2xs"
+                            :class="selectedDate === d.date 
+                                ? 'bg-white border-slate-900 ring-2 ring-slate-900/10' 
+                                : 'bg-white border-slate-100 hover:border-slate-300'">
+                        <span class="text-[11px] font-extrabold uppercase" 
+                              :class="selectedDate === d.date ? 'text-slate-900' : 'text-slate-400'" 
+                              x-text="d.name"></span>
+                        
+                        <!-- Date Number (Solid black circle when selected, exactly like Screen 2) -->
+                        <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition"
+                              :class="selectedDate === d.date 
+                                  ? 'bg-[#1C1C1E] text-white shadow-xs' 
+                                  : (d.isToday ? 'bg-emerald-100 text-emerald-800' : 'text-slate-800')"
+                              x-text="d.dayNum"></span>
+
+                        <span class="w-1.5 h-1.5 rounded-full" :class="d.hasSession ? 'bg-emerald-500' : 'bg-transparent'"></span>
+                    </button>
+                </template>
+            </div>
+
+            <!-- 2-Column Responsive Layout for Calendar & Day Details -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                 
-                <!-- Left: Calendar Grid -->
+                <!-- Left: Full Monthly Calendar Grid -->
                 <div class="lg:col-span-7">
-                    <div class="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xs">
+                    <div class="overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-xs">
+                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-slate-400">Kalender Bulanan</span>
+                            <span x-show="loading" class="text-xs text-slate-400">Memuat…</span>
+                        </div>
+
                         <!-- Day Names -->
-                        <div class="grid grid-cols-7 bg-slate-50/80 border-b border-slate-100 text-center">
+                        <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-100 text-center">
                             <template x-for="day in ['Sen','Sel','Rab','Kam','Jum','Sab','Min']">
                                 <div class="py-2.5 text-center text-xs font-bold text-slate-500" x-text="day"></div>
                             </template>
@@ -402,8 +473,8 @@
                                             x-show="cell.date" 
                                             @click="selectedDate=cell.date" 
                                             :aria-pressed="selectedDate===cell.date" 
-                                            :class="selectedDate===cell.date ? 'bg-[#18181B] text-white shadow-sm' : 'hover:bg-slate-50/80'" 
-                                            class="min-h-[72px] w-full p-2 text-left sm:min-h-[88px] sm:p-2.5 transition rounded-xl">
+                                            :class="selectedDate===cell.date ? 'bg-[#1C1C1E] text-white shadow-sm' : 'hover:bg-slate-50'" 
+                                            class="min-h-[72px] w-full p-2 text-left sm:min-h-[84px] sm:p-2.5 transition rounded-xl">
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs font-bold" 
                                                   :class="cell.date === today && selectedDate !== cell.date ? 'w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]' : ''"
@@ -415,36 +486,43 @@
                                               :class="selectedDate === cell.date ? 'text-slate-300' : (cell.attendance ? 'text-emerald-700' : (cell.sessions?.length ? 'text-slate-700' : 'text-slate-400'))" 
                                               x-text="cell.attendance ? '✓ Masuk' : (cell.sessions?.length ? cell.sessions.length + ' sesi' : 'Libur')"></span>
                                     </button>
-                                    <span x-show="!cell.date" class="block min-h-[72px] bg-slate-50/40 sm:min-h-[88px]"></span>
+                                    <span x-show="!cell.date" class="block min-h-[72px] bg-slate-50/40 sm:min-h-[84px]"></span>
                                 </div>
                             </template>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right: Selected Date Session Details -->
+                <!-- Right: Selected Date Session Timeline (Screen 2 Timeline Style) -->
                 <div class="lg:col-span-5 space-y-3">
-                    <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-xs space-y-3">
+                    <div class="rounded-[28px] border border-slate-100 bg-white p-5 shadow-xs space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                            <span class="text-xs font-black uppercase tracking-wider text-slate-400">Rincian Hari</span>
+                            <span class="text-xs font-black uppercase tracking-wider text-slate-400">Detail Sesi</span>
                             <span x-show="selectedDate === today" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">Hari Ini</span>
                         </div>
 
                         <h3 class="text-base font-black text-slate-900" x-text="dateLabel(selectedDate)"></h3>
 
                         <!-- Sessions List -->
-                        <div class="space-y-2">
+                        <div class="space-y-2.5">
                             <template x-for="session in selectedDay.sessions" :key="session.id">
-                                <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3 flex items-center justify-between">
-                                    <div>
-                                        <p class="font-extrabold text-xs text-slate-900" x-text="'Sesi ' + session.id"></p>
-                                        <p class="text-[10px] text-slate-500 font-mono mt-0.5" x-text="session.start + ' – ' + session.end + ' WITA'"></p>
+                                <div class="rounded-2xl border border-slate-100 bg-slate-50/80 p-3.5 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-center w-12 shrink-0">
+                                            <span class="text-xs font-black text-slate-900 block font-mono" x-text="session.start"></span>
+                                            <span class="text-[10px] font-bold text-slate-400 block font-mono" x-text="session.end"></span>
+                                        </div>
+                                        <div class="h-6 w-px bg-slate-200"></div>
+                                        <div>
+                                            <p class="font-black text-xs text-slate-900" x-text="'Sesi ' + session.id"></p>
+                                            <p class="text-[11px] text-emerald-700 font-bold" x-text="session.tool"></p>
+                                        </div>
                                     </div>
-                                    <span class="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg" x-text="session.tool"></span>
+                                    <span class="text-[10px] font-black text-slate-700 bg-slate-200/80 px-2 py-0.5 rounded-lg">Terjadwal</span>
                                 </div>
                             </template>
 
-                            <p x-show="!selectedDay.sessions.length" class="py-4 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl">
+                            <p x-show="!selectedDay.sessions.length" class="py-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl">
                                 Tidak ada jadwal sesi kerja pada tanggal ini.
                             </p>
                         </div>
@@ -466,16 +544,16 @@
             <!-- Subheader -->
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Payroll</span>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">Slip Gaji & Estimasi</h2>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900">Slip Gaji</h2>
+                    <p class="text-xs text-slate-400 font-medium mt-0.5">Estimasi berjalan & arsip dokumen resmi</p>
                 </div>
-                <button type="button" @click="loadSlips()" :disabled="loadingSlips" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-2xs">
+                <button type="button" @click="loadSlips()" :disabled="loadingSlips" class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition">
                     Segarkan
                 </button>
             </div>
 
-            <!-- LIVE CYCLE ESTIMATION CARD -->
-            <section class="rounded-3xl bg-[#18181B] text-white p-5 sm:p-6 shadow-xl space-y-4">
+            <!-- LIVE CYCLE ESTIMATION CARD (Dark Hero Card) -->
+            <section class="rounded-[32px] bg-[#1C1C1E] text-white p-5 sm:p-7 shadow-xl space-y-4">
                 <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400">Periode Berjalan (Cut-Off 22 - 21)</span>
                     <span class="text-xs font-bold text-slate-300" x-text="currentPeriod?.name || 'Siklus Ini'"></span>
@@ -485,7 +563,7 @@
                     <div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Estimasi Take Home Pay</span>
                         <span class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono tracking-tight" x-text="formatRupiah(liveSlip?.total_thp || 0)"></span>
-                        <div class="flex items-center gap-3 mt-1 text-xs text-slate-300">
+                        <div class="flex items-center gap-3 mt-1.5 text-xs text-slate-300">
                             <span>Approved: <strong class="text-white" x-text="(liveSlip?.total_approved_hours || 0) + ' Jam'"></strong></span>
                             <span>&bull;</span>
                             <span>Logged: <strong class="text-white" x-text="(liveSlip?.total_logged_hours || 0) + ' Jam'"></strong></span>
@@ -493,10 +571,10 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button type="button" @click="openLiveSlip()" :disabled="!liveSlip" class="px-4 py-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition">
+                        <button type="button" @click="openLiveSlip()" :disabled="!liveSlip" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs shadow-sm transition">
                             Buka Slip Live ↗
                         </button>
-                        <button type="button" @click="downloadLiveSlipPdf()" :disabled="!liveSlip || downloadingSlipId === 'live'" class="px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/10">
+                        <button type="button" @click="downloadLiveSlipPdf()" :disabled="!liveSlip || downloadingSlipId === 'live'" class="px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/10">
                             <span x-text="downloadingSlipId === 'live' ? 'PDF…' : 'PDF'"></span>
                         </button>
                     </div>
@@ -509,13 +587,13 @@
 
                 <div class="space-y-2.5">
                     <template x-for="slip in slips" :key="slip.id">
-                        <div class="rounded-3xl bg-white p-4 sm:p-5 border border-slate-100 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="rounded-[24px] bg-white p-4 sm:p-5 border border-slate-100 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-emerald-200 transition">
                             <div>
                                 <div class="flex items-center gap-2">
                                     <h4 class="text-sm font-black text-slate-900" x-text="slip.period"></h4>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold"
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
                                           :class="slip.status === 'sudah' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
-                                          x-text="slip.status === 'sudah' ? 'Sudah Ditransfer' : 'Menunggu Cair'">
+                                          x-text="slip.status === 'sudah' ? '✓ Sudah Ditransfer' : 'Menunggu Cair'">
                                     </span>
                                 </div>
                                 <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
@@ -525,10 +603,10 @@
                             </div>
 
                             <div class="flex items-center gap-2">
-                                <button type="button" @click="openSlip(slip.id)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition">
+                                <button type="button" @click="openSlip(slip.id)" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition">
                                     Buka Slip ↗
                                 </button>
-                                <button type="button" @click="downloadSlipPdf(slip)" :disabled="downloadingSlipId === slip.id" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+                                <button type="button" @click="downloadSlipPdf(slip)" :disabled="downloadingSlipId === slip.id" class="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
                                     <span x-text="downloadingSlipId === slip.id ? '…' : 'PDF'"></span>
                                 </button>
                             </div>
@@ -536,8 +614,7 @@
                     </template>
 
                     <template x-if="!loadingSlips && slips.length === 0">
-                        <div class="p-8 text-center rounded-3xl bg-white border border-slate-100 shadow-2xs">
-                            <span class="text-2xl block mb-1">📄</span>
+                        <div class="p-8 text-center rounded-[28px] bg-white border border-slate-100 shadow-2xs">
                             <p class="text-xs font-extrabold text-slate-700">Belum ada slip resmi yang diterbitkan.</p>
                             <p class="text-[11px] text-slate-400 mt-0.5">Slip resmi diterbitkan setiap tanggal 22 setelah cut-off.</p>
                         </div>
@@ -556,14 +633,14 @@
              class="space-y-5">
 
             <!-- Profile Info Card -->
-            <section class="rounded-3xl bg-white p-6 border border-slate-100 shadow-2xs flex items-center gap-4">
-                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 text-white font-black text-xl flex items-center justify-center shadow-xs shrink-0 ring-4 ring-orange-50">
+            <section class="rounded-[32px] bg-white p-6 border border-slate-100 shadow-2xs flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 text-white font-black text-xl flex items-center justify-center shadow-xs shrink-0 ring-4 ring-emerald-50">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
                 <div>
                     <h3 class="text-base font-black text-slate-900">{{ auth()->user()->name }}</h3>
                     <p class="text-xs text-slate-400 font-medium">{{ auth()->user()->email }}</p>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 mt-1">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 mt-1">
                         Kontributor Aktif
                     </span>
                 </div>
@@ -571,11 +648,11 @@
 
             <!-- Stats Grid -->
             <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-3xl bg-white p-4 border border-slate-100 shadow-2xs">
+                <div class="rounded-[28px] bg-white p-5 border border-slate-100 shadow-2xs">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Kehadiran Bulan Ini</span>
                     <span class="text-2xl font-black text-slate-900 font-mono block mt-1" x-text="totalMonthAttendances + ' Hari'"></span>
                 </div>
-                <div class="rounded-3xl bg-white p-4 border border-slate-100 shadow-2xs cursor-pointer" @click="setTab('slip')">
+                <div class="rounded-[28px] bg-white p-5 border border-slate-100 shadow-2xs cursor-pointer hover:border-emerald-300 transition" @click="setTab('slip')">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Arsip Slip Gaji</span>
                     <span class="text-2xl font-black text-emerald-700 font-mono block mt-1" x-text="slips.length + ' Dokumen'"></span>
                 </div>
@@ -584,7 +661,7 @@
             <!-- Logout Button -->
             <form method="post" action="/logout">
                 @csrf
-                <button type="submit" class="w-full py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200/60 shadow-2xs flex items-center justify-center gap-2">
+                <button type="submit" class="w-full py-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200/60 shadow-2xs flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                     <span>Keluar dari Akun</span>
                 </button>
@@ -596,14 +673,14 @@
     <!-- ========================================================= -->
     <!-- FLOATING DOCK BOTTOM NAVIGATION BAR (MATCHING DRIBBBLE)   -->
     <!-- ========================================================= -->
-    <nav class="md:hidden fixed bottom-5 inset-x-4 max-w-sm sm:max-w-md mx-auto z-40 bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_16px_36px_rgba(0,0,0,0.12)] rounded-[32px] px-2.5 py-2 flex items-center justify-between">
+    <nav class="md:hidden fixed bottom-5 inset-x-4 max-w-sm sm:max-w-md mx-auto z-40 bg-white/95 backdrop-blur-xl border border-slate-200/80 shadow-[0_16px_36px_rgba(0,0,0,0.12)] rounded-[32px] px-3 py-2 flex items-center justify-between">
         
         <!-- Tab 1: Utama / Home -->
         <button type="button" 
                 @click="setTab('absensi')" 
                 class="transition-all duration-200 flex flex-col items-center"
                 :class="activeTab === 'absensi' 
-                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    ? 'bg-[#1C1C1E] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
                     : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
             <svg class="w-5 h-5" :class="activeTab === 'absensi' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -614,9 +691,9 @@
         <!-- Tab 2: Laporan / Projects -->
         <button type="button" 
                 @click="setTab('laporan')" 
-                class="transition-all duration-200 flex flex-col items-center relative"
+                class="transition-all duration-200 flex flex-col items-center"
                 :class="activeTab === 'laporan' 
-                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    ? 'bg-[#1C1C1E] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
                     : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
             <svg class="w-5 h-5" :class="activeTab === 'laporan' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -629,7 +706,7 @@
                 @click="setTab('jadwal')" 
                 class="transition-all duration-200 flex flex-col items-center"
                 :class="activeTab === 'jadwal' 
-                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    ? 'bg-[#1C1C1E] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
                     : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
             <svg class="w-5 h-5" :class="activeTab === 'jadwal' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -642,7 +719,7 @@
                 @click="setTab('slip')" 
                 class="transition-all duration-200 flex flex-col items-center"
                 :class="activeTab === 'slip' 
-                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    ? 'bg-[#1C1C1E] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
                     : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
             <svg class="w-5 h-5" :class="activeTab === 'slip' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -655,7 +732,7 @@
                 @click="setTab('akun')" 
                 class="transition-all duration-200 flex flex-col items-center"
                 :class="activeTab === 'akun' 
-                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    ? 'bg-[#1C1C1E] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
                     : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
             <svg class="w-5 h-5" :class="activeTab === 'akun' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -676,15 +753,15 @@
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs"
          @keydown.escape.window="closeScanner()">
         
-        <div class="bg-white rounded-3xl border border-slate-200 w-full max-w-sm overflow-hidden shadow-2xl flex flex-col"
+        <div class="bg-white rounded-[32px] border border-slate-200 w-full max-w-sm overflow-hidden shadow-2xl flex flex-col"
              @click.outside="closeScanner()">
             
-            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="px-5 py-4 bg-[#1C1C1E] text-white flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <h3 class="font-bold text-sm">Scan Barcode Studio</h3>
                 </div>
-                <button type="button" @click="closeScanner()" class="w-8 h-8 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
+                <button type="button" @click="closeScanner()" class="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
                     ✕
                 </button>
             </div>
@@ -700,9 +777,9 @@
             <div class="p-5 text-center space-y-3 bg-white">
                 <div>
                     <p class="text-xs font-bold text-slate-800">Arahkan kamera ke Poster Barcode di Studio</p>
-                    <p class="text-[11px] text-slate-500 mt-1">Pastikan HP Anda terhubung ke <strong>WiFi Kantor</strong>.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Pastikan HP terhubung ke <strong>WiFi Kantor</strong>.</p>
                 </div>
-                <button type="button" @click="closeScanner()" class="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-600 transition">
+                <button type="button" @click="closeScanner()" class="w-full py-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 transition">
                     Tutup Kamera
                 </button>
             </div>
