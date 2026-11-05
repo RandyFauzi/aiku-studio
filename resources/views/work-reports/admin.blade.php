@@ -238,7 +238,7 @@
                                                             </span>
                                                         </template>
                                                         <template x-if="pMatch.status === 'personal_phone'">
-                                                            <span class="text-xs text-slate-500">HP Sendiri · tidak terintegrasi akun studio</span>
+                                                            <span class="text-xs text-slate-500">HP Sendiri · isi email laporan untuk mencocokkan rekaman bot</span>
                                                         </template>
                                                         <template x-if="pMatch.status === 'no_device_account'">
                                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-red-50 text-red-700">
@@ -573,7 +573,7 @@
                                         </template>
 
                                         <p class="text-[10px] text-slate-400 mt-1 leading-tight">
-                                            <span x-text="key === 'sendiri' ? 'Email opsional, hanya untuk laporan ini. Tidak terhubung ke akun studio.' : 'Perubahan email hanya untuk laporan ini dan tidak mengubah akun master HP.'"></span>
+                                            <span x-text="key === 'sendiri' ? 'Email opsional untuk mencocokkan rekaman bot pada tanggal laporan, tanpa dihubungkan ke akun master HP studio.' : 'Perubahan email hanya untuk laporan ini dan tidak mengubah akun master HP.'"></span>
                                         </p>
                                     </div>
                                 </div>
@@ -733,7 +733,7 @@
                                     </template>
 
                                     <p class="text-[10px] text-slate-400 mt-1 leading-tight">
-                                        <span x-text="key === 'sendiri' ? 'Email opsional, hanya untuk laporan ini. Tidak terhubung ke akun studio.' : 'Email ini hanya tersimpan di laporan dan tidak mengubah master HP.'"></span>
+                                        <span x-text="key === 'sendiri' ? 'Email opsional untuk mencocokkan rekaman bot pada tanggal laporan, tanpa dihubungkan ke akun master HP studio.' : 'Email ini hanya tersimpan di laporan dan tidak mengubah master HP.'"></span>
                                     </p>
                                 </div>
                             </div>

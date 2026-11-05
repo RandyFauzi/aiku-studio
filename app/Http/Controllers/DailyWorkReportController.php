@@ -206,7 +206,8 @@ class DailyWorkReportController extends Controller
                 if ($phoneKey === 'sendiri') {
                     $activeEmail = $effectiveEmail;
                     $activeAccountName = null;
-                    $phoneEmails = [];
+                    // Report-only email; never resolve or register a studio device account.
+                    $phoneEmails = $effectiveEmail ? [mb_strtolower($effectiveEmail)] : [];
                 } elseif ($isEmailOverridden && $effectiveEmail) {
                     $matchingAcct = $deviceAccounts->firstWhere('email', $effectiveEmail);
                     $activeAccountName = $matchingAcct?->account_name ?: explode('@', $effectiveEmail)[0];
@@ -240,8 +241,13 @@ class DailyWorkReportController extends Controller
                 }
 
                 // Query recordings on that WITA day for these emails
-                $recs = StudioRecording::whereIn('participant_email', $phoneEmails)
-                    ->whereBetween('recorded_at', [$witaStart, $witaEnd])
+                $recordings = StudioRecording::query();
+                if ($phoneKey === 'sendiri') {
+                    $recordings->whereRaw('LOWER(TRIM(participant_email)) = ?', [$phoneEmails[0]]);
+                } else {
+                    $recordings->whereIn('participant_email', $phoneEmails);
+                }
+                $recs = $recordings->whereBetween('recorded_at', [$witaStart, $witaEnd])
                     ->orderBy('recorded_at')
                     ->get();
 

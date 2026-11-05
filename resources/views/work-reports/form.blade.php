@@ -56,7 +56,7 @@
                             <template x-if="key === 'sendiri'">
                                 <label class="block text-xs font-semibold text-slate-600">Email HP Sendiri (opsional)
                                     <input type="email" maxlength="100" x-model.trim="phoneEmails[key]" placeholder="nama@email.com" class="mt-2 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 text-sm">
-                                    <span class="mt-2 block text-xs leading-5 text-slate-500">Hanya untuk laporan ini. Tidak terhubung ke akun studio.</span>
+                                    <span class="mt-2 block text-xs leading-5 text-slate-500">Jika diisi, email dipakai untuk mencocokkan rekaman bot pada tanggal laporan. Tidak dihubungkan ke akun master HP studio.</span>
                                 </label>
                             </template>
                             <div class="flex items-center gap-2">

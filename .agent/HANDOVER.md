@@ -1,3 +1,7 @@
+### [2026-11-05 17.30] — CODEX
+- Email opsional HP Sendiri kini digunakan untuk kandidat rekaman bot pada tanggal WITA laporan; pencocokan mengabaikan kapital/spasi email. Tidak mencari/membuat tautan master HP studio dan tidak otomatis menugaskan rekaman; email kosong tetap tanpa kandidat.
+- Validasi: DailyWorkReportTest 14 tes/140 assertion, termasuk batas hari WITA, email berbeda, tugas milik orang lain, email kosong, master akun tidak berubah; render formulir worker/admin dan diff lulus. Tanpa build aset atau rebuild graph karena perubahan logika lokal dan teks saja.
+
 ### [2026-11-05 17.21] — CODEX
 - Laporan worker/admin kini mendukung HP Sendiri dengan email manual opsional tersimpan di phone_emails; load/edit/dirty/reset mengikuti email. Opsi laporan dipisahkan dari 6 HP master; HP Sendiri tidak membuat akun atau masuk pencocokan otomatis.
 - Validasi: full suite 108 tes/688 assertion, browser worker mobile + admin desktop (pilih, simpan email, perubahan email saja, hapus pilihan), UTF-8/diff, build Vite dan refresh Graphify lulus. Tidak memerlukan migrasi baru.

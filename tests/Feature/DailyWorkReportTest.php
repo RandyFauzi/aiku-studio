@@ -399,11 +399,53 @@ class DailyWorkReportTest extends TestCase
         $this->putJson('/api/work-reports/'.$id, ['phone_durations' => ['sendiri' => 180], 'phone_emails' => ['sendiri' => 'edit@example.test']])
             ->assertOk()->assertJsonPath('report.phone_emails.sendiri', 'edit@example.test');
         $this->getJson('/api/work-reports/assist-matches?date='.$date)->assertOk()
-            ->assertJsonPath('assist_data.0.phones.0.status', 'personal_phone')
+            ->assertJsonPath('assist_data.0.phones.0.status', 'no_bot_data')
+            ->assertJsonPath('assist_data.0.phones.0.emails', ['edit@example.test'])
             ->assertJsonPath('assist_data.0.phones.0.candidate_record_ids', []);
         $this->getJson('/api/devices')->assertOk()->assertJsonCount(6, 'phones');
         $this->postJson('/api/devices/accounts', ['phone_key' => 'sendiri', 'email' => 'manual@example.test'])->assertUnprocessable();
         $this->assertDatabaseCount('device_accounts', 0);
+    }
+
+    public function test_personal_phone_email_matches_only_same_wita_day_without_touching_master_accounts(): void
+    {
+        $worker = $this->employee();
+        $date = now('Asia/Makassar')->toDateString();
+        $start = CarbonImmutable::parse($date, 'Asia/Makassar')->startOfDay();
+        $master = DeviceAccount::create(['phone_key' => 'putih', 'email' => 'personal@example.test', 'account_name' => 'Studio Master', 'is_active' => true]);
+        $masterBefore = $master->fresh()->getAttributes();
+        $other = Contributor::create(['nama' => 'Other Worker']);
+
+        $recording = ['participant_email' => ' PERSONAL@EXAMPLE.TEST ', 'duration_min' => 60, 'billable_min' => 60,
+            'recorded_at' => $start->addMinutes(5)->utc()->format('Y-m-d H:i:s'), 'manual_payment_status' => 'Belum Rekap'];
+        StudioRecording::create(['record_id' => 'personal-match'] + $recording);
+        StudioRecording::create(array_replace($recording, ['record_id' => 'previous-day', 'recorded_at' => $start->subMinute()->utc()->format('Y-m-d H:i:s')]));
+        StudioRecording::create(array_replace($recording, ['record_id' => 'next-day', 'recorded_at' => $start->addDay()->utc()->format('Y-m-d H:i:s')]));
+        StudioRecording::create(array_replace($recording, ['record_id' => 'other-email', 'participant_email' => 'different@example.test']));
+        StudioRecording::create(array_replace($recording, ['record_id' => 'assigned-elsewhere', 'assigned_worker_name' => $other->nama, 'assigned_contributor_id' => $other->id]));
+
+        $payload = ['work_date' => $date, 'expected_revision' => 0, 'phone_durations' => ['sendiri' => 60], 'phone_emails' => ['sendiri' => 'Personal@example.test']];
+        $this->actingAs($worker)->putJson('/api/me/work-report', $payload)->assertOk();
+        $admin = User::factory()->create();
+        $this->actingAs($admin)->getJson('/api/work-reports/assist-matches?date='.$date)->assertOk()
+            ->assertJsonPath('assist_data.0.phones.0.status', 'exact_match')
+            ->assertJsonPath('assist_data.0.phones.0.emails', ['personal@example.test'])
+            ->assertJsonPath('assist_data.0.phones.0.active_account_name', null)
+            ->assertJsonPath('assist_data.0.phones.0.candidate_record_ids', ['personal-match'])
+            ->assertJsonPath('assist_data.0.phones.0.other_assigned_count', 1)
+            ->assertJsonPath('assist_data.0.phones.0.unassigned_minutes', 60);
+        $this->assertSame($masterBefore, $master->fresh()->getAttributes());
+        $this->assertDatabaseCount('device_accounts', 1);
+        $this->assertDatabaseCount('studio_accounts', 0);
+        $this->assertDatabaseHas('studio_recordings', ['record_id' => 'personal-match', 'assigned_worker_name' => null]);
+
+        $payload['expected_revision'] = 1;
+        $payload['phone_emails']['sendiri'] = '';
+        $this->actingAs($worker)->putJson('/api/me/work-report', $payload)->assertOk();
+        $this->actingAs($admin)->getJson('/api/work-reports/assist-matches?date='.$date)->assertOk()
+            ->assertJsonPath('assist_data.0.phones.0.status', 'personal_phone')
+            ->assertJsonPath('assist_data.0.phones.0.emails', [])
+            ->assertJsonPath('assist_data.0.phones.0.candidate_record_ids', []);
     }
 
     public function test_all_seven_report_phone_options_are_accepted_together(): void
