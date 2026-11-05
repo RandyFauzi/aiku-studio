@@ -2,7 +2,7 @@
     <!-- Header (Matching Screen 3 Header) -->
     <div class="border-b border-slate-100 p-5 sm:p-6 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-            <button type="button" @click="setTab('absensi')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition" title="Kembali">
+            <button type="button" @click="window.location.assign('/me')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition" title="Kembali">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
             <div>
@@ -11,8 +11,8 @@
             </div>
         </div>
 
-        <span class="rounded-full px-3 py-1 text-xs font-black" 
-              :class="revision ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-200'" 
+        <span class="rounded-full px-3 py-1 text-xs font-black"
+              :class="revision ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-200'"
               x-text="revision ? '✓ Sudah Dikirim' : 'Belum Dikirim'"></span>
     </div>
 
@@ -30,13 +30,13 @@
             </div>
 
             <!-- Dynamic Phones Grid (Matching Priority & Tag Pills from Screen 3) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 portal-phone-grid">
                 <template x-for="(label, key) in options" :key="key">
-                    <div :class="phones.includes(key) ? 'border-emerald-400 bg-emerald-50/50 ring-2 ring-emerald-400/20 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'" 
+                    <div :class="phones.includes(key) ? 'border-emerald-400 bg-emerald-50/50 ring-2 ring-emerald-400/20 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'"
                          class="rounded-3xl border p-4 transition flex flex-col justify-between">
-                        
+
                         <!-- Toggle Header -->
-                        <div class="flex items-center justify-between cursor-pointer select-none" @click="togglePhone(key)">
+                        <button type="button" class="flex flex-wrap gap-2 items-center justify-between w-full cursor-pointer select-none" @click="togglePhone(key)" :aria-pressed="phones.includes(key)">
                             <div class="flex items-center gap-2.5">
                                 <div class="w-5 h-5 rounded-md border flex items-center justify-center transition"
                                      :class="phones.includes(key) ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'">
@@ -47,19 +47,20 @@
                             <span x-show="phones.includes(key)" class="text-[10px] font-black text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full">
                                 Dipakai
                             </span>
-                        </div>
+                        </button>
 
                         <!-- Duration Input Section (Expands when selected) -->
                         <div x-show="phones.includes(key)" x-transition class="mt-3.5 pt-3.5 border-t border-slate-200/80 space-y-2.5">
                             <div class="flex items-center gap-2">
-                                <input type="number" 
-                                       min="1" 
-                                       max="1440" 
-                                       step="1" 
-                                       inputmode="numeric" 
-                                       placeholder="Contoh: 120" 
-                                       :value="phoneDurations[key] || ''" 
-                                       @input="setMinutes(key, $event.target.value)" 
+                                <input type="number"
+                                       :aria-label="'Durasi HP ' + label + ' dalam menit'"
+                                       min="1"
+                                       max="1440"
+                                       step="1"
+                                       inputmode="numeric"
+                                       placeholder="Contoh: 120"
+                                       :value="phoneDurations[key] || ''"
+                                       @input="setMinutes(key, $event.target.value)"
                                        class="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2 text-sm font-black text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none font-mono">
                                 <span class="text-xs font-bold text-slate-400 shrink-0">menit</span>
                             </div>
@@ -77,7 +78,7 @@
             </div>
 
             <!-- Dynamic Live Total Accumulation Banner (Dark/Emerald Pill) -->
-            <div class="rounded-3xl bg-[#1C1C1E] text-white p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+            <div class="rounded-3xl portal-dark-card text-white p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Akumulasi Durasi Hari Ini</span>
                     <div class="flex items-baseline gap-2 mt-0.5">
@@ -105,9 +106,9 @@
 
         <!-- Submit Controls (Matching Screen 3 Full Button) -->
         <div class="space-y-3 pt-2">
-            <button type="submit" 
-                    :disabled="saving || loading || !isComplete || !dirty" 
-                    class="w-full py-4 rounded-2xl bg-[#1C1C1E] hover:bg-slate-800 active:scale-98 text-sm font-black text-white shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            <button type="submit"
+                    :disabled="saving || loading || !isComplete || !dirty"
+                    class="w-full py-4 rounded-2xl bg-[#174c39] hover:bg-slate-800 active:scale-98 text-sm font-black text-white shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     x-text="saving ? 'Menyimpan…' : (revision ? 'Perbarui Laporan' : 'Kirim Laporan Kerja')">
             </button>
 
@@ -124,7 +125,7 @@
     <div class="border-t border-slate-100 p-5 sm:p-6 bg-slate-50/50">
         <div class="mb-3.5 flex items-center justify-between gap-3">
             <h4 class="font-black text-slate-900 text-sm">Riwayat Laporan Bulanan</h4>
-            <input type="month" x-model="month" @change="load(false)" :disabled="loading || saving" class="h-8 rounded-xl border border-slate-200 px-2.5 text-xs font-bold text-slate-700 bg-white shadow-2xs">
+            <input type="month" aria-label="Bulan riwayat laporan" x-model="month" @change="load(false)" :disabled="loading || saving" class="h-8 rounded-xl border border-slate-200 px-2.5 text-xs font-bold text-slate-700 bg-white shadow-2xs">
         </div>
         <div class="space-y-2">
             <template x-for="report in reports" :key="report.id">

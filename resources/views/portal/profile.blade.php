@@ -6,18 +6,18 @@
     <!-- Subheader -->
     <div class="flex items-center justify-between gap-3">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900">Profil Kontributor</h1>
+            <h1 class="text-xl sm:text-2xl font-semibold text-slate-900">Profil Kontributor</h1>
             <p class="text-xs text-slate-400 font-medium mt-0.5">Informasi akun dan ringkasan aktivitas kerja</p>
         </div>
     </div>
 
     <!-- Profile Info Card -->
     <section class="rounded-[32px] bg-white p-6 border border-slate-100 shadow-2xs flex items-center gap-4">
-        <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 text-white font-black text-2xl flex items-center justify-center shadow-xs shrink-0 ring-4 ring-emerald-50">
+        <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 text-white font-semibold text-2xl flex items-center justify-center shadow-xs shrink-0 ring-4 ring-emerald-50">
             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
         </div>
         <div>
-            <h3 class="text-lg font-black text-slate-900">{{ auth()->user()->name }}</h3>
+            <h3 class="text-lg font-semibold text-slate-900">{{ auth()->user()->name }}</h3>
             <p class="text-xs text-slate-400 font-medium">{{ auth()->user()->email }}</p>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 mt-2 border border-emerald-200/80">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
@@ -30,19 +30,19 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="rounded-[28px] bg-white p-5 border border-slate-100 shadow-2xs">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Kehadiran Bulan Ini</span>
-            <span class="text-2xl font-black text-slate-900 font-mono block mt-1" x-text="totalMonthAttendances + ' Hari'"></span>
+            <span class="text-2xl font-semibold text-slate-900 font-mono block mt-1" x-text="totalMonthAttendances + ' Hari'"></span>
             <p class="text-[11px] text-slate-400 mt-1">Presensi terverifikasi melalui WiFi Studio atau GPS.</p>
         </div>
         <a href="/me/slip" class="rounded-[28px] bg-white p-5 border border-slate-100 shadow-2xs hover:border-emerald-300 transition block">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Arsip Dokumen Slip Gaji</span>
-            <span class="text-2xl font-black text-emerald-700 font-mono block mt-1" x-text="slips.length + ' Dokumen'"></span>
+            <span class="text-2xl font-semibold text-emerald-700 font-mono block mt-1" x-text="slips.length + ' Dokumen'"></span>
             <p class="text-[11px] text-emerald-600 font-semibold mt-1">Lihat riwayat dan unduh PDF ↗</p>
         </a>
     </div>
 
     <!-- Quick Links Card -->
     <section class="rounded-[28px] bg-white p-5 border border-slate-100 shadow-2xs space-y-3">
-        <h4 class="text-xs font-black uppercase tracking-wider text-slate-400">Navigasi Halaman Anda</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Navigasi Halaman Anda</h4>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <a href="/me" class="p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 transition flex items-center justify-between">

@@ -483,7 +483,7 @@ window.attendancePortalData = () => ({
             }
         });
 
-        await Promise.all([this.load(), this.loadSlips()]);
+        await Promise.all([this.load(), this.loadSlips(), this.loadReportStatus()]);
 
         // Auto-checkin if URL has ?qr_token=... (e.g. from native phone camera scanning poster)
         const urlParams = new URLSearchParams(window.location.search);
@@ -497,7 +497,10 @@ window.attendancePortalData = () => ({
 
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                if (!this.checking) this.load();
+                if (!this.checking) {
+                    this.load();
+                    this.loadReportStatus();
+                }
                 if (this.timer.isRunning && this.timer.endTime) {
                     const now = Date.now();
                     const diffMs = this.timer.endTime - now;
@@ -517,8 +520,22 @@ window.attendancePortalData = () => ({
                 this.month = witaDate().slice(0, 7);
                 this.selectedDate = witaDate();
                 this.load();
+                this.loadReportStatus();
             }
         }, 60000);
+    },
+
+    async loadReportStatus() {
+        try {
+            const response = await fetch('/api/me/work-reports?month=' + witaDate().slice(0, 7), {
+                headers: { Accept: 'application/json' }
+            });
+            if (!response.ok) throw new Error('Status laporan belum tersedia.');
+            const data = await response.json();
+            this.todayReportSubmitted = Boolean(data.today_report);
+        } catch {
+            this.todayReportSubmitted = null;
+        }
     },
 
     async load() {
