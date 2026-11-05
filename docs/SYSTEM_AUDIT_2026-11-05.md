@@ -36,6 +36,16 @@ no conclusion relies on an inferred graph edge alone.
 
 ## Verification and limits
 
+Final verification: **85 tests / 481 assertions passed**. Graph refreshed to
+913 nodes and 1,586 edges. Read-only integrity audit reported zero issues in all
+11 checks on both local MySQL and production. Deployment checked all business
+table hashes before/after and preserved them, including the primary admin.
+Live browser checks passed on nine admin pages, five contributor pages and three
+personal APIs. Contributor access to admin data, another person's slip and
+another person's raw PDF returned 403. No business records were created by those
+live browser checks. These results describe the deployed snapshot, not all
+future inputs or database changes.
+
 Regression suite: `tests/Feature/SystemAuditRegressionTest.php`. Full suite runs
 against SQLite in-memory, not operational MySQL. PHP formatting is checked only
 on changed files. No external synchronization, emails, payroll imports or fake
