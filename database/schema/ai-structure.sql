@@ -9,7 +9,7 @@ CREATE TABLE "cache_locks" ("key" varchar not null, "owner" varchar not null, "e
 
 CREATE TABLE "contributors" ("id" integer primary key autoincrement not null, "nama" varchar, "no_wa" varchar, "domisili" varchar, "no_rek" varchar, "shift" varchar, "hp" varchar, "email" varchar, "role" varchar not null default 'contributor');
 
-CREATE TABLE "daily_work_reports" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "total_duration_minutes" integer not null, "phones" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime, "phone_durations" text);
+CREATE TABLE "daily_work_reports" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "total_duration_minutes" integer not null, "phones" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime, "phone_durations" text, "phone_emails" text);
 
 CREATE TABLE "device_accounts" ("id" integer primary key autoincrement not null, "phone_key" varchar not null, "email" varchar not null, "account_name" varchar, "is_active" tinyint(1) not null default '0', "activated_at" datetime, "created_at" datetime, "updated_at" datetime);
 

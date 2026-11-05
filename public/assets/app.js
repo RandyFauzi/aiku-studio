@@ -926,6 +926,9 @@ document.addEventListener('alpine:init', () => {
         perfModalOpen: false,
         isLoadingPerf: false,
         selectedPerf: null,
+        perfError: '',
+        perfContributor: null,
+        perfRequestId: 0,
         perfLookup: {},
 
         init() {
@@ -969,24 +972,33 @@ document.addEventListener('alpine:init', () => {
         },
 
         async openPerfModal(contributor) {
+            if (!contributor?.id) return;
+            const requestId = ++this.perfRequestId;
             this.perfModalOpen = true;
             this.isLoadingPerf = true;
             this.selectedPerf = null;
+            this.perfError = '';
+            this.perfContributor = contributor;
             try {
-                const response = await fetch(`/api/contributors/${contributor.id}/performance`);
-                if (response.ok) {
-                    this.selectedPerf = await response.json();
+                const response = await fetch(`/api/contributors/${contributor.id}/performance`, {headers: {Accept: 'application/json'}});
+                const data = await response.json().catch(() => null);
+                if (!response.ok || !data?.contributor || !data.recordings || !data.attendance || !data.work_reports || !data.evaluation) {
+                    throw new Error('Analisis kinerja belum dapat dimuat. Silakan coba lagi.');
                 }
+                if (requestId === this.perfRequestId && this.perfModalOpen) this.selectedPerf = data;
             } catch (error) {
-                console.error("Error fetching contributor performance:", error);
+                if (requestId === this.perfRequestId && this.perfModalOpen) this.perfError = 'Analisis kinerja belum dapat dimuat. Silakan coba lagi.';
             } finally {
-                this.isLoadingPerf = false;
+                if (requestId === this.perfRequestId) this.isLoadingPerf = false;
             }
         },
 
         closePerfModal() {
+            this.perfRequestId++;
             this.perfModalOpen = false;
+            this.isLoadingPerf = false;
             this.selectedPerf = null;
+            this.perfError = '';
         },
 
         openModal(contributor = null) {

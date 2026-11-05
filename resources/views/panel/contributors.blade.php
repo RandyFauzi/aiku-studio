@@ -254,7 +254,7 @@
     </main>
 
     <!-- Profile & Smart Performance Evaluation Modal -->
-    <div x-show="perfModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
+    <div x-show="perfModalOpen" role="dialog" aria-modal="true" aria-labelledby="performance-title" @keydown.escape.window="if(perfModalOpen)closePerfModal()" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
         <div class="flex items-center justify-center min-h-screen px-3 sm:px-4 pt-4 pb-20 text-center sm:p-0">
             <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closePerfModal()">
                 <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
@@ -268,7 +268,7 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                         </div>
                         <div>
-                            <h3 class="text-base font-bold">Profil & Analisis Kinerja Kontributor</h3>
+                            <h3 id="performance-title" class="text-base font-bold">Profil & Analisis Kinerja Kontributor</h3>
                             <p class="text-xs text-slate-300">Evaluasi pintar kualitas rekaman, approval rate, dan kedisiplinan kerja.</p>
                         </div>
                     </div>
@@ -293,6 +293,10 @@
                     </template>
 
                     <!-- Content Loaded -->
+                    <div x-show="perfError" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        <p x-text="perfError"></p>
+                        <button type="button" @click="openPerfModal(perfContributor)" :disabled="isLoadingPerf" class="mt-3 rounded-lg border border-red-200 bg-white px-4 py-2 font-semibold disabled:opacity-50">Coba lagi</button>
+                    </div>
                     <template x-if="!isLoadingPerf && selectedPerf">
                         <div class="space-y-5">
                             <!-- 1. Profile Identity Header Card -->
@@ -438,7 +442,7 @@
                                     <span class="font-semibold text-slate-800">Riwayat Laporan Kerja Harian:</span>
                                     <span class="ml-1" x-text="selectedPerf.work_reports.total_reports + ' laporan diserahkan (' + selectedPerf.work_reports.total_reported_hours + ' jam)'"></span>
                                 </div>
-                                <a href="/laporan-kerja" class="text-brand hover:underline font-semibold text-xs">Buka Laporan Harian &rarr;</a>
+                                <a href="/work-reports" class="text-brand hover:underline font-semibold text-xs">Buka Laporan Harian &rarr;</a>
                             </div>
                         </div>
                     </template>
@@ -450,7 +454,8 @@
                         Tutup
                     </button>
                     <button type="button"
-                            @click="const c = selectedPerf.contributor; closePerfModal(); openModal(c)"
+                            @click="if(selectedPerf){const c = selectedPerf.contributor; closePerfModal(); openModal(c)}"
+                            :disabled="isLoadingPerf || !selectedPerf"
                             class="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         <span>Edit Data Kontributor</span>
@@ -548,6 +553,6 @@
         </div>
     </div>
 
-    <script src="/assets/app.js"></script>
+    <script src="/assets/app.js?v={{ filemtime(public_path('assets/app.js')) }}"></script>
 </body>
 </html>
