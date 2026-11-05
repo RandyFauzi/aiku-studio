@@ -35,6 +35,8 @@ Untuk mengembangkan CSS/JavaScript gunakan composer dev. Sinkronisasi Atlas loka
 Tidak ada fitur menghidupkan/mematikan CMD. Hosting menjalankan PHP biasa. Node.js hanya untuk build aset sebelum upload.
 
 ## Dokumentasi
+- [Graphify: indeks kode/skema untuk AI dan cara memperbaruinya](docs/GRAPHIFY.md)
+- [Peta alur data dan panduan investigasi bug untuk AI](docs/AI_CONTEXT.md)
 - [Arsitektur, pemetaan variabel, database, kontrak API, dan hasil verifikasi](docs/MIGRATION.md)
 - [Deployment shared hosting Hostinger](docs/HOSTINGER.md)
 - [Kalender, akses kontributor, dan absensi](docs/ATTENDANCE_AND_CALENDAR.md)

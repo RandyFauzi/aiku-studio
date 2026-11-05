@@ -1,0 +1,2 @@
+# Development-only tooling; never installed on shared hosting.
+graphifyy[sql]==0.9.102

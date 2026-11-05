@@ -1,0 +1,24 @@
+# Development sources only. Never index operational data or credentials.
+.env*
+auth.json
+storage/
+vendor/
+node_modules/
+public/
+.git/
+.codex/
+.agents/
+graphify-out/
+database/*.sqlite*
+*.sql
+!database/schema/ai-structure.sql
+*.zip
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.mp3
+*.mp4
+composer.lock
+package-lock.json
