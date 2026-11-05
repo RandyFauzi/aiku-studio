@@ -14,6 +14,7 @@ window.attendancePortalData = () => ({
     month: witaDate().slice(0, 7),
     selectedDate: witaDate(),
     schedule: [],
+    activeSchedule: null,
     attendances: [],
     todayAttendance: null,
     slips: [],
@@ -319,7 +320,7 @@ window.attendancePortalData = () => ({
     },
 
     get todaySchedule() {
-        return this.schedule.find(day => day.date === this.today) || { sessions: [] };
+        return this.activeSchedule || this.schedule.find(day => day.date === this.today) || { sessions: [] };
     },
 
     get weekDays() {
@@ -549,6 +550,7 @@ window.attendancePortalData = () => ({
             const data = await response.json();
             this.today = data.today;
             this.schedule = data.schedule;
+            this.activeSchedule = data.active_schedule || null;
             this.attendances = data.attendances;
             this.todayAttendance = data.today_attendance;
             if (!this.selectedDate.startsWith(this.month)) this.selectedDate = this.month + '-01';
@@ -743,25 +745,10 @@ window.attendancePortalData = () => ({
                 ? 'Anda sudah absen hari ini.'
                 : 'Absensi masuk via Barcode & WiFi Studio berhasil!';
 
-            if (window.Swal) {
-                const hasGpsCaptured = data.attendance && data.attendance.latitude && Number(data.attendance.latitude) !== 0;
-                const detailText = data.already_checked_in
-                    ? (data.message || 'Anda sudah melakukan absensi hari ini.')
-                    : (hasGpsCaptured
-                        ? 'Kehadiran Anda berhasil diverifikasi pada WiFi Studio & titik lokasi GPS Anda telah tercatat.'
-                        : 'Kehadiran Anda berhasil diverifikasi pada WiFi Studio.');
-
-                window.Swal.fire({
-                    icon: data.already_checked_in ? 'info' : 'success',
-                    title: data.already_checked_in ? 'Sudah Absen Hari Ini' : 'Absensi Berhasil!',
-                    text: detailText,
-                    confirmButtonColor: '#009B7E'
-                });
-            }
-
             this.month = data.attendance.work_date.slice(0, 7);
             this.selectedDate = data.attendance.work_date;
             await this.load();
+            this.confirmAttendance(data);
         } catch (e) {
             this.message = '';
             this.error = e.message;
@@ -775,6 +762,13 @@ window.attendancePortalData = () => ({
             }
         } finally {
             this.checking = false;
+        }
+    },
+
+    confirmAttendance(data) {
+        window.dispatchEvent(new CustomEvent('attendance-recorded', {detail:{attendanceId:data.attendance.id,workDate:data.attendance.work_date}}));
+        if (!document.querySelector('[data-record-streak]') && window.Swal) {
+            window.Swal.fire({icon:data.already_checked_in?'info':'success',title:data.already_checked_in?'Sudah absen hari ini':'Absensi berhasil!',text:'Kehadiran kamu sudah tercatat.',confirmButtonColor:'#315d24'});
         }
     },
 
@@ -812,6 +806,7 @@ window.attendancePortalData = () => ({
             this.month = data.attendance.work_date.slice(0, 7);
             this.selectedDate = data.attendance.work_date;
             await this.load();
+            this.confirmAttendance(data);
         } catch (e) {
             this.message = '';
             this.error = e.code === 1 ? 'Izin lokasi ditolak. Izinkan lokasi pada pengaturan browser lalu tekan Masuk lagi.' : e.code === 2 ? 'Lokasi belum terbaca. Aktifkan GPS dan coba di tempat dengan sinyal lebih baik.' : e.code === 3 ? 'GPS membutuhkan waktu lebih lama. Silakan coba lagi.' : e.message;

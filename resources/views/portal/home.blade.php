@@ -11,6 +11,7 @@
 
 <div class="portal-dashboard-grid">
     <div class="portal-stack">
+        @include('portal.streak')
         <section class="portal-dark-card portal-overview" aria-labelledby="presence-heading">
             <div class="portal-card-heading">
                 <h2 id="presence-heading">Aktivitas hari ini</h2>

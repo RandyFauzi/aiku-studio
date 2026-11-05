@@ -27,6 +27,8 @@ CREATE TABLE "payroll_statuses" ("id" integer primary key autoincrement not null
 
 CREATE TABLE "payslips" ("id" integer primary key autoincrement not null, "employee_name" varchar not null, "period" varchar not null, "total_logged_hours" double not null default '0', "total_approved_hours" double not null default '0', "total_thp" integer not null default '0', "bonus" integer not null default '0', "status" varchar check ("status" in ('belum', 'sudah')) not null default 'belum', "file_path" varchar, "evidence_data" text, "created_at" datetime, "pending_carry_over_amount" integer not null default '0', "pending_carry_over_hours" double not null default '0', "pending_carry_over_data" text, "is_locked" tinyint(1) not null default '0');
 
+CREATE TABLE "record_streak_days" ("id" integer primary key autoincrement not null, "contributor_id" integer not null, "work_date" date not null, "schedule_snapshot" text not null, "deadline_at" datetime not null, "target_minutes" integer not null, "rule_version" integer not null default '1', "status" varchar not null default 'open', "reason" varchar, "attendance_id" integer, "verified_minutes" numeric not null default '0', "evidence_ids" text, "manual_report_id" integer, "manual_report_revision" integer, "verified_by" integer, "verified_at" datetime, "celebrated_at" datetime, "created_at" datetime, "updated_at" datetime);
+
 CREATE TABLE "sessions" ("id" varchar not null, "user_id" integer, "ip_address" varchar, "user_agent" text, "payload" text not null, "last_activity" integer not null, primary key ("id"));
 
 CREATE TABLE "shift_days" ("id" integer primary key autoincrement not null, "work_date" date not null, "config" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime);
@@ -78,6 +80,10 @@ CREATE INDEX "jobs_queue_index" on "jobs" ("queue");
 CREATE UNIQUE INDEX "payroll_statuses_worker_name_period_unique" on "payroll_statuses" ("worker_name", "period");
 
 CREATE INDEX "payslips_employee_name_period_index" on "payslips" ("employee_name", "period");
+
+CREATE INDEX "record_streak_days_contributor_id_index" on "record_streak_days" ("contributor_id");
+
+CREATE UNIQUE INDEX "record_streak_days_contributor_id_work_date_unique" on "record_streak_days" ("contributor_id", "work_date");
 
 CREATE INDEX "sessions_last_activity_index" on "sessions" ("last_activity");
 

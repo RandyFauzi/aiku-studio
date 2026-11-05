@@ -9,6 +9,26 @@ use Carbon\CarbonImmutable;
 
 class ShiftSchedule
 {
+    public function workDate(Contributor $person, ?CarbonImmutable $instant = null): string
+    {
+        $instant = ($instant ?? CarbonImmutable::now())->setTimezone('Asia/Makassar');
+        $previous = $instant->subDay()->toDateString();
+        $day = collect($this->forContributor($person, substr($previous, 0, 7)))->firstWhere('date', $previous);
+
+        return self::dateFromPreviousSessions($instant, $day['sessions'] ?? []);
+    }
+
+    public static function dateFromPreviousSessions(CarbonImmutable $instant, array $sessions): string
+    {
+        foreach ($sessions as $session) {
+            if ($instant->gte(CarbonImmutable::parse($session['start_at'])) && $instant->lt(CarbonImmutable::parse($session['end_at']))) {
+                return $instant->subDay()->toDateString();
+            }
+        }
+
+        return $instant->toDateString();
+    }
+
     public function forContributor(Contributor $person, string $month): array
     {
         $first = CarbonImmutable::createFromFormat('!Y-m', $month, 'Asia/Makassar');

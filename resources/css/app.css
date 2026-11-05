@@ -370,3 +370,44 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .portal.admin-theme > main { height:auto; overflow:visible; background:white !important; }
     .portal.admin-theme .workspace-sidebar,.portal.admin-theme .workspace-backdrop,.workspace-skip { display:none !important; }
 }
+
+/* Daily Record: compact progress above attendance, with a focused celebration. */
+.portal .record-streak-card { padding:20px 22px 16px; background:linear-gradient(120deg,#fffdf5,#fff9eb); border:1px solid #f2e9ce; border-radius:27px; box-shadow:0 4px 16px #a47c1405; min-width:0; }
+.portal .record-streak-top { display:flex; align-items:center; gap:14px; }
+.record-flame { display:block; width:58px; height:70px; flex-shrink:0; }
+.portal .record-streak-flame.is-resting { filter:grayscale(1); opacity:.42; }
+.portal .record-streak-copy { flex:1; min-width:0; }
+.portal .record-streak-copy h2 { margin:0 0 4px; color:#7a5c25; font-size:12px; font-weight:600; }
+.portal .record-streak-number { display:flex; align-items:center; gap:10px; margin:0; }
+.portal .record-streak-number strong { color:#bf650c; font-size:34px; line-height:1; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-1px; }
+.portal .record-streak-number span { color:#7e6b4a; font-size:11px; line-height:1.5; }
+.portal .record-streak-detail { width:44px; height:44px; border-radius:50%; background:#fff; color:#8f612c; border:1px solid #efe2c8; font-size:19px; flex-shrink:0; }
+.portal .record-streak-message { min-height:32px; margin:13px 0 10px; font-size:12px; line-height:1.6; color:#74654a; }
+.record-streak-week { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+.record-streak-day { display:flex; align-items:center; flex-direction:column; gap:7px; color:#827a69; font-family:'Manrope',sans-serif; }
+.record-streak-day > span { font-size:10px; font-weight:500; }
+.record-streak-day b { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:#f0ede5; color:#827a69; font-size:16px; font-weight:600; border:1px solid transparent; }
+.record-streak-day.success b { background:linear-gradient(135deg,#ffd25e,#f3a832); color:#57350a; border-color:#edbc4c; }
+.record-streak-day.protected b { background:#e9f3dd; color:#4d6a38; }
+.record-streak-day.pending b { background:#fff0c9; color:#936819; border:1px dashed #d3a149; }
+.record-streak-day.broken b { background:#f5e5e0; color:#9b5142; }
+.record-streak-day.is-today > span { color:#b86013; font-weight:750; }
+.record-streak-day.is-today b { box-shadow:0 0 0 3px #fff,0 0 0 4px #e1c28a; }
+.portal .record-streak-bottom { margin-top:15px; padding-top:9px; border-top:1px solid #ece1ca; display:flex; align-items:center; justify-content:space-between; gap:10px; color:#7a6c53; font-size:10px; }
+.portal .record-streak-bottom button { min-height:44px; padding:0 4px; color:#4e683c; font-size:11px; font-weight:600; }
+.portal .record-streak-note { font-size:11px; line-height:1.6; color:#8b641c; margin:0; }
+.record-streak-popup { border-radius:30px !important; padding:24px !important; font-family:'Manrope',sans-serif !important; background:linear-gradient(145deg,#fffef9,#fff8e7) !important; }
+.record-streak-popup-title { font-size:20px !important; font-weight:650 !important; color:#423925 !important; padding:6px 8px 0 !important; }
+.record-streak-popup .swal2-html-container { margin:12px 0 0 !important; padding:0 !important; overflow:visible; }
+.record-streak-art { position:relative; width:190px; height:155px; margin:0 auto; display:flex; align-items:center; justify-content:center; }
+.record-streak-art .record-flame { width:128px; height:150px; filter:grayscale(1); opacity:.3; }
+.record-streak-art img { position:absolute; bottom:0; right:-24px; width:112px; height:84px; object-fit:contain; border-radius:20px; }
+.record-streak-popup-content.is-lit .record-streak-art .record-flame { filter:drop-shadow(0 7px 12px #ec9a2133); opacity:1; animation:record-flame-glow 1.8s ease-in-out infinite alternate; transform-origin:bottom; }
+.record-streak-popup-number { display:block; margin:3px 0 0; font-size:64px; line-height:1.1; font-weight:750; letter-spacing:-2px; color:#c46711; }
+.record-streak-popup-subtitle { margin:2px 0 22px; color:#9d6c2a; font-size:14px; font-weight:550; }
+.record-streak-popup-message { font-size:13px; color:#5d5848; line-height:1.7; margin:20px 0 10px; }
+.record-streak-popup-note { font-size:11px; color:#81745e; line-height:1.7; margin:0 5px; }
+.record-streak-confirm { min-height:46px !important; border-radius:999px !important; padding:12px 28px !important; font-family:inherit !important; font-size:13px !important; box-shadow:none !important; }
+@keyframes record-flame-glow { from { transform:scale(.96) rotate(-2deg); } to { transform:scale(1.03) rotate(2deg); } }
+@media(max-width:767px) { .portal .record-streak-card { order:0; width:100%; padding:18px 18px 12px; } }
+@media(prefers-reduced-motion:reduce) { .record-streak-popup *, .record-streak-popup *::before { animation:none !important; transition:none !important; } }

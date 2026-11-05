@@ -8,6 +8,7 @@ use App\Http\Controllers\DeviceAccountController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\RecordingController;
+use App\Http\Controllers\RecordStreakController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShiftDayController;
 use App\Http\Controllers\SyncController;
@@ -33,6 +34,8 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/me/profil', fn () => view('portal.profile'))->name('portal.profile');
     Route::get('/me/profile', fn () => redirect('/me/profil'));
     Route::get('/api/me/attendance', [AttendanceController::class, 'mine']);
+    Route::get('/api/me/streak', [RecordStreakController::class, 'mine'])->middleware('throttle:60,1');
+    Route::post('/api/me/streak/celebrate', [RecordStreakController::class, 'celebrate'])->middleware('throttle:30,1');
     Route::post('/api/me/attendance', [AttendanceController::class, 'checkIn'])->middleware('throttle:20,1');
     Route::post('/api/me/attendance/qr', [AttendanceController::class, 'checkInQr'])->middleware('throttle:20,1');
     Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
@@ -58,6 +61,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::view('/work-reports.html', 'panel.work-reports');
         Route::get('/api/work-reports', [DailyWorkReportController::class, 'index']);
         Route::post('/api/work-reports', [DailyWorkReportController::class, 'adminStore']);
+        Route::post('/api/work-reports/{report}/streak-verify', [RecordStreakController::class, 'verify'])->whereNumber('report');
         Route::put('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminUpdate']);
         Route::delete('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminDestroy']);
         Route::get('/api/work-reports/assist-matches', [DailyWorkReportController::class, 'assistMatches']);

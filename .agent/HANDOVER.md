@@ -1,3 +1,7 @@
+### [2026-11-05 18.16] — CODEX
+- Daily Record di atas absensi: api/7 hari/popup absen GPS-QR sekali per tanggal kerja, memakai Gif Terimakasih.webp. Libur aman; izin/sakit admin dan absen terlewat reset. Target awal 30 menit (dibatasi durasi shift), laporan + bukti bot tertugaskan atau verifikasi admin; masa verifikasi 24 jam. Ledger/migrasi baru, snapshot jadwal, batas WITA/shift malam, cron hourly; hitungan mulai sejak fitur dipasang.
+- Validasi: full suite 118 tes/790 assertion, 4 tes JS, browser desktop/mobile GPS+QR/refresh/reduced-motion/reset/libur/verifikasi admin, build dan Graphify lulus; fixture SQLite :memory:. Jalankan migrasi saat deploy (deploy_server.php sudah memanggil migrate). Perubahan paralel public/assets/app.js dan panel/contributors.blade.php dipertahankan di luar commit.
+
 ### [2026-11-05 17.30] — CODEX
 - Email opsional HP Sendiri kini digunakan untuk kandidat rekaman bot pada tanggal WITA laporan; pencocokan mengabaikan kapital/spasi email. Tidak mencari/membuat tautan master HP studio dan tidak otomatis menugaskan rekaman; email kosong tetap tanpa kandidat.
 - Validasi: DailyWorkReportTest 14 tes/140 assertion, termasuk batas hari WITA, email berbeda, tugas milik orang lain, email kosong, master akun tidak berubah; render formulir worker/admin dan diff lulus. Tanpa build aset atau rebuild graph karena perubahan logika lokal dan teks saja.

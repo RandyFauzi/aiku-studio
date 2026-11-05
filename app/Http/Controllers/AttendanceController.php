@@ -31,12 +31,18 @@ class AttendanceController extends Controller
         $person = $this->contributor($request);
         $data = $request->validate(['month' => 'required|date_format:Y-m']);
         $start = CarbonImmutable::createFromFormat('!Y-m', $data['month'], 'Asia/Makassar');
+        $workDate = $schedule->workDate($person);
+        $days = $schedule->forContributor($person, $data['month']);
+        $activeDay = collect($days)->firstWhere('date', $workDate)
+            ?? collect($schedule->forContributor($person, substr($workDate, 0, 7)))->firstWhere('date', $workDate);
 
         return response()->json([
             'name' => $person->nama,
             'today' => CarbonImmutable::now('Asia/Makassar')->toDateString(),
-            'today_attendance' => Attendance::where('user_id', $request->user()->id)->where('work_date', CarbonImmutable::now('Asia/Makassar')->toDateString())->first(),
-            'schedule' => $schedule->forContributor($person, $data['month']),
+            'attendance_work_date' => $workDate,
+            'today_attendance' => Attendance::where('user_id', $request->user()->id)->where('work_date', $workDate)->first(),
+            'schedule' => $days,
+            'active_schedule' => $activeDay,
             'attendances' => Attendance::where('user_id', $request->user()->id)->whereBetween('work_date', [$start->toDateString(), $start->endOfMonth()->toDateString()])->orderByDesc('work_date')->get(),
         ]);
     }
@@ -44,7 +50,7 @@ class AttendanceController extends Controller
     public function checkIn(Request $request)
     {
         $person = $this->contributor($request);
-        $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
+        $today = app(ShiftSchedule::class)->workDate($person);
         if ($existing = Attendance::where('user_id', $request->user()->id)->where('work_date', $today)->first()) {
             return response()->json(['success' => true, 'already_checked_in' => true, 'attendance' => $existing]);
         }
@@ -85,7 +91,7 @@ class AttendanceController extends Controller
     {
         try {
             $person = $this->contributor($request);
-            $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
+            $today = app(ShiftSchedule::class)->workDate($person);
 
             $data = $request->validate([
                 'qr_token' => 'required|string',

@@ -260,6 +260,9 @@ window.adminWorkReportsData = () => ({
     phonesInfo: {},
     detailModalOpen: false,
     selectedReport: null,
+    verifyingStreak: false,
+    streakReviewMessage: '',
+    streakReviewError: '',
 
     getPhoneInfo(pkey) {
         return pkey === 'sendiri' ? null : this.phonesInfo[pkey] || null;
@@ -303,8 +306,23 @@ window.adminWorkReportsData = () => ({
     },
 
     openDetailModal(report) {
+        this.streakReviewMessage = '';
+        this.streakReviewError = '';
         this.selectedReport = report;
         this.detailModalOpen = true;
+    },
+
+    async verifyRecordStreak() {
+        if (!this.selectedReport || this.verifyingStreak) return;
+        const answer = await window.Swal.fire({title:'Verifikasi Daily Record?',text:'Pastikan bukti rekaman laporan ini sudah diperiksa. Ini hanya mengesahkan streak, tidak mengubah QA atau payroll.',icon:'question',showCancelButton:true,confirmButtonText:'Sudah diperiksa',cancelButtonText:'Batal'});
+        if (!answer.isConfirmed) return;
+        this.verifyingStreak = true; this.streakReviewError = ''; this.streakReviewMessage = '';
+        try {
+            const response = await fetch('/api/work-reports/'+this.selectedReport.id+'/streak-verify', {method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({expected_revision:this.selectedReport.revision})});
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || 'Verifikasi belum tersimpan.');
+            this.streakReviewMessage = 'Rekaman disahkan untuk Daily Record. Perubahan isi laporan memerlukan verifikasi ulang.';
+        } catch(e) { this.streakReviewError = e.message; } finally { this.verifyingStreak = false; }
     },
 
     closeDetailModal() {

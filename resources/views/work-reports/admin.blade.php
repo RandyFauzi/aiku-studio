@@ -438,6 +438,12 @@
                     <svg class="w-4 h-4 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <p>Jika ada ketidaksesuaian durasi atau perangkat HP yang dilaporkan oleh pekerja, admin dapat langsung menekan tombol <strong>Edit Laporan Ini</strong> untuk menyesuaikan data.</p>
                 </div>
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+                    <p>Jika rekaman tidak tersedia di bot, periksa bukti laporan lalu sahkan untuk Daily Record. Libur tetap aman; izin/sakit dan hari kerja tanpa absen mereset streak.</p>
+                    <button type="button" @click="verifyRecordStreak()" :disabled="verifyingStreak||!selectedReport||!!streakReviewMessage" class="mt-3 min-h-[44px] rounded-xl border border-amber-300 bg-white px-4 font-bold disabled:opacity-40" x-text="verifyingStreak?'Memverifikasi…':'Verifikasi Daily Record'"></button>
+                    <p x-show="streakReviewMessage" x-text="streakReviewMessage" role="status" class="mt-2"></p>
+                    <p x-show="streakReviewError" x-text="streakReviewError" role="alert" class="mt-2 text-red-700"></p>
+                </div>
             </div>
 
             <!-- Modal Footer -->

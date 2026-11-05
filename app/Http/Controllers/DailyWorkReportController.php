@@ -9,6 +9,7 @@ use App\Models\StudioRecording;
 use App\Models\User;
 use App\Services\ContributorAccess;
 use App\Services\ContributorIdentity;
+use App\Services\ShiftSchedule;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,10 +26,10 @@ class DailyWorkReportController extends Controller
 
     public function mine(Request $request)
     {
-        $this->contributor($request);
+        $person = $this->contributor($request);
         $data = $request->validate(['month' => 'required|date_format:Y-m']);
         $start = CarbonImmutable::createFromFormat('!Y-m', $data['month'], 'Asia/Makassar');
-        $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
+        $today = app(ShiftSchedule::class)->workDate($person);
 
         return response()->json([
             'today' => $today,
@@ -56,9 +57,9 @@ class DailyWorkReportController extends Controller
             'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
         ]);
 
-        $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
+        $today = app(ShiftSchedule::class)->workDate($person);
         if ($fields['work_date'] !== $today) {
-            throw ValidationException::withMessages(['work_date' => 'Laporan hanya dapat dikirim atau diubah untuk hari ini (WITA). Muat ulang jika tanggal sudah berganti.']);
+            throw ValidationException::withMessages(['work_date' => 'Laporan hanya dapat dikirim atau diubah untuk tanggal kerja aktif (WITA). Muat ulang jika shift atau tanggal sudah berganti.']);
         }
 
         // Process phone_durations or fallback to phones + total_duration_minutes
