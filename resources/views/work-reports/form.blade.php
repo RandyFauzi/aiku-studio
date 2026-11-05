@@ -1,4 +1,4 @@
-<section x-data="dailyWorkReportData()" id="laporan-harian" class="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xs">
+<section id="laporan-harian" class="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xs">
     <!-- Header -->
     <div class="border-b border-slate-100 p-5 sm:p-6 flex items-center justify-between gap-3 bg-white">
         <div class="flex items-center gap-3">
@@ -16,7 +16,7 @@
               x-text="revision ? '✓ Sudah Dikirim' : 'Belum Dikirim'"></span>
     </div>
 
-    <form @submit.prevent="submit()" class="space-y-6 p-5 sm:p-6 bg-white">
+    <form @submit.prevent="submit().then(() => { reportFormOpen = false; })" class="space-y-6 p-5 sm:p-6 bg-white">
         <p x-show="error" x-text="error" role="alert" class="rounded-2xl bg-red-50 p-4 text-xs font-bold text-red-800 border border-red-200"></p>
         <p x-show="message" x-text="message" role="status" aria-live="polite" class="rounded-2xl bg-emerald-50 p-4 text-xs font-bold text-emerald-900 border border-emerald-300"></p>
 
@@ -126,41 +126,16 @@
                     <span class="w-2 h-2 rounded-full" :class="dirty ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'"></span>
                     <span x-text="dirty ? 'Ada perubahan belum disimpan' : 'Semua data tersimpan'"></span>
                 </span>
-                <button type="button" @click="reload()" :disabled="saving || loading" class="font-extrabold text-slate-700 hover:text-slate-900 hover:underline transition cursor-pointer">
-                    Batalkan Perubahan
-                </button>
+                <div class="flex items-center gap-3">
+                    <button type="button" @click="reload()" :disabled="saving || loading" class="font-extrabold text-slate-700 hover:text-slate-900 hover:underline transition cursor-pointer">
+                        Batalkan Perubahan
+                    </button>
+                    <span class="text-slate-300">•</span>
+                    <button type="button" @click="$dispatch('close-report-form')" class="font-extrabold text-slate-500 hover:text-slate-800 hover:underline transition cursor-pointer">
+                        Tutup Form
+                    </button>
+                </div>
             </div>
         </div>
     </form>
-
-    <!-- Report History -->
-    <div class="border-t border-slate-100 p-5 sm:p-6 bg-slate-50/60 rounded-b-[32px]">
-        <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-                <h4 class="font-black text-slate-900 text-sm sm:text-base">Riwayat Laporan Bulanan</h4>
-                <p class="text-xs text-slate-500 font-medium">Daftar laporan kerja yang telah Anda laporkan</p>
-            </div>
-            <input type="month" 
-                   aria-label="Bulan riwayat laporan" 
-                   x-model="month" 
-                   @change="load(false)" 
-                   :disabled="loading || saving" 
-                   class="h-9 rounded-xl border-2 border-slate-200 px-3 text-xs font-bold text-slate-800 bg-white shadow-2xs focus:border-emerald-500 focus:outline-none">
-        </div>
-        <div class="space-y-2.5">
-            <template x-for="report in reports" :key="report.id">
-                <div class="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 transition">
-                    <div>
-                        <p class="text-xs sm:text-sm font-extrabold text-slate-900" x-text="dateLabel(report.work_date)"></p>
-                        <p class="text-[11px] text-slate-600 font-mono font-medium mt-0.5" x-text="phoneDurationsText(report)"></p>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-xs sm:text-sm font-black text-emerald-800 font-mono block" x-text="report.total_duration_minutes + ' menit'"></span>
-                        <span class="text-[11px] font-bold text-slate-500 block" x-text="duration(report.total_duration_minutes)"></span>
-                    </div>
-                </div>
-            </template>
-            <p x-show="!loading && !reports.length" class="py-6 text-center text-xs sm:text-sm text-slate-500 font-medium">Belum ada laporan pada bulan ini.</p>
-        </div>
-    </div>
 </section>
