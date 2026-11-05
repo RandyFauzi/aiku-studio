@@ -1,5 +1,9 @@
 # Agent Collaboration Log (Antigravity & CODEX)
 
+### [2026-11-05 13:14] — Antigravity
+- **Selesai**: Memperbesar ukuran tampilan animasi ilustrasi gif (`Login page.gif`) pada halaman Login (`auth/login.blade.php`) baik di mobile (dari max 320px menjadi 440px) maupun di desktop (grid 7-kolom hingga max 700px) lengkap dengan aura hijau organik yang proporsional.
+- **Status**: 93/93 PHPUnit tests (535 assertions) PASS, Vite build PASS. Graphify diperbarui; lock dilepas ke IDLE.
+
 ### [2026-11-05 13:10] — Antigravity
 - **Selesai**: Implementasi sistem Bank / Saldo Pending dari selisih rekaman aktual vs slip terkunci (`PayrollCalculator::detectPendingCarryOver` & `summary`). Menghitung selisih jam dan nominal per kontributor (contoh Muhamad Zikri: +7.39 jam / Rp 369.525).
 - **UI Form & Checkbox**: Di form Buat/Edit Slip (`create.blade.php`), tersedia kartu Bank Saldo Pending dengan checkbox interaktif `[x] Cairkan Saldo ke Slip Ini` yang otomatis menambah THP dan rincian selisih. Desain tampilan slip web dan PDF dikembalikan ke tata letak asli yang bersih (`slips/content.blade.php`).

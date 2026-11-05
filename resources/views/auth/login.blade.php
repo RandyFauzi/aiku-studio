@@ -45,24 +45,24 @@
     </div>
 
     <!-- Main Container: Dynamic Mobile and Desktop Layout -->
-    <main class="w-full max-w-6xl mx-auto px-4 py-8 sm:px-6 sm:py-12 lg:px-8 my-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+    <main class="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-10 lg:px-10 lg:py-12 my-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-center">
             
-            <!-- Left Column (Desktop) / Top Section (Mobile): Animated Illustration -->
-            <div class="flex flex-col items-center justify-center relative">
-                <!-- Soft Green Blob Frame behind the illustration -->
-                <div class="absolute inset-0 max-w-md mx-auto bg-gradient-to-tr from-emerald-100/80 via-lime-100/60 to-emerald-50/40 rounded-[48px] sm:rounded-[56px] blur-xl -z-10 scale-95 opacity-90"></div>
+            <!-- Left Column (Desktop) / Top Section (Mobile): Animated Illustration (Large & Prominent) -->
+            <div class="lg:col-span-7 flex flex-col items-center justify-center relative w-full">
+                <!-- Soft Green Aura Frame behind the illustration -->
+                <div class="absolute inset-0 w-3/4 max-w-lg mx-auto bg-gradient-to-tr from-emerald-200/80 via-lime-200/70 to-emerald-100/50 rounded-full blur-3xl -z-10 scale-110 opacity-90 pointer-events-none"></div>
                 
-                <div class="relative w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[460px] flex items-center justify-center p-2 sm:p-4">
+                <div class="relative w-full max-w-[440px] sm:max-w-[520px] lg:max-w-[620px] xl:max-w-[700px] flex items-center justify-center p-1 sm:p-2">
                     <img src="{{ asset('assets/object/Login page.gif') }}" 
                          alt="Ilustrasi Kontributor dan Robot AIKu Studio" 
-                         class="w-full h-auto object-contain drop-shadow-sm select-none pointer-events-none"
+                         class="w-full h-auto object-contain drop-shadow-md select-none pointer-events-none transition-transform duration-300"
                          loading="eager">
                 </div>
             </div>
 
             <!-- Right Column (Desktop) / Bottom Section (Mobile): Login Form -->
-            <div class="w-full max-w-md mx-auto flex flex-col justify-center">
+            <div class="lg:col-span-5 w-full max-w-md mx-auto flex flex-col justify-center">
                 
                 <!-- Header with Playful Lime Radiant Accent Marks -->
                 <div class="text-center mb-6 sm:mb-8">

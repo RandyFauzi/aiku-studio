@@ -88,7 +88,7 @@
   "resources/views/attendance/barcode-modal.blade.php": "0c1bc16b047a1efbbd1807f6d26e2934b057a1336b7068619a1504ff0414aefb",
   "resources/views/attendance/nav.blade.php": "9d0faeab9ad148167da08f2e4c1a05e4df99a33d372077e6d3ed9b64df50f3f2",
   "resources/views/attendance/poster.blade.php": "fa80fbfeeb372a033cb5e1b43d26e83013d5c8685aaa1c87f2ea0473d3567e4a",
-  "resources/views/auth/login.blade.php": "886e46788e47f1e2fa70c325ac723a6a1011802f744d4137abcdfa0d3d68d2b2",
+  "resources/views/auth/login.blade.php": "bef9f4124835ee1619582c8d83cf64a98c45e4f03cf1d1ad797d5a3bfa494f11",
   "resources/views/layouts/sidebar.blade.php": "a8c34d56f619ae49b5bd548ebdd98c0d08ff27e793b021ce49072fcfe32ba348",
   "resources/views/panel/attendance.blade.php": "05480ce36014945459a1be043089eef2fd674cc695346f89ca29bd89a0a402e9",
   "resources/views/panel/contributors.blade.php": "6a969b77efb7a8466d9d31f7cf652f5d2e218ed796ea22d8a99981084f797286",
