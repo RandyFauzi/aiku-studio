@@ -62,7 +62,7 @@
                     <button type="button" 
                             @click="setTab('absensi')" 
                             :class="activeTab === 'absensi' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
-                            class="relative min-h-[38px] px-4 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-2">
+                            class="relative min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                         <span>Absensi</span>
                         <template x-if="!todayAttendance">
@@ -77,7 +77,7 @@
                     <button type="button" 
                             @click="setTab('laporan')" 
                             :class="activeTab === 'laporan' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
-                            class="relative min-h-[38px] px-4 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-2">
+                            class="relative min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>Laporan Kerja</span>
                         <template x-if="todayReportSubmitted === false">
@@ -92,16 +92,28 @@
                     <button type="button" 
                             @click="setTab('jadwal')" 
                             :class="activeTab === 'jadwal' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
-                            class="min-h-[38px] px-4 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-2">
+                            class="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>Kalender Jadwal</span>
                     </button>
 
-                    <!-- Tab 4: Akun / Profil -->
+                    <!-- Tab 4: Slip Gaji -->
+                    <button type="button" 
+                            @click="setTab('slip')" 
+                            :class="activeTab === 'slip' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                            class="relative min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <span>Slip Gaji</span>
+                        <template x-if="slips.length > 0">
+                            <span class="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800" x-text="slips.length"></span>
+                        </template>
+                    </button>
+
+                    <!-- Tab 5: Akun / Profil -->
                     <button type="button" 
                             @click="setTab('akun')" 
                             :class="activeTab === 'akun' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
-                            class="min-h-[38px] px-4 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-2">
+                            class="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         <span>Profil & Rekap</span>
                     </button>
@@ -538,7 +550,188 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 4: AKUN & PROFIL                       -->
+        <!-- TAB 4: SLIP GAJI & RIWAYAT PAYROLL        -->
+        <!-- ========================================== -->
+        <div x-show="activeTab === 'slip'" 
+             x-transition:enter="transition ease-out duration-150" 
+             x-transition:enter-start="opacity-0 translate-y-2" 
+             x-transition:enter-end="opacity-100 translate-y-0" 
+             class="space-y-6">
+
+            <!-- Subheader banner -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest text-emerald-700">Dokumen Payroll & Penghasilan</p>
+                    <h2 class="text-2xl font-black text-slate-900 mt-0.5">Riwayat Slip Gaji</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Pantau estimasi periode berjalan dan riwayat dokumen slip gaji resmi kamu.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="loadSlips()" :disabled="loadingSlips" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-2xs transition">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" :class="loadingSlips ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Segarkan Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARD 1: LIVE CYCLE / ESTIMASI PERIODE BERJALAN -->
+            <section class="rounded-3xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 p-5 sm:p-7 shadow-xs relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-100 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-2xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                <span>Periode Berjalan</span>
+                            </span>
+                            <span class="text-xs font-bold text-slate-400">Cut-Off 22 - 21</span>
+                        </div>
+                        <h3 class="mt-2 text-lg sm:text-xl font-extrabold text-slate-900" x-text="currentPeriod?.name || 'Periode Berjalan'"></h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Estimasi akumulasi rekaman yang telah tercatat dan disetujui pada siklus ini.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" 
+                                @click="openLiveSlip()" 
+                                :disabled="!liveSlip" 
+                                class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-2 disabled:opacity-50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            <span>Buka Slip Live ↗</span>
+                        </button>
+
+                        <button type="button" 
+                                @click="downloadLiveSlipPdf()" 
+                                :disabled="!liveSlip || downloadingSlipId === 'live'" 
+                                class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition flex items-center gap-1.5 disabled:opacity-50">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span x-text="downloadingSlipId === 'live' ? 'Membuat PDF…' : 'Unduh PDF'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Metrics Grid -->
+                <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Estimasi THP</p>
+                        <p class="mt-1 text-xl sm:text-2xl font-black text-emerald-700 font-mono tracking-tight" x-text="formatRupiah(liveSlip?.total_thp || 0)"></p>
+                        <p class="text-[10px] text-emerald-600 font-semibold mt-0.5">Rate: Rp 50.000 / Jam</p>
+                    </div>
+
+                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Jam Approved</p>
+                        <p class="mt-1 text-xl sm:text-2xl font-black text-slate-900 font-mono" x-text="(liveSlip?.total_approved_hours || 0) + ' Jam'"></p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Durasi dibayar</p>
+                    </div>
+
+                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Logged</p>
+                        <p class="mt-1 text-xl sm:text-2xl font-black text-slate-700 font-mono" x-text="(liveSlip?.total_logged_hours || 0) + ' Jam'"></p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Total rekaman masuk</p>
+                    </div>
+
+                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status Pembayaran</p>
+                        <div class="mt-1.5">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold" 
+                                  :class="liveSlip?.status === 'sudah' ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-200'"
+                                  x-text="liveSlip?.status === 'sudah' ? '✓ Sudah Dibayar' : 'Menunggu Cut-Off'">
+                            </span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1">Dicairkan pasca cut-off</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CARD 2: RIWAYAT SLIP GAJI RESMI YANG DITERBITKAN -->
+            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-black text-slate-900">Arsip Slip Gaji Resmi</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Daftar slip gaji resmi yang telah diterbitkan dan disahkan oleh manajemen studio.</p>
+                    </div>
+                    <span class="text-xs font-bold text-slate-400" x-text="slips.length + ' Slip'"></span>
+                </div>
+
+                <div class="mt-5 space-y-3">
+                    <template x-for="slip in slips" :key="slip.id">
+                        <article class="rounded-2xl border border-slate-200 hover:border-emerald-300 bg-slate-50/50 hover:bg-emerald-50/20 p-4 sm:p-5 transition duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h4 class="text-base font-extrabold text-slate-900" x-text="slip.period"></h4>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+                                          :class="slip.status === 'sudah' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'"
+                                          x-text="slip.status === 'sudah' ? '✓ Sudah Dibayar' : 'Belum Dibayar'">
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
+                                    <span>Approved: <strong class="text-slate-800" x-text="slip.total_approved_hours + ' jam'"></strong></span>
+                                    <span>Logged: <strong class="text-slate-800" x-text="slip.total_logged_hours + ' jam'"></strong></span>
+                                    <template x-if="slip.bonus > 0">
+                                        <span class="text-emerald-700 font-bold" x-text="'+ Bonus ' + formatRupiah(slip.bonus)"></span>
+                                    </template>
+                                </div>
+                                <p class="text-[11px] text-slate-400" x-text="'Diterbitkan: ' + (slip.created_at ? new Date(slip.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : 'Arsip')"></p>
+                            </div>
+
+                            <div class="flex flex-col sm:items-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
+                                <div class="text-left sm:text-right">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Take Home Pay</span>
+                                    <span class="text-xl font-black text-slate-900 font-mono" x-text="formatRupiah(slip.total_thp)"></span>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <button type="button" 
+                                            @click="openSlip(slip.id)" 
+                                            class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        <span>Lihat Dokumen</span>
+                                    </button>
+
+                                    <button type="button" 
+                                            @click="downloadSlipPdf(slip)" 
+                                            :disabled="downloadingSlipId === slip.id" 
+                                            class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition flex items-center gap-1 disabled:opacity-50">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                        <span x-text="downloadingSlipId === slip.id ? 'Membuat…' : 'PDF'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    </template>
+
+                    <!-- Empty State -->
+                    <template x-if="!loadingSlips && slips.length === 0">
+                        <div class="text-center py-12 px-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200">
+                            <span class="text-3xl block mb-2">📄</span>
+                            <p class="font-extrabold text-slate-800 text-sm">Belum ada slip gaji resmi yang diterbitkan</p>
+                            <p class="text-xs text-slate-400 max-w-md mx-auto mt-1 leading-relaxed">
+                                Dokumen slip resmi diterbitkan otomatis oleh manajemen setiap akhir siklus cut-off (tanggal 22). Kamu tetap dapat memantau estimasi pendapatan berjalan di kartu atas.
+                            </p>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- KETENTUAN PENGGAJIAN CARD -->
+            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 text-xs text-slate-500 shadow-xs">
+                <p class="font-bold uppercase tracking-wider text-slate-400 text-[10px] mb-2">Ketentuan Payroll Studio</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-600">
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <p class="font-extrabold text-slate-800 text-xs mb-1">Rate Pembayaran</p>
+                        <p class="leading-relaxed">Rp 50.000 per jam untuk durasi rekaman yang telah disetujui (*Approved*) oleh sistem.</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <p class="font-extrabold text-slate-800 text-xs mb-1">Siklus Cut-Off</p>
+                        <p class="leading-relaxed">Perhitungan otomatis berjalan dari tanggal 22 bulan lalu s/d tanggal 21 bulan berjalan.</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <p class="font-extrabold text-slate-800 text-xs mb-1">Bukti Transfer</p>
+                        <p class="leading-relaxed">Setiap slip resmi memiliki nomor referensi dan lampiran bukti rincian pengerjaan harian.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 5: AKUN & PROFIL                       -->
         <!-- ========================================== -->
         <div x-show="activeTab === 'akun'" 
              x-transition:enter="transition ease-out duration-150" 
@@ -572,7 +765,7 @@
                 </div>
 
                 <!-- Monthly Stats -->
-                <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100">
                         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kehadiran Bulan Ini</p>
                         <p class="mt-1 text-2xl font-black text-emerald-700 font-mono" x-text="totalMonthAttendances + ' Hari'"></p>
@@ -581,7 +774,12 @@
                         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Sesi Terjadwal</p>
                         <p class="mt-1 text-2xl font-black text-slate-800 font-mono" x-text="totalMonthSessions + ' Sesi'"></p>
                     </div>
-                    <div class="col-span-2 sm:col-span-1 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                    <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100 cursor-pointer hover:bg-emerald-50/50 transition" @click="setTab('slip')">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Slip Gaji Resmi</p>
+                        <p class="mt-1 text-2xl font-black text-emerald-700 font-mono" x-text="slips.length + ' Slip'"></p>
+                        <p class="text-[10px] text-emerald-600 font-semibold mt-0.5">Buka Slip Gaji →</p>
+                    </div>
+                    <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100">
                         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Zona Waktu Studio</p>
                         <p class="mt-1 text-sm font-extrabold text-slate-800">WITA (Asia/Makassar)</p>
                         <p class="text-[10px] text-slate-400 mt-0.5">UTC +08:00</p>
@@ -596,6 +794,7 @@
                     <li><strong>WiFi Kantor:</strong> Absensi menggunakan Barcode hanya sah apabila HP terhubung ke jaringan WiFi resmi AIKu Studio.</li>
                     <li><strong>Absensi 1x Sehari:</strong> Presensi dicatat satu kali per hari kerja saat tiba di studio dan tidak memerlukan proses checkout saat selesai.</li>
                     <li><strong>Laporan Harian:</strong> Setiap kontributor wajib mengisi Laporan Kerja Harian setelah menyelesaikan sesi rekaman sesuai menit riil masing-masing HP.</li>
+                    <li><strong>Slip Gaji:</strong> Diterbitkan secara resmi setiap periode cut-off (22 s/d 21) dan dapat dipantau langsung pada tab Slip Gaji.</li>
                 </ul>
             </section>
 
@@ -620,13 +819,13 @@
     <!-- ========================================== -->
     <!-- MODERN BOTTOM NAVIGATION BAR (MOBILE ONLY) -->
     <!-- ========================================== -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] px-2 pt-1.5 pb-[calc(0.65rem+env(safe-area-inset-bottom,0px))]">
-        <div class="grid grid-cols-4 items-center max-w-md mx-auto">
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] px-1 pt-1.5 pb-[calc(0.65rem+env(safe-area-inset-bottom,0px))]">
+        <div class="grid grid-cols-5 items-center max-w-lg mx-auto">
             
             <!-- Tab 1: Absensi -->
             <button type="button" 
                     @click="setTab('absensi')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition duration-150"
+                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
                     :class="activeTab === 'absensi' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
                 <div class="relative p-1 rounded-xl transition duration-150"
                      :class="activeTab === 'absensi' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
@@ -641,13 +840,13 @@
                         <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                     </template>
                 </div>
-                <span class="text-[11px] leading-tight mt-0.5">Absensi</span>
+                <span class="text-[10px] leading-tight mt-0.5">Absensi</span>
             </button>
 
             <!-- Tab 2: Laporan -->
             <button type="button" 
                     @click="setTab('laporan')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition duration-150"
+                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
                     :class="activeTab === 'laporan' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
                 <div class="relative p-1 rounded-xl transition duration-150"
                      :class="activeTab === 'laporan' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
@@ -662,13 +861,13 @@
                         <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                     </template>
                 </div>
-                <span class="text-[11px] leading-tight mt-0.5">Laporan</span>
+                <span class="text-[10px] leading-tight mt-0.5">Laporan</span>
             </button>
 
             <!-- Tab 3: Jadwal -->
             <button type="button" 
                     @click="setTab('jadwal')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition duration-150"
+                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
                     :class="activeTab === 'jadwal' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
                 <div class="relative p-1 rounded-xl transition duration-150"
                      :class="activeTab === 'jadwal' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
@@ -676,13 +875,31 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
-                <span class="text-[11px] leading-tight mt-0.5">Jadwal</span>
+                <span class="text-[10px] leading-tight mt-0.5">Jadwal</span>
             </button>
 
-            <!-- Tab 4: Akun / Profil -->
+            <!-- Tab 4: Slip Gaji -->
+            <button type="button" 
+                    @click="setTab('slip')" 
+                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
+                    :class="activeTab === 'slip' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
+                <div class="relative p-1 rounded-xl transition duration-150"
+                     :class="activeTab === 'slip' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <!-- Dot indicator if slips exist -->
+                    <template x-if="slips.length > 0">
+                        <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+                    </template>
+                </div>
+                <span class="text-[10px] leading-tight mt-0.5">Slip Gaji</span>
+            </button>
+
+            <!-- Tab 5: Akun / Profil -->
             <button type="button" 
                     @click="setTab('akun')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition duration-150"
+                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
                     :class="activeTab === 'akun' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
                 <div class="relative p-1 rounded-xl transition duration-150"
                      :class="activeTab === 'akun' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
@@ -690,7 +907,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                 </div>
-                <span class="text-[11px] leading-tight mt-0.5">Profil</span>
+                <span class="text-[10px] leading-tight mt-0.5">Profil</span>
             </button>
 
         </div>

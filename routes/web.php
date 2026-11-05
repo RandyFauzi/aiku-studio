@@ -30,6 +30,15 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::post('/api/me/attendance/qr', [AttendanceController::class, 'checkInQr'])->middleware('throttle:20,1');
     Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
     Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
+    Route::get('/api/me/payslips', [PayslipController::class, 'mine']);
+
+    // Web view of payslips and download endpoints (accessible to admin and the owner contributor)
+    Route::get('/slip/live/{worker}', [PayslipController::class, 'live']);
+    Route::get('/slip/{payslip}', [PayslipController::class, 'page'])->whereNumber('payslip');
+    Route::get('/{type}/{path}', [PayslipController::class, 'file'])->where('type', 'evidence_images|pdf_slips')->where('path', '.+');
+    Route::get('/api/payslips/{payslip}/export', [PayslipController::class, 'export'])->whereNumber('payslip');
+    Route::get('/api/payroll/export-live/{worker}', [PayslipController::class, 'exportLive']);
+
     Route::middleware(EnsureAdministrator::class)->group(function () {
         Route::get('/attendance/barcode/poster', [AttendanceController::class, 'barcodePoster'])->name('attendance.barcode.poster');
         Route::get('/api/attendance/wifi-config', [AttendanceController::class, 'getWifiConfig']);
@@ -50,9 +59,6 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::view('/'.$page, $view)->name($page);
             Route::view('/'.$page.'.html', $view);
         }
-        Route::get('/slip/live/{worker}', [PayslipController::class, 'live']);
-        Route::get('/slip/{payslip}', [PayslipController::class, 'page'])->whereNumber('payslip');
-        Route::get('/{type}/{path}', [PayslipController::class, 'file'])->where('type', 'evidence_images|pdf_slips')->where('path', '.+');
 
         // Keep session authentication and CSRF on legacy-compatible JSON endpoints.
         Route::prefix('api')->group(function () {

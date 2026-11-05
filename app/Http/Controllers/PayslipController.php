@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contributor;
 use App\Models\PayrollStatus;
 use App\Models\Payslip;
 use App\Services\PayrollCalculator;
@@ -14,6 +15,41 @@ use Illuminate\Support\Facades\Storage;
 
 class PayslipController extends Controller
 {
+    private function validateSlipOwner(Request $request, string $employeeName): void
+    {
+        if ($request->user()->role === 'contributor') {
+            $person = Contributor::find($request->user()->contributor_id);
+            $validNames = array_unique(array_filter([$request->user()->name, $person?->nama]));
+            abort_unless(in_array($employeeName, $validNames, true), 403, 'Anda tidak berhak mengakses slip ini.');
+        }
+    }
+
+    public function mine(Request $request, PayrollPeriod $resolver, PayrollCalculator $calculator)
+    {
+        abort_unless($request->user()->role === 'contributor', 403);
+        $person = Contributor::find($request->user()->contributor_id);
+        $workerName = $person?->nama ?: $request->user()->name;
+        $validNames = array_unique(array_filter([$request->user()->name, $person?->nama]));
+
+        $slips = Payslip::whereIn('employee_name', $validNames)
+            ->orderByDesc('id')
+            ->get();
+
+        $currentPeriod = $resolver->cutoff();
+        $liveSlip = null;
+        try {
+            $liveSlip = $calculator->liveSlip($currentPeriod, $workerName);
+        } catch (\Throwable $e) {
+            // Live calculation is optional if recordings don't exist
+        }
+
+        return response()->json([
+            'worker_name' => $workerName,
+            'slips' => $slips,
+            'current_period' => $currentPeriod,
+            'live_slip' => $liveSlip,
+        ]);
+    }
     public function index()
     {
         return Payslip::orderByDesc('created_at')->get();
@@ -75,18 +111,24 @@ class PayslipController extends Controller
         return response()->json(['success' => true, 'id' => $payslip->id, 'status' => $payslip->status]);
     }
 
-    public function page(Payslip $payslip, PayrollCalculator $calculator)
+    public function page(Request $request, Payslip $payslip, PayrollCalculator $calculator)
     {
+        $this->validateSlipOwner($request, $payslip->employee_name);
+
         return view('slips.web', $calculator->displaySlip($payslip));
     }
 
     public function live(Request $request, string $worker, PayrollPeriod $resolver, PayrollCalculator $calculator)
     {
+        $this->validateSlipOwner($request, $worker);
+
         return view('slips.web', $calculator->liveSlip($resolver->resolve($request->query()), $worker));
     }
 
-    public function export(Payslip $payslip, PayrollCalculator $calculator, PayslipPdf $pdf)
+    public function export(Request $request, Payslip $payslip, PayrollCalculator $calculator, PayslipPdf $pdf)
     {
+        $this->validateSlipOwner($request, $payslip->employee_name);
+
         $result = $pdf->export($calculator->displaySlip($payslip));
         $payslip->update(['file_path' => $result['url']]);
 
@@ -95,6 +137,8 @@ class PayslipController extends Controller
 
     public function exportLive(Request $request, string $worker, PayrollPeriod $resolver, PayrollCalculator $calculator, PayslipPdf $pdf)
     {
+        $this->validateSlipOwner($request, $worker);
+
         return response()->json($pdf->export($calculator->liveSlip($resolver->resolve($request->query()), $worker)));
     }
 
