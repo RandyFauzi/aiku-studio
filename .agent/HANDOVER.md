@@ -1,5 +1,9 @@
 # Agent Collaboration Log (Antigravity & CODEX)
 
+### [2026-11-05 12:04] — CODEX
+- Redesain lima halaman portal mengikuti referensi: kartu hijau-putih, Manrope lokal, sidebar desktop/dock mobile; shell/navigation/icon terpisah, status laporan beranda membaca API aktual.
+- PHPUnit 85 tes / 481 assertions dan build PASS; 20 pemeriksaan layout lokal + live serta timer PASS. Sudah live via Git pull (fca1e82); metadata .gitignore runtime server dicadangkan ke stash. Panduan: docs/PORTAL_DESIGN.md.
+
 ### [2026-11-05 11:39] — CODEX
 - Audit Graphify dan perbaikan akses file, identitas, payroll, absensi, assignment, akun HP, shift, dan sinkronisasi selesai; 85 PHPUnit tests / 481 assertions serta npm run build PASS.
 - Perbaikan PHP sudah live; 11 cek integritas produksi = 0 masalah, data bisnis tetap. Cron AIKu kini public_html/artisan (UID TV9nyHgDON); detail: docs/SYSTEM_AUDIT_2026-11-05.md. Protokol lock dicatat di AGENTS.md.

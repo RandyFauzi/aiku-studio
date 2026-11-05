@@ -1,18 +1,7 @@
 {
-  "active_agent": "CODEX",
-  "locked_files": [
-    "resources/views/portal/*",
-    "resources/views/work-reports/form.blade.php",
-    "resources/css/portal.css",
-    "resources/css/app.css",
-    "public/fonts/*",
-    "public/build/*",
-    "docs/PORTAL_DESIGN.md",
-    "graphify-out/*",
-    ".agent/STATE.json",
-    ".agent/HANDOVER.md",
-    "resources/js/attendance.js"
-  ],
-  "task": "Redesain portal user mengikuti referensi dengan gradasi hijau putih",
-  "updated_at": "2026-11-05T03:54:14.5718029Z"
+  "active_agent": "IDLE",
+  "locked_files": [],
+  "task": "None",
+  "updated_at": "2026-11-05T12:04:53.568798+08:00",
+  "last_commit": "fca1e82"
 }
