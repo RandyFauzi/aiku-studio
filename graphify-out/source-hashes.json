@@ -83,7 +83,7 @@
   "resources/js/bootstrap.js": "6fd9fc82e68fa915a882f4e227b9faacbe7bfd66cb953c628840e83bda6b72f4",
   "resources/js/shift-calendar.js": "c6822361b9fe162ffba2726fbf2e0c853d87d49621ddc5bf14e6e6631bebe234",
   "resources/js/shifts.js": "ac10541ed7ed74c6a9aa7b2467cb3dcd1f6d4b41eec71c0a6ef6f414fddf9ff6",
-  "resources/js/work-reports.js": "0d55da7056f220570196f9c96b41d36f4b7034f62040a016fb08b07330d8c964",
+  "resources/js/work-reports.js": "29cb7a957e4d350c9523f0814dca22840d684abdd9528abc23b387342b5bc226",
   "resources/views/attendance/admin.blade.php": "ff975d95dc82b87e1a00333e8979470ee46ff940edf142cd058cbea148022840",
   "resources/views/attendance/barcode-modal.blade.php": "0c1bc16b047a1efbbd1807f6d26e2934b057a1336b7068619a1504ff0414aefb",
   "resources/views/attendance/nav.blade.php": "9d0faeab9ad148167da08f2e4c1a05e4df99a33d372077e6d3ed9b64df50f3f2",

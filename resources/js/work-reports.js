@@ -171,11 +171,17 @@ window.dailyWorkReportData = () => ({
 
             if (window.Swal) {
                 window.Swal.fire({
-                    icon: 'success',
-                    title: 'Laporan Tersimpan!',
-                    text: `Total ${this.totalMinutes} menit pada ${this.phones.length} HP berhasil dicatat.`,
-                    timer: 2000,
-                    showConfirmButton: false
+                    imageUrl: '/assets/object/Gif%20Terimakasih.webp',
+                    imageWidth: 280,
+                    imageAlt: 'Terimakasih sudah berkontribusi',
+                    html: '<div style="padding: 6px 12px 2px;"><p style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.55; margin: 0;">Terimakasih sudah berkontribusi untuk masa depan hari ini, semangat rekaman besok!</p></div>',
+                    confirmButtonText: 'Sama-sama',
+                    confirmButtonColor: '#00B090',
+                    customClass: {
+                        popup: 'rounded-[32px] p-6 shadow-2xl border border-slate-100',
+                        image: 'rounded-2xl mx-auto object-contain max-w-full',
+                        confirmButton: 'rounded-full px-8 py-2.5 text-xs font-black tracking-wide shadow-sm'
+                    }
                 });
             }
 
