@@ -28,6 +28,288 @@ window.attendancePortalData = () => ({
     dateLabel,
     mapUrl,
 
+    // ==========================================
+    // TIMER FEATURE (FOCUS & RECORDING TIMER)
+    // ==========================================
+    timer: {
+        durationMinutes: 20,
+        totalSeconds: 20 * 60,
+        remainingSeconds: 20 * 60,
+        isRunning: false,
+        isPaused: false,
+        timerId: null,
+        endTime: null,
+        modalOpen: false,
+        showAlarmAlert: false,
+        isAlarmPlaying: false,
+        customMinutesInput: '',
+        selectedPreset: 20, // 15, 20, 30, or 'custom'
+        currentAudio: null,
+        loopIndex: 0,
+    },
+
+    timerAudioSources: [
+        '/audio/timer/alarm-1.mp3',
+        '/audio/timer/alarm-2.mp3',
+        '/audio/timer/alarm-3.mp3'
+    ],
+
+    get timerFormatted() {
+        const total = Math.max(0, this.timer.remainingSeconds);
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    },
+
+    get timerProgressPercent() {
+        if (!this.timer.totalSeconds) return 0;
+        const passed = this.timer.totalSeconds - this.timer.remainingSeconds;
+        return Math.min(100, Math.max(0, (passed / this.timer.totalSeconds) * 100));
+    },
+
+    get timerStrokeDashoffset() {
+        // Circumference 100 base for SVG stroke-dasharray="100, 100"
+        return 100 - this.timerProgressPercent;
+    },
+
+    setTimerPreset(minutes) {
+        if (this.timer.isRunning) {
+            this.pauseTimer();
+        }
+        this.timer.durationMinutes = minutes;
+        this.timer.totalSeconds = minutes * 60;
+        this.timer.remainingSeconds = minutes * 60;
+        this.timer.selectedPreset = minutes;
+        this.timer.isPaused = false;
+        this.timer.showAlarmAlert = false;
+        this.stopAlarm();
+    },
+
+    setTimerManual(minutes) {
+        const val = parseInt(minutes, 10);
+        if (isNaN(val) || val <= 0) return;
+        const clamped = Math.min(720, Math.max(1, val));
+        if (this.timer.isRunning) {
+            this.pauseTimer();
+        }
+        this.timer.durationMinutes = clamped;
+        this.timer.totalSeconds = clamped * 60;
+        this.timer.remainingSeconds = clamped * 60;
+        this.timer.selectedPreset = 'custom';
+        this.timer.customMinutesInput = clamped;
+        this.timer.isPaused = false;
+        this.timer.showAlarmAlert = false;
+        this.stopAlarm();
+    },
+
+    toggleTimer() {
+        if (this.timer.isRunning) {
+            this.pauseTimer();
+        } else {
+            this.startTimer();
+        }
+    },
+
+    startTimer() {
+        if (this.timer.remainingSeconds <= 0) {
+            this.timer.remainingSeconds = this.timer.totalSeconds;
+        }
+
+        // Prime audio to unlock browser autoplay restrictions
+        this.primeAudio();
+
+        // Ask for Notification permission if available
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().catch(() => {});
+        }
+
+        this.timer.isRunning = true;
+        this.timer.isPaused = false;
+        this.timer.showAlarmAlert = false;
+        this.stopAlarm();
+
+        this.timer.endTime = Date.now() + (this.timer.remainingSeconds * 1000);
+
+        if (this.timer.timerId) {
+            clearInterval(this.timer.timerId);
+        }
+
+        this.timer.timerId = setInterval(() => {
+            const now = Date.now();
+            const diffMs = this.timer.endTime - now;
+            const remaining = Math.ceil(diffMs / 1000);
+
+            if (remaining <= 0) {
+                this.timer.remainingSeconds = 0;
+                this.onTimerFinished();
+            } else {
+                this.timer.remainingSeconds = remaining;
+            }
+        }, 250);
+    },
+
+    pauseTimer() {
+        if (this.timer.timerId) {
+            clearInterval(this.timer.timerId);
+            this.timer.timerId = null;
+        }
+        this.timer.isRunning = false;
+        this.timer.isPaused = true;
+    },
+
+    resetTimer() {
+        if (this.timer.timerId) {
+            clearInterval(this.timer.timerId);
+            this.timer.timerId = null;
+        }
+        this.timer.isRunning = false;
+        this.timer.isPaused = false;
+        this.timer.remainingSeconds = this.timer.totalSeconds;
+        this.timer.showAlarmAlert = false;
+        this.stopAlarm();
+    },
+
+    onTimerFinished() {
+        if (this.timer.timerId) {
+            clearInterval(this.timer.timerId);
+            this.timer.timerId = null;
+        }
+        this.timer.isRunning = false;
+        this.timer.isPaused = false;
+        this.timer.remainingSeconds = 0;
+        this.timer.showAlarmAlert = true;
+
+        // Vibrate mobile device if supported
+        if ('vibrate' in navigator) {
+            try { navigator.vibrate([500, 250, 500, 250, 500, 250, 800]); } catch (e) {}
+        }
+
+        // Send browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+                new Notification('AIKu Studio — Waktu Rekaman Selesai!', {
+                    body: 'Waktu sesi rekaman sudah habis! Harap simpan file dan istirahat.',
+                    icon: '/favicon.ico'
+                });
+            } catch (e) {}
+        }
+
+        // Play loud shuffled alarm audio sequence (loop 3x)
+        this.playAlarmSequence();
+    },
+
+    primeAudio() {
+        try {
+            const testAudio = new Audio(this.timerAudioSources[0]);
+            testAudio.volume = 0.01;
+            const p = testAudio.play();
+            if (p !== undefined) {
+                p.then(() => {
+                    testAudio.pause();
+                    testAudio.currentTime = 0;
+                }).catch(() => {});
+            }
+        } catch (e) {}
+    },
+
+    playAlarmSequence() {
+        this.stopAlarm();
+        this.timer.isAlarmPlaying = true;
+
+        // Fisher-Yates shuffle algorithm
+        const shuffle = (array) => {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        };
+
+        let currentLoop = 0;
+        const maxLoops = 3;
+        let shuffledQueue = shuffle(this.timerAudioSources);
+        let trackIndex = 0;
+
+        const playNext = () => {
+            if (!this.timer.isAlarmPlaying) return;
+
+            if (trackIndex >= shuffledQueue.length) {
+                currentLoop++;
+                if (currentLoop >= maxLoops) {
+                    this.timer.isAlarmPlaying = false;
+                    return;
+                }
+                // Reshuffle for subsequent loop
+                shuffledQueue = shuffle(this.timerAudioSources);
+                trackIndex = 0;
+            }
+
+            const audioSrc = shuffledQueue[trackIndex];
+            trackIndex++;
+
+            const audio = new Audio(audioSrc);
+            audio.volume = 1.0;
+            this.timer.currentAudio = audio;
+
+            audio.onended = () => {
+                if (this.timer.isAlarmPlaying) {
+                    playNext();
+                }
+            };
+
+            audio.onerror = (err) => {
+                console.warn('Timer audio error:', err);
+                if (this.timer.isAlarmPlaying) {
+                    playNext();
+                }
+            };
+
+            audio.play().catch(e => {
+                console.warn('Timer audio autoplay blocked:', e);
+                if (this.timer.isAlarmPlaying) {
+                    playNext();
+                }
+            });
+        };
+
+        playNext();
+    },
+
+    stopAlarm() {
+        this.timer.isAlarmPlaying = false;
+        if (this.timer.currentAudio) {
+            try {
+                this.timer.currentAudio.pause();
+                this.timer.currentAudio.currentTime = 0;
+            } catch (e) {}
+            this.timer.currentAudio = null;
+        }
+    },
+
+    testAlarmSound() {
+        this.stopAlarm();
+        const randSrc = this.timerAudioSources[Math.floor(Math.random() * this.timerAudioSources.length)];
+        const audio = new Audio(randSrc);
+        audio.volume = 1.0;
+        this.timer.currentAudio = audio;
+        this.timer.isAlarmPlaying = true;
+        audio.onended = () => {
+            this.timer.isAlarmPlaying = false;
+        };
+        audio.play().catch(e => {
+            alert('Tidak dapat memutar audio: ' + e.message);
+        });
+    },
+
+    openTimerModal() {
+        this.timer.modalOpen = true;
+    },
+
+    closeTimerModal() {
+        this.timer.modalOpen = false;
+    },
+
     formatRupiah(num) {
         return 'Rp ' + (Number(num) || 0).toLocaleString('id-ID');
     },
@@ -197,7 +479,20 @@ window.attendancePortalData = () => ({
         }
 
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && !this.checking) this.load();
+            if (!document.hidden) {
+                if (!this.checking) this.load();
+                if (this.timer.isRunning && this.timer.endTime) {
+                    const now = Date.now();
+                    const diffMs = this.timer.endTime - now;
+                    const remaining = Math.ceil(diffMs / 1000);
+                    if (remaining <= 0) {
+                        this.timer.remainingSeconds = 0;
+                        this.onTimerFinished();
+                    } else {
+                        this.timer.remainingSeconds = remaining;
+                    }
+                }
+            }
         });
 
         setInterval(() => {
