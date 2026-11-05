@@ -1,3 +1,8 @@
+### [2026-11-05 16:55] — Antigravity
+- Menampilkan nama perangkat HP (HP Putih, HP Pink, dll) bersama durasi menit dan email akun di tabel laporan kerja harian.
+- Menambahkan input email terhubung pada formulir edit dan buat laporan kerja dengan cakupan khusus laporan (scoped per report) sehingga tidak menimpa akun master aktif di HP.
+- Validasi: DailyWorkReportTest 10/10 PASS (96 assertions), ContributorRoleManagementTest 6/6 PASS, PayrollMigrationTest 15/15 PASS, Vite build PASS. Lock dilepas ke IDLE.
+
 ### [2026-11-05 16:30] — Antigravity
 - Menampilkan nama akun studio aktif dan email pada rincian HP di tabel laporan harian, pop-up modal detail laporan dengan aksi edit langsung, serta integrasi akun device.
 - Menambahkan statistik kinerja per user dan studio di halaman Contributors: approval rate %, total jam billable vs reject, frekuensi hadir & izin, sistem pintar evaluasi skor (0-100) dan rekomendasi perbaikan/pembelajaran berbasis data.

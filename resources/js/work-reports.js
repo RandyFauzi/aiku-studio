@@ -260,6 +260,43 @@ window.adminWorkReportsData = () => ({
         return this.phonesInfo[pkey] || null;
     },
 
+    formatPhoneName(pkey) {
+        if (!pkey) return 'HP';
+        const clean = String(pkey).toLowerCase().trim();
+        if (this.phoneOptions && this.phoneOptions[clean]) {
+            return 'HP ' + this.phoneOptions[clean];
+        }
+        const map = {
+            putih: 'Putih',
+            pink: 'Pink',
+            biru: 'Biru',
+            hijau: 'Hijau',
+            hitam: 'Hitam',
+            pink_st: 'Pink ST'
+        };
+        return 'HP ' + (map[clean] || (clean.charAt(0).toUpperCase() + clean.slice(1)));
+    },
+
+    getReportPhoneEmail(report, pkey) {
+        if (report?.phone_emails && report.phone_emails[pkey]) {
+            return report.phone_emails[pkey];
+        }
+        const pInfo = this.getPhoneInfo(pkey);
+        return pInfo?.active_email || '';
+    },
+
+    getReportPhoneAccount(report, pkey) {
+        if (report?.phone_emails && report.phone_emails[pkey]) {
+            return report.phone_emails[pkey];
+        }
+        const pInfo = this.getPhoneInfo(pkey);
+        return pInfo?.active_account_name || pInfo?.active_email || '';
+    },
+
+    isPhoneEmailOverridden(report, pkey) {
+        return Boolean(report?.phone_emails && report.phone_emails[pkey]);
+    },
+
     openDetailModal(report) {
         this.selectedReport = report;
         this.detailModalOpen = true;
@@ -275,7 +312,8 @@ window.adminWorkReportsData = () => ({
         contributor_id: '',
         work_date: today(),
         phones: [],
-        phone_durations: {}
+        phone_durations: {},
+        phone_emails: {}
     },
     createError: '',
     savingCreate: false,
@@ -294,11 +332,18 @@ window.adminWorkReportsData = () => ({
 
     openCreateModal() {
         this.createError = '';
+        const initialEmails = {};
+        const pKeys = this.phoneOptions ? Object.keys(this.phoneOptions) : ['putih', 'pink', 'biru', 'hijau', 'hitam', 'pink_st'];
+        pKeys.forEach(pk => {
+            const pInfo = this.getPhoneInfo(pk);
+            initialEmails[pk] = pInfo?.active_email || '';
+        });
         this.createForm = {
             contributor_id: '',
             work_date: this.date || today(),
             phones: [],
-            phone_durations: {}
+            phone_durations: {},
+            phone_emails: initialEmails
         };
         if (!this.contributorsList.length) {
             this.fetchContributors();
@@ -318,6 +363,10 @@ window.adminWorkReportsData = () => ({
         } else {
             this.createForm.phones.push(key);
             this.createForm.phone_durations[key] = this.createForm.phone_durations[key] || 60;
+            if (!this.createForm.phone_emails[key]) {
+                const pInfo = this.getPhoneInfo(key);
+                this.createForm.phone_emails[key] = pInfo?.active_email || '';
+            }
         }
     },
 
@@ -372,6 +421,7 @@ window.adminWorkReportsData = () => ({
                     work_date: this.createForm.work_date,
                     phones: this.createForm.phones,
                     phone_durations: this.createForm.phone_durations,
+                    phone_emails: this.createForm.phone_emails,
                     total_duration_minutes: total
                 })
             });
@@ -408,7 +458,8 @@ window.adminWorkReportsData = () => ({
     editingReport: null,
     editForm: {
         phones: [],
-        phone_durations: {}
+        phone_durations: {},
+        phone_emails: {}
     },
     editError: '',
     savingEdit: false,
@@ -419,6 +470,7 @@ window.adminWorkReportsData = () => ({
         this.editError = '';
         const phones = Array.isArray(report.phones) ? [...report.phones] : [];
         const durations = {};
+        const emails = {};
         if (report.phone_durations && typeof report.phone_durations === 'object') {
             for (const [k, v] of Object.entries(report.phone_durations)) {
                 durations[k] = parseInt(v) || 0;
@@ -427,9 +479,21 @@ window.adminWorkReportsData = () => ({
             const split = Math.round((report.total_duration_minutes || 0) / phones.length);
             phones.forEach(p => { durations[p] = split; });
         }
+
+        const pKeys = this.phoneOptions ? Object.keys(this.phoneOptions) : ['putih', 'pink', 'biru', 'hijau', 'hitam', 'pink_st'];
+        pKeys.forEach(p => {
+            if (report.phone_emails && report.phone_emails[p]) {
+                emails[p] = report.phone_emails[p];
+            } else {
+                const pInfo = this.getPhoneInfo(p);
+                emails[p] = pInfo?.active_email || '';
+            }
+        });
+
         this.editForm = {
             phones: phones,
-            phone_durations: durations
+            phone_durations: durations,
+            phone_emails: emails
         };
         this.editModalOpen = true;
     },
@@ -447,6 +511,10 @@ window.adminWorkReportsData = () => ({
         } else {
             this.editForm.phones.push(key);
             this.editForm.phone_durations[key] = this.editForm.phone_durations[key] || 60;
+            if (!this.editForm.phone_emails[key]) {
+                const pInfo = this.getPhoneInfo(key);
+                this.editForm.phone_emails[key] = pInfo?.active_email || '';
+            }
         }
     },
 
@@ -479,6 +547,7 @@ window.adminWorkReportsData = () => ({
                 body: JSON.stringify({
                     phones: this.editForm.phones,
                     phone_durations: this.editForm.phone_durations,
+                    phone_emails: this.editForm.phone_emails,
                     total_duration_minutes: total
                 })
             });

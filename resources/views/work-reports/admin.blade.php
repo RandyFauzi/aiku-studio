@@ -111,12 +111,14 @@
                                     <template x-if="report.phone_durations && Object.keys(report.phone_durations).length > 0">
                                         <template x-for="(mins, pkey) in report.phone_durations" :key="pkey">
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200/90 shadow-2xs hover:border-emerald-300 transition">
-                                                <span class="w-2 h-2 rounded-full shrink-0" :class="getPhoneInfo(pkey)?.active_account_name ? 'bg-emerald-500' : 'bg-slate-300'"></span>
-                                                <span class="text-slate-800 font-extrabold" x-text="'HP ' + (phoneOptions[pkey] || pkey)"></span>
-                                                <template x-if="getPhoneInfo(pkey)?.active_account_name">
-                                                    <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold" x-text="getPhoneInfo(pkey).active_account_name"></span>
+                                                <span class="w-2 h-2 rounded-full shrink-0" :class="getReportPhoneAccount(report, pkey) ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                                                <span class="text-slate-800 font-extrabold" x-text="formatPhoneName(pkey)"></span>
+                                                <template x-if="getReportPhoneAccount(report, pkey)">
+                                                    <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold truncate max-w-[150px]" 
+                                                          :title="getReportPhoneEmail(report, pkey) || getReportPhoneAccount(report, pkey)"
+                                                          x-text="getReportPhoneAccount(report, pkey)"></span>
                                                 </template>
-                                                <span class="font-mono text-emerald-900 font-black" x-text="mins + 'm'"></span>
+                                                <span class="font-mono text-emerald-900 font-black px-1.5 py-0.5 rounded-md bg-emerald-100/60" x-text="mins + 'm'"></span>
                                             </span>
                                         </template>
                                     </template>
@@ -124,10 +126,12 @@
                                         <div class="flex flex-wrap gap-1.5">
                                             <template x-for="pkey in (report.phones || [])" :key="pkey">
                                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200/90 shadow-2xs">
-                                                    <span class="w-2 h-2 rounded-full shrink-0" :class="getPhoneInfo(pkey)?.active_account_name ? 'bg-emerald-500' : 'bg-slate-300'"></span>
-                                                    <span class="text-slate-800 font-extrabold" x-text="'HP ' + (phoneOptions[pkey] || pkey)"></span>
-                                                    <template x-if="getPhoneInfo(pkey)?.active_account_name">
-                                                        <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold" x-text="getPhoneInfo(pkey).active_account_name"></span>
+                                                    <span class="w-2 h-2 rounded-full shrink-0" :class="getReportPhoneAccount(report, pkey) ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                                                    <span class="text-slate-800 font-extrabold" x-text="formatPhoneName(pkey)"></span>
+                                                    <template x-if="getReportPhoneAccount(report, pkey)">
+                                                        <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold truncate max-w-[150px]" 
+                                                              :title="getReportPhoneEmail(report, pkey) || getReportPhoneAccount(report, pkey)"
+                                                              x-text="getReportPhoneAccount(report, pkey)"></span>
                                                     </template>
                                                 </span>
                                             </template>
@@ -374,7 +378,7 @@
                                             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                         </div>
                                         <div>
-                                            <h5 class="text-sm font-black text-slate-900" x-text="'HP ' + (phoneOptions[pkey] || pkey)"></h5>
+                                            <h5 class="text-sm font-black text-slate-900" x-text="formatPhoneName(pkey)"></h5>
                                             <span class="text-[11px] text-slate-500 font-medium">Perangkat Studio</span>
                                         </div>
                                     </div>
@@ -388,22 +392,38 @@
 
                                 <!-- Akun Studio yang Terhubung ke HP ini -->
                                 <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs flex-wrap gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-slate-500 font-semibold">Akun Terhubung:</span>
-                                        <template x-if="getPhoneInfo(pkey)?.active_account_name">
-                                            <div class="inline-flex items-center gap-1.5">
-                                                <span class="font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200"
-                                                      x-text="getPhoneInfo(pkey).active_account_name"></span>
-                                                <span class="text-slate-500 font-mono text-[11px]" x-text="'(' + getPhoneInfo(pkey).active_email + ')'"></span>
-                                            </div>
-                                        </template>
-                                        <template x-if="!getPhoneInfo(pkey)?.active_account_name">
-                                            <span class="text-slate-400 italic">Belum ada akun aktif di perangkat ini</span>
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="text-slate-500 font-semibold">Email Terhubung:</span>
+                                            <template x-if="getReportPhoneEmail(selectedReport, pkey)">
+                                                <div class="inline-flex items-center gap-1.5">
+                                                    <span class="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]"
+                                                          x-text="getReportPhoneEmail(selectedReport, pkey)"></span>
+                                                    <template x-if="isPhoneEmailOverridden(selectedReport, pkey)">
+                                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200">
+                                                            Override Laporan
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="!isPhoneEmailOverridden(selectedReport, pkey)">
+                                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                            Master HP
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <template x-if="!getReportPhoneEmail(selectedReport, pkey)">
+                                                <span class="text-slate-400 italic">Belum ada email akun di perangkat ini</span>
+                                            </template>
+                                        </div>
+                                        <template x-if="isPhoneEmailOverridden(selectedReport, pkey) && getPhoneInfo(pkey)?.active_email">
+                                            <p class="text-[10px] text-slate-400 font-mono">
+                                                Email master asli di HP: <span x-text="getPhoneInfo(pkey).active_email"></span>
+                                            </p>
                                         </template>
                                     </div>
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                          :class="getPhoneInfo(pkey)?.active_account_name ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'"
-                                          x-text="getPhoneInfo(pkey)?.active_account_name ? 'Status: Terhubung Aktif' : 'Status: Akun Standby'"></span>
+                                          :class="getReportPhoneAccount(selectedReport, pkey) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'"
+                                          x-text="getReportPhoneAccount(selectedReport, pkey) ? 'Status: Terhubung' : 'Status: Standby'"></span>
                                 </div>
                             </div>
                         </template>
@@ -501,16 +521,57 @@
                                     <span x-show="editForm.phones.includes(key)" class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">Aktif</span>
                                 </button>
 
-                                <!-- Duration Input (visible when selected) -->
-                                <div x-show="editForm.phones.includes(key)" class="mt-2.5 pt-2 border-t border-slate-200/60">
-                                    <div class="flex items-center gap-1.5">
-                                        <input type="number" 
-                                               x-model.number="editForm.phone_durations[key]" 
-                                               min="1" 
-                                               max="1440" 
-                                               placeholder="0"
-                                               class="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs font-bold text-slate-800 focus:border-emerald-500 focus:outline-none">
-                                        <span class="text-xs text-slate-500 font-semibold shrink-0">menit</span>
+                                <!-- Duration & Email Inputs (visible when selected) -->
+                                <div x-show="editForm.phones.includes(key)" class="mt-2.5 pt-2 border-t border-slate-200/60 space-y-2.5">
+                                    <!-- Duration Input -->
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-600 mb-1">Durasi Menit:</label>
+                                        <div class="flex items-center gap-1.5">
+                                            <input type="number" 
+                                                   x-model.number="editForm.phone_durations[key]" 
+                                                   min="1" 
+                                                   max="1440" 
+                                                   placeholder="0"
+                                                   class="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs font-bold text-slate-800 focus:border-emerald-500 focus:outline-none">
+                                            <span class="text-xs text-slate-500 font-semibold shrink-0">menit</span>
+                                        </div>
+                                        <!-- Quick Chips -->
+                                        <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+                                            <button type="button" @click="editForm.phone_durations[key] = 60" class="px-1.5 py-0.5 rounded-md bg-white hover:bg-emerald-100 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">60m</button>
+                                            <button type="button" @click="editForm.phone_durations[key] = 120" class="px-1.5 py-0.5 rounded-md bg-white hover:bg-emerald-100 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">120m</button>
+                                            <button type="button" @click="editForm.phone_durations[key] = 180" class="px-1.5 py-0.5 rounded-md bg-white hover:bg-emerald-100 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">180m</button>
+                                            <button type="button" @click="editForm.phone_durations[key] = 240" class="px-1.5 py-0.5 rounded-md bg-white hover:bg-emerald-100 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">240m</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Email Akun Terhubung Input -->
+                                    <div class="pt-2 border-t border-slate-200/50">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="block text-[10px] font-bold text-slate-600">Email Akun Terhubung:</label>
+                                            <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">Khusus Laporan Ini</span>
+                                        </div>
+                                        <input type="text" 
+                                               x-model="editForm.phone_emails[key]" 
+                                               :placeholder="getPhoneInfo(key)?.active_email || 'email@gmail.com'"
+                                               class="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs text-slate-800 focus:border-emerald-500 focus:outline-none">
+                                        
+                                        <!-- Quick Suggestions from Known Accounts -->
+                                        <template x-if="getPhoneInfo(key)?.accounts && getPhoneInfo(key).accounts.length > 0">
+                                            <div class="mt-1 flex items-center gap-1 flex-wrap">
+                                                <span class="text-[9px] text-slate-400">Pilihan akun:</span>
+                                                <template x-for="acc in getPhoneInfo(key).accounts" :key="acc.email">
+                                                    <button type="button" 
+                                                            @click="editForm.phone_emails[key] = acc.email" 
+                                                            class="text-[9px] px-1.5 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 font-mono transition cursor-pointer"
+                                                            :class="editForm.phone_emails[key] === acc.email ? 'border-emerald-400 bg-emerald-50 text-emerald-800 font-bold' : ''"
+                                                            x-text="acc.account_name || acc.email"></button>
+                                                </template>
+                                            </div>
+                                        </template>
+
+                                        <p class="text-[10px] text-slate-400 mt-1 leading-tight">
+                                            Perubahan email hanya tersimpan untuk laporan ini dan <strong>tidak</strong> mengubah akun master aktif di HP.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -617,27 +678,60 @@
                                 </span>
                             </button>
 
-                            <!-- Duration Input Section (Expands when selected) -->
-                            <div x-show="createForm.phones.includes(key)" x-transition class="mt-3 pt-3 border-t border-slate-200 space-y-2">
-                                <div class="flex items-center gap-1.5">
-                                    <input type="number"
-                                           min="1"
-                                           max="1440"
-                                           step="1"
-                                           inputmode="numeric"
-                                           placeholder="120"
-                                           :value="createForm.phone_durations[key] || ''"
-                                           @input="setCreateMinutes(key, $event.target.value)"
-                                           class="w-full bg-white border-2 border-slate-300 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-black text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none font-mono">
-                                    <span class="text-xs font-bold text-slate-600 shrink-0">menit</span>
+                            <!-- Duration & Email Input Section (Expands when selected) -->
+                            <div x-show="createForm.phones.includes(key)" x-transition class="mt-3 pt-3 border-t border-slate-200 space-y-2.5">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Durasi Menit:</label>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number"
+                                               min="1"
+                                               max="1440"
+                                               step="1"
+                                               inputmode="numeric"
+                                               placeholder="120"
+                                               :value="createForm.phone_durations[key] || ''"
+                                               @input="setCreateMinutes(key, $event.target.value)"
+                                               class="w-full bg-white border-2 border-slate-300 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-black text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none font-mono">
+                                        <span class="text-xs font-bold text-slate-600 shrink-0">menit</span>
+                                    </div>
+
+                                    <!-- Fast Increment Pill Chips -->
+                                    <div class="flex items-center gap-1 flex-wrap mt-1.5">
+                                        <button type="button" @click="setCreateMinutes(key, 60)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">60m</button>
+                                        <button type="button" @click="setCreateMinutes(key, 120)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">120m</button>
+                                        <button type="button" @click="setCreateMinutes(key, 180)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">180m</button>
+                                        <button type="button" @click="setCreateMinutes(key, 240)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">240m</button>
+                                    </div>
                                 </div>
 
-                                <!-- Fast Increment Pill Chips -->
-                                <div class="flex items-center gap-1 flex-wrap">
-                                    <button type="button" @click="setCreateMinutes(key, 60)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">60m</button>
-                                    <button type="button" @click="setCreateMinutes(key, 120)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">120m</button>
-                                    <button type="button" @click="setCreateMinutes(key, 180)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">180m</button>
-                                    <button type="button" @click="setCreateMinutes(key, 240)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">240m</button>
+                                <!-- Email Akun Terhubung Input -->
+                                <div class="pt-2 border-t border-slate-200/50">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[10px] font-bold text-slate-600">Email Akun Terhubung:</label>
+                                        <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">Khusus Laporan Ini</span>
+                                    </div>
+                                    <input type="text" 
+                                           x-model="createForm.phone_emails[key]" 
+                                           :placeholder="getPhoneInfo(key)?.active_email || 'email@gmail.com'"
+                                           class="w-full h-8 px-2.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800 focus:border-emerald-500 focus:outline-none">
+                                    
+                                    <!-- Quick Suggestions from Known Accounts -->
+                                    <template x-if="getPhoneInfo(key)?.accounts && getPhoneInfo(key).accounts.length > 0">
+                                        <div class="mt-1 flex items-center gap-1 flex-wrap">
+                                            <span class="text-[9px] text-slate-400">Pilihan:</span>
+                                            <template x-for="acc in getPhoneInfo(key).accounts" :key="acc.email">
+                                                <button type="button" 
+                                                        @click="createForm.phone_emails[key] = acc.email" 
+                                                        class="text-[9px] px-1.5 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 font-mono transition cursor-pointer"
+                                                        :class="createForm.phone_emails[key] === acc.email ? 'border-emerald-400 bg-emerald-50 text-emerald-800 font-bold' : ''"
+                                                        x-text="acc.account_name || acc.email"></button>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <p class="text-[10px] text-slate-400 mt-1 leading-tight">
+                                        Email ini hanya tersimpan di laporan dan tidak mengubah master HP.
+                                    </p>
                                 </div>
                             </div>
                         </div>

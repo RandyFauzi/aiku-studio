@@ -294,4 +294,73 @@ class DailyWorkReportTest extends TestCase
             'total_duration_minutes' => 60,
         ])->assertForbidden();
     }
+
+    public function test_report_scoped_phone_emails_does_not_modify_master_device_accounts(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $contributor = Contributor::create([
+            'nama' => 'Ghina Mawaddah',
+            'email' => 'ghina@example.com',
+            'role' => 'contributor',
+        ]);
+
+        $masterDevice = \App\Models\DeviceAccount::create([
+            'phone_key' => 'putih',
+            'email' => 'master_putih@gmail.com',
+            'account_name' => 'aikuputih_master',
+            'is_active' => true,
+        ]);
+
+        $today = now('Asia/Makassar')->toDateString();
+
+        // Admin creates work report with custom overridden email
+        $res = $this->actingAs($admin)->postJson('/api/work-reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'phones' => ['putih'],
+            'phone_durations' => ['putih' => 130],
+            'phone_emails' => ['putih' => 'override_khusus_laporan@gmail.com'],
+            'total_duration_minutes' => 130,
+        ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('report.phone_emails.putih', 'override_khusus_laporan@gmail.com');
+
+        $reportId = $res->json('report.id');
+
+        // Verify DeviceAccount in database remains completely untouched!
+        $this->assertDatabaseHas('device_accounts', [
+            'id' => $masterDevice->id,
+            'phone_key' => 'putih',
+            'email' => 'master_putih@gmail.com',
+            'account_name' => 'aikuputih_master',
+            'is_active' => true,
+        ]);
+
+        // Verify report in database has the overridden email
+        $report = \App\Models\DailyWorkReport::find($reportId);
+        $this->assertEquals('override_khusus_laporan@gmail.com', $report->phone_emails['putih'] ?? null);
+
+        // Admin updates report with another email
+        $updateRes = $this->actingAs($admin)->putJson('/api/work-reports/'.$reportId, [
+            'phones' => ['putih'],
+            'phone_durations' => ['putih' => 130],
+            'phone_emails' => ['putih' => 'updated_override@gmail.com'],
+            'total_duration_minutes' => 130,
+        ]);
+
+        $updateRes->assertOk()
+            ->assertJsonPath('report.phone_emails.putih', 'updated_override@gmail.com');
+
+        // Master device account is STILL untouched!
+        $this->assertEquals('master_putih@gmail.com', $masterDevice->fresh()->email);
+
+        // Assist matches checks the overridden email
+        $assistRes = $this->actingAs($admin)->getJson('/api/work-reports/assist-matches?date='.$today);
+        $assistRes->assertOk();
+        $phoneData = $assistRes->json('assist_data.0.phones.0');
+        $this->assertEquals('updated_override@gmail.com', $phoneData['active_email']);
+        $this->assertTrue($phoneData['is_email_overridden']);
+    }
 }

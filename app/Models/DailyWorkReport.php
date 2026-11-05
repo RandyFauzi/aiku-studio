@@ -15,6 +15,7 @@ class DailyWorkReport extends Model
         return [
             'phones' => 'array',
             'phone_durations' => 'array',
+            'phone_emails' => 'array',
             'total_duration_minutes' => 'integer',
             'revision' => 'integer',
         ];

@@ -50,6 +50,8 @@ class DailyWorkReportController extends Controller
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
             'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
             'phone_durations.*' => 'integer|min:1|max:1440',
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_emails.*' => 'nullable|string|max:100',
         ]);
 
         $today = CarbonImmutable::now('Asia/Makassar')->toDateString();
@@ -82,7 +84,18 @@ class DailyWorkReportController extends Controller
             throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP yang digunakan hari ini.']);
         }
 
-        $row = DB::transaction(function () use ($request, $person, $fields, $today, $phones, $totalMinutes, $phoneDurations) {
+        $phoneEmails = null;
+        if (! empty($fields['phone_emails'])) {
+            $cleanedEmails = [];
+            foreach ($fields['phone_emails'] as $key => $em) {
+                if (in_array($key, $allowedKeys, true) && ! empty($em) && in_array($key, $phones, true)) {
+                    $cleanedEmails[$key] = trim($em);
+                }
+            }
+            $phoneEmails = ! empty($cleanedEmails) ? $cleanedEmails : null;
+        }
+
+        $row = DB::transaction(function () use ($request, $person, $fields, $today, $phones, $totalMinutes, $phoneDurations, $phoneEmails) {
             User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             $row = DailyWorkReport::where('user_id', $request->user()->id)->where('work_date', $today)->first();
             abort_if(($row?->revision ?? 0) !== $fields['expected_revision'], 409, 'Laporan sudah berubah di sesi lain. Muat ulang data sebelum menyimpan.');
@@ -96,6 +109,10 @@ class DailyWorkReportController extends Controller
 
             if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
                 $attributes['phone_durations'] = $phoneDurations;
+            }
+
+            if (Schema::hasColumn('daily_work_reports', 'phone_emails')) {
+                $attributes['phone_emails'] = $phoneEmails;
             }
 
             $row->fill($attributes);
@@ -179,8 +196,19 @@ class DailyWorkReportController extends Controller
                 $activeAccountName = $activeAccount?->account_name ?: ($activeAccount?->email ? explode('@', $activeAccount->email)[0] : null);
                 $activeEmail = $activeAccount?->email;
 
-                // Get all emails linked to this phone
-                $phoneEmails = $phoneAccounts->pluck('email')->unique()->all();
+                // Support report-scoped overridden email for this phone
+                $reportPhoneEmails = $report->phone_emails ?? [];
+                $isEmailOverridden = ! empty($reportPhoneEmails[$phoneKey]);
+                $effectiveEmail = $isEmailOverridden ? trim($reportPhoneEmails[$phoneKey]) : $activeEmail;
+
+                if ($isEmailOverridden && $effectiveEmail) {
+                    $matchingAcct = $deviceAccounts->firstWhere('email', $effectiveEmail);
+                    $activeAccountName = $matchingAcct?->account_name ?: explode('@', $effectiveEmail)[0];
+                    $activeEmail = $effectiveEmail;
+                    $phoneEmails = [$effectiveEmail];
+                } else {
+                    $phoneEmails = $phoneAccounts->pluck('email')->unique()->all();
+                }
 
                 if (empty($phoneEmails)) {
                     $phoneDetails[] = [
@@ -188,6 +216,7 @@ class DailyWorkReportController extends Controller
                         'phone_label' => $phoneLabel,
                         'active_account_name' => $activeAccountName,
                         'active_email' => $activeEmail,
+                        'is_email_overridden' => $isEmailOverridden,
                         'reported_minutes' => (int) $reportedMinutes,
                         'emails' => [],
                         'status' => 'no_device_account',
@@ -249,6 +278,7 @@ class DailyWorkReportController extends Controller
                     'phone_label' => $phoneLabel,
                     'active_account_name' => $activeAccountName,
                     'active_email' => $activeEmail,
+                    'is_email_overridden' => $isEmailOverridden,
                     'reported_minutes' => (int) $reportedMinutes,
                     'emails' => $phoneEmails,
                     'status' => $status,
@@ -336,6 +366,8 @@ class DailyWorkReportController extends Controller
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
             'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
             'phone_durations.*' => 'integer|min:1|max:1440',
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_emails.*' => 'nullable|string|max:100',
             'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
         ]);
 
@@ -377,6 +409,17 @@ class DailyWorkReportController extends Controller
             throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP.']);
         }
 
+        $phoneEmails = null;
+        if (! empty($fields['phone_emails'])) {
+            $cleanedEmails = [];
+            foreach ($fields['phone_emails'] as $key => $em) {
+                if (in_array($key, $allowedKeys, true) && ! empty($em) && in_array($key, $phones, true)) {
+                    $cleanedEmails[$key] = trim($em);
+                }
+            }
+            $phoneEmails = ! empty($cleanedEmails) ? $cleanedEmails : null;
+        }
+
         $existing = DailyWorkReport::where('contributor_id', $contributor->id)
             ->where('work_date', $fields['work_date'])
             ->first();
@@ -386,6 +429,9 @@ class DailyWorkReportController extends Controller
             $existing->total_duration_minutes = $totalMinutes;
             if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
                 $existing->phone_durations = $phoneDurations;
+            }
+            if (Schema::hasColumn('daily_work_reports', 'phone_emails')) {
+                $existing->phone_emails = $phoneEmails;
             }
             $existing->revision++;
             $existing->save();
@@ -411,6 +457,10 @@ class DailyWorkReportController extends Controller
             $attributes['phone_durations'] = $phoneDurations;
         }
 
+        if (Schema::hasColumn('daily_work_reports', 'phone_emails')) {
+            $attributes['phone_emails'] = $phoneEmails;
+        }
+
         $report = DailyWorkReport::create($attributes);
 
         return response()->json([
@@ -429,6 +479,8 @@ class DailyWorkReportController extends Controller
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
             'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
             'phone_durations.*' => 'integer|min:1|max:1440',
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_emails.*' => 'nullable|string|max:100',
             'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
         ]);
 
@@ -456,10 +508,24 @@ class DailyWorkReportController extends Controller
             throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP.']);
         }
 
+        $phoneEmails = null;
+        if (! empty($fields['phone_emails'])) {
+            $cleanedEmails = [];
+            foreach ($fields['phone_emails'] as $key => $em) {
+                if (in_array($key, $allowedKeys, true) && ! empty($em) && in_array($key, $phones, true)) {
+                    $cleanedEmails[$key] = trim($em);
+                }
+            }
+            $phoneEmails = ! empty($cleanedEmails) ? $cleanedEmails : null;
+        }
+
         $report->phones = $phones;
         $report->total_duration_minutes = $totalMinutes;
         if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
             $report->phone_durations = $phoneDurations;
+        }
+        if (Schema::hasColumn('daily_work_reports', 'phone_emails')) {
+            $report->phone_emails = $phoneEmails;
         }
         $report->revision++;
         $report->save();
