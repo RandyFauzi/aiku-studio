@@ -24,6 +24,10 @@
             </p>
         </div>
         <div class="flex items-center gap-2">
+            <button type="button" @click="openCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white shadow-2xs transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                <span>+ Buat Laporan</span>
+            </button>
             <button type="button" @click="load()" :disabled="loading || assistLoading" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-2xs transition">
                 <svg class="w-3.5 h-3.5 text-slate-500" :class="(loading || assistLoading) ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 <span>Muat Ulang Data</span>
@@ -381,6 +385,157 @@
                         :disabled="savingEdit || calcEditTotal() <= 0" 
                         class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5">
                     <span x-text="savingEdit ? 'Menyimpan…' : 'Simpan Perubahan'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Report Modal -->
+    <div x-show="createModalOpen" 
+         x-transition.opacity 
+         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;">
+        
+        <div class="bg-white rounded-[28px] border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+             @click.outside="closeCreateModal()">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-extrabold text-sm sm:text-base">Buat Laporan Kerja</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Input rekaman menit pengerjaan HP atas nama kontributor</p>
+                </div>
+                <button type="button" @click="closeCreateModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition cursor-pointer" aria-label="Tutup form">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
+                <!-- Contributor & Date Selection Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                            Pilih Kontributor <span class="text-red-500">*</span>
+                        </label>
+                        <select x-model="createForm.contributor_id" 
+                                class="w-full h-11 px-3.5 rounded-2xl border-2 border-slate-200 bg-white text-xs sm:text-sm font-bold text-slate-900 focus:border-emerald-500 focus:outline-none">
+                            <option value="">-- Pilih Kontributor --</option>
+                            <template x-for="c in contributorsList" :key="c.id">
+                                <option :value="c.id" x-text="c.nama + (c.email ? ' (' + c.email + ')' : '')"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                            Tanggal Kerja (WITA) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" 
+                               x-model="createForm.work_date" 
+                               class="w-full h-11 px-3.5 rounded-2xl border-2 border-slate-200 bg-white text-xs sm:text-sm font-bold text-slate-900 focus:border-emerald-500 focus:outline-none font-mono">
+                    </div>
+                </div>
+
+                <!-- Section Label -->
+                <div class="flex items-center justify-between pt-1">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-700">Pilih HP & Durasi Menit</span>
+                    <span class="text-xs font-bold"
+                          :class="createForm.phones.length ? 'text-emerald-900 bg-emerald-100 px-3 py-1 rounded-full font-extrabold border border-emerald-200' : 'text-slate-500'"
+                          x-text="createForm.phones.length ? createForm.phones.length + ' HP Dipilih' : 'Pilih HP di bawah'"></span>
+                </div>
+
+                <!-- Dynamic Phones Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <template x-for="(label, key) in phoneOptions" :key="key">
+                        <div :class="createForm.phones.includes(key) ? 'border-2 border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-xs' : 'border border-slate-200 hover:border-slate-300 bg-white shadow-2xs'"
+                             class="rounded-3xl p-3.5 transition flex flex-col justify-between">
+
+                            <!-- Toggle Header -->
+                            <button type="button" class="flex flex-wrap gap-2 items-center justify-between w-full cursor-pointer select-none" 
+                                    @click="toggleCreatePhone(key)">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-4 h-4 rounded-md border flex items-center justify-center transition"
+                                         :class="createForm.phones.includes(key) ? 'bg-emerald-600 border-emerald-600 text-white font-black' : 'border-slate-300 bg-white'">
+                                        <svg x-show="createForm.phones.includes(key)" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <span class="text-xs sm:text-sm font-black text-slate-900" x-text="'HP ' + label"></span>
+                                </div>
+                                <span x-show="createForm.phones.includes(key)" class="text-[10px] font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                                    Dipakai
+                                </span>
+                            </button>
+
+                            <!-- Duration Input Section (Expands when selected) -->
+                            <div x-show="createForm.phones.includes(key)" x-transition class="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number"
+                                           min="1"
+                                           max="1440"
+                                           step="1"
+                                           inputmode="numeric"
+                                           placeholder="120"
+                                           :value="createForm.phone_durations[key] || ''"
+                                           @input="setCreateMinutes(key, $event.target.value)"
+                                           class="w-full bg-white border-2 border-slate-300 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-black text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none font-mono">
+                                    <span class="text-xs font-bold text-slate-600 shrink-0">menit</span>
+                                </div>
+
+                                <!-- Fast Increment Pill Chips -->
+                                <div class="flex items-center gap-1 flex-wrap">
+                                    <button type="button" @click="setCreateMinutes(key, 60)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">60m</button>
+                                    <button type="button" @click="setCreateMinutes(key, 120)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">120m</button>
+                                    <button type="button" @click="setCreateMinutes(key, 180)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">180m</button>
+                                    <button type="button" @click="setCreateMinutes(key, 240)" class="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[10px] font-bold text-slate-700 border border-slate-200 transition cursor-pointer">240m</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Dynamic Live Total Accumulation Banner (Lime & Mint Design) -->
+                <div class="rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-2 border-lime-300/90 shadow-xs relative overflow-hidden"
+                     style="background: linear-gradient(115deg, #dcfce7 0%, #d9f99d 55%, #bef264 100%);">
+                    
+                    <div class="relative z-10">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-[#1e3c16] block">
+                            Akumulasi Durasi Laporan
+                        </span>
+                        <div class="flex items-baseline gap-2 mt-0.5">
+                            <span class="text-2xl sm:text-3xl font-black text-[#0f240c] font-mono tracking-tight" x-text="calcCreateTotal()"></span>
+                            <span class="text-xs sm:text-sm font-black text-[#0f240c]">Menit</span>
+                            <span class="text-xs font-extrabold text-[#2d4e22]" x-text="'(' + duration(calcCreateTotal()) + ')'"></span>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10">
+                        <span x-show="calcCreateTotal() <= 0 || !createForm.phones.length" 
+                              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-slate-900 text-lime-300 shadow-xs border border-slate-800">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            Pilih HP & Isi Menit
+                        </span>
+                        <span x-show="calcCreateTotal() > 0 && createForm.phones.length" 
+                              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-[#14532d] text-emerald-100 shadow-xs border border-emerald-800">
+                            <svg class="w-3.5 h-3.5 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            Laporan Siap Disimpan
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Error Message Alert -->
+                <div x-show="createError" x-text="createError" class="p-3.5 rounded-2xl bg-red-50 text-red-700 text-xs font-bold border border-red-200"></div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" @click="closeCreateModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" 
+                        @click="saveCreateReport()" 
+                        :disabled="savingCreate || calcCreateTotal() <= 0 || !createForm.contributor_id || !createForm.work_date" 
+                        class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <span x-text="savingCreate ? 'Menyimpan…' : 'Simpan Laporan Kerja'"></span>
                 </button>
             </div>
         </div>

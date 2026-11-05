@@ -57,6 +57,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::view('/work-reports', 'panel.work-reports')->name('work-reports');
         Route::view('/work-reports.html', 'panel.work-reports');
         Route::get('/api/work-reports', [DailyWorkReportController::class, 'index']);
+        Route::post('/api/work-reports', [DailyWorkReportController::class, 'adminStore']);
         Route::put('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminUpdate']);
         Route::delete('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminDestroy']);
         Route::get('/api/work-reports/assist-matches', [DailyWorkReportController::class, 'assistMatches']);

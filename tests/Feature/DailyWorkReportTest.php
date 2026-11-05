@@ -230,4 +230,68 @@ class DailyWorkReportTest extends TestCase
 
         $this->assertDatabaseMissing('daily_work_reports', ['id' => $report->id]);
     }
+
+    public function test_admin_can_create_daily_work_report_for_any_contributor(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $contributor = Contributor::create([
+            'nama' => 'Budi Santoso',
+            'email' => 'budi_create@example.com',
+            'role' => 'contributor',
+        ]);
+
+        $today = now('Asia/Makassar')->toDateString();
+
+        // 1. Admin creates report for Budi Santoso
+        $response = $this->actingAs($admin)->postJson('/api/work-reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'phones' => ['putih', 'biru'],
+            'phone_durations' => ['putih' => 120, 'biru' => 60],
+            'total_duration_minutes' => 180,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('report.contributor_name', 'Budi Santoso')
+            ->assertJsonPath('report.contributor_id', $contributor->id)
+            ->assertJsonPath('report.total_duration_minutes', 180)
+            ->assertJsonPath('report.phones', ['putih', 'biru']);
+
+        $this->assertDatabaseHas('daily_work_reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'total_duration_minutes' => 180,
+        ]);
+
+        // 2. Creating again for same contributor and date updates the report
+        $updateResponse = $this->actingAs($admin)->postJson('/api/work-reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'phones' => ['putih', 'biru', 'hijau'],
+            'phone_durations' => ['putih' => 120, 'biru' => 60, 'hijau' => 60],
+            'total_duration_minutes' => 240,
+        ]);
+
+        $updateResponse->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('report.total_duration_minutes', 240)
+            ->assertJsonPath('report.revision', 2);
+
+        $this->assertDatabaseHas('daily_work_reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'total_duration_minutes' => 240,
+        ]);
+
+        // 3. Non-admin (contributor) cannot access admin endpoint
+        $worker = $this->employee('other_worker@example.com');
+        $this->actingAs($worker)->postJson('/api/work-reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'phones' => ['putih'],
+            'phone_durations' => ['putih' => 60],
+            'total_duration_minutes' => 60,
+        ])->assertForbidden();
+    }
 }

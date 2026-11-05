@@ -252,6 +252,141 @@ window.adminWorkReportsData = () => ({
         hitam: 'Hitam',
         pink_st: 'Pink ST'
     },
+    createModalOpen: false,
+    contributorsList: [],
+    createForm: {
+        contributor_id: '',
+        work_date: today(),
+        phones: [],
+        phone_durations: {}
+    },
+    createError: '',
+    savingCreate: false,
+
+    async fetchContributors() {
+        try {
+            const res = await fetch('/api/contributors');
+            if (res.ok) {
+                const data = await res.json();
+                this.contributorsList = Array.isArray(data) ? data : (data.contributors || []);
+            }
+        } catch (e) {
+            console.error('Gagal memuat kontributor', e);
+        }
+    },
+
+    openCreateModal() {
+        this.createError = '';
+        this.createForm = {
+            contributor_id: '',
+            work_date: this.date || today(),
+            phones: [],
+            phone_durations: {}
+        };
+        if (!this.contributorsList.length) {
+            this.fetchContributors();
+        }
+        this.createModalOpen = true;
+    },
+
+    closeCreateModal() {
+        this.createModalOpen = false;
+        this.createError = '';
+    },
+
+    toggleCreatePhone(key) {
+        if (this.createForm.phones.includes(key)) {
+            this.createForm.phones = this.createForm.phones.filter(p => p !== key);
+            delete this.createForm.phone_durations[key];
+        } else {
+            this.createForm.phones.push(key);
+            this.createForm.phone_durations[key] = this.createForm.phone_durations[key] || 60;
+        }
+    },
+
+    setCreateMinutes(key, val) {
+        const mins = parseInt(val) || 0;
+        if (mins > 0) {
+            if (!this.createForm.phones.includes(key)) {
+                this.createForm.phones.push(key);
+            }
+            this.createForm.phone_durations[key] = mins;
+        } else {
+            this.createForm.phone_durations[key] = '';
+        }
+    },
+
+    calcCreateTotal() {
+        let sum = 0;
+        for (const pk of this.createForm.phones) {
+            sum += parseInt(this.createForm.phone_durations[pk]) || 0;
+        }
+        return sum;
+    },
+
+    async saveCreateReport() {
+        if (this.savingCreate) return;
+        if (!this.createForm.contributor_id) {
+            this.createError = 'Pilih kontributor terlebih dahulu.';
+            return;
+        }
+        if (!this.createForm.work_date) {
+            this.createError = 'Pilih tanggal kerja laporan.';
+            return;
+        }
+        const total = this.calcCreateTotal();
+        if (total <= 0 || !this.createForm.phones.length) {
+            this.createError = 'Pilih minimal satu HP dan tentukan durasi menitnya.';
+            return;
+        }
+        this.savingCreate = true;
+        this.createError = '';
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const res = await fetch('/api/work-reports', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    contributor_id: parseInt(this.createForm.contributor_id),
+                    work_date: this.createForm.work_date,
+                    phones: this.createForm.phones,
+                    phone_durations: this.createForm.phone_durations,
+                    total_duration_minutes: total
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || Object.values(data.errors || {}).flat().join(' ') || 'Gagal membuat laporan');
+
+            const targetDate = this.createForm.work_date;
+            this.closeCreateModal();
+
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'success',
+                    title: 'Laporan Berhasil Dibuat',
+                    text: data.message || 'Laporan kerja berhasil disimpan.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+
+            if (this.date === targetDate) {
+                await this.load();
+            } else {
+                this.date = targetDate;
+                await this.load();
+            }
+        } catch (e) {
+            this.createError = e.message;
+        } finally {
+            this.savingCreate = false;
+        }
+    },
+
     editModalOpen: false,
     editingReport: null,
     editForm: {
@@ -442,6 +577,11 @@ window.adminWorkReportsData = () => ({
             const repData = await repRes.json();
             this.rows = repData.reports || [];
             this.total = repData.total_duration_minutes || 0;
+            if (repData.contributors && Array.isArray(repData.contributors)) {
+                this.contributorsList = repData.contributors;
+            } else if (!this.contributorsList.length) {
+                this.fetchContributors();
+            }
 
             if (assistRes.ok) {
                 const assistJson = await assistRes.json();

@@ -117,6 +117,7 @@ class DailyWorkReportController extends Controller
             'reports' => $rows,
             'phone_options' => DailyWorkReport::PHONES,
             'total_duration_minutes' => $rows->sum('total_duration_minutes'),
+            'contributors' => Contributor::orderBy('nama')->get(['id', 'nama', 'email', 'role']),
         ]);
     }
 
@@ -290,6 +291,101 @@ class DailyWorkReportController extends Controller
             'success' => true,
             'message' => "Berhasil membatalkan penugasan {$updated} rekaman.",
             'updated_count' => $updated,
+        ]);
+    }
+
+    public function adminStore(Request $request)
+    {
+        $allowedKeys = array_keys(DailyWorkReport::PHONES);
+
+        $fields = $request->validate([
+            'contributor_id' => 'required|integer|exists:contributors,id',
+            'work_date' => 'required|date_format:Y-m-d',
+            'phones' => 'nullable|array|max:6',
+            'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_durations.*' => 'integer|min:1|max:1440',
+            'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
+        ]);
+
+        $contributor = Contributor::findOrFail($fields['contributor_id']);
+
+        $user = User::where('contributor_id', $contributor->id)->first();
+        if (! $user) {
+            $user = app(\App\Services\ContributorAccess::class)->sync($contributor);
+        }
+        if (! $user) {
+            $email = $contributor->email ?: ('contributor_'.$contributor->id.'@aikustudio.id');
+            $user = User::firstOrCreate(
+                ['contributor_id' => $contributor->id],
+                ['name' => $contributor->nama, 'email' => $email, 'role' => 'contributor', 'password' => 'password', 'is_active' => true]
+            );
+        }
+
+        $phoneDurations = null;
+        if (! empty($fields['phone_durations'])) {
+            $cleaned = [];
+            foreach ($fields['phone_durations'] as $key => $mins) {
+                if (in_array($key, $allowedKeys, true) && (int) $mins > 0) {
+                    $cleaned[$key] = (int) $mins;
+                }
+            }
+            if (empty($cleaned)) {
+                throw ValidationException::withMessages(['phone_durations' => 'Isi menit durasi untuk setiap HP yang dipilih.']);
+            }
+            $phoneDurations = $cleaned;
+            $phones = array_values(array_unique(array_keys($cleaned)));
+            $totalMinutes = array_sum($cleaned);
+        } elseif (! empty($fields['phones'])) {
+            $phones = array_values($fields['phones']);
+            $totalMinutes = (int) ($fields['total_duration_minutes'] ?? 0);
+            if ($totalMinutes <= 0 || $totalMinutes > 8640) {
+                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 8640 menit.']);
+            }
+        } else {
+            throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP.']);
+        }
+
+        $existing = DailyWorkReport::where('contributor_id', $contributor->id)
+            ->where('work_date', $fields['work_date'])
+            ->first();
+
+        if ($existing) {
+            $existing->phones = $phones;
+            $existing->total_duration_minutes = $totalMinutes;
+            if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
+                $existing->phone_durations = $phoneDurations;
+            }
+            $existing->revision++;
+            $existing->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan kerja tanggal '.$fields['work_date'].' untuk '.$contributor->nama.' berhasil diperbarui.',
+                'report' => $existing,
+            ]);
+        }
+
+        $attributes = [
+            'user_id' => $user->id,
+            'contributor_id' => $contributor->id,
+            'contributor_name' => $contributor->nama,
+            'work_date' => $fields['work_date'],
+            'total_duration_minutes' => $totalMinutes,
+            'phones' => $phones,
+            'revision' => 1,
+        ];
+
+        if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
+            $attributes['phone_durations'] = $phoneDurations;
+        }
+
+        $report = DailyWorkReport::create($attributes);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan kerja tanggal '.$fields['work_date'].' untuk '.$contributor->nama.' berhasil dibuat.',
+            'report' => $report,
         ]);
     }
 
