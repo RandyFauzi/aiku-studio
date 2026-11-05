@@ -8,114 +8,118 @@
     @vite(['resources/css/app.css','resources/js/app.js'])
     <style>[x-cloak]{display:none!important}</style>
 </head>
-<body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900" x-data="attendancePortalData()">
+<body class="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900 relative" x-data="attendancePortalData()">
+
+    <!-- AMBIENT TOP GRADIENT MESH (Dribbble Style) -->
+    <div class="fixed top-0 inset-x-0 h-80 bg-gradient-to-b from-orange-100/50 via-purple-100/30 to-transparent pointer-events-none -z-10"></div>
 
     <!-- TOP HEADER -->
-    <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-2xs">
-        <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-2xs">
+        <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
             
             <!-- MOBILE TOP HEADER (md:hidden) -->
             <div class="flex items-center justify-between w-full md:hidden">
-                <a href="/me" class="flex items-center gap-2 group">
-                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-sm shadow-xs">
-                        AI
-                    </div>
+                <!-- User Avatar & Greeting -->
+                <div class="flex items-center gap-3">
+                    <button type="button" @click="setTab('akun')" class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 text-white font-black flex items-center justify-center text-sm shadow-xs shrink-0 ring-2 ring-white">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    </button>
                     <div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="font-black text-slate-900 text-base tracking-tight">AIKu Studio</span>
-                            <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Portal</span>
-                        </div>
+                        <p class="text-[11px] font-semibold text-slate-400 leading-none">Halo,</p>
+                        <h2 class="text-sm font-extrabold text-slate-900 leading-tight mt-0.5 truncate max-w-[140px]">{{ auth()->user()->name }}</h2>
                     </div>
-                </a>
+                </div>
 
-                <!-- User profile pill quick access -->
+                <!-- Circular Action Buttons (Matching Dribbble Screen 1) -->
                 <div class="flex items-center gap-2">
+                    <!-- Quick Scan Barcode Button -->
+                    <button type="button" 
+                            @click="openScanner()" 
+                            :disabled="checking || loading || !!todayAttendance"
+                            class="w-10 h-10 rounded-full bg-[#18181B] text-white flex items-center justify-center shadow-xs hover:scale-105 active:scale-95 transition disabled:opacity-50"
+                            title="Scan Barcode WiFi">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+
+                    <!-- Account / Info Button -->
                     <button type="button" 
                             @click="setTab('akun')" 
-                            class="flex items-center gap-2 py-1 px-2.5 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-slate-100 transition text-left">
-                        <div class="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow-2xs">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                        </div>
-                        <span class="text-xs font-semibold text-slate-700 max-w-[90px] truncate">{{ auth()->user()->name }}</span>
+                            class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-700 flex items-center justify-center shadow-2xs hover:bg-slate-50 active:scale-95 transition"
+                            title="Profil & Pengaturan">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </button>
                 </div>
             </div>
 
             <!-- DESKTOP TOP HEADER (hidden md:flex) -->
             <div class="hidden md:flex items-center justify-between w-full">
-                <!-- Brand & Subtitle -->
+                <!-- Brand Logo -->
                 <div class="flex items-center gap-3">
                     <a href="/me" class="flex items-center gap-2.5 group">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-base shadow-xs group-hover:scale-105 transition">
+                        <div class="w-9 h-9 rounded-2xl bg-[#18181B] text-white flex items-center justify-center font-black text-sm shadow-xs group-hover:scale-105 transition">
                             AI
                         </div>
                         <div>
                             <span class="font-black text-slate-900 text-lg tracking-tight">AIKu Studio</span>
-                            <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Portal Kontributor</span>
+                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Contributor App</span>
                         </div>
                     </a>
                 </div>
 
                 <!-- DESKTOP MODERN SEGMENTED NAVIGATION TABS -->
-                <nav class="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 border border-slate-200/90 shadow-inner">
+                <nav class="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 border border-slate-200/80 shadow-inner">
                     <!-- Tab 1: Absensi -->
                     <button type="button" 
                             @click="setTab('absensi')" 
-                            :class="activeTab === 'absensi' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                            :class="activeTab === 'absensi' ? 'bg-[#18181B] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
                             class="relative min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                        <span>Absensi</span>
+                        <svg class="w-4 h-4" :class="activeTab === 'absensi' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        <span>Utama</span>
                         <template x-if="!todayAttendance">
-                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Belum Absen Hari Ini"></span>
-                        </template>
-                        <template x-if="todayAttendance">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500" title="Sudah Absen"></span>
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         </template>
                     </button>
 
                     <!-- Tab 2: Laporan -->
                     <button type="button" 
                             @click="setTab('laporan')" 
-                            :class="activeTab === 'laporan' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                            :class="activeTab === 'laporan' ? 'bg-[#18181B] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
                             class="relative min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <span>Laporan Kerja</span>
+                        <svg class="w-4 h-4" :class="activeTab === 'laporan' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Laporan</span>
                         <template x-if="todayReportSubmitted === false">
-                            <span class="w-2 h-2 rounded-full bg-amber-500" title="Belum Kirim Laporan"></span>
-                        </template>
-                        <template x-if="todayReportSubmitted === true">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500" title="Laporan Sudah Dikirim"></span>
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                         </template>
                     </button>
 
                     <!-- Tab 3: Jadwal -->
                     <button type="button" 
                             @click="setTab('jadwal')" 
-                            :class="activeTab === 'jadwal' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                            :class="activeTab === 'jadwal' ? 'bg-[#18181B] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
                             class="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <span>Kalender Jadwal</span>
+                        <svg class="w-4 h-4" :class="activeTab === 'jadwal' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Jadwal</span>
                     </button>
 
                     <!-- Tab 4: Slip Gaji -->
                     <button type="button" 
                             @click="setTab('slip')" 
-                            :class="activeTab === 'slip' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                            :class="activeTab === 'slip' ? 'bg-[#18181B] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
                             class="relative min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <svg class="w-4 h-4" :class="activeTab === 'slip' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         <span>Slip Gaji</span>
                         <template x-if="slips.length > 0">
                             <span class="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800" x-text="slips.length"></span>
                         </template>
                     </button>
 
-                    <!-- Tab 5: Akun / Profil -->
+                    <!-- Tab 5: Profil -->
                     <button type="button" 
                             @click="setTab('akun')" 
-                            :class="activeTab === 'akun' ? 'bg-white text-emerald-800 shadow-xs font-bold border border-slate-200/70' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                            :class="activeTab === 'akun' ? 'bg-[#18181B] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
                             class="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs transition duration-150 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        <span>Profil & Rekap</span>
+                        <svg class="w-4 h-4" :class="activeTab === 'akun' ? 'text-white' : 'text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span>Profil</span>
                     </button>
                 </nav>
 
@@ -127,7 +131,7 @@
                     </div>
                     <form method="post" action="/logout">
                         @csrf
-                        <button class="min-h-[38px] rounded-xl border border-slate-200 px-3.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs">
+                        <button class="min-h-[38px] rounded-2xl border border-slate-200 px-3.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs">
                             Keluar
                         </button>
                     </form>
@@ -138,594 +142,406 @@
     </header>
 
     <!-- MAIN BODY CONTAINER -->
-    <main x-cloak class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 pb-32 md:pb-12 space-y-6">
+    <main x-cloak class="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7 pb-36 md:pb-16 space-y-6">
 
         <!-- GLOBAL ERROR ALERT -->
         <div x-show="error" 
              x-transition 
-             class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-start justify-between gap-3 shadow-xs">
-            <div class="flex items-start gap-2.5">
-                <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+             class="rounded-2xl border border-red-200 bg-red-50 p-3.5 text-xs font-semibold text-red-700 flex items-center justify-between gap-3 shadow-xs">
+            <div class="flex items-center gap-2">
+                <span class="text-red-500 font-bold">✕</span>
                 <span x-text="error"></span>
             </div>
-            <button type="button" @click="error = ''" class="text-red-400 hover:text-red-700 text-sm font-bold">✕</button>
+            <button type="button" @click="error = ''" class="text-red-400 hover:text-red-700 text-xs font-bold">Tutup</button>
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 1: ABSENSI HARI INI                    -->
+        <!-- TAB 1: ABSENSI & HOME (DRIBBBLE SCREEN 1) -->
         <!-- ========================================== -->
         <div x-show="activeTab === 'absensi'" 
              x-transition:enter="transition ease-out duration-150" 
              x-transition:enter-start="opacity-0 translate-y-2" 
              x-transition:enter-end="opacity-100 translate-y-0" 
-             class="space-y-6">
+             class="space-y-5">
 
-            <!-- Hero Banner -->
-            <section class="rounded-3xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-6 sm:p-8 shadow-md relative overflow-hidden">
-                <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-emerald-300 border border-white/10 backdrop-blur-xs">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span>Presensi Kehadiran</span>
-                        </div>
-                        <h1 class="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-white">
-                            Halo, {{ auth()->user()->name }}
-                        </h1>
-                        <p class="mt-1.5 text-xs sm:text-sm text-emerald-100/80 max-w-xl">
-                            Catat kehadiranmu menggunakan Barcode WiFi Studio saat sampai di kantor atau gunakan GPS cadangan.
-                        </p>
-                    </div>
-                    <div class="shrink-0 bg-white/10 border border-white/10 rounded-2xl p-4 text-center sm:text-right backdrop-blur-xs">
-                        <p class="text-[11px] font-semibold text-emerald-200 uppercase tracking-wider">Tanggal Hari Ini (WITA)</p>
-                        <p class="mt-0.5 text-sm sm:text-base font-extrabold text-white" x-text="dateLabel(today)"></p>
-                    </div>
-                </div>
-            </section>
+            <!-- Bold Catchy Hero Headline (Matching Dribbble "Let's Make Today Productive") -->
+            <div class="pt-1">
+                <h1 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                    Kerja Produktif<br><span class="text-slate-400">Hari Ini</span>
+                </h1>
+            </div>
 
-            <!-- ATTENDANCE MAIN CARD -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs">
-                <div class="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-black uppercase tracking-wider text-emerald-700">Absensi Hari Ini</span>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                WiFi Studio
-                            </span>
-                        </div>
-                        <h2 class="mt-1.5 text-xl font-extrabold text-slate-900" x-text="dateLabel(today)"></h2>
-                        <p class="mt-1 text-xs sm:text-sm text-slate-500">
-                            Scan Barcode Studio yang terpasang di dinding saat terhubung ke WiFi kantor, atau gunakan GPS.
-                        </p>
-                    </div>
-
-                    <!-- ACTION BUTTONS -->
-                    <div class="flex flex-wrap items-center gap-2.5">
-                        <!-- SCAN BARCODE BUTTON (PRIMARY) -->
-                        <button type="button" 
-                                @click="openScanner()" 
-                                :disabled="checking || loading || !!todayAttendance" 
-                                class="min-h-[48px] shrink-0 inline-flex items-center gap-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 px-5 py-2.5 text-sm font-bold text-white shadow-xs transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                            <span x-text="todayAttendance ? 'Sudah Masuk' : 'Scan Barcode WiFi'"></span>
-                        </button>
-
-                        <!-- GPS FALLBACK BUTTON -->
-                        <button type="button" 
-                                @click="checkIn()" 
-                                :disabled="checking || loading || !!todayAttendance" 
-                                class="min-h-[48px] shrink-0 inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-98 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Absensi menggunakan koordinat GPS HP">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span x-text="checking ? 'Membaca…' : (todayAttendance ? 'Hadir (GPS)' : 'GPS')"></span>
-                        </button>
-                    </div>
+            <!-- DARK CONTRAST HERO CARD ("TODAY'S PROGRESS" - SCREEN 1 INSPIRATION) -->
+            <section class="rounded-[32px] bg-[#18181B] text-white p-5 sm:p-7 shadow-xl relative overflow-hidden">
+                <!-- Top Row: Card Title & Date Pill -->
+                <div class="flex items-center justify-between gap-3 pb-5 border-b border-white/10">
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Status Hari Ini</span>
+                    <span class="text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-slate-200 border border-white/10" x-text="dateLabel(today)"></span>
                 </div>
 
-                <p x-show="message" x-text="message" role="status" aria-live="polite" class="mt-4 text-sm font-semibold text-emerald-700"></p>
-
-                <!-- CHECK-IN RESULT CARD -->
-                <template x-if="todayAttendance">
-                    <div class="mt-5">
-                        <!-- Case 1: Checked in via QR Code + WiFi -->
-                        <template x-if="todayAttendance.checkin_method === 'qr_wifi'">
-                            <div class="grid gap-4 rounded-2xl bg-emerald-50/90 border border-emerald-200 p-5 text-sm sm:grid-cols-3">
+                <!-- Middle Row: Circular Gauge & Stats Column -->
+                <div class="py-5 flex items-center justify-between gap-5 sm:gap-8">
+                    
+                    <!-- Circular SVG Ring Gauge (Inspired by Dribbble Screen 1) -->
+                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-white/10" stroke-width="3.5" stroke="currentColor" fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path :class="todayAttendance ? 'text-emerald-400' : 'text-amber-400'" 
+                                  stroke-dasharray="100, 100" 
+                                  :stroke-dashoffset="todayAttendance ? 0 : 75" 
+                                  stroke-linecap="round" 
+                                  stroke-width="3.5" 
+                                  stroke="currentColor" 
+                                  fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <template x-if="todayAttendance">
                                 <div>
-                                    <p class="text-xs font-bold text-emerald-800">Jam Masuk (WITA)</p>
-                                    <p class="mt-1 text-xl font-black text-emerald-950 font-mono" x-text="time(todayAttendance.checked_in_at)"></p>
-                                    <span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-200/70 text-emerald-900 border border-emerald-300">
-                                        ✓ Terverifikasi WiFi Studio
-                                    </span>
+                                    <span class="text-lg sm:text-xl font-black text-emerald-400 block leading-none">100%</span>
+                                    <span class="text-[9px] font-bold text-slate-300 uppercase tracking-wider block mt-0.5">Hadir</span>
                                 </div>
+                            </template>
+                            <template x-if="!todayAttendance">
                                 <div>
-                                    <p class="text-xs font-bold text-emerald-800">Metode & Jaringan</p>
-                                    <p class="mt-1 font-bold text-emerald-950 flex items-center gap-1.5">
-                                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                                        <span>Barcode WiFi Studio</span>
-                                    </p>
-                                    <p class="mt-0.5 text-xs text-emerald-800 font-mono" x-text="'IP: ' + (todayAttendance.client_ip || 'Terverifikasi')"></p>
-
-                                    <template x-if="todayAttendance.latitude && Number(todayAttendance.latitude) !== 0">
-                                        <div class="mt-2 pt-2 border-t border-emerald-200/80">
-                                            <p class="text-[11px] font-bold text-emerald-800">Koordinat GPS:</p>
-                                            <p class="font-mono text-[11px] text-emerald-950" x-text="todayAttendance.latitude + ', ' + todayAttendance.longitude"></p>
-                                            <p class="text-[10px] text-emerald-700" x-text="todayAttendance.accuracy_m ? ('Akurasi ±' + Math.round(todayAttendance.accuracy_m) + ' meter') : ''"></p>
-                                        </div>
-                                    </template>
+                                    <span class="text-base sm:text-lg font-black text-amber-400 block leading-none">0%</span>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">Absen</span>
                                 </div>
-                                <div class="flex items-center sm:justify-end">
-                                    <template x-if="todayAttendance.latitude && Number(todayAttendance.latitude) !== 0">
-                                        <a :href="mapUrl(todayAttendance)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 transition shadow-2xs">
-                                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                            <span>Lihat lokasi di peta ↗</span>
-                                        </a>
-                                    </template>
-                                    <template x-if="!todayAttendance.latitude || Number(todayAttendance.latitude) === 0">
-                                        <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-200/70 text-emerald-900 border border-emerald-300">
-                                            ✓ Presensi Sah
-                                        </span>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
-
-                        <!-- Case 2: Checked in via GPS Coordinates -->
-                        <template x-if="todayAttendance.checkin_method !== 'qr_wifi'">
-                            <div class="grid gap-4 rounded-2xl bg-brand-50/80 border border-brand-200/80 p-5 text-sm sm:grid-cols-3">
-                                <div>
-                                    <p class="text-xs font-bold text-brand-800">Jam Masuk (WITA)</p>
-                                    <p class="mt-1 text-xl font-black text-slate-900 font-mono" x-text="time(todayAttendance.checked_in_at)"></p>
-                                    <span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-brand-100 text-brand-900 border border-brand-200">
-                                        ✓ Presensi GPS Cadangan
-                                    </span>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold text-brand-800">Koordinat GPS</p>
-                                    <p class="mt-1 break-all font-mono text-xs font-medium text-slate-800" x-text="todayAttendance.latitude + ', ' + todayAttendance.longitude"></p>
-                                    <p class="mt-0.5 text-xs text-slate-500" x-text="'Akurasi ±' + Math.round(todayAttendance.accuracy_m) + ' meter'"></p>
-                                </div>
-                                <div class="flex items-center sm:justify-end">
-                                    <a :href="mapUrl(todayAttendance)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-brand-200 text-brand-700 hover:bg-brand-50 transition shadow-2xs">
-                                        <span>Lihat lokasi di peta</span>
-                                        <span>↗</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-
-                <!-- If not checked in yet -->
-                <template x-if="!todayAttendance">
-                    <div class="mt-4 rounded-2xl bg-amber-50/80 border border-amber-200 p-4 text-xs text-amber-900 flex items-center gap-3">
-                        <span class="text-lg">💡</span>
-                        <p class="leading-relaxed">
-                            <strong>Kamu belum melakukan presensi hari ini.</strong> Hubungkan HP ke WiFi Studio, lalu tekan tombol <strong>Scan Barcode WiFi</strong> di atas untuk memindai poster barcode di dinding studio.
-                        </p>
-                    </div>
-                </template>
-            </section>
-
-            <!-- TODAY'S SCHEDULE SNAPSHOT -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs">
-                <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-black uppercase tracking-wider text-slate-500">Jadwal Sesi Hari Ini</span>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Shift</span>
+                            </template>
                         </div>
-                        <h3 class="mt-1 text-base sm:text-lg font-extrabold text-slate-900" x-text="dateLabel(today)"></h3>
                     </div>
-                    <button type="button" @click="setTab('jadwal')" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1">
-                        <span>Lihat Semua Kalender</span>
-                        <span>→</span>
+
+                    <!-- 3 Stats Rows (Matching 12 Total Task, 12 Completed, etc.) -->
+                    <div class="flex-1 space-y-3">
+                        <!-- Stat 1: Absensi -->
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2 text-slate-400">
+                                <span class="w-2 h-2 rounded-full" :class="todayAttendance ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+                                <span class="font-bold">Kehadiran</span>
+                            </div>
+                            <span class="font-extrabold text-xs" :class="todayAttendance ? 'text-emerald-400' : 'text-amber-400'" x-text="todayAttendance ? '✓ Hadir' : 'Belum Absen'"></span>
+                        </div>
+
+                        <!-- Stat 2: Laporan -->
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2 text-slate-400">
+                                <span class="w-2 h-2 rounded-full" :class="todayReportSubmitted ? 'bg-emerald-400' : 'bg-slate-500'"></span>
+                                <span class="font-bold">Laporan HP</span>
+                            </div>
+                            <span class="font-extrabold text-xs" :class="todayReportSubmitted ? 'text-emerald-400' : 'text-slate-400'" x-text="todayReportSubmitted ? '✓ Terkirim' : 'Belum Kirim'"></span>
+                        </div>
+
+                        <!-- Stat 3: Sesi Shift -->
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2 text-slate-400">
+                                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                <span class="font-bold">Sesi Kerja</span>
+                            </div>
+                            <span class="font-extrabold text-xs text-white" x-text="todaySchedule.sessions ? todaySchedule.sessions.length + ' Sesi' : '0 Sesi'"></span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Bottom Row: Direct Action Buttons (No Text Bloat!) -->
+                <div class="pt-4 border-t border-white/10 flex flex-wrap items-center gap-2.5">
+                    <!-- Scan Barcode Button -->
+                    <button type="button" 
+                            @click="openScanner()" 
+                            :disabled="checking || loading || !!todayAttendance" 
+                            class="flex-1 min-h-[46px] rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-98 px-4 py-2.5 text-xs font-black text-white shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        <span x-text="todayAttendance ? 'Sudah Presensi Masuk' : 'Scan Barcode WiFi'"></span>
+                    </button>
+
+                    <!-- GPS Button -->
+                    <button type="button" 
+                            @click="checkIn()" 
+                            :disabled="checking || loading || !!todayAttendance" 
+                            class="min-h-[46px] rounded-2xl bg-white/10 hover:bg-white/20 active:scale-98 px-3.5 py-2.5 text-xs font-bold text-white transition border border-white/10 flex items-center justify-center gap-1.5 disabled:opacity-50">
+                        <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span x-text="checking ? 'Membaca…' : (todayAttendance ? 'GPS' : 'GPS')"></span>
                     </button>
                 </div>
 
-                <div class="mt-4">
+                <!-- Minimalist Check-In Verification Strip (if checked in) -->
+                <template x-if="todayAttendance">
+                    <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-300">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-emerald-400 font-bold">✓ Masuk:</span>
+                            <span class="font-mono text-white font-bold" x-text="time(todayAttendance.checked_in_at)"></span>
+                            <span class="text-slate-400 ml-1" x-text="todayAttendance.checkin_method === 'qr_wifi' ? '(WiFi Studio)' : '(GPS)'"></span>
+                        </div>
+                        <template x-if="todayAttendance.latitude && Number(todayAttendance.latitude) !== 0">
+                            <a :href="mapUrl(todayAttendance)" target="_blank" rel="noopener noreferrer" class="font-bold text-emerald-400 hover:underline flex items-center gap-0.5">
+                                <span>Peta</span>
+                                <span>↗</span>
+                            </a>
+                        </template>
+                    </div>
+                </template>
+            </section>
+
+            <!-- TODAY'S SESSIONS (TIMELINE STYLE - DRIBBBLE SCREEN 1 & 2 INSPIRATION) -->
+            <section class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base font-black text-slate-900">Sesi Hari Ini</h3>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-700" x-text="todaySchedule.sessions ? todaySchedule.sessions.length : 0"></span>
+                    </div>
+                    <button type="button" @click="setTab('jadwal')" class="text-xs font-bold text-slate-500 hover:text-slate-900 transition">
+                        Lihat Kalender →
+                    </button>
+                </div>
+
+                <!-- Session Cards -->
+                <div class="space-y-2.5">
                     <template x-if="todaySchedule.sessions && todaySchedule.sessions.length > 0">
-                        <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="space-y-2.5">
                             <template x-for="session in todaySchedule.sessions" :key="session.id">
-                                <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4 transition hover:border-emerald-200">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2">
-                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                            <span class="font-black text-slate-900 text-sm" x-text="'Sesi ' + session.id"></span>
+                                <div class="rounded-3xl bg-white p-4 border border-slate-100 shadow-2xs flex items-center justify-between gap-3 hover:border-slate-200 transition">
+                                    <div class="flex items-center gap-3.5">
+                                        <!-- Time Box -->
+                                        <div class="text-center w-14 shrink-0">
+                                            <span class="text-xs font-black text-slate-900 block font-mono" x-text="session.start"></span>
+                                            <span class="text-[10px] font-bold text-slate-400 block font-mono" x-text="session.end"></span>
                                         </div>
-                                        <span class="text-xs font-bold text-emerald-800 bg-emerald-100/90 px-2.5 py-1 rounded-xl" x-text="session.tool"></span>
+                                        <div class="h-8 w-px bg-slate-100"></div>
+                                        <div>
+                                            <h4 class="text-sm font-extrabold text-slate-900" x-text="'Sesi ' + session.id"></h4>
+                                            <span class="text-[11px] font-bold text-emerald-700" x-text="session.tool"></span>
+                                        </div>
                                     </div>
-                                    <div class="mt-2.5 flex items-center justify-between text-xs font-semibold text-slate-600">
-                                        <span class="text-slate-400">Jam Kerja:</span>
-                                        <span class="font-mono font-bold text-slate-800" x-text="session.start + ' – ' + session.end + ' WITA'"></span>
-                                    </div>
+
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                                        Shift Aktif
+                                    </span>
                                 </div>
                             </template>
                         </div>
                     </template>
+
                     <template x-if="!todaySchedule.sessions || todaySchedule.sessions.length === 0">
-                        <div class="text-center py-8 text-slate-500 text-sm bg-slate-50/80 rounded-2xl border border-dashed border-slate-200">
+                        <div class="p-6 text-center rounded-3xl bg-white border border-slate-100 shadow-2xs">
                             <span class="text-2xl block mb-1">☕</span>
-                            <p class="font-bold text-slate-700">Tidak ada jadwal sesi rekaman untukmu hari ini.</p>
-                            <p class="text-xs text-slate-400 mt-1">Hari ini libur atau tidak ada shift yang dijadwalkan.</p>
+                            <p class="text-xs font-extrabold text-slate-700">Tidak ada sesi rekaman hari ini.</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Hari ini libur atau belum ada jadwal terdaftar.</p>
                         </div>
                     </template>
                 </div>
             </section>
 
-            <!-- QUICK ACTION: GO TO WORK REPORT -->
-            <section class="rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-700 p-5 sm:p-7 text-white shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h3 class="font-black text-lg">Sudah selesai rekaman hari ini?</h3>
-                    <p class="text-xs sm:text-sm text-emerald-100 mt-1">
-                        Kirim Laporan Kerja Harian untuk mencatat total menit pengerjaan pada tiap HP yang kamu gunakan.
-                    </p>
+            <!-- QUICK SHORTCUT: LAPORAN HARIAN CARD -->
+            <section class="rounded-3xl bg-white p-4 sm:p-5 border border-slate-100 shadow-2xs flex items-center justify-between gap-3 cursor-pointer hover:border-slate-300 transition" @click="setTab('laporan')">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-lg shrink-0">
+                        📋
+                    </div>
+                    <div>
+                        <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">Laporan Kerja Harian</h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Input durasi menit HP yang digunakan</p>
+                    </div>
                 </div>
-                <button type="button" 
-                        @click="setTab('laporan')" 
-                        class="shrink-0 px-5 py-3 rounded-2xl bg-white text-emerald-800 hover:bg-emerald-50 active:scale-98 text-xs sm:text-sm font-black shadow-xs transition flex items-center gap-2">
-                    <span>Buka Laporan Kerja</span>
-                    <span>→</span>
-                </button>
+
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-emerald-700">Isi Sekarang</span>
+                    <span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">→</span>
+                </div>
             </section>
 
-            <!-- PANDUAN CEPAT ABSENSI -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 text-xs text-slate-500">
-                <p class="font-bold uppercase tracking-wider text-slate-400 text-[10px] mb-2">Panduan Singkat</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-600">
-                    <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0">1</span>
-                        <p class="leading-relaxed"><strong>Hubungkan WiFi Studio:</strong> Pastikan HP Anda tersambung ke jaringan WiFi kantor AIKu Studio.</p>
-                    </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0">2</span>
-                        <p class="leading-relaxed"><strong>Scan Poster Barcode:</strong> Klik Scan Barcode dan arahkan kamera HP ke poster di dinding studio.</p>
-                    </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0">3</span>
-                        <p class="leading-relaxed"><strong>Selesai:</strong> Absensi masuk tercatat otomatis. Tidak perlu checkout saat pulang kerja.</p>
-                    </div>
-                </div>
-            </section>
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 2: LAPORAN KERJA HARIAN                -->
+        <!-- TAB 2: LAPORAN KERJA (INPUT MENIT HP)     -->
         <!-- ========================================== -->
         <div x-show="activeTab === 'laporan'" 
              x-transition:enter="transition ease-out duration-150" 
              x-transition:enter-start="opacity-0 translate-y-2" 
              x-transition:enter-end="opacity-100 translate-y-0" 
-             class="space-y-6">
-
-            <!-- Subheader banner -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-widest text-emerald-700">Input Durasi Menit</p>
-                    <h2 class="text-2xl font-black text-slate-900 mt-0.5">Laporan Kerja Harian</h2>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Centang HP yang kamu gunakan hari ini dan masukkan durasi pengerjaan dalam satuan menit.</p>
-                </div>
-                <div class="shrink-0">
-                    <button type="button" @click="setTab('absensi')" class="text-xs font-bold text-slate-500 hover:text-emerald-700 transition flex items-center gap-1">
-                        <span>← Kembali ke Absensi</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- INCLUDED WORK REPORT FORM -->
+             class="space-y-5">
             @include('work-reports.form')
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 3: KALENDER JADWAL & SHIFT             -->
+        <!-- TAB 3: KALENDER JADWAL (SCREEN 2 STYLE)   -->
         <!-- ========================================== -->
         <div x-show="activeTab === 'jadwal'" 
              x-transition:enter="transition ease-out duration-150" 
              x-transition:enter-start="opacity-0 translate-y-2" 
              x-transition:enter-end="opacity-100 translate-y-0" 
-             class="space-y-6">
+             class="space-y-5">
 
-            <!-- Subheader banner -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+            <!-- Title & Month Switcher -->
+            <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-widest text-emerald-700">Jadwal Kerja Bulanan</p>
-                    <h2 class="text-2xl font-black text-slate-900 mt-0.5">Kalender Jadwal & Shift</h2>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Pilih tanggal pada kalender untuk melihat rincian sesi dan alat kerja.</p>
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Jadwal Shift</span>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">Kalender Bulanan</h2>
                 </div>
-                <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-3 py-1.5 shadow-2xs">
-                        <span class="text-xs font-bold text-slate-500">Bulan:</span>
-                        <input type="month" x-model="month" @change="load()" :disabled="loading" class="text-xs sm:text-sm font-bold text-slate-800 bg-transparent focus:outline-none">
-                    </label>
-                </div>
+                <input type="month" x-model="month" @change="load()" :disabled="loading" class="h-9 rounded-2xl border border-slate-200 px-3 text-xs font-bold text-slate-800 bg-white shadow-2xs">
             </div>
 
-            <!-- RESPONSIVE 2-COLUMN LAYOUT ON DESKTOP -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- 2-Column Responsive Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                 
-                <!-- LEFT COLUMN: CALENDAR GRID (lg:col-span-7) -->
+                <!-- Left: Calendar Grid -->
                 <div class="lg:col-span-7">
-                    <section class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs">
-                        <div class="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100">
-                            <span class="text-sm font-extrabold text-slate-800">Kalender Bulanan</span>
-                            <span x-show="loading" class="text-xs text-slate-400">Memuat jadwal…</span>
-                        </div>
-
+                    <div class="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xs">
                         <!-- Day Names -->
-                        <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-100 text-center">
+                        <div class="grid grid-cols-7 bg-slate-50/80 border-b border-slate-100 text-center">
                             <template x-for="day in ['Sen','Sel','Rab','Kam','Jum','Sab','Min']">
                                 <div class="py-2.5 text-center text-xs font-bold text-slate-500" x-text="day"></div>
                             </template>
                         </div>
 
-                        <!-- Calendar Cells -->
+                        <!-- Calendar Grid -->
                         <div class="grid grid-cols-7">
                             <template x-for="cell in calendarCells" :key="cell.key">
                                 <div class="min-w-0 border-t border-r border-slate-100 relative">
                                     <button type="button" 
                                             x-show="cell.date" 
                                             @click="selectedDate=cell.date" 
-                                            :aria-label="cell.date+(cell.attendance?', sudah masuk':'')" 
                                             :aria-pressed="selectedDate===cell.date" 
-                                            :class="selectedDate===cell.date ? 'bg-emerald-50/80 ring-2 ring-inset ring-emerald-500' : 'hover:bg-slate-50/80'" 
-                                            class="min-h-[80px] w-full p-2 text-left sm:min-h-[96px] sm:p-2.5 transition">
+                                            :class="selectedDate===cell.date ? 'bg-[#18181B] text-white shadow-sm' : 'hover:bg-slate-50/80'" 
+                                            class="min-h-[72px] w-full p-2 text-left sm:min-h-[88px] sm:p-2.5 transition rounded-xl">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-slate-800" 
-                                                  :class="cell.date === today ? 'w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black' : ''"
+                                            <span class="text-xs font-bold" 
+                                                  :class="cell.date === today && selectedDate !== cell.date ? 'w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]' : ''"
                                                   x-text="Number(cell.date?.slice(-2))"></span>
-                                            <span x-show="cell.attendance" class="w-2 h-2 rounded-full bg-emerald-500" title="Hadir"></span>
+                                            <span x-show="cell.attendance" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                         </div>
 
-                                        <span class="mt-2 block text-[10px] sm:text-xs leading-tight font-semibold" 
-                                              :class="cell.attendance ? 'text-emerald-700' : (cell.sessions?.length ? 'text-slate-700' : 'text-slate-400')" 
+                                        <span class="mt-1.5 block text-[9px] sm:text-[10px] leading-tight font-semibold" 
+                                              :class="selectedDate === cell.date ? 'text-slate-300' : (cell.attendance ? 'text-emerald-700' : (cell.sessions?.length ? 'text-slate-700' : 'text-slate-400'))" 
                                               x-text="cell.attendance ? '✓ Masuk' : (cell.sessions?.length ? cell.sessions.length + ' sesi' : 'Libur')"></span>
-                                        
-                                        <span x-show="cell.custom" class="mt-1 hidden text-[9px] font-bold text-indigo-600 sm:block">Khusus</span>
                                     </button>
-                                    <span x-show="!cell.date" class="block min-h-[80px] bg-slate-50/50 sm:min-h-[96px]"></span>
+                                    <span x-show="!cell.date" class="block min-h-[72px] bg-slate-50/40 sm:min-h-[88px]"></span>
                                 </div>
                             </template>
                         </div>
-                    </section>
+                    </div>
                 </div>
 
-                <!-- RIGHT COLUMN: SELECTED DAY DETAIL (lg:col-span-5) -->
-                <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
-                    <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
+                <!-- Right: Selected Date Session Details -->
+                <div class="lg:col-span-5 space-y-3">
+                    <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-xs space-y-3">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Detail Tanggal</span>
-                            <span x-show="selectedDate === today" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Hari Ini</span>
+                            <span class="text-xs font-black uppercase tracking-wider text-slate-400">Rincian Hari</span>
+                            <span x-show="selectedDate === today" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">Hari Ini</span>
                         </div>
 
-                        <h3 class="mt-2 text-base sm:text-lg font-black text-slate-900" x-text="dateLabel(selectedDate)"></h3>
+                        <h3 class="text-base font-black text-slate-900" x-text="dateLabel(selectedDate)"></h3>
 
-                        <!-- Session List -->
-                        <div class="mt-4 space-y-2.5">
+                        <!-- Sessions List -->
+                        <div class="space-y-2">
                             <template x-for="session in selectedDay.sessions" :key="session.id">
-                                <div class="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-3.5 transition">
-                                    <div class="flex items-center justify-between">
-                                        <p class="font-extrabold text-sm text-slate-900" x-text="'Sesi ' + session.id"></p>
-                                        <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg" x-text="session.tool"></span>
+                                <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3 flex items-center justify-between">
+                                    <div>
+                                        <p class="font-extrabold text-xs text-slate-900" x-text="'Sesi ' + session.id"></p>
+                                        <p class="text-[10px] text-slate-500 font-mono mt-0.5" x-text="session.start + ' – ' + session.end + ' WITA'"></p>
                                     </div>
-                                    <p class="mt-1 text-xs text-slate-500 font-semibold" x-text="session.start + ' – ' + session.end + ' WITA'"></p>
+                                    <span class="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg" x-text="session.tool"></span>
                                 </div>
                             </template>
 
-                            <p x-show="!selectedDay.sessions.length" class="py-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                Tidak ada sesi yang dijadwalkan pada tanggal ini.
+                            <p x-show="!selectedDay.sessions.length" class="py-4 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl">
+                                Tidak ada jadwal sesi kerja pada tanggal ini.
                             </p>
                         </div>
-
-                        <!-- Attendance log for selected date -->
-                        <template x-if="selectedAttendance">
-                            <div class="mt-5 border-t border-slate-100 pt-4 text-xs space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-semibold text-slate-500">Status Kehadiran:</span>
-                                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">✓ Hadir</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="font-semibold text-slate-500">Jam Masuk:</span>
-                                    <strong class="font-mono text-slate-900" x-text="time(selectedAttendance.checked_in_at)"></strong>
-                                </div>
-                                <template x-if="selectedAttendance.checkin_method === 'qr_wifi'">
-                                    <p class="text-emerald-700 font-semibold flex items-center gap-1.5 pt-1">
-                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        <span>Terverifikasi WiFi Studio</span>
-                                    </p>
-                                </template>
-                                <template x-if="selectedAttendance.latitude && Number(selectedAttendance.latitude) !== 0">
-                                    <div class="pt-1">
-                                        <p class="text-[11px] text-slate-500 font-mono" x-text="'GPS: ' + selectedAttendance.latitude + ', ' + selectedAttendance.longitude"></p>
-                                        <a :href="mapUrl(selectedAttendance)" target="_blank" rel="noopener noreferrer" class="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:underline">
-                                            <span>Lihat lokasi di peta</span>
-                                            <span>↗</span>
-                                        </a>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </section>
+                    </div>
                 </div>
 
             </div>
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 4: SLIP GAJI & RIWAYAT PAYROLL        -->
+        <!-- TAB 4: SLIP GAJI                          -->
         <!-- ========================================== -->
         <div x-show="activeTab === 'slip'" 
              x-transition:enter="transition ease-out duration-150" 
              x-transition:enter-start="opacity-0 translate-y-2" 
              x-transition:enter-end="opacity-100 translate-y-0" 
-             class="space-y-6">
+             class="space-y-5">
 
-            <!-- Subheader banner -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+            <!-- Subheader -->
+            <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-widest text-emerald-700">Dokumen Payroll & Penghasilan</p>
-                    <h2 class="text-2xl font-black text-slate-900 mt-0.5">Riwayat Slip Gaji</h2>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Pantau estimasi periode berjalan dan riwayat dokumen slip gaji resmi kamu.</p>
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-400">Payroll</span>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">Slip Gaji & Estimasi</h2>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" @click="loadSlips()" :disabled="loadingSlips" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-2xs transition">
-                        <svg class="w-3.5 h-3.5 text-emerald-600" :class="loadingSlips ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span>Segarkan Data</span>
-                    </button>
-                </div>
+                <button type="button" @click="loadSlips()" :disabled="loadingSlips" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-2xs">
+                    Segarkan
+                </button>
             </div>
 
-            <!-- CARD 1: LIVE CYCLE / ESTIMASI PERIODE BERJALAN -->
-            <section class="rounded-3xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 p-5 sm:p-7 shadow-xs relative overflow-hidden">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-100 pb-4">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-2xs">
-                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                <span>Periode Berjalan</span>
-                            </span>
-                            <span class="text-xs font-bold text-slate-400">Cut-Off 22 - 21</span>
-                        </div>
-                        <h3 class="mt-2 text-lg sm:text-xl font-extrabold text-slate-900" x-text="currentPeriod?.name || 'Periode Berjalan'"></h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Estimasi akumulasi rekaman yang telah tercatat dan disetujui pada siklus ini.</p>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button type="button" 
-                                @click="openLiveSlip()" 
-                                :disabled="!liveSlip" 
-                                class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-2 disabled:opacity-50">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                            <span>Buka Slip Live ↗</span>
-                        </button>
-
-                        <button type="button" 
-                                @click="downloadLiveSlipPdf()" 
-                                :disabled="!liveSlip || downloadingSlipId === 'live'" 
-                                class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition flex items-center gap-1.5 disabled:opacity-50">
-                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            <span x-text="downloadingSlipId === 'live' ? 'Membuat PDF…' : 'Unduh PDF'"></span>
-                        </button>
-                    </div>
+            <!-- LIVE CYCLE ESTIMATION CARD -->
+            <section class="rounded-3xl bg-[#18181B] text-white p-5 sm:p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400">Periode Berjalan (Cut-Off 22 - 21)</span>
+                    <span class="text-xs font-bold text-slate-300" x-text="currentPeriod?.name || 'Siklus Ini'"></span>
                 </div>
 
-                <!-- Live Metrics Grid -->
-                <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Estimasi THP</p>
-                        <p class="mt-1 text-xl sm:text-2xl font-black text-emerald-700 font-mono tracking-tight" x-text="formatRupiah(liveSlip?.total_thp || 0)"></p>
-                        <p class="text-[10px] text-emerald-600 font-semibold mt-0.5">Rate: Rp 50.000 / Jam</p>
-                    </div>
-
-                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Jam Approved</p>
-                        <p class="mt-1 text-xl sm:text-2xl font-black text-slate-900 font-mono" x-text="(liveSlip?.total_approved_hours || 0) + ' Jam'"></p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Durasi dibayar</p>
-                    </div>
-
-                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Logged</p>
-                        <p class="mt-1 text-xl sm:text-2xl font-black text-slate-700 font-mono" x-text="(liveSlip?.total_logged_hours || 0) + ' Jam'"></p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Total rekaman masuk</p>
-                    </div>
-
-                    <div class="rounded-2xl bg-white/90 p-4 border border-emerald-100 shadow-2xs">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status Pembayaran</p>
-                        <div class="mt-1.5">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold" 
-                                  :class="liveSlip?.status === 'sudah' ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-amber-100 text-amber-900 border border-amber-200'"
-                                  x-text="liveSlip?.status === 'sudah' ? '✓ Sudah Dibayar' : 'Menunggu Cut-Off'">
-                            </span>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Estimasi Take Home Pay</span>
+                        <span class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono tracking-tight" x-text="formatRupiah(liveSlip?.total_thp || 0)"></span>
+                        <div class="flex items-center gap-3 mt-1 text-xs text-slate-300">
+                            <span>Approved: <strong class="text-white" x-text="(liveSlip?.total_approved_hours || 0) + ' Jam'"></strong></span>
+                            <span>&bull;</span>
+                            <span>Logged: <strong class="text-white" x-text="(liveSlip?.total_logged_hours || 0) + ' Jam'"></strong></span>
                         </div>
-                        <p class="text-[10px] text-slate-400 mt-1">Dicairkan pasca cut-off</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="openLiveSlip()" :disabled="!liveSlip" class="px-4 py-2 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition">
+                            Buka Slip Live ↗
+                        </button>
+                        <button type="button" @click="downloadLiveSlipPdf()" :disabled="!liveSlip || downloadingSlipId === 'live'" class="px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/10">
+                            <span x-text="downloadingSlipId === 'live' ? 'PDF…' : 'PDF'"></span>
+                        </button>
                     </div>
                 </div>
             </section>
 
-            <!-- CARD 2: RIWAYAT SLIP GAJI RESMI YANG DITERBITKAN -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <div>
-                        <h3 class="text-base sm:text-lg font-black text-slate-900">Arsip Slip Gaji Resmi</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Daftar slip gaji resmi yang telah diterbitkan dan disahkan oleh manajemen studio.</p>
-                    </div>
-                    <span class="text-xs font-bold text-slate-400" x-text="slips.length + ' Slip'"></span>
-                </div>
+            <!-- OFFICIAL SLIPS ARCHIVE -->
+            <section class="space-y-3">
+                <h3 class="text-sm font-black text-slate-900">Arsip Slip Resmi</h3>
 
-                <div class="mt-5 space-y-3">
+                <div class="space-y-2.5">
                     <template x-for="slip in slips" :key="slip.id">
-                        <article class="rounded-2xl border border-slate-200 hover:border-emerald-300 bg-slate-50/50 hover:bg-emerald-50/20 p-4 sm:p-5 transition duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div class="space-y-1">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h4 class="text-base font-extrabold text-slate-900" x-text="slip.period"></h4>
-                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold"
-                                          :class="slip.status === 'sudah' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'"
-                                          x-text="slip.status === 'sudah' ? '✓ Sudah Dibayar' : 'Belum Dibayar'">
+                        <div class="rounded-3xl bg-white p-4 sm:p-5 border border-slate-100 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="text-sm font-black text-slate-900" x-text="slip.period"></h4>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold"
+                                          :class="slip.status === 'sudah' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                          x-text="slip.status === 'sudah' ? 'Sudah Ditransfer' : 'Menunggu Cair'">
                                     </span>
                                 </div>
-                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                                    <span>Approved: <strong class="text-slate-800" x-text="slip.total_approved_hours + ' jam'"></strong></span>
-                                    <span>Logged: <strong class="text-slate-800" x-text="slip.total_logged_hours + ' jam'"></strong></span>
-                                    <template x-if="slip.bonus > 0">
-                                        <span class="text-emerald-700 font-bold" x-text="'+ Bonus ' + formatRupiah(slip.bonus)"></span>
-                                    </template>
-                                </div>
-                                <p class="text-[11px] text-slate-400" x-text="'Diterbitkan: ' + (slip.created_at ? new Date(slip.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : 'Arsip')"></p>
-                            </div>
-
-                            <div class="flex flex-col sm:items-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
-                                <div class="text-left sm:text-right">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Take Home Pay</span>
-                                    <span class="text-xl font-black text-slate-900 font-mono" x-text="formatRupiah(slip.total_thp)"></span>
-                                </div>
-                                
-                                <div class="flex items-center gap-2">
-                                    <button type="button" 
-                                            @click="openSlip(slip.id)" 
-                                            class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                        <span>Lihat Dokumen</span>
-                                    </button>
-
-                                    <button type="button" 
-                                            @click="downloadSlipPdf(slip)" 
-                                            :disabled="downloadingSlipId === slip.id" 
-                                            class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition flex items-center gap-1 disabled:opacity-50">
-                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        <span x-text="downloadingSlipId === slip.id ? 'Membuat…' : 'PDF'"></span>
-                                    </button>
+                                <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                                    <span>Approved: <strong class="text-slate-800" x-text="slip.total_approved_hours + 'h'"></strong></span>
+                                    <span class="text-emerald-700 font-bold" x-text="formatRupiah(slip.total_thp)"></span>
                                 </div>
                             </div>
-                        </article>
-                    </template>
 
-                    <!-- Empty State -->
-                    <template x-if="!loadingSlips && slips.length === 0">
-                        <div class="text-center py-12 px-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200">
-                            <span class="text-3xl block mb-2">📄</span>
-                            <p class="font-extrabold text-slate-800 text-sm">Belum ada slip gaji resmi yang diterbitkan</p>
-                            <p class="text-xs text-slate-400 max-w-md mx-auto mt-1 leading-relaxed">
-                                Dokumen slip resmi diterbitkan otomatis oleh manajemen setiap akhir siklus cut-off (tanggal 22). Kamu tetap dapat memantau estimasi pendapatan berjalan di kartu atas.
-                            </p>
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="openSlip(slip.id)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition">
+                                    Buka Slip ↗
+                                </button>
+                                <button type="button" @click="downloadSlipPdf(slip)" :disabled="downloadingSlipId === slip.id" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+                                    <span x-text="downloadingSlipId === slip.id ? '…' : 'PDF'"></span>
+                                </button>
+                            </div>
                         </div>
                     </template>
-                </div>
-            </section>
 
-            <!-- KETENTUAN PENGGAJIAN CARD -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 text-xs text-slate-500 shadow-xs">
-                <p class="font-bold uppercase tracking-wider text-slate-400 text-[10px] mb-2">Ketentuan Payroll Studio</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-600">
-                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <p class="font-extrabold text-slate-800 text-xs mb-1">Rate Pembayaran</p>
-                        <p class="leading-relaxed">Rp 50.000 per jam untuk durasi rekaman yang telah disetujui (*Approved*) oleh sistem.</p>
-                    </div>
-                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <p class="font-extrabold text-slate-800 text-xs mb-1">Siklus Cut-Off</p>
-                        <p class="leading-relaxed">Perhitungan otomatis berjalan dari tanggal 22 bulan lalu s/d tanggal 21 bulan berjalan.</p>
-                    </div>
-                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <p class="font-extrabold text-slate-800 text-xs mb-1">Bukti Transfer</p>
-                        <p class="leading-relaxed">Setiap slip resmi memiliki nomor referensi dan lampiran bukti rincian pengerjaan harian.</p>
-                    </div>
+                    <template x-if="!loadingSlips && slips.length === 0">
+                        <div class="p-8 text-center rounded-3xl bg-white border border-slate-100 shadow-2xs">
+                            <span class="text-2xl block mb-1">📄</span>
+                            <p class="text-xs font-extrabold text-slate-700">Belum ada slip resmi yang diterbitkan.</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Slip resmi diterbitkan setiap tanggal 22 setelah cut-off.</p>
+                        </div>
+                    </template>
                 </div>
             </section>
         </div>
@@ -737,180 +553,116 @@
              x-transition:enter="transition ease-out duration-150" 
              x-transition:enter-start="opacity-0 translate-y-2" 
              x-transition:enter-end="opacity-100 translate-y-0" 
-             class="space-y-6">
+             class="space-y-5">
 
-            <!-- Subheader banner -->
-            <div class="pb-1">
-                <p class="text-xs font-bold uppercase tracking-widest text-emerald-700">Akun & Ringkasan</p>
-                <h2 class="text-2xl font-black text-slate-900 mt-0.5">Profil Saya</h2>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Informasi kontributor, ringkasan performa bulan ini, dan pengaturan akun.</p>
+            <!-- Profile Info Card -->
+            <section class="rounded-3xl bg-white p-6 border border-slate-100 shadow-2xs flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 text-white font-black text-xl flex items-center justify-center shadow-xs shrink-0 ring-4 ring-orange-50">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-slate-900">{{ auth()->user()->name }}</h3>
+                    <p class="text-xs text-slate-400 font-medium">{{ auth()->user()->email }}</p>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 mt-1">
+                        Kontributor Aktif
+                    </span>
+                </div>
+            </section>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-3xl bg-white p-4 border border-slate-100 shadow-2xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Kehadiran Bulan Ini</span>
+                    <span class="text-2xl font-black text-slate-900 font-mono block mt-1" x-text="totalMonthAttendances + ' Hari'"></span>
+                </div>
+                <div class="rounded-3xl bg-white p-4 border border-slate-100 shadow-2xs cursor-pointer" @click="setTab('slip')">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Arsip Slip Gaji</span>
+                    <span class="text-2xl font-black text-emerald-700 font-mono block mt-1" x-text="slips.length + ' Dokumen'"></span>
+                </div>
             </div>
 
-            <!-- Profile Card -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-5">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-xl flex items-center justify-center shadow-sm shrink-0">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="text-xl font-extrabold text-slate-900">{{ auth()->user()->name }}</h3>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                Kontributor Aktif
-                            </span>
-                        </div>
-                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">{{ auth()->user()->email }}</p>
-                        <p class="text-[11px] text-slate-400 mt-2">Terdaftar di AIKu Studio Production Portal</p>
-                    </div>
-                </div>
-
-                <!-- Monthly Stats -->
-                <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100">
-                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kehadiran Bulan Ini</p>
-                        <p class="mt-1 text-2xl font-black text-emerald-700 font-mono" x-text="totalMonthAttendances + ' Hari'"></p>
-                    </div>
-                    <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100">
-                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Sesi Terjadwal</p>
-                        <p class="mt-1 text-2xl font-black text-slate-800 font-mono" x-text="totalMonthSessions + ' Sesi'"></p>
-                    </div>
-                    <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100 cursor-pointer hover:bg-emerald-50/50 transition" @click="setTab('slip')">
-                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Slip Gaji Resmi</p>
-                        <p class="mt-1 text-2xl font-black text-emerald-700 font-mono" x-text="slips.length + ' Slip'"></p>
-                        <p class="text-[10px] text-emerald-600 font-semibold mt-0.5">Buka Slip Gaji →</p>
-                    </div>
-                    <div class="rounded-2xl bg-slate-50 p-4 border border-slate-100">
-                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Zona Waktu Studio</p>
-                        <p class="mt-1 text-sm font-extrabold text-slate-800">WITA (Asia/Makassar)</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">UTC +08:00</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Ketentuan Studio Card -->
-            <section class="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs text-xs text-slate-600 space-y-3">
-                <h4 class="font-extrabold text-sm text-slate-800">Ketentuan & Kebijakan Studio</h4>
-                <ul class="space-y-2 list-disc list-inside leading-relaxed text-slate-500">
-                    <li><strong>WiFi Kantor:</strong> Absensi menggunakan Barcode hanya sah apabila HP terhubung ke jaringan WiFi resmi AIKu Studio.</li>
-                    <li><strong>Absensi 1x Sehari:</strong> Presensi dicatat satu kali per hari kerja saat tiba di studio dan tidak memerlukan proses checkout saat selesai.</li>
-                    <li><strong>Laporan Harian:</strong> Setiap kontributor wajib mengisi Laporan Kerja Harian setelah menyelesaikan sesi rekaman sesuai menit riil masing-masing HP.</li>
-                    <li><strong>Slip Gaji:</strong> Diterbitkan secara resmi setiap periode cut-off (22 s/d 21) dan dapat dipantau langsung pada tab Slip Gaji.</li>
-                </ul>
-            </section>
-
-            <!-- Logout Section -->
-            <section class="rounded-3xl border border-red-100 bg-red-50/50 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h4 class="font-bold text-sm text-red-950">Keluar dari Akun</h4>
-                    <p class="text-xs text-red-700/80 mt-0.5">Akhiri sesi portal kontributor pada perangkat ini.</p>
-                </div>
-                <form method="post" action="/logout">
-                    @csrf
-                    <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 active:scale-98 text-white font-bold text-xs transition duration-150 shadow-xs flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        <span>Keluar Sekarang</span>
-                    </button>
-                </form>
-            </section>
+            <!-- Logout Button -->
+            <form method="post" action="/logout">
+                @csrf
+                <button type="submit" class="w-full py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200/60 shadow-2xs flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <span>Keluar dari Akun</span>
+                </button>
+            </form>
         </div>
 
     </main>
 
-    <!-- ========================================== -->
-    <!-- MODERN BOTTOM NAVIGATION BAR (MOBILE ONLY) -->
-    <!-- ========================================== -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] px-1 pt-1.5 pb-[calc(0.65rem+env(safe-area-inset-bottom,0px))]">
-        <div class="grid grid-cols-5 items-center max-w-lg mx-auto">
-            
-            <!-- Tab 1: Absensi -->
-            <button type="button" 
-                    @click="setTab('absensi')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
-                    :class="activeTab === 'absensi' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
-                <div class="relative p-1 rounded-xl transition duration-150"
-                     :class="activeTab === 'absensi' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                    </svg>
-                    <!-- Status dot indicator -->
-                    <template x-if="!todayAttendance">
-                        <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white animate-pulse"></span>
-                    </template>
-                    <template x-if="todayAttendance">
-                        <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
-                    </template>
-                </div>
-                <span class="text-[10px] leading-tight mt-0.5">Absensi</span>
-            </button>
+    <!-- ========================================================= -->
+    <!-- FLOATING DOCK BOTTOM NAVIGATION BAR (MATCHING DRIBBBLE)   -->
+    <!-- ========================================================= -->
+    <nav class="md:hidden fixed bottom-5 inset-x-4 max-w-sm sm:max-w-md mx-auto z-40 bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_16px_36px_rgba(0,0,0,0.12)] rounded-[32px] px-2.5 py-2 flex items-center justify-between">
+        
+        <!-- Tab 1: Utama / Home -->
+        <button type="button" 
+                @click="setTab('absensi')" 
+                class="transition-all duration-200 flex flex-col items-center"
+                :class="activeTab === 'absensi' 
+                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
+            <svg class="w-5 h-5" :class="activeTab === 'absensi' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span class="text-[10px] leading-none mt-0.5" :class="activeTab === 'absensi' ? 'font-bold text-white' : 'font-medium'">Home</span>
+        </button>
 
-            <!-- Tab 2: Laporan -->
-            <button type="button" 
-                    @click="setTab('laporan')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
-                    :class="activeTab === 'laporan' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
-                <div class="relative p-1 rounded-xl transition duration-150"
-                     :class="activeTab === 'laporan' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    <!-- Status dot indicator -->
-                    <template x-if="todayReportSubmitted === false">
-                        <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white"></span>
-                    </template>
-                    <template x-if="todayReportSubmitted === true">
-                        <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
-                    </template>
-                </div>
-                <span class="text-[10px] leading-tight mt-0.5">Laporan</span>
-            </button>
+        <!-- Tab 2: Laporan / Projects -->
+        <button type="button" 
+                @click="setTab('laporan')" 
+                class="transition-all duration-200 flex flex-col items-center relative"
+                :class="activeTab === 'laporan' 
+                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
+            <svg class="w-5 h-5" :class="activeTab === 'laporan' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="text-[10px] leading-none mt-0.5" :class="activeTab === 'laporan' ? 'font-bold text-white' : 'font-medium'">Laporan</span>
+        </button>
 
-            <!-- Tab 3: Jadwal -->
-            <button type="button" 
-                    @click="setTab('jadwal')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
-                    :class="activeTab === 'jadwal' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
-                <div class="relative p-1 rounded-xl transition duration-150"
-                     :class="activeTab === 'jadwal' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] leading-tight mt-0.5">Jadwal</span>
-            </button>
+        <!-- Tab 3: Jadwal / Calendar -->
+        <button type="button" 
+                @click="setTab('jadwal')" 
+                class="transition-all duration-200 flex flex-col items-center"
+                :class="activeTab === 'jadwal' 
+                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
+            <svg class="w-5 h-5" :class="activeTab === 'jadwal' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-[10px] leading-none mt-0.5" :class="activeTab === 'jadwal' ? 'font-bold text-white' : 'font-medium'">Jadwal</span>
+        </button>
 
-            <!-- Tab 4: Slip Gaji -->
-            <button type="button" 
-                    @click="setTab('slip')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
-                    :class="activeTab === 'slip' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
-                <div class="relative p-1 rounded-xl transition duration-150"
-                     :class="activeTab === 'slip' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    <!-- Dot indicator if slips exist -->
-                    <template x-if="slips.length > 0">
-                        <span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
-                    </template>
-                </div>
-                <span class="text-[10px] leading-tight mt-0.5">Slip Gaji</span>
-            </button>
+        <!-- Tab 4: Slip Gaji -->
+        <button type="button" 
+                @click="setTab('slip')" 
+                class="transition-all duration-200 flex flex-col items-center"
+                :class="activeTab === 'slip' 
+                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
+            <svg class="w-5 h-5" :class="activeTab === 'slip' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span class="text-[10px] leading-none mt-0.5" :class="activeTab === 'slip' ? 'font-bold text-white' : 'font-medium'">Slip</span>
+        </button>
 
-            <!-- Tab 5: Akun / Profil -->
-            <button type="button" 
-                    @click="setTab('akun')" 
-                    class="relative flex flex-col items-center justify-center py-1 px-0.5 rounded-2xl transition duration-150"
-                    :class="activeTab === 'akun' ? 'text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium'">
-                <div class="relative p-1 rounded-xl transition duration-150"
-                     :class="activeTab === 'akun' ? 'bg-emerald-50 text-emerald-600 scale-105' : ''">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] leading-tight mt-0.5">Profil</span>
-            </button>
+        <!-- Tab 5: Profil -->
+        <button type="button" 
+                @click="setTab('akun')" 
+                class="transition-all duration-200 flex flex-col items-center"
+                :class="activeTab === 'akun' 
+                    ? 'bg-[#18181B] text-white rounded-2xl px-3.5 py-1.5 shadow-sm scale-102' 
+                    : 'text-slate-400 hover:text-slate-700 py-1.5 px-2'">
+            <svg class="w-5 h-5" :class="activeTab === 'akun' ? 'text-white' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="text-[10px] leading-none mt-0.5" :class="activeTab === 'akun' ? 'font-bold text-white' : 'font-medium'">Profil</span>
+        </button>
 
-        </div>
     </nav>
 
     <!-- CAMERA SCANNER MODAL FOR CONTRIBUTOR -->
@@ -948,7 +700,7 @@
             <div class="p-5 text-center space-y-3 bg-white">
                 <div>
                     <p class="text-xs font-bold text-slate-800">Arahkan kamera ke Poster Barcode di Studio</p>
-                    <p class="text-[11px] text-slate-500 mt-1">Pastikan HP Anda sudah terhubung ke <strong>WiFi Kantor</strong>.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Pastikan HP Anda terhubung ke <strong>WiFi Kantor</strong>.</p>
                 </div>
                 <button type="button" @click="closeScanner()" class="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-600 transition">
                     Tutup Kamera
