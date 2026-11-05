@@ -192,4 +192,42 @@ class DailyWorkReportTest extends TestCase
             'assigned_worker_name' => null,
         ]);
     }
+
+    public function test_admin_can_edit_and_delete_daily_work_report(): void
+    {
+        $employee = $this->employee('contributor@example.com');
+        $this->actingAs($employee)->putJson('/api/me/work-report', [
+            'work_date' => now('Asia/Makassar')->toDateString(),
+            'expected_revision' => 0,
+            'phones' => ['putih'],
+            'phone_durations' => ['putih' => 120],
+        ])->assertOk();
+
+        $report = \App\Models\DailyWorkReport::first();
+        $this->assertNotNull($report);
+        $this->assertEquals(120, $report->total_duration_minutes);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        // 1. Admin edits report (changes phones to putih + pink_st and total to 180)
+        $this->actingAs($admin)->putJson('/api/work-reports/'.$report->id, [
+            'phones' => ['putih', 'pink_st'],
+            'phone_durations' => ['putih' => 100, 'pink_st' => 80],
+            'total_duration_minutes' => 180,
+        ])->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('report.total_duration_minutes', 180)
+            ->assertJsonPath('report.phones', ['putih', 'pink_st']);
+
+        $report->refresh();
+        $this->assertEquals(180, $report->total_duration_minutes);
+        $this->assertEquals(['putih' => 100, 'pink_st' => 80], $report->phone_durations);
+
+        // 2. Admin deletes report
+        $this->actingAs($admin)->deleteJson('/api/work-reports/'.$report->id)
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('daily_work_reports', ['id' => $report->id]);
+    }
 }

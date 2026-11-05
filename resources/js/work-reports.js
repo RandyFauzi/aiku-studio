@@ -202,6 +202,181 @@ window.adminWorkReportsData = () => ({
     expandedPhoneKey: null,
     error: '',
     total: 0,
+    phoneOptions: {
+        putih: 'Putih',
+        pink: 'Pink',
+        biru: 'Biru',
+        hijau: 'Hijau',
+        hitam: 'Hitam',
+        pink_st: 'Pink ST'
+    },
+    editModalOpen: false,
+    editingReport: null,
+    editForm: {
+        phones: [],
+        phone_durations: {}
+    },
+    editError: '',
+    savingEdit: false,
+    deletingId: null,
+
+    openEditModal(report) {
+        this.editingReport = report;
+        this.editError = '';
+        const phones = Array.isArray(report.phones) ? [...report.phones] : [];
+        const durations = {};
+        if (report.phone_durations && typeof report.phone_durations === 'object') {
+            for (const [k, v] of Object.entries(report.phone_durations)) {
+                durations[k] = parseInt(v) || 0;
+            }
+        } else if (phones.length) {
+            const split = Math.round((report.total_duration_minutes || 0) / phones.length);
+            phones.forEach(p => { durations[p] = split; });
+        }
+        this.editForm = {
+            phones: phones,
+            phone_durations: durations
+        };
+        this.editModalOpen = true;
+    },
+
+    closeEditModal() {
+        this.editModalOpen = false;
+        this.editingReport = null;
+        this.editError = '';
+    },
+
+    toggleEditPhone(key) {
+        if (this.editForm.phones.includes(key)) {
+            this.editForm.phones = this.editForm.phones.filter(p => p !== key);
+            delete this.editForm.phone_durations[key];
+        } else {
+            this.editForm.phones.push(key);
+            this.editForm.phone_durations[key] = this.editForm.phone_durations[key] || 60;
+        }
+    },
+
+    calcEditTotal() {
+        let sum = 0;
+        for (const pk of this.editForm.phones) {
+            sum += parseInt(this.editForm.phone_durations[pk]) || 0;
+        }
+        return sum;
+    },
+
+    async saveEditReport() {
+        if (!this.editingReport || this.savingEdit) return;
+        const total = this.calcEditTotal();
+        if (total <= 0 || !this.editForm.phones.length) {
+            this.editError = 'Pilih minimal satu HP dan isi menit durasinya.';
+            return;
+        }
+        this.savingEdit = true;
+        this.editError = '';
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const res = await fetch('/api/work-reports/' + this.editingReport.id, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    phones: this.editForm.phones,
+                    phone_durations: this.editForm.phone_durations,
+                    total_duration_minutes: total
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Gagal menyimpan perubahan laporan');
+
+            const idx = this.rows.findIndex(r => r.id === this.editingReport.id);
+            if (idx !== -1 && data.report) {
+                this.rows[idx] = data.report;
+            }
+            this.total = this.rows.reduce((s, r) => s + (parseInt(r.total_duration_minutes) || 0), 0);
+            this.closeEditModal();
+
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil Diperbarui',
+                    text: 'Laporan kerja berhasil diperbarui.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+            await this.reloadAssistOnly();
+        } catch (e) {
+            this.editError = e.message;
+        } finally {
+            this.savingEdit = false;
+        }
+    },
+
+    async confirmDeleteReport(report) {
+        if (!report || this.deletingId) return;
+        const confirmMsg = `Hapus laporan kerja ${report.contributor_name} (${report.total_duration_minutes} menit)? Tindakan ini tidak dapat dibatalkan.`;
+        
+        let confirmed = false;
+        if (window.Swal) {
+            const result = await window.Swal.fire({
+                title: 'Hapus Laporan Kerja?',
+                text: confirmMsg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            });
+            confirmed = result.isConfirmed;
+        } else {
+            confirmed = window.confirm(confirmMsg);
+        }
+
+        if (!confirmed) return;
+
+        this.deletingId = report.id;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const res = await fetch('/api/work-reports/' + report.id, {
+                method: 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Gagal menghapus laporan');
+
+            this.rows = this.rows.filter(r => r.id !== report.id);
+            this.total = this.rows.reduce((s, r) => s + (parseInt(r.total_duration_minutes) || 0), 0);
+            if (this.expandedReportId === report.id) {
+                this.expandedReportId = null;
+            }
+
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'success',
+                    title: 'Terhapus',
+                    text: 'Laporan kerja berhasil dihapus.',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            }
+            await this.reloadAssistOnly();
+        } catch (e) {
+            if (window.Swal) {
+                window.Swal.fire({ icon: 'error', title: 'Gagal', text: e.message });
+            } else {
+                alert(e.message);
+            }
+        } finally {
+            this.deletingId = null;
+        }
+    },
     assigning: false,
     duration,
     phoneNames,

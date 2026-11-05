@@ -81,7 +81,7 @@
                         <th class="p-4">Kontributor</th>
                         <th class="p-4">Total Menit</th>
                         <th class="p-4">Rincian Menit per HP</th>
-                        <th class="p-4 text-right">Assist Rekaman Bot</th>
+                        <th class="p-4 text-right">Aksi & Assist</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,17 +118,36 @@
                                 </div>
                             </td>
 
-                            <!-- Assist Matching Trigger Button -->
+                            <!-- Action Buttons: Edit, Delete, Assist -->
                             <td class="p-4 text-right">
-                                <button type="button" 
-                                        @click="toggleExpandReport(report.id)" 
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs"
-                                        :class="expandedReportId === report.id 
-                                            ? 'bg-slate-900 text-white' 
-                                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                                    <span x-text="expandedReportId === report.id ? 'Tutup Assist' : 'Assist Pencocokan'"></span>
-                                </button>
+                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                    <!-- Edit Button (Pop-up) -->
+                                    <button type="button" 
+                                            @click="openEditModal(report)" 
+                                            class="p-2 rounded-xl text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition" 
+                                            title="Edit Laporan (Pop-up)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+
+                                    <!-- Delete Button -->
+                                    <button type="button" 
+                                            @click="confirmDeleteReport(report)" 
+                                            class="p-2 rounded-xl text-slate-500 hover:text-rose-700 hover:bg-rose-50 border border-slate-200 transition" 
+                                            title="Hapus Laporan">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+
+                                    <!-- Assist Matching Trigger Button -->
+                                    <button type="button" 
+                                            @click="toggleExpandReport(report.id)" 
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs"
+                                            :class="expandedReportId === report.id 
+                                                ? 'bg-slate-900 text-white' 
+                                                : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                        <span x-text="expandedReportId === report.id ? 'Tutup Assist' : 'Assist Pencocokan'"></span>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
@@ -266,5 +285,104 @@
 
         <p x-show="loading" class="p-8 text-center text-sm text-slate-500">Memuat laporan kerja…</p>
         <p x-show="!loading && !filtered.length" class="p-8 text-center text-sm text-slate-500">Belum ada laporan kerja pada tanggal ini.</p>
+    </div>
+
+    <!-- EDIT REPORT MODAL (POP-UP) -->
+    <div x-show="editModalOpen" x-cloak 
+         x-transition:enter="ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs"
+         @keydown.escape.window="closeEditModal()">
+        
+        <div class="bg-white rounded-[28px] border border-slate-200 w-full max-w-lg overflow-hidden shadow-2xl flex flex-col"
+             @click.outside="closeEditModal()">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-extrabold text-sm sm:text-base">Edit Laporan Kerja</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        <span x-text="editingReport?.contributor_name"></span> · <span x-text="dateLabel(editingReport?.work_date)"></span>
+                    </p>
+                </div>
+                <button type="button" @click="closeEditModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                <!-- Live Accumulation Total Box -->
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Total Akumulasi Durasi</span>
+                        <div class="flex items-baseline gap-2 mt-0.5">
+                            <span class="font-mono text-2xl font-black text-emerald-950" x-text="calcEditTotal() + ' Menit'"></span>
+                            <span class="text-xs text-emerald-700 font-semibold" x-text="'(' + duration(calcEditTotal()) + ')'"></span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-700 bg-white px-3 py-1 rounded-full border border-emerald-200 shadow-2xs"
+                          x-text="editForm.phones.length + ' HP Dipilih'"></span>
+                </div>
+
+                <!-- Phone List Selection & Durations -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-2">Pilih HP & Atur Menit Durasi:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <template x-for="(label, key) in phoneOptions" :key="key">
+                            <div class="rounded-2xl border p-3 transition flex flex-col justify-between"
+                                 :class="editForm.phones.includes(key) ? 'bg-emerald-50/40 border-emerald-300' : 'bg-slate-50 border-slate-200'">
+                                
+                                <!-- Toggle Row -->
+                                <button type="button" 
+                                        @click="toggleEditPhone(key)" 
+                                        class="flex items-center justify-between w-full text-left">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-4 h-4 rounded-md border flex items-center justify-center transition text-[10px]"
+                                             :class="editForm.phones.includes(key) ? 'bg-emerald-600 border-emerald-600 text-white font-bold' : 'border-slate-300 bg-white'">
+                                            <span x-show="editForm.phones.includes(key)">✓</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-800" x-text="'HP ' + label"></span>
+                                    </div>
+                                    <span x-show="editForm.phones.includes(key)" class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">Aktif</span>
+                                </button>
+
+                                <!-- Duration Input (visible when selected) -->
+                                <div x-show="editForm.phones.includes(key)" class="mt-2.5 pt-2 border-t border-slate-200/60">
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number" 
+                                               x-model.number="editForm.phone_durations[key]" 
+                                               min="1" 
+                                               max="1440" 
+                                               placeholder="0"
+                                               class="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs font-bold text-slate-800 focus:border-emerald-500 focus:outline-none">
+                                        <span class="text-xs text-slate-500 font-semibold shrink-0">menit</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="editError" x-text="editError" class="p-3 rounded-xl bg-red-50 text-red-700 text-xs"></div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" @click="closeEditModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+                    Batal
+                </button>
+                <button type="button" 
+                        @click="saveEditReport()" 
+                        :disabled="savingEdit || calcEditTotal() <= 0" 
+                        class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+                    <span x-text="savingEdit ? 'Menyimpan…' : 'Simpan Perubahan'"></span>
+                </button>
+            </div>
+        </div>
     </div>
 </section>

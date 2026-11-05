@@ -292,4 +292,65 @@ class DailyWorkReportController extends Controller
             'updated_count' => $updated,
         ]);
     }
+
+    public function adminUpdate(Request $request, DailyWorkReport $report)
+    {
+        $allowedKeys = array_keys(DailyWorkReport::PHONES);
+
+        $fields = $request->validate([
+            'phones' => 'nullable|array|max:6',
+            'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:6'],
+            'phone_durations.*' => 'integer|min:1|max:1440',
+            'total_duration_minutes' => 'nullable|integer|min:1|max:8640',
+        ]);
+
+        $phoneDurations = null;
+        if (! empty($fields['phone_durations'])) {
+            $cleaned = [];
+            foreach ($fields['phone_durations'] as $key => $mins) {
+                if (in_array($key, $allowedKeys, true) && (int) $mins > 0) {
+                    $cleaned[$key] = (int) $mins;
+                }
+            }
+            if (empty($cleaned)) {
+                throw ValidationException::withMessages(['phone_durations' => 'Isi menit durasi untuk setiap HP yang dipilih.']);
+            }
+            $phoneDurations = $cleaned;
+            $phones = array_values(array_unique(array_keys($cleaned)));
+            $totalMinutes = array_sum($cleaned);
+        } elseif (! empty($fields['phones'])) {
+            $phones = array_values($fields['phones']);
+            $totalMinutes = (int) ($fields['total_duration_minutes'] ?? 0);
+            if ($totalMinutes <= 0 || $totalMinutes > 8640) {
+                throw ValidationException::withMessages(['total_duration_minutes' => 'Total durasi harus antara 1 sampai 8640 menit.']);
+            }
+        } else {
+            throw ValidationException::withMessages(['phones' => 'Pilih minimal satu HP.']);
+        }
+
+        $report->phones = $phones;
+        $report->total_duration_minutes = $totalMinutes;
+        if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
+            $report->phone_durations = $phoneDurations;
+        }
+        $report->revision++;
+        $report->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan kerja berhasil diperbarui.',
+            'report' => $report,
+        ]);
+    }
+
+    public function adminDestroy(DailyWorkReport $report)
+    {
+        $report->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan kerja berhasil dihapus.',
+        ]);
+    }
 }
