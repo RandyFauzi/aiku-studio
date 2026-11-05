@@ -931,6 +931,50 @@ document.addEventListener('alpine:init', () => {
         perfRequestId: 0,
         perfLookup: {},
 
+        // Search & Filter State
+        search: '',
+        filterRole: 'all',
+        filterGrade: 'all',
+
+        get filteredContributors() {
+            const q = (this.search || '').trim().toLowerCase();
+            const role = this.filterRole;
+            const grade = this.filterGrade;
+
+            return this.contributors.filter(c => {
+                if (role !== 'all' && (c.role || 'contributor') !== role) {
+                    return false;
+                }
+
+                if (grade !== 'all') {
+                    const perf = this.perfLookup[c.id];
+                    if (!perf || perf.grade !== grade) {
+                        return false;
+                    }
+                }
+
+                if (!q) return true;
+
+                const nama = (c.nama || '').toLowerCase();
+                const email = (c.email || '').toLowerCase();
+                const wa = (c.no_wa || '').toLowerCase();
+                const domisili = (c.domisili || '').toLowerCase();
+                const shift = (c.shift || '').toLowerCase();
+                const hp = (c.hp || '').toLowerCase();
+                const noRek = (c.no_rek || '').toLowerCase();
+                const idStr = String(c.id || '');
+
+                return nama.includes(q)
+                    || email.includes(q)
+                    || wa.includes(q)
+                    || domisili.includes(q)
+                    || shift.includes(q)
+                    || hp.includes(q)
+                    || noRek.includes(q)
+                    || idStr.includes(q);
+            });
+        },
+
         init() {
             // Watch sidebarOpen in contributorsListData
             this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });

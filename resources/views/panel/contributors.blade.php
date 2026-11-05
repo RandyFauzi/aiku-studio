@@ -111,20 +111,84 @@
                     <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/60">
                         <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Distribusi Status Tim</p>
                         <div class="mt-1.5 flex flex-wrap gap-1.5">
-                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800" title="Kinerja Sangat Baik">
+                            <button type="button" 
+                                    @click="filterGrade = (filterGrade === 'Sangat Baik' ? 'all' : 'Sangat Baik')"
+                                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full transition cursor-pointer"
+                                    :class="filterGrade === 'Sangat Baik' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400 shadow-xs' : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'" 
+                                    title="Klik untuk filter kinerja Sangat Baik">
                                 Sangat Baik: <span x-text="studioSummary?.grade_distribution?.['Sangat Baik'] ?? 0">0</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800" title="Kinerja Bagus">
+                            </button>
+                            <button type="button" 
+                                    @click="filterGrade = (filterGrade === 'Bagus' ? 'all' : 'Bagus')"
+                                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full transition cursor-pointer"
+                                    :class="filterGrade === 'Bagus' ? 'bg-teal-600 text-white ring-2 ring-teal-400 shadow-xs' : 'bg-teal-100 text-teal-800 hover:bg-teal-200'" 
+                                    title="Klik untuk filter kinerja Bagus">
                                 Bagus: <span x-text="studioSummary?.grade_distribution?.['Bagus'] ?? 0">0</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800" title="Kinerja Cukup">
+                            </button>
+                            <button type="button" 
+                                    @click="filterGrade = (filterGrade === 'Cukup' ? 'all' : 'Cukup')"
+                                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full transition cursor-pointer"
+                                    :class="filterGrade === 'Cukup' ? 'bg-amber-600 text-white ring-2 ring-amber-400 shadow-xs' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'" 
+                                    title="Klik untuk filter kinerja Cukup">
                                 Cukup: <span x-text="studioSummary?.grade_distribution?.['Cukup'] ?? 0">0</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800" title="Perlu Evaluasi">
+                            </button>
+                            <button type="button" 
+                                    @click="filterGrade = (filterGrade === 'Perlu Evaluasi' ? 'all' : 'Perlu Evaluasi')"
+                                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full transition cursor-pointer"
+                                    :class="filterGrade === 'Perlu Evaluasi' ? 'bg-rose-600 text-white ring-2 ring-rose-400 shadow-xs' : 'bg-rose-100 text-rose-800 hover:bg-rose-200'" 
+                                    title="Klik untuk filter kinerja Perlu Evaluasi">
                                 Evaluasi: <span x-text="studioSummary?.grade_distribution?.['Perlu Evaluasi'] ?? 0">0</span>
-                            </span>
+                            </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Search & Filter Controls -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <!-- Search Input -->
+                <div class="relative flex-1">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="search" 
+                           x-model="search" 
+                           placeholder="Cari nama, email, WhatsApp, shift/tim, domisili, atau rekening kontributor..." 
+                           class="w-full pl-10 pr-9 py-2.5 bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition shadow-2xs">
+                    <button type="button" 
+                            x-show="search" 
+                            @click="search = ''" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs p-1 cursor-pointer" 
+                            title="Hapus pencarian">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <!-- Role Filter -->
+                    <select x-model="filterRole" class="bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200/90 text-slate-700 py-2.5 px-3 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition shadow-2xs cursor-pointer">
+                        <option value="all">Semua Peran</option>
+                        <option value="contributor">Pekerja</option>
+                        <option value="admin">Admin</option>
+                    </select>
+
+                    <!-- Grade Filter -->
+                    <select x-model="filterGrade" class="bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200/90 text-slate-700 py-2.5 px-3 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition shadow-2xs cursor-pointer">
+                        <option value="all">Semua Status Kinerja</option>
+                        <option value="Sangat Baik">Sangat Baik</option>
+                        <option value="Bagus">Bagus</option>
+                        <option value="Cukup">Cukup</option>
+                        <option value="Perlu Evaluasi">Perlu Evaluasi</option>
+                    </select>
+
+                    <!-- Reset Filter Button -->
+                    <button type="button" 
+                            x-show="search || filterRole !== 'all' || filterGrade !== 'all'" 
+                            @click="search = ''; filterRole = 'all'; filterGrade = 'all'" 
+                            class="text-xs text-rose-600 hover:text-rose-800 font-bold px-3 py-2 rounded-xl hover:bg-rose-50 border border-rose-200 transition cursor-pointer">
+                        Reset Filter
+                    </button>
                 </div>
             </div>
 
@@ -156,12 +220,26 @@
                                 </td>
                             </tr>
                         </template>
-                        <template x-if="!isLoading && contributors.length === 0">
+                        <template x-if="!isLoading && filteredContributors.length === 0">
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-400 font-medium">No contributors found in database.</td>
+                                <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-500 font-medium">
+                                    <template x-if="contributors.length === 0">
+                                        <span>Belum ada data kontributor di database.</span>
+                                    </template>
+                                    <template x-if="contributors.length > 0">
+                                        <div class="space-y-2">
+                                            <p class="text-slate-600 font-semibold">Tidak ada kontributor yang cocok dengan pencarian atau filter.</p>
+                                            <button type="button" 
+                                                    @click="search = ''; filterRole = 'all'; filterGrade = 'all'" 
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand/10 hover:bg-brand/20 text-brand text-xs font-bold transition cursor-pointer">
+                                                Reset Pencarian & Filter
+                                            </button>
+                                        </div>
+                                    </template>
+                                </td>
                             </tr>
                         </template>
-                        <template x-for="c in contributors" :key="c.id">
+                        <template x-for="c in filteredContributors" :key="c.id">
                             <tr class="hover:bg-gray-50/80 transition-colors group">
                                 <td class="px-5 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -245,9 +323,12 @@
                 </table>
             </div>
             
-            <!-- Pagination Placeholder -->
-            <div class="mt-6 flex justify-between items-center text-sm text-gray-500">
-                <span x-text="'Showing ' + contributors.length + ' contributors'"></span>
+            <!-- Pagination & Counter -->
+            <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-gray-500">
+                <span x-text="'Menampilkan ' + filteredContributors.length + ' dari ' + contributors.length + ' kontributor'"></span>
+                <span x-show="search || filterRole !== 'all' || filterGrade !== 'all'" class="text-xs text-brand font-semibold">
+                    Filter aktif terpasang
+                </span>
             </div>
         
         </div>

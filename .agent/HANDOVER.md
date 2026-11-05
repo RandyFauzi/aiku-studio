@@ -1,3 +1,8 @@
+### [2026-11-05 18:18] — Antigravity
+- Menambahkan fitur pencarian instan (search bar) dan filter multi-kriteria pada halaman Contributors List (/contributors) berdasarkan nama, email, WA, domisili, shift, nomor rekening, ID, filter peran (Pekerja/Admin), dan filter status kinerja (Sangat Baik, Bagus, Cukup, Perlu Evaluasi) serta integrasi klik pada pill statistik banner.
+- Ditambahkan visual indikator filter aktif, empty state informatif saat hasil pencarian nihil dengan tombol reset, dan penghitung dinamis total kontributor yang tampil.
+- Validasi: ContributorRoleManagementTest 6 tes/63 assertion PASS, build Vite PASS, lock koordinasi tetap IDLE.
+
 ### [2026-11-05 18.16] — CODEX
 - Daily Record di atas absensi: api/7 hari/popup absen GPS-QR sekali per tanggal kerja, memakai Gif Terimakasih.webp. Libur aman; izin/sakit admin dan absen terlewat reset. Target awal 30 menit (dibatasi durasi shift), laporan + bukti bot tertugaskan atau verifikasi admin; masa verifikasi 24 jam. Ledger/migrasi baru, snapshot jadwal, batas WITA/shift malam, cron hourly; hitungan mulai sejak fitur dipasang.
 - Validasi: full suite 118 tes/790 assertion, 4 tes JS, browser desktop/mobile GPS+QR/refresh/reduced-motion/reset/libur/verifikasi admin, build dan Graphify lulus; fixture SQLite :memory:. Jalankan migrasi saat deploy (deploy_server.php sudah memanggil migrate). Perubahan paralel public/assets/app.js dan panel/contributors.blade.php dipertahankan di luar commit.
