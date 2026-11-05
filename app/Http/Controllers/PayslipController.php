@@ -62,15 +62,29 @@ class PayslipController extends Controller
 
     private function fields(Request $request): array
     {
-        return $request->validate(['employee_name' => 'required|string|max:255', 'period' => 'required|string|max:255',
-            'bonus' => 'sometimes|nullable|integer|min:0|max:100000000000', 'status' => 'sometimes|in:belum,sudah',
-            'evidence' => 'present|array|max:366', 'evidence.*.date' => 'required|date_format:Y-m-d',
-            'evidence.*.approved_mins' => 'nullable|numeric|min:0', 'evidence.*.rejected_mins' => 'nullable|numeric|min:0',
-            'evidence.*.pending_mins' => 'nullable|numeric|min:0', 'evidence.*.total_video_mins' => 'nullable|numeric|min:0',
-            'evidence.*.tasks' => 'sometimes|array|max:1000', 'evidence.*.tasks.*.task_name' => 'nullable|string|max:1000',
-            'evidence.*.tasks.*.approved_mins' => 'nullable|numeric|min:0', 'evidence.*.tasks.*.rejected_mins' => 'nullable|numeric|min:0',
-            'evidence.*.tasks.*.pending_mins' => 'nullable|numeric|min:0', 'evidence.*.tasks.*.total_video_mins' => 'nullable|numeric|min:0',
-            'evidence.*.image_urls' => 'sometimes|array|max:10', 'evidence.*.image_urls.*' => 'string|regex:#^/evidence_images/[A-Za-z0-9_./-]+$#',
+        return $request->validate([
+            'employee_name' => 'required|string|max:255',
+            'period' => 'required|string|max:255',
+            'bonus' => 'sometimes|nullable|integer|min:0|max:100000000000',
+            'status' => 'sometimes|in:belum,sudah',
+            'is_locked' => 'sometimes|nullable|boolean',
+            'pending_carry_over_amount' => 'sometimes|nullable|integer|min:0',
+            'pending_carry_over_hours' => 'sometimes|nullable|numeric|min:0',
+            'pending_carry_over_data' => 'sometimes|nullable|array',
+            'evidence' => 'present|array|max:366',
+            'evidence.*.date' => 'required|date_format:Y-m-d',
+            'evidence.*.approved_mins' => 'nullable|numeric|min:0',
+            'evidence.*.rejected_mins' => 'nullable|numeric|min:0',
+            'evidence.*.pending_mins' => 'nullable|numeric|min:0',
+            'evidence.*.total_video_mins' => 'nullable|numeric|min:0',
+            'evidence.*.tasks' => 'sometimes|array|max:1000',
+            'evidence.*.tasks.*.task_name' => 'nullable|string|max:1000',
+            'evidence.*.tasks.*.approved_mins' => 'nullable|numeric|min:0',
+            'evidence.*.tasks.*.rejected_mins' => 'nullable|numeric|min:0',
+            'evidence.*.tasks.*.pending_mins' => 'nullable|numeric|min:0',
+            'evidence.*.tasks.*.total_video_mins' => 'nullable|numeric|min:0',
+            'evidence.*.image_urls' => 'sometimes|array|max:10',
+            'evidence.*.image_urls.*' => 'string|regex:#^/evidence_images/[A-Za-z0-9_./-]+$#',
         ]);
     }
 
@@ -79,8 +93,20 @@ class PayslipController extends Controller
         $fields = $this->fields($request);
         $slip = DB::transaction(function () use ($fields, $request, $calculator) {
             $status = $fields['status'] ?? PayrollStatus::where('worker_name', $fields['employee_name'])->where('period', $fields['period'])->value('status') ?? 'belum';
-            $slip = Payslip::create(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
-                'status' => $status] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? 0)));
+            $carryAmount = (int) ($fields['pending_carry_over_amount'] ?? 0);
+            $carryData = $fields['pending_carry_over_data'] ?? null;
+            $bonus = (int) ($fields['bonus'] ?? 0);
+            $isLocked = $fields['is_locked'] ?? ($status === 'sudah');
+
+            $calculated = $calculator->calculate($request->input('evidence', []), $bonus, $carryAmount, $carryData);
+
+            $slip = Payslip::create(array_merge([
+                'employee_name' => $fields['employee_name'],
+                'period' => $fields['period'],
+                'status' => $status,
+                'is_locked' => $isLocked,
+            ], $calculated));
+
             app(PayrollPaymentStatus::class)->set($slip->employee_name, $slip->period, $status);
 
             return $slip;
@@ -93,8 +119,22 @@ class PayslipController extends Controller
     {
         $fields = $this->fields($request);
         DB::transaction(function () use ($fields, $request, $payslip, $calculator) {
-            $payslip->update(['employee_name' => $fields['employee_name'], 'period' => $fields['period'],
-                'status' => $fields['status'] ?? $payslip->status, 'file_path' => null] + $calculator->calculate($request->input('evidence', []), (int) ($fields['bonus'] ?? $payslip->bonus)));
+            $carryAmount = isset($fields['pending_carry_over_amount']) ? (int) $fields['pending_carry_over_amount'] : (int) $payslip->pending_carry_over_amount;
+            $carryData = array_key_exists('pending_carry_over_data', $fields) ? $fields['pending_carry_over_data'] : $payslip->pending_carry_over_data;
+            $bonus = (int) ($fields['bonus'] ?? $payslip->bonus);
+            $status = $fields['status'] ?? $payslip->status;
+            $isLocked = $fields['is_locked'] ?? ($status === 'sudah' || $payslip->is_locked);
+
+            $calculated = $calculator->calculate($request->input('evidence', []), $bonus, $carryAmount, $carryData);
+
+            $payslip->update(array_merge([
+                'employee_name' => $fields['employee_name'],
+                'period' => $fields['period'],
+                'status' => $status,
+                'is_locked' => $isLocked,
+                'file_path' => null,
+            ], $calculated));
+
             app(PayrollPaymentStatus::class)->set($payslip->employee_name, $payslip->period, $payslip->status);
         });
 

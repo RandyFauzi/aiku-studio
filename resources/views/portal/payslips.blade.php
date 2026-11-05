@@ -61,6 +61,9 @@
                         <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
                             <span>Approved: <strong class="text-slate-800" x-text="slip.total_approved_hours + 'h'"></strong></span>
                             <span class="text-emerald-700 font-bold" x-text="formatRupiah(slip.total_thp)"></span>
+                            <template x-if="slip.pending_carry_over_amount > 0">
+                                <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200/60 px-2 py-0.5 rounded-full font-semibold" x-text="'+' + formatRupiah(slip.pending_carry_over_amount) + ' pending lalu'"></span>
+                            </template>
                         </div>
                     </div>
 

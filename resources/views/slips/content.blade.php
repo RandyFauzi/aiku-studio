@@ -8,9 +8,24 @@
 <table class="summary"><tr><th>Total durasi tercatat</th><td>{{ number_format($total_logged_hours, 2, ',', '.') }} jam</td></tr>
 <tr><th>Durasi disetujui</th><td>{{ number_format($total_approved_hours, 2, ',', '.') }} jam</td></tr>
 <tr><th>Tarif per jam disetujui</th><td>{{ $rupiah(config('payroll.hourly_rate')) }}</td></tr>
-<tr><th>Upah disetujui</th><td>{{ $rupiah($total_thp - ($bonus ?? 0)) }}</td></tr>
+<tr><th>Upah disetujui</th><td>{{ $rupiah($total_thp - ($bonus ?? 0) - ($pending_carry_over_amount ?? 0)) }}</td></tr>
+@if(!empty($pending_carry_over_amount))
+<tr><th>Sisa pending periode sebelumnya</th><td>{{ $rupiah($pending_carry_over_amount) }}</td></tr>
+@endif
 <tr><th>Bonus</th><td>{{ $rupiah($bonus ?? 0) }}</td></tr>
 <tr class="total"><th>Total Take Home Pay</th><td>{{ $rupiah($total_thp) }}</td></tr></table>
+@if(!empty($pending_carry_over_data) && count($pending_carry_over_data) > 0)
+<h2>Pencairan sisa pending periode sebelumnya</h2>
+<p class="note">Tugas dari periode sebelumnya yang baru disetujui (billable) setelah cut-off lalu dan dicairkan pada slip ini.</p>
+<table class="tasks"><thead><tr><th>Tugas / Tanggal</th><th>Periode Asal</th><th>Durasi Cair</th><th>Nominal</th></tr></thead><tbody>
+@foreach($pending_carry_over_data as $coTask)
+<tr><td><strong>{{ $coTask['task_name'] ?? 'Rekaman Atlas' }}</strong><br><small>{{ $coTask['date'] ?? '' }} {{ $coTask['record_id'] ?? '' }}</small></td>
+<td>{{ $coTask['source_period'] ?? '-' }}</td>
+<td>{{ number_format((float)($coTask['delta_min'] ?? 0), 2, ',', '.') }} mnt</td>
+<td>{{ $rupiah($coTask['amount'] ?? 0) }}</td></tr>
+@endforeach
+</tbody></table>
+@endif
 <h2>Rincian aktivitas harian</h2>
 <p class="note">Durasi pending akan direkonsiliasi setelah hasil QA Atlas diterbitkan. Seluruh waktu rekaman ditampilkan dalam WITA.</p>
 @forelse($evidence as $day)

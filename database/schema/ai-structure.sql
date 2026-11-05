@@ -25,7 +25,7 @@ CREATE TABLE "password_reset_tokens" ("email" varchar not null, "token" varchar 
 
 CREATE TABLE "payroll_statuses" ("id" integer primary key autoincrement not null, "worker_name" varchar not null, "period" varchar not null, "status" varchar check ("status" in ('belum', 'sudah')) not null default 'belum', "notes" text, "created_at" datetime, "updated_at" datetime);
 
-CREATE TABLE "payslips" ("id" integer primary key autoincrement not null, "employee_name" varchar not null, "period" varchar not null, "total_logged_hours" double not null default '0', "total_approved_hours" double not null default '0', "total_thp" integer not null default '0', "bonus" integer not null default '0', "status" varchar check ("status" in ('belum', 'sudah')) not null default 'belum', "file_path" varchar, "evidence_data" text, "created_at" datetime);
+CREATE TABLE "payslips" ("id" integer primary key autoincrement not null, "employee_name" varchar not null, "period" varchar not null, "total_logged_hours" double not null default '0', "total_approved_hours" double not null default '0', "total_thp" integer not null default '0', "bonus" integer not null default '0', "status" varchar check ("status" in ('belum', 'sudah')) not null default 'belum', "file_path" varchar, "evidence_data" text, "created_at" datetime, "pending_carry_over_amount" integer not null default '0', "pending_carry_over_hours" double not null default '0', "pending_carry_over_data" text, "is_locked" tinyint(1) not null default '0');
 
 CREATE TABLE "sessions" ("id" varchar not null, "user_id" integer, "ip_address" varchar, "user_agent" text, "payload" text not null, "last_activity" integer not null, primary key ("id"));
 

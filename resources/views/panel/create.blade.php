@@ -233,6 +233,47 @@
                                 </div>
                                 <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">Isi nominal bonus manual (hanya akan muncul di slip PDF jika diisi > 0).</p>
                             </div>
+
+                            <!-- SISA PENDING PERIODE SEBELUMNYA (CARRY-OVER) -->
+                            <div class="pt-4 mt-4 border-t border-gray-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-semibold text-gray-600">Sisa Pending Periode Sebelumnya</span>
+                                    <span x-show="pendingCarryOver.available" 
+                                          class="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full" 
+                                          x-text="'Tersedia +' + formatRupiah(pendingCarryOver.total_amount || 0)"></span>
+                                </div>
+
+                                <template x-if="isLoadingCarryOver">
+                                    <div class="py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-400 flex items-center justify-center gap-2 animate-pulse">
+                                        <svg class="animate-spin h-3.5 w-3.5 text-brand" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <span>Mengecek pending periode sebelumnya...</span>
+                                    </div>
+                                </template>
+
+                                <template x-if="!isLoadingCarryOver && pendingCarryOver.available">
+                                    <div class="space-y-1.5">
+                                        <button type="button" 
+                                                @click="togglePendingCarryOver()" 
+                                                class="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition flex items-center justify-between border shadow-2xs"
+                                                :class="formData.include_pending_carry_over 
+                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600' 
+                                                    : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200'">
+                                            <div class="flex items-center gap-2">
+                                                <span x-text="formData.include_pending_carry_over ? '✓' : '+'"></span>
+                                                <span x-text="formData.include_pending_carry_over ? 'Sisa Pending Dimasukkan' : 'Masukkan Sisa Pending'"></span>
+                                            </div>
+                                            <span class="font-extrabold" x-text="'+ ' + formatRupiah(pendingCarryOver.total_amount || 0)"></span>
+                                        </button>
+                                        <p class="text-[10px] text-emerald-700" x-text="'Terdapat ' + (pendingCarryOver.tasks_count || 0) + ' tugas (' + (pendingCarryOver.total_hours || 0) + ' jam) yang disetujui susulan dari periode lalu.'"></p>
+                                    </div>
+                                </template>
+
+                                <template x-if="!isLoadingCarryOver && !pendingCarryOver.available">
+                                    <div class="py-2 px-3 rounded-xl bg-gray-50/80 border border-gray-100 text-[11px] text-gray-400 text-center">
+                                        Tidak ada sisa pending dari periode sebelumnya.
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
 

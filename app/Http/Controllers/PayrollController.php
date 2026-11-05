@@ -47,7 +47,26 @@ class PayrollController extends Controller
 
         return response()->json(['existingSlipId' => $slip?->id, 'employee_name' => $request->worker,
             'period' => $period['name'], 'bonus' => $slip?->bonus ?? 0,
+            'pending_carry_over_amount' => $slip?->pending_carry_over_amount ?? 0,
+            'pending_carry_over_hours' => $slip?->pending_carry_over_hours ?? 0,
+            'pending_carry_over_data' => $slip?->pending_carry_over_data,
+            'is_locked' => (bool) ($slip?->is_locked || $slip?->status === 'sudah'),
             'evidence' => ! empty($slip?->evidence_data) ? $slip->evidence_data : $calculator->evidence($period, $request->worker)]);
+    }
+
+    public function pendingCarryOver(Request $request, PayrollCalculator $calculator)
+    {
+        $request->validate([
+            'worker' => 'required|string|max:255',
+            'period' => 'required|string|max:255',
+            'exclude_slip_id' => 'nullable|integer',
+        ]);
+
+        return response()->json($calculator->detectPendingCarryOver(
+            $request->input('worker'),
+            $request->input('period'),
+            $request->filled('exclude_slip_id') ? (int) $request->input('exclude_slip_id') : null
+        ));
     }
 
     public function status(Request $request)

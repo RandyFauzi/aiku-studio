@@ -1057,10 +1057,16 @@ document.addEventListener('alpine:init', () => {
         payrollPeriods: [],
         defaultPeriod: null,
         isLoadingEvidence: false,
+        isLoadingCarryOver: false,
+        pendingCarryOver: { available: false, total_amount: 0, total_hours: 0, total_mins: 0, tasks: [] },
         formData: {
             employee_name: '',
             period: '',
             bonus: 0,
+            pending_carry_over_amount: 0,
+            pending_carry_over_hours: 0,
+            pending_carry_over_data: null,
+            include_pending_carry_over: false,
             evidence: [
                 { date: '', total_video_mins: '', approved_mins: '', rejected_mins: '', pending_mins: '', notes: '', image_url: '', is_uploading: false, is_open: true, tasks: [{ task_name: '', approved_mins: '', rejected_mins: '', pending_mins: '', notes: '' }] }
             ]
@@ -1133,6 +1139,20 @@ document.addEventListener('alpine:init', () => {
                     this.formData.employee_name = data.employee_name;
                     this.formData.period = data.period;
                     this.formData.bonus = data.bonus !== undefined ? data.bonus : 0;
+                    if (data.pending_carry_over_amount > 0) {
+                        this.formData.pending_carry_over_amount = data.pending_carry_over_amount;
+                        this.formData.pending_carry_over_hours = data.pending_carry_over_hours || 0;
+                        this.formData.pending_carry_over_data = data.pending_carry_over_data || [];
+                        this.formData.include_pending_carry_over = true;
+                        this.pendingCarryOver = {
+                            available: true,
+                            total_amount: data.pending_carry_over_amount,
+                            total_hours: data.pending_carry_over_hours || 0,
+                            tasks: data.pending_carry_over_data || []
+                        };
+                    } else {
+                        await this.checkPendingCarryOver();
+                    }
                     if (data.evidence_data && data.evidence_data.length > 0) {
                         this.formData.evidence = data.evidence_data.map((ev, i) => {
                             if (!ev.tasks || !Array.isArray(ev.tasks) || ev.tasks.length === 0) {
@@ -1179,6 +1199,20 @@ document.addEventListener('alpine:init', () => {
                     }
                     if (data.period) this.formData.period = data.period;
                     if (data.bonus !== undefined) this.formData.bonus = data.bonus;
+                    if (data.pending_carry_over_amount > 0) {
+                        this.formData.pending_carry_over_amount = data.pending_carry_over_amount;
+                        this.formData.pending_carry_over_hours = data.pending_carry_over_hours || 0;
+                        this.formData.pending_carry_over_data = data.pending_carry_over_data || [];
+                        this.formData.include_pending_carry_over = true;
+                        this.pendingCarryOver = {
+                            available: true,
+                            total_amount: data.pending_carry_over_amount,
+                            total_hours: data.pending_carry_over_hours || 0,
+                            tasks: data.pending_carry_over_data || []
+                        };
+                    } else {
+                        await this.checkPendingCarryOver();
+                    }
                     if (data.evidence && data.evidence.length > 0) {
                         this.formData.evidence = data.evidence.map((ev, i) => {
                             ev.is_open = (i === 0);
@@ -1353,6 +1387,39 @@ document.addEventListener('alpine:init', () => {
             return (totalMins / 60).toFixed(2);
         },
 
+        async checkPendingCarryOver() {
+            if (!this.formData.employee_name || !this.formData.period) return;
+            this.isLoadingCarryOver = true;
+            try {
+                let url = `/api/payroll/pending-carry-over?worker=${encodeURIComponent(this.formData.employee_name)}&period=${encodeURIComponent(this.formData.period)}`;
+                if (this.slipId && !String(this.slipId).startsWith('LIVE-')) {
+                    url += `&exclude_slip_id=${encodeURIComponent(this.slipId)}`;
+                }
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    this.pendingCarryOver = data;
+                }
+            } catch (err) {
+                console.error("Error checking pending carry over:", err);
+            } finally {
+                this.isLoadingCarryOver = false;
+            }
+        },
+
+        togglePendingCarryOver() {
+            this.formData.include_pending_carry_over = !this.formData.include_pending_carry_over;
+            if (this.formData.include_pending_carry_over && this.pendingCarryOver.available) {
+                this.formData.pending_carry_over_amount = this.pendingCarryOver.total_amount;
+                this.formData.pending_carry_over_hours = this.pendingCarryOver.total_hours;
+                this.formData.pending_carry_over_data = this.pendingCarryOver.tasks;
+            } else {
+                this.formData.pending_carry_over_amount = 0;
+                this.formData.pending_carry_over_hours = 0;
+                this.formData.pending_carry_over_data = null;
+            }
+        },
+
         calculateTHP() {
             // THP is base rate * approved exact minutes / 60 + manual bonus
             let totalMins = 0;
@@ -1364,7 +1431,8 @@ document.addEventListener('alpine:init', () => {
             });
             const base = Math.round((totalMins / 60) * window.AIKU_CONFIG.hourlyRate);
             const b = parseFloat(this.formData.bonus) || 0;
-            return Math.round(base + b);
+            const co = this.formData.include_pending_carry_over ? (parseFloat(this.formData.pending_carry_over_amount) || 0) : 0;
+            return Math.round(base + b + co);
         },
 
         formatRupiah,

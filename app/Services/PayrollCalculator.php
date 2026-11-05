@@ -17,7 +17,7 @@ class PayrollCalculator
             ->when($worker !== null, fn ($q) => $q->where('assigned_worker_name', $worker));
     }
 
-    public function calculate(array $evidence, int $bonus = 0): array
+    public function calculate(array $evidence, int $bonus = 0, int $carryOverAmount = 0, ?array $carryOverData = null): array
     {
         $logged = 0;
         $approved = 0;
@@ -34,9 +34,23 @@ class PayrollCalculator
         }
         unset($day);
 
-        return ['total_logged_hours' => $logged / 60, 'total_approved_hours' => $approved / 60,
-            'total_thp' => (int) round($approved / 60 * config('payroll.hourly_rate')) + $bonus,
-            'bonus' => $bonus, 'evidence_data' => $evidence];
+        $base = (int) round($approved / 60 * config('payroll.hourly_rate'));
+        $carryOverHours = 0;
+        if (! empty($carryOverData) && is_array($carryOverData)) {
+            $carryOverHours = round(array_sum(array_column($carryOverData, 'delta_min')) / 60, 2);
+        }
+
+        return [
+            'total_logged_hours' => $logged / 60,
+            'total_approved_hours' => $approved / 60,
+            'base_thp' => $base,
+            'bonus' => $bonus,
+            'pending_carry_over_amount' => $carryOverAmount,
+            'pending_carry_over_hours' => $carryOverHours,
+            'pending_carry_over_data' => $carryOverData,
+            'total_thp' => $base + $bonus + $carryOverAmount,
+            'evidence_data' => $evidence,
+        ];
     }
 
     private function duration(array $item): float
@@ -81,6 +95,12 @@ class PayrollCalculator
     {
         $data = $slip->toArray();
         $data['editUrl'] = '/create.html?id='.$slip->id;
+
+        // If the slip is saved in database with evidence or locked/sudah, retain frozen historical snapshot!
+        if (! empty($slip->evidence_data) || $slip->is_locked || $slip->status === 'sudah') {
+            return $data;
+        }
+
         if (! str_contains(strtolower($slip->period), 'training')) {
             try {
                 $period = app(PayrollPeriod::class)->resolve(['period' => $slip->period]);
@@ -118,14 +138,27 @@ class PayrollCalculator
                     'status' => $a > 0 && $r > 0 ? 'Disetujui sebagian' : ($a == 0 && $r > 0 ? 'Ditolak' : ($a == 0 && $p > 0 ? 'Sedang Ditinjau' : 'Disetujui penuh'))];
             }
             $slip = $slips->get($name);
-            $base = (int) round((float) $group->approved / 60 * config('payroll.hourly_rate'));
+            $carryOver = (int) ($slip?->pending_carry_over_amount ?? 0);
+            $isLocked = $slip && (! empty($slip->evidence_data) || $slip->is_locked || $slip->status === 'sudah');
+
+            if ($isLocked) {
+                $base = (int) round($slip->total_approved_hours * config('payroll.hourly_rate'));
+                $bonus = (int) ($slip->bonus ?? 0);
+                $thp = (int) $slip->total_thp;
+            } else {
+                $base = (int) round((float) $group->approved / 60 * config('payroll.hourly_rate'));
+                $bonus = (int) ($slip?->bonus ?? 0);
+                $thp = $base + $bonus + $carryOver;
+            }
+
             $workers[] = ['worker_name' => $name, 'total_tasks' => (int) $group->total_tasks,
                 'approved_min' => round($group->approved, 2), 'approved_hours' => round($group->approved / 60, 2),
                 'rejected_min' => round($group->rejected, 2), 'rejected_hours' => round($group->rejected / 60, 2),
                 'pending_min' => round($group->pending, 2), 'pending_hours' => round($group->pending / 60, 2),
                 'logged_hours' => round($group->duration / 60, 2), 'total_duration_min' => round($group->duration, 2),
-                'base_thp' => $base, 'bonus' => $slip?->bonus ?? 0, 'slip_id' => $slip?->id, 'has_slip' => (bool) $slip,
-                'status' => $statuses->get($name) ?? $slip?->status ?? 'belum', 'thp' => $base + ($slip?->bonus ?? 0),
+                'base_thp' => $base, 'bonus' => $bonus, 'pending_carry_over_amount' => $carryOver,
+                'slip_id' => $slip?->id, 'has_slip' => (bool) $slip, 'is_locked' => $isLocked,
+                'status' => $statuses->get($name) ?? $slip?->status ?? 'belum', 'thp' => $thp,
                 'work_days_count' => count($daily), 'daily_breakdown' => $daily];
         }
         $c = collect($workers);
@@ -134,5 +167,108 @@ class PayrollCalculator
             'stats' => ['totalWorkers' => $c->count(), 'totalSudah' => $c->where('status', 'sudah')->count(), 'totalBelum' => $c->where('status', 'belum')->count(),
                 'totalThp' => $c->sum('thp'), 'totalApprovedHours' => round($c->sum('approved_hours'), 2),
                 'totalRejectedHours' => round($c->sum('rejected_hours'), 2), 'totalLoggedHours' => round($c->sum('logged_hours'), 2)], 'workers' => $workers];
+    }
+
+    public function detectPendingCarryOver(string $worker, string|array $targetPeriod, ?int $excludeSlipId = null): array
+    {
+        $periodResolver = app(PayrollPeriod::class);
+        $period = is_array($targetPeriod) ? $targetPeriod : $periodResolver->resolve(['period' => $targetPeriod]);
+
+        // 1. Gather all record IDs already claimed in carry-over across other saved payslips
+        $claimedRecordIds = [];
+        $existingSlips = Payslip::where('employee_name', $worker)
+            ->when($excludeSlipId, fn ($q) => $q->where('id', '!=', $excludeSlipId))
+            ->whereNotNull('pending_carry_over_data')
+            ->get();
+
+        foreach ($existingSlips as $es) {
+            if (is_array($es->pending_carry_over_data)) {
+                foreach ($es->pending_carry_over_data as $item) {
+                    if (! empty($item['record_id'])) {
+                        $claimedRecordIds[$item['record_id']] = true;
+                    }
+                }
+            }
+        }
+
+        // 2. Look back over prior cut-off periods (up to 3 months)
+        $anchor = CarbonImmutable::parse($period['startDate'], 'Asia/Makassar');
+        $priorPeriods = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $priorPeriods[] = $periodResolver->cutoff($anchor->subDays($i * 30));
+        }
+
+        $carryOverTasks = [];
+        $totalDeltaMins = 0;
+        $rate = config('payroll.hourly_rate');
+
+        foreach ($priorPeriods as $prevP) {
+            // Find historical slip for that previous period
+            $prevSlip = Payslip::where('employee_name', $worker)
+                ->where('period', $prevP['name'])
+                ->latest('id')
+                ->first();
+
+            if (! $prevSlip || empty($prevSlip->evidence_data)) {
+                continue;
+            }
+
+            // Map what was already paid / approved in that prior slip
+            $alreadyPaidInSlip = [];
+            foreach ($prevSlip->evidence_data as $day) {
+                if (! empty($day['tasks']) && is_array($day['tasks'])) {
+                    foreach ($day['tasks'] as $t) {
+                        $recId = $t['notes'] ?? null;
+                        if ($recId) {
+                            $alreadyPaidInSlip[$recId] = ($alreadyPaidInSlip[$recId] ?? 0) + (float) ($t['approved_mins'] ?? 0);
+                        }
+                    }
+                }
+            }
+
+            // Check all recordings in that prior period
+            $recordings = $this->recordings($prevP, $worker)
+                ->where('billable_min', '>', 0)
+                ->orderBy('recorded_at')
+                ->get();
+
+            foreach ($recordings as $r) {
+                if (isset($claimedRecordIds[$r->record_id])) {
+                    continue; // Already claimed in another slip
+                }
+
+                $paidMin = $alreadyPaidInSlip[$r->record_id] ?? 0;
+                if ($r->billable_min > $paidMin) {
+                    $delta = round($r->billable_min - $paidMin, 2);
+                    $taskAmount = (int) round($delta / 60 * $rate);
+                    $localDate = CarbonImmutable::parse($r->getRawOriginal('recorded_at'), 'UTC')->setTimezone('Asia/Makassar')->toDateString();
+
+                    $carryOverTasks[] = [
+                        'record_id' => $r->record_id,
+                        'date' => $localDate,
+                        'task_name' => $r->task_title ?: 'Rekaman Atlas',
+                        'billable_min' => (float) $r->billable_min,
+                        'previously_paid_min' => (float) $paidMin,
+                        'delta_min' => $delta,
+                        'amount' => $taskAmount,
+                        'source_period' => $prevP['name'],
+                    ];
+                    $totalDeltaMins += $delta;
+                }
+            }
+        }
+
+        $totalAmount = (int) round($totalDeltaMins / 60 * $rate);
+
+        return [
+            'available' => count($carryOverTasks) > 0,
+            'worker_name' => $worker,
+            'target_period' => $period['name'],
+            'total_mins' => round($totalDeltaMins, 2),
+            'total_hours' => round($totalDeltaMins / 60, 2),
+            'total_amount' => $totalAmount,
+            'tasks_count' => count($carryOverTasks),
+            'tasks' => $carryOverTasks,
+        ];
     }
 }

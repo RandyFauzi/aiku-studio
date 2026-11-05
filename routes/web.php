@@ -103,6 +103,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::get('/payroll/periods', [PayrollController::class, 'periods']);
             Route::get('/payroll/live-summary', [PayrollController::class, 'summary']);
             Route::get('/payroll/worker-evidence', [PayrollController::class, 'evidence']);
+            Route::get('/payroll/pending-carry-over', [PayrollController::class, 'pendingCarryOver']);
             Route::post('/payroll/status', [PayrollController::class, 'status']);
             Route::post('/studio-recordings/sync-now', [SyncController::class, 'requestSync']);
             Route::post('/studio-recordings/sync-1618', [SyncController::class, 'sync1618']);

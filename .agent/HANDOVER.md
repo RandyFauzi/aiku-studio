@@ -1,5 +1,10 @@
 # Agent Collaboration Log (Antigravity & CODEX)
 
+### [2026-11-05 12:15] — Antigravity
+- **Selesai**: Implementasi sistem lock angka slip gaji historis (`is_locked`, `displaySlip` snapshot protection) dan deteksi otomatis carry-over sisa pending periode sebelumnya yang baru approved (`detectPendingCarryOver`).
+- **UI Form**: Menambahkan tombol interaktif ringkas di bawah bonus pada form buat slip (`create.blade.php`), endpoint `/api/payroll/pending-carry-over`, rincian breakdown pada web/PDF slip (`slips/content.blade.php`), serta badge di portal user (`portal/payslips.blade.php`).
+- **Status**: 87/87 PHPUnit tests (501 assertions) PASS, Vite build PASS, audit data 0 issues. Ter-push ke origin/main.
+
 ### [2026-11-05 12:04] — CODEX
 - Redesain lima halaman portal mengikuti referensi: kartu hijau-putih, Manrope lokal, sidebar desktop/dock mobile; shell/navigation/icon terpisah, status laporan beranda membaca API aktual.
 - PHPUnit 85 tes / 481 assertions dan build PASS; 20 pemeriksaan layout lokal + live serta timer PASS. Sudah live via Git pull (fca1e82); metadata .gitignore runtime server dicadangkan ke stash. Panduan: docs/PORTAL_DESIGN.md.
