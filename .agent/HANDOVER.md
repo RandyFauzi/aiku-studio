@@ -1,3 +1,7 @@
+### [2026-11-05 19.03] — CODEX
+- Kartu dan popup Daily Record memakai bar tersambung untuk success + hari libur (tanda minus/warna lembut); pending/open/broken memisahkan bar. Perfect Streak tampil mulai 3 hari kerja terverifikasi dan mengikuti jumlah streak aktif, termasuk rangkaian sebelum jendela tujuh hari.
+- Validasi: 8 tes JS, browser desktop/mobile (bar/libur, batas 2–3, popup GPS/QR, reset, refresh sekali sehari, reduced motion), render dan build Vite lulus; tidak mengubah hitungan backend atau perlu migrasi. Graphify tidak direbuild untuk perubahan UI lokal ini.
+
 ### [2026-11-05 18:31] — Antigravity
 - Mengimplementasikan tampilan Grid interaktif pada halaman Task List Rekaman (/recordings) dengan viewMode toggle (List/Grid) tersimpan di localStorage.
 - Kartu grid dilengkapi checkbox seleksi, status QC, tombol siklus status bayar (Paid/Belum/Belum Rekap), segmented quality progress bar (Approved vs Rejected vs Pending), mini chips durasi, penanda pekerja (assigned avatar & popover picker), toolbar pilih semua, loading skeleton, dan empty state.

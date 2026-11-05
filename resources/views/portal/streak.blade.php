@@ -13,13 +13,14 @@
     </div>
     <p class="record-streak-message" role="status" x-text="error||data?.message||'Memuat progres rekamanmu…'"></p>
     <div class="record-streak-week" aria-label="Progres tujuh hari terakhir">
-        <template x-for="day in data?.days||[]" :key="day.date">
-            <div class="record-streak-day" :class="[day.status,day.today?'is-today':'']" :title="day.date+' · '+statusLabel(day.status)">
+        <template x-for="day in weekDays" :key="day.date">
+            <div class="record-streak-day" :class="[day.status,day.today?'is-today':'',day.connected?'is-connected':'',day.joinLeft?'join-left':'',day.joinRight?'join-right':'']" :aria-current="day.today?'date':false" :title="day.date+' · '+statusLabel(day.status)">
                 <span x-text="day.label"></span>
                 <b :aria-label="day.date+': '+statusLabel(day.status)" x-text="day.status==='success'?'✓':day.status==='protected'?'−':day.status==='broken'?'×':day.status==='pending'?'◷':'·'"></b>
             </div>
         </template>
     </div>
+    <div x-show="perfectStreak" class="record-perfect-streak" role="status"><strong>Perfect Streak!</strong><p x-text="perfectMessage"></p></div>
     <div class="record-streak-bottom"><span x-text="data?'Terbaik '+data.longest+' hari · target '+data.target_minutes+' menit':'Daily Record'"></span><button type="button" @click="refresh(false)" :disabled="loading" x-text="error?'Coba lagi':'Perbarui'"></button></div>
     <p x-show="data?.pending_days" class="record-streak-note" x-text="(data?.pending_days||0)+' hari menunggu verifikasi. Angka final belum bertambah.'"></p>
 </section>

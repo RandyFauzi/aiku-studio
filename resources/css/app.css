@@ -393,6 +393,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .record-streak-day.broken b { background:#f5e5e0; color:#9b5142; }
 .record-streak-day.is-today > span { color:#b86013; font-weight:750; }
 .record-streak-day.is-today b { box-shadow:0 0 0 3px #fff,0 0 0 4px #e1c28a; }
+.record-streak-day.is-connected { position:relative; isolation:isolate; }
+.record-streak-day.is-connected b { width:100%; border-radius:0; border:2px solid #e7b331; border-left:0; border-right:0; background:linear-gradient(180deg,#ffc555,#ed961f); color:#603707; }
+.record-streak-day.is-connected:not(.join-left) b { border-radius:999px 0 0 999px; border-left:2px solid #e7b331; }
+.record-streak-day.is-connected:not(.join-right) b { border-radius:0 999px 999px 0; border-right:2px solid #e7b331; }
+.record-streak-day.join-right::after { content:''; position:absolute; left:100%; bottom:0; width:5px; height:32px; background:linear-gradient(180deg,#ffc555,#ed961f); border-block:2px solid #e7b331; }
+.record-streak-day.is-connected.protected b,.record-streak-day.protected.join-right::after { background:#ffebba; color:#735b24; }
+.record-streak-day.is-connected.is-today b { box-shadow:none; }
+.record-perfect-streak { margin:15px 0 0; padding:12px 14px; border-radius:16px; border:1px solid #efdb9d; background:#fff2cc; color:#755015; font-family:'Manrope',sans-serif; text-align:left; }
+.record-perfect-streak strong { display:block; color:#b35a0e; font-size:13px; font-weight:750; }
+.record-perfect-streak p { margin:4px 0 0; font-size:11px; line-height:1.65; }
 .portal .record-streak-bottom { margin-top:15px; padding-top:9px; border-top:1px solid #ece1ca; display:flex; align-items:center; justify-content:space-between; gap:10px; color:#7a6c53; font-size:10px; }
 .portal .record-streak-bottom button { min-height:44px; padding:0 4px; color:#4e683c; font-size:11px; font-weight:600; }
 .portal .record-streak-note { font-size:11px; line-height:1.6; color:#8b641c; margin:0; }
