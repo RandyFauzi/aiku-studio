@@ -60,6 +60,8 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::view('/attendance', 'panel.attendance')->name('attendance');
         Route::view('/attendance.html', 'panel.attendance');
         Route::get('/api/attendance', [AttendanceController::class, 'index']);
+        Route::post('/api/attendance/manual', [AttendanceController::class, 'manualCheckIn']);
+        Route::delete('/api/attendance/{attendance}', [AttendanceController::class, 'destroy'])->whereNumber('attendance');
         Route::view('/work-reports', 'panel.work-reports')->name('work-reports');
         Route::view('/work-reports.html', 'panel.work-reports');
         Route::get('/api/work-reports', [DailyWorkReportController::class, 'index']);

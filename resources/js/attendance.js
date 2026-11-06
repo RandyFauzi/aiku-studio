@@ -825,8 +825,145 @@ window.adminAttendanceData = () => ({
     time,
     dateLabel,
     mapUrl,
+
+    // Manual Attendance Modal & Form State
+    contributors: [],
+    showManualModal: false,
+    manualSaving: false,
+    manualError: '',
+    manualSuccess: '',
+    manualForm: {
+        contributor_id: '',
+        work_date: witaDate(),
+        time: '',
+        notes: ''
+    },
+
     async init() {
-        await this.load();
+        await Promise.all([
+            this.load(),
+            this.fetchContributors()
+        ]);
+    },
+    async fetchContributors() {
+        try {
+            const res = await fetch('/api/contributors');
+            if (res.ok) {
+                const data = await res.json();
+                this.contributors = Array.isArray(data) ? data : (data.contributors || []);
+            }
+        } catch (e) {
+            console.error('Gagal memuat kontributor:', e);
+        }
+    },
+    openManualModal() {
+        this.manualError = '';
+        this.manualSuccess = '';
+
+        let defaultTime = '08:00';
+        try {
+            defaultTime = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Makassar',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(new Date());
+        } catch (e) {}
+
+        this.manualForm = {
+            contributor_id: '',
+            work_date: this.date || witaDate(),
+            time: defaultTime,
+            notes: ''
+        };
+        if (!this.contributors.length) {
+            this.fetchContributors();
+        }
+        this.showManualModal = true;
+    },
+    closeManualModal() {
+        if (this.manualSaving) return;
+        this.showManualModal = false;
+        this.manualError = '';
+    },
+    async saveManualAttendance() {
+        if (!this.manualForm.contributor_id) {
+            this.manualError = 'Silakan pilih kontributor terlebih dahulu.';
+            return;
+        }
+        if (!this.manualForm.work_date) {
+            this.manualError = 'Silakan pilih tanggal kerja absensi.';
+            return;
+        }
+
+        this.manualSaving = true;
+        this.manualError = '';
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        try {
+            const res = await fetch('/api/attendance/manual', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token || ''
+                },
+                body: JSON.stringify(this.manualForm)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Gagal menyimpan absensi manual.');
+                throw new Error(msg);
+            }
+
+            this.showManualModal = false;
+            this.date = this.manualForm.work_date;
+            await this.load();
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: data.message || 'Absensi manual berhasil disimpan.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                this.manualSuccess = data.message || 'Absensi manual berhasil disimpan.';
+                setTimeout(() => { this.manualSuccess = ''; }, 4000);
+            }
+        } catch (e) {
+            this.manualError = e.message;
+        } finally {
+            this.manualSaving = false;
+        }
+    },
+    async deleteAttendance(row) {
+        if (!confirm(`Hapus absensi ${row.contributor_name} pada tanggal ${row.work_date}?`)) {
+            return;
+        }
+
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        try {
+            const res = await fetch(`/api/attendance/${row.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token || ''
+                }
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Gagal menghapus absensi.');
+            }
+
+            await this.load();
+        } catch (e) {
+            alert(e.message);
+        }
     },
     async load() {
         this.loading = true;

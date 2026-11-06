@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Contributor;
 use App\Models\ShiftSetting;
 use App\Models\User;
+use App\Services\ContributorAccess;
 use App\Services\ContributorIdentity;
 use App\Services\ShiftSchedule;
 use Carbon\CarbonImmutable;
@@ -282,6 +283,94 @@ class AttendanceController extends Controller
         $rows = Attendance::where('work_date', $data['date'])->when($request->filled('contributor_id'), fn ($q) => $q->where('contributor_id', $data['contributor_id']))->orderBy('checked_in_at')->get();
 
         return response()->json(['date' => $data['date'], 'attendances' => $rows]);
+    }
+
+    public function manualCheckIn(Request $request)
+    {
+        $fields = $request->validate([
+            'contributor_id' => 'required|integer|exists:contributors,id',
+            'work_date' => 'required|date_format:Y-m-d',
+            'time' => 'nullable|string',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $contributor = Contributor::findOrFail($fields['contributor_id']);
+
+        $user = User::where('contributor_id', $contributor->id)->first();
+        if (! $user) {
+            $user = app(ContributorAccess::class)->sync($contributor);
+        }
+
+        $existing = Attendance::where('user_id', $user->id)
+            ->where('work_date', $fields['work_date'])
+            ->first();
+
+        if ($existing) {
+            $timeFormatted = CarbonImmutable::instance($existing->checked_in_at)->setTimezone('Asia/Makassar')->format('H:i:s');
+            throw ValidationException::withMessages([
+                'contributor_id' => "{$contributor->nama} sudah tercatat absen masuk pada tanggal {$fields['work_date']} pukul {$timeFormatted} WITA.",
+            ]);
+        }
+
+        $nowWita = CarbonImmutable::now('Asia/Makassar');
+        if (! empty($fields['time'])) {
+            $rawTime = trim($fields['time']);
+            if (preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $rawTime)) {
+                $seconds = strlen($rawTime) === 5 ? $rawTime.':00' : $rawTime;
+                $checkinInstant = CarbonImmutable::createFromFormat('Y-m-d H:i:s', $fields['work_date'].' '.$seconds, 'Asia/Makassar');
+            } else {
+                $checkinInstant = CarbonImmutable::parse($rawTime, 'Asia/Makassar');
+            }
+        } else {
+            $checkinInstant = $nowWita;
+        }
+
+        $adminUser = $request->user();
+        $adminName = $adminUser ? ($adminUser->name ?? $adminUser->email) : 'Admin';
+        $clientIp = 'Manual Admin ('.$adminName.')';
+        if (! empty($fields['notes'])) {
+            $clientIp .= ' - '.trim($fields['notes']);
+        }
+
+        $row = DB::transaction(function () use ($user, $contributor, $fields, $checkinInstant, $clientIp) {
+            User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+
+            $attributes = [
+                'contributor_id' => $contributor->id,
+                'contributor_name' => $contributor->nama,
+                'checked_in_at' => $checkinInstant->utc(),
+                'latitude' => null,
+                'longitude' => null,
+                'accuracy_m' => null,
+                'gps_captured_at' => null,
+                'checkin_method' => 'manual',
+                'client_ip' => $clientIp,
+                'wifi_verified' => true,
+            ];
+
+            return Attendance::create(array_merge(
+                ['user_id' => $user->id, 'work_date' => $fields['work_date']],
+                $attributes
+            ));
+        });
+
+        return response()->json([
+            'success' => true,
+            'attendance' => $row,
+            'message' => "Absensi manual untuk {$contributor->nama} berhasil disimpan.",
+        ]);
+    }
+
+    public function destroy(Attendance $attendance)
+    {
+        $name = $attendance->contributor_name;
+        $date = $attendance->work_date;
+        $attendance->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Data absensi {$name} pada tanggal {$date} berhasil dihapus.",
+        ]);
     }
 
     public function getWifiConfig(Request $request)

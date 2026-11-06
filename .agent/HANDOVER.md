@@ -1,3 +1,8 @@
+### [2026-11-06 17:00] — Antigravity
+- Menambahkan fitur Input Absensi Manual dari Admin pada halaman Rekap Absensi Masuk Harian (/attendance). Admin dapat memilih kontributor, tanggal kerja, jam masuk WITA, dan catatan alasan kendala.
+- Backend endpoint POST /api/attendance/manual dengan validasi duplikasi tanggal kerja, auto-sync user kontributor, checkin_method manual terverifikasi, serta DELETE /api/attendance/{attendance} untuk pembatalan absensi manual.
+- Tampilan tabel absensi diperbarui dengan badge "Manual Admin", detail verifikator admin, tombol hapus cepat, dan modal interaktif. Validasi: AttendanceManualAdminTest 4 tes/15 assertion PASS, seluruh suite absensi 22 tes/137 assertion PASS, Vite build PASS. State IDLE.
+
 ### [2026-11-06 16.04] — CODEX
 - Form laporan worker/admin create/edit: satu HP per baris, checklist label Indonesia, pencarian multi-kata/sinonim/potongan kata/typo ringan; judul Inggris tetap tersimpan untuk identitas pencocokan. Katalog membaca seluruh judul unik recording sebelum meranking hasil, fallback bila tabel katalog/terjemahan belum tersedia; request awal bersama di browser, retry dan pesan sesi/route lebih jelas.
 - Kamus padanan umum + padanan otomatis yang dapat ditinjau; admin bisa mengubah nama Indonesia dan kata kunci via ikon pensil (migrasi 2026_11_06_000003/report_task_translations). Judul baru di luar kamus memerlukan padanan admin, tanpa API penerjemah eksternal. Validasi: 137 tes/946 assertions, browser 390/1440 (baris HP, checklist/search/copy, simpan judul asli, retry, edit padanan), build dan Graphify/schema terisolasi lulus. DB operasional tidak terjangkau dari lingkungan lokal; jalankan migrasi saat deploy.
