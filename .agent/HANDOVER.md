@@ -1,3 +1,7 @@
+### [2026-11-06 15.01] — CODEX
+- Pembatas list recording memakai konfigurasi cutoff upload terpisah dari sesi kerja/charging: Shift 1 09–13, Shift 2 >13–19, Shift 3 >19–23, lembur >23–08 besok (tanggal hari sebelumnya); >08–<09 ditandai sebelum Shift 1. Cutoff akhir inklusif, tanpa celah/duplikasi; tidak mengubah pemilik atau payroll.
+- Validasi: 25 tes terkait/195 assertions, termasuk 16 waktu batas dan tanggal WITA; 10 tes pencocokan/86 assertions setelah fallback cache konfigurasi. Browser desktop/mobile dan Graphify lulus; PHP/config saja, tanpa build aset atau migrasi baru.
+
 ### [2026-11-06 14.55] — CODEX
 - Recording: hapus panel pencocokan tambahan; pembatas tanggal/shift mengikuti setting langsung dalam tabel utama (kelompok berisi recording saja), termasuk lembur lintas hari. Centang lama tetap dipakai; tombol Konfirmasi pemilik membuka dialog ringkas laporan/HP/email dengan tanggal laporan bebas untuk delay.
 - Laporan kerja: tampilkan hari/tanggal/jam kirim awal dan revisi secara terpisah dalam WITA, juga pada dialog pemilik. Validasi: 38 tes/302 assertions, browser 1440px + 390px untuk pembatas/centang/konfirmasi delay/timestamp, build dan Graphify lulus; tidak ada migrasi baru atau perubahan rumus/periode payroll.

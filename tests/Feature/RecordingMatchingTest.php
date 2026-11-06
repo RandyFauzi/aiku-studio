@@ -152,7 +152,7 @@ class RecordingMatchingTest extends TestCase
         $cfg['session_durations'] = [300, 240]; $cfg['charging_duration_min'] = 0;
         ShiftDay::create(['work_date' => '2026-11-06', 'config' => $cfg, 'revision' => 1]);
         $this->recording('shift-one', '2026-11-06 04:59:59');
-        $this->recording('shift-two', '2026-11-06 05:00:00');
+        $this->recording('shift-two', '2026-11-06 05:00:01');
         $this->recording('overnight', '2026-11-06 23:59:00');
         $this->actingAs(User::factory()->create())->getJson('/api/studio-recordings?limit=2')
             ->assertOk()->assertJsonPath('total', 3)->assertJsonPath('recordings.0.shift_group.key', '2026-11-06:outside')
@@ -163,5 +163,36 @@ class RecordingMatchingTest extends TestCase
             ->assertJsonPath('reports.0.submitted_at', '2026-11-05T04:15:00+00:00')->assertJsonPath('reports.0.reported_at', '2026-11-05T05:30:00+00:00');
         $this->get('/recordings')->assertOk()->assertDontSee('Cocokkan recording per shift')->assertSee('data-shift-divider', false);
         $this->get('/work-reports')->assertOk()->assertSee('Dikirim:')->assertSee('Diperbarui:');
+    }
+
+    public function test_upload_cutoffs_are_inclusive_at_shift_end_and_ignore_planner_charging_sessions(): void
+    {
+        $service = app(RecordingMatching::class);
+        $cases = [
+            ['2026-11-06 08:00:00', '2026-11-05:outside'],
+            ['2026-11-06 08:00:01', '2026-11-06:before-shift'],
+            ['2026-11-06 08:59:59', '2026-11-06:before-shift'],
+            ['2026-11-06 09:00:00', '2026-11-06:shift-1'],
+            ['2026-11-06 13:00:00', '2026-11-06:shift-1'],
+            ['2026-11-06 13:00:01', '2026-11-06:shift-2'],
+            ['2026-11-06 16:37:00', '2026-11-06:shift-2'],
+            ['2026-11-06 19:00:00', '2026-11-06:shift-2'],
+            ['2026-11-06 19:00:01', '2026-11-06:shift-3'],
+            ['2026-11-06 21:50:00', '2026-11-06:shift-3'],
+            ['2026-11-06 23:00:00', '2026-11-06:shift-3'],
+            ['2026-11-06 23:00:01', '2026-11-06:outside'],
+            ['2026-11-07 00:00:00', '2026-11-06:outside'],
+            ['2026-11-07 07:59:59', '2026-11-06:outside'],
+            ['2026-11-07 08:00:00', '2026-11-06:outside'],
+            ['2026-11-07 09:00:00', '2026-11-07:shift-1'],
+        ];
+        foreach ($cases as [$wita, $key]) {
+            $utc = CarbonImmutable::parse($wita, 'Asia/Makassar')->utc()->format('Y-m-d H:i:s');
+            $group = $service->groupFor($utc);
+            $this->assertSame($key, $group['key'], $wita);
+            $this->assertStringNotContainsString('Jeda', $group['label']);
+        }
+        config(['recording_upload.shift_1_end' => '14:00']);
+        $this->assertSame('2026-11-06:shift-1', $service->groupFor('2026-11-06 05:30:00')['key']);
     }
 }
