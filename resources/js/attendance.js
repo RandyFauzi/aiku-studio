@@ -643,9 +643,22 @@ window.attendancePortalData = () => ({
                 body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-                const errorMsg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'Absensi barcode gagal.');
+                let errorMsg = '';
+                if (data.errors && typeof data.errors === 'object') {
+                    const errorList = Object.values(data.errors).flat().filter(Boolean);
+                    if (errorList.length > 0) errorMsg = errorList.join(' ');
+                }
+                if (!errorMsg) {
+                    if (response.status === 403) {
+                        errorMsg = data.message || 'Akses ditolak: Absensi hanya dapat dilakukan oleh akun pekerja (kontributor).';
+                    } else if (response.status === 401) {
+                        errorMsg = 'Sesi Anda telah berakhir. Silakan login kembali untuk absensi.';
+                    } else {
+                        errorMsg = data.message || 'Absensi barcode gagal diproses.';
+                    }
+                }
                 throw new Error(errorMsg);
             }
 

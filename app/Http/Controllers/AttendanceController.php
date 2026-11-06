@@ -91,6 +91,12 @@ class AttendanceController extends Controller
     public function checkInQr(Request $request)
     {
         try {
+            if ($request->user()->role === 'admin') {
+                throw ValidationException::withMessages([
+                    'qr_token' => 'Anda sedang login dengan akun Admin. Absensi masuk barcode ini khusus untuk akun pekerja (kontributor). Silakan coba scan menggunakan akun pekerja.',
+                ]);
+            }
+
             $person = $this->contributor($request);
             $today = app(ShiftSchedule::class)->workDate($person);
 
@@ -104,8 +110,12 @@ class AttendanceController extends Controller
 
             $config = $this->getWifiQrConfig();
 
-            // 1. Validate QR Token FIRST
-            if (! hash_equals(trim($config['qr_secret']), trim($data['qr_token']))) {
+            // 1. Validate QR Token FIRST (supports official printed poster token: aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm)
+            $token = trim($data['qr_token']);
+            $currentSecret = trim($config['qr_secret'] ?? '');
+            $isOfficialPosterToken = hash_equals('aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm', $token);
+
+            if (! hash_equals($currentSecret, $token) && ! $isOfficialPosterToken) {
                 throw ValidationException::withMessages([
                     'qr_token' => 'Barcode absensi tidak valid atau telah diperbarui oleh Admin. Silakan scan ulang barcode resmi studio.',
                 ]);
@@ -477,7 +487,7 @@ class AttendanceController extends Controller
             $default = [
                 'wifi_ips' => [],
                 'wifi_check_enabled' => true,
-                'qr_secret' => 'aiku_qr_'.Str::random(24),
+                'qr_secret' => 'aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm',
                 'studio_name' => 'AIKu Studio',
                 'studio_lat' => null,
                 'studio_lng' => null,

@@ -1,3 +1,8 @@
+### [2026-11-06 23:29] — Antigravity
+- Kunci token barcode cetak fisik studio aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm secara permanen pada checkInQr dan getWifiQrConfig agar poster fisik yang sudah dicetak selalu valid.
+- Tangani percobaan scan oleh akun Admin dengan pesan jelas bahwa absensi barcode khusus akun pekerja/kontributor, serta perbaiki ekstraksi pesan error respons server pada attendance.js.
+- Validasi: 14 tests/73 assertions PASS (AttendanceQrWifiTest), Vite build PASS. State IDLE.
+
 ### [2026-11-06 23:15] — Antigravity
 - Pengisian task laporan kerja (/portal/work-reports dan /work-reports): menghilangkan tombol toggle 'Pilih task' / 'Selesai memilih' yang membingungkan seolah harus dikonfirmasi. Checklist task dan kolom cari kini tampil langsung (inline) di setiap kartu HP terpilih.
 - Pemilihan task cukup dengan klik checkbox langsung, dilengkapi chip task terpilih yang dapat dihapus cepat serta status counter jumlah task dipilih secara instan tanpa pop-up atau tombol konfirmasi tambahan.

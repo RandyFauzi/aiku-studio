@@ -389,4 +389,43 @@ class AttendanceQrWifiTest extends TestCase
             ->assertJsonPath('config.studio_lng', 115.123456)
             ->assertJsonPath('config.geofence_radius_m', 200);
     }
+
+    public function test_checkin_succeeds_with_official_printed_poster_token_permanently(): void
+    {
+        $worker = $this->contributorUser();
+
+        // Even if DB has a completely different or freshly regenerated token
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['114.122.99.88'],
+                'wifi_check_enabled' => false,
+                'qr_secret' => 'some_other_random_secret_999',
+            ]]
+        );
+
+        // Official printed poster token always succeeds
+        $res = $this->actingAs($worker)
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm',
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.checkin_method', 'qr_wifi');
+    }
+
+    public function test_admin_role_scanning_qr_returns_clear_actionable_message(): void
+    {
+        $admin = $this->adminUser();
+
+        $res = $this->actingAs($admin)
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm',
+            ]);
+
+        $res->assertUnprocessable()
+            ->assertJsonValidationErrors(['qr_token'])
+            ->assertSee('Anda sedang login dengan akun Admin');
+    }
 }
