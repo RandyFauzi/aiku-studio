@@ -73,121 +73,58 @@
         <div class="p-5 border-b border-slate-100 flex items-center justify-between">
             <div>
                 <h2 class="font-extrabold text-slate-900" x-text="'Daftar Laporan ' + dateLabel(date)"></h2>
-                <p class="text-xs text-slate-500 mt-0.5">Klik tombol Assist pada baris pekerja untuk mencocokkan rekaman bot.</p>
+                <p class="text-xs text-slate-500 mt-0.5">Ringkasan laporan harian. Buka Detail untuk melihat email, task, dan riwayat pengiriman.</p>
             </div>
             <span class="text-xs font-semibold text-slate-400" x-text="filtered.length + ' laporan'"></span>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[700px] text-left text-sm">
-                <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <table class="block w-full text-left text-sm md:table" data-report-summary>
+                <thead class="hidden bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 md:table-header-group">
                     <tr>
                         <th class="p-4">Kontributor</th>
                         <th class="p-4">Total Menit</th>
-                        <th class="p-4">Rincian Menit per HP</th>
-                        <th class="p-4 text-right">Aksi & Assist</th>
+                        <th class="p-4">HP Digunakan</th>
+                        <th class="p-4 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <template x-for="report in filtered" :key="report.id">
-                        <tr class="border-t border-slate-100 transition" 
+                <template x-for="report in filtered" :key="report.id">
+                    <tbody class="block md:table-row-group">
+                        <tr class="grid grid-cols-2 border-t border-slate-100 transition md:table-row"
                             :class="expandedReportId === report.id ? 'bg-emerald-50/20' : 'hover:bg-slate-50/70'">
-                            
-                            <!-- Contributor Info -->
-                            <td class="p-4">
-                                <p class="font-extrabold text-slate-900" x-text="report.contributor_name"></p>
-                                <p class="text-[11px] text-slate-400" x-text="'Rev: #' + (report.revision || 1)"></p>
-                                <p class="mt-1 text-xs text-slate-600" x-text="'Dikirim: ' + reportTimestamp(report.created_at)"></p>
-                                <template x-for="pkey in report.phones" :key="pkey"><p class="mt-1 text-xs text-slate-600 break-words" x-text="formatPhoneName(pkey) + ' · Task: ' + (report.phone_tasks?.[pkey]?.join(' · ') || 'Belum dicatat')"></p></template>
-                                <p x-show="report.revision > 1" class="text-xs text-slate-500" x-text="'Diperbarui: ' + reportTimestamp(report.updated_at)"></p>
+                            <td class="col-span-2 block px-4 pt-4 pb-2 align-middle md:table-cell md:py-4">
+                                <p class="font-bold text-slate-900" x-text="report.contributor_name"></p>
+                                <p class="mt-1 text-xs text-slate-500" :title="reportTimestamp(report.created_at)" x-text="'Dikirim ' + (reportTimestamp(report.created_at).match(/\d{2}:\d{2} WITA$/)?.[0] || '—') + (report.revision > 1 ? ' · Direvisi' : '')"></p>
                             </td>
-
-                            <!-- Total Minutes -->
-                            <td class="p-4">
-                                <span class="font-mono text-base font-black text-emerald-900" x-text="report.total_duration_minutes + ' m'"></span>
-                                <span class="block text-[11px] text-slate-400" x-text="duration(report.total_duration_minutes)"></span>
+                            <td class="block px-4 py-2 align-middle md:table-cell md:py-4">
+                                <span class="mb-1 block text-xs text-slate-500 md:hidden">Total durasi</span>
+                                <span class="font-mono text-base font-bold text-emerald-900" x-text="report.total_duration_minutes"></span>
+                                <span class="text-xs text-slate-500">menit</span>
                             </td>
-
-                            <!-- Per-Phone Minutes -->
-                            <td class="p-4">
-                                <div class="flex flex-wrap gap-1.5">
-                                    <template x-if="report.phone_durations && Object.keys(report.phone_durations).length > 0">
-                                        <template x-for="(mins, pkey) in report.phone_durations" :key="pkey">
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200/90 shadow-2xs hover:border-emerald-300 transition">
-                                                <span class="w-2 h-2 rounded-full shrink-0" :class="getReportPhoneAccount(report, pkey) ? 'bg-emerald-500' : 'bg-slate-300'"></span>
-                                                <span class="text-slate-800 font-extrabold" x-text="formatPhoneName(pkey)"></span>
-                                                <template x-if="getReportPhoneAccount(report, pkey)">
-                                                    <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold truncate max-w-[150px]" 
-                                                          :title="getReportPhoneEmail(report, pkey) || getReportPhoneAccount(report, pkey)"
-                                                          x-text="getReportPhoneAccount(report, pkey)"></span>
-                                                </template>
-                                                <span class="font-mono text-emerald-900 font-black px-1.5 py-0.5 rounded-md bg-emerald-100/60" x-text="mins + 'm'"></span>
-                                            </span>
-                                        </template>
+                            <td class="block min-w-0 px-4 py-2 align-middle md:table-cell md:py-4">
+                                <span class="mb-1 block text-xs text-slate-500 md:hidden">HP digunakan</span>
+                                <p class="text-xs leading-5 text-slate-700 md:hidden" x-text="(report.phones?.length || 0) + ' HP · ' + (report.phones || []).slice(0, 2).map(pkey => phoneOptions[pkey] || pkey).join(', ') + (report.phones?.length > 2 ? ' +' + (report.phones.length - 2) : '')"></p>
+                                <div class="hidden flex-wrap gap-1.5 md:flex">
+                                    <template x-for="pkey in (report.phones || []).slice(0, 3)" :key="pkey">
+                                        <span class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700">
+                                            <span x-text="phoneOptions[pkey] || pkey"></span>
+                                            <span x-show="report.phone_durations?.[pkey]" class="font-mono text-slate-500" x-text="(report.phone_durations?.[pkey] || '') + 'm'"></span>
+                                        </span>
                                     </template>
-                                    <template x-if="!report.phone_durations || Object.keys(report.phone_durations).length === 0">
-                                        <div class="flex flex-wrap gap-1.5">
-                                            <template x-for="pkey in (report.phones || [])" :key="pkey">
-                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200/90 shadow-2xs">
-                                                    <span class="w-2 h-2 rounded-full shrink-0" :class="getReportPhoneAccount(report, pkey) ? 'bg-emerald-500' : 'bg-slate-300'"></span>
-                                                    <span class="text-slate-800 font-extrabold" x-text="formatPhoneName(pkey)"></span>
-                                                    <template x-if="getReportPhoneAccount(report, pkey)">
-                                                        <span class="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-bold truncate max-w-[150px]" 
-                                                              :title="getReportPhoneEmail(report, pkey) || getReportPhoneAccount(report, pkey)"
-                                                              x-text="getReportPhoneAccount(report, pkey)"></span>
-                                                    </template>
-                                                </span>
-                                            </template>
-                                        </div>
-                                    </template>
+                                    <button type="button" x-show="report.phones?.length > 3" @click="openDetailModal(report)" class="min-h-11 px-2 text-xs font-semibold text-emerald-800" x-text="'+' + (report.phones.length - 3) + ' HP'"></button>
                                 </div>
                             </td>
-
-                            <!-- Action Buttons: Detail, Edit, Delete, Assist -->
-                            <td class="p-4 text-right">
-                                <div class="inline-flex items-center gap-1.5 justify-end">
-                                    <!-- Detail Button (Pop-up) -->
-                                    <button type="button" 
-                                            @click="openDetailModal(report)" 
-                                            class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:text-emerald-800 hover:bg-emerald-50 border border-slate-200 transition shadow-2xs cursor-pointer" 
-                                            title="Lihat Detail Laporan & Akun Terhubung">
-                                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        <span>Detail</span>
-                                    </button>
-
-                                    <!-- Edit Button (Pop-up) -->
-                                    <button type="button" 
-                                            @click="openEditModal(report)" 
-                                            class="p-2 rounded-xl text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition cursor-pointer" 
-                                            title="Edit Laporan (Pop-up)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    </button>
-
-                                    <!-- Delete Button -->
-                                    <button type="button" 
-                                            @click="confirmDeleteReport(report)" 
-                                            class="p-2 rounded-xl text-slate-500 hover:text-rose-700 hover:bg-rose-50 border border-slate-200 transition" 
-                                            title="Hapus Laporan">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
-
-                                    <!-- Assist Matching Trigger Button -->
-                                    <button type="button" 
-                                            @click="toggleExpandReport(report.id)" 
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs"
-                                            :class="expandedReportId === report.id 
-                                                ? 'bg-slate-900 text-white' 
-                                                : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                                        <span x-text="expandedReportId === report.id ? 'Tutup Assist' : 'Assist Pencocokan'"></span>
-                                    </button>
+                            <td class="col-span-2 block px-4 pt-2 pb-4 text-right align-middle md:table-cell md:py-4">
+                                <div class="flex items-center justify-end gap-2 whitespace-nowrap">
+                                    <button type="button" @click="openDetailModal(report)" class="min-h-11 rounded-lg border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50">Detail</button>
+                                    <button type="button" @click="toggleExpandReport(report.id)" class="min-h-11 rounded-lg border border-emerald-200 bg-emerald-50 px-4 text-xs font-semibold text-emerald-900" :aria-expanded="expandedReportId === report.id" x-text="expandedReportId === report.id ? 'Tutup Assist' : 'Assist'"></button>
                                 </div>
                             </td>
                         </tr>
 
                         <!-- EXPANDED ASSIST DRAWER ROW -->
-                        <tr x-show="expandedReportId === report.id" class="border-t border-slate-200/60 bg-slate-50/80">
-                            <td colspan="4" class="p-4 sm:p-6">
+                        <tr x-show="expandedReportId === report.id" class="block border-t border-slate-200/60 bg-slate-50/80 md:table-row">
+                            <td colspan="4" class="block p-4 sm:p-6 md:table-cell">
                                 <div class="space-y-4">
                                     <div class="flex items-center justify-between">
                                         <div>
@@ -316,8 +253,8 @@
                                 </div>
                             </td>
                         </tr>
-                    </template>
-                </tbody>
+                    </tbody>
+                </template>
             </table>
         </div>
 
@@ -325,146 +262,50 @@
         <p x-show="!loading && !filtered.length" class="p-8 text-center text-sm text-slate-500">Belum ada laporan kerja pada tanggal ini.</p>
     </div>
 
-    <!-- DETAIL REPORT & CONNECTED ACCOUNTS MODAL (POP-UP) -->
-    <div x-show="detailModalOpen" x-cloak 
-         x-transition:enter="ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs"
-         @keydown.escape.window="closeDetailModal()">
-        
-        <div class="bg-white rounded-[28px] border border-slate-200 w-full max-w-xl overflow-hidden shadow-2xl flex flex-col"
-             @click.outside="closeDetailModal()">
-            
-            <!-- Modal Header -->
-            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
-                <div>
-                    <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-2">
-                        <span>Detail Laporan Kerja & Akun Terhubung</span>
-                    </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">
-                        <span class="text-white font-bold" x-text="selectedReport?.contributor_name"></span> · <span x-text="dateLabel(selectedReport?.work_date)"></span>
-                    </p>
+    <!-- Details are kept out of the compact report table. -->
+    <div x-show="detailModalOpen" x-cloak @keydown.escape.window="closeDetailModal()" @click.self="closeDetailModal()"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-5">
+        <section role="dialog" aria-modal="true" aria-labelledby="report-detail-title" class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+            <header class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
+                <div class="min-w-0">
+                    <h3 id="report-detail-title" class="text-lg font-bold text-slate-900">Detail laporan kerja</h3>
+                    <p class="mt-1 break-words text-sm font-semibold text-slate-700" x-text="selectedReport?.contributor_name"></p>
+                    <p class="mt-1 text-xs text-slate-500" x-text="selectedReport ? dateLabel(selectedReport.work_date) : ''"></p>
                 </div>
-                <button type="button" @click="closeDetailModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition cursor-pointer">
-                    ✕
-                </button>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-                <!-- Ringkasan Info Banner -->
-                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Total Durasi Kerja Dilaporkan</span>
-                        <div class="flex items-baseline gap-2 mt-0.5">
-                            <span class="font-mono text-2xl font-black text-emerald-950" x-text="(selectedReport?.total_duration_minutes || 0) + ' Menit'"></span>
-                            <span class="text-xs text-emerald-700 font-semibold" x-text="'(' + duration(selectedReport?.total_duration_minutes || 0) + ')'"></span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-white text-emerald-800 border border-emerald-200 shadow-2xs"
-                              x-text="'Rev: #' + (selectedReport?.revision || 1)"></span>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300"
-                              x-text="(selectedReport?.phones?.length || 0) + ' HP Digunakan'"></span>
-                    </div>
+                <button type="button" @click="closeDetailModal()" class="min-h-11 shrink-0 rounded-lg px-3 text-sm text-slate-600" aria-label="Tutup detail laporan">Tutup</button>
+            </header>
+            <div class="min-h-0 overflow-y-auto p-5 sm:p-6 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50 p-4">
+                    <div><p class="text-xs text-emerald-800">Durasi dilaporkan</p><p class="mt-1 text-2xl font-bold text-emerald-950"><span x-text="selectedReport?.total_duration_minutes || 0"></span> <span class="text-sm font-medium">menit</span></p></div>
+                    <p class="text-xs text-emerald-900" x-text="(selectedReport?.phones?.length || 0) + ' HP · Revisi #' + (selectedReport?.revision || 1)"></p>
                 </div>
-
-                <!-- Daftar Rincian HP & Akun Terhubung -->
+                <dl class="grid gap-3 text-sm sm:grid-cols-2">
+                    <div><dt class="text-xs text-slate-500">Dikirim:</dt><dd class="mt-1 font-medium text-slate-800" x-text="reportTimestamp(selectedReport?.created_at)"></dd></div>
+                    <div><dt class="text-xs text-slate-500">Diperbarui:</dt><dd class="mt-1 font-medium text-slate-800" x-text="selectedReport?.revision > 1 ? reportTimestamp(selectedReport.updated_at) : 'Belum ada revisi'"></dd></div>
+                </dl>
                 <div class="space-y-3">
-                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Rincian HP & Email Laporan</h4>
-                    <div class="space-y-2.5">
-                        <template x-for="pkey in (selectedReport?.phones || [])" :key="pkey">
-                            <div class="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/70 hover:bg-slate-50 transition space-y-3">
-                                <div class="flex items-center justify-between flex-wrap gap-2">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-700 shadow-2xs">
-                                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                        </div>
-                                        <div>
-                                            <h5 class="text-sm font-black text-slate-900" x-text="formatPhoneName(pkey)"></h5>
-                                            <span class="text-[11px] text-slate-500 font-medium">Perangkat Studio</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="font-mono text-sm font-black text-emerald-900 block"
-                                              x-text="(selectedReport?.phone_durations?.[pkey] || 0) + ' Menit'"></span>
-                                        <span class="text-[11px] text-slate-500 font-medium"
-                                              x-text="duration(selectedReport?.phone_durations?.[pkey] || 0)"></span>
-                                    </div>
-                                </div>
-
-                                <p class="mb-2 break-words text-sm text-slate-600" x-text="'Task: ' + (selectedReport?.phone_tasks?.[pkey]?.join(' · ') || 'Belum dicatat')"></p>
-
-                                <!-- Akun Studio yang Terhubung ke HP ini -->
-                                <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs flex-wrap gap-2">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            <span class="text-slate-500 font-semibold" x-text="pkey === 'sendiri' ? 'Email laporan (opsional):' : 'Email Terhubung:'"></span>
-                                            <template x-if="getReportPhoneEmail(selectedReport, pkey)">
-                                                <div class="inline-flex items-center gap-1.5">
-                                                    <span class="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]"
-                                                          x-text="getReportPhoneEmail(selectedReport, pkey)"></span>
-                                                    <template x-if="isPhoneEmailOverridden(selectedReport, pkey)">
-                                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200">
-                                                            <span x-text="pkey === 'sendiri' ? 'Email manual' : 'Override Laporan'"></span>
-                                                        </span>
-                                                    </template>
-                                                    <template x-if="!isPhoneEmailOverridden(selectedReport, pkey)">
-                                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                            Master HP
-                                                        </span>
-                                                    </template>
-                                                </div>
-                                            </template>
-                                            <template x-if="!getReportPhoneEmail(selectedReport, pkey)">
-                                                <span class="text-slate-400 italic" x-text="pkey === 'sendiri' ? 'Tidak diisi (opsional)' : 'Belum ada email akun di perangkat ini'"></span>
-                                            </template>
-                                        </div>
-                                        <template x-if="isPhoneEmailOverridden(selectedReport, pkey) && getPhoneInfo(pkey)?.active_email">
-                                            <p class="text-[10px] text-slate-400 font-mono">
-                                                Email master asli di HP: <span x-text="getPhoneInfo(pkey).active_email"></span>
-                                            </p>
-                                        </template>
-                                    </div>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                          :class="getReportPhoneAccount(selectedReport, pkey) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'"
-                                          x-text="pkey === 'sendiri' ? 'Tanpa integrasi akun' : (getReportPhoneAccount(selectedReport, pkey) ? 'Status: Terhubung' : 'Status: Standby')"></span>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
+                    <h4 class="text-sm font-bold text-slate-900">Rincian per HP</h4>
+                    <template x-for="pkey in (selectedReport?.phones || [])" :key="pkey">
+                        <article class="rounded-2xl border border-slate-200 p-4 space-y-3">
+                            <div class="flex items-start justify-between gap-3"><h5 class="text-sm font-bold text-slate-900" x-text="formatPhoneName(pkey)"></h5><span class="shrink-0 text-sm font-semibold text-emerald-900" x-text="selectedReport?.phone_durations?.[pkey] ? selectedReport.phone_durations[pkey] + ' menit' : 'Tidak dirinci'"></span></div>
+                            <div class="text-sm"><p class="text-xs text-slate-500" x-text="isPhoneEmailOverridden(selectedReport, pkey) ? 'Email pada laporan' : (pkey === 'sendiri' ? 'Email pribadi (opsional)' : 'Email master HP saat ini')"></p><p class="mt-1 break-all text-slate-800" x-text="getReportPhoneEmail(selectedReport, pkey) || 'Belum diisi'"></p><p x-show="pkey !== 'sendiri' && !isPhoneEmailOverridden(selectedReport, pkey)" class="mt-1 text-xs text-slate-500">Referensi master HP; pastikan akun yang digunakan saat bekerja.</p></div>
+                            <div class="border-t border-slate-100 pt-3"><p class="mb-2 text-xs text-slate-500">Task yang dikerjakan</p><div class="flex flex-wrap gap-2"><template x-for="task in (selectedReport?.phone_tasks?.[pkey] || [])" :key="task"><span class="max-w-full break-words rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm text-slate-700" x-text="task"></span></template><p x-show="!selectedReport?.phone_tasks?.[pkey]?.length" class="text-sm text-slate-400">Task belum dicatat pada laporan ini.</p></div></div>
+                        </article>
+                    </template>
                 </div>
-
-                <!-- Bantuan Penyesuaian -->
-                <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
-                    <svg class="w-4 h-4 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <p>Jika ada ketidaksesuaian durasi atau perangkat HP yang dilaporkan oleh pekerja, admin dapat langsung menekan tombol <strong>Edit Laporan Ini</strong> untuk menyesuaikan data.</p>
-                </div>
-                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-                    <p>Jika rekaman tidak tersedia di bot, periksa bukti laporan lalu sahkan untuk Daily Record. Libur tetap aman; izin/sakit dan hari kerja tanpa absen mereset streak.</p>
-                    <button type="button" @click="verifyRecordStreak()" :disabled="verifyingStreak||!selectedReport||!!streakReviewMessage" class="mt-3 min-h-[44px] rounded-xl border border-amber-300 bg-white px-4 font-bold disabled:opacity-40" x-text="verifyingStreak?'Memverifikasi…':'Verifikasi Daily Record'"></button>
-                    <p x-show="streakReviewMessage" x-text="streakReviewMessage" role="status" class="mt-2"></p>
-                    <p x-show="streakReviewError" x-text="streakReviewError" role="alert" class="mt-2 text-red-700"></p>
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <h4 class="text-sm font-semibold text-amber-950">Verifikasi Daily Record</h4>
+                    <p class="mt-1 text-xs leading-5 text-amber-900">Gunakan setelah bukti rekaman diperiksa jika data bot belum tersedia. Verifikasi ini tidak mengubah QA atau penghasilan.</p>
+                    <button type="button" @click="verifyRecordStreak()" :disabled="verifyingStreak || !selectedReport || !!streakReviewMessage" class="mt-3 min-h-11 rounded-lg border border-amber-300 bg-white px-4 text-xs font-bold disabled:opacity-40" x-text="verifyingStreak ? 'Memverifikasi…' : 'Verifikasi Daily Record'"></button>
+                    <p x-show="streakReviewMessage" x-text="streakReviewMessage" role="status" class="mt-2 text-xs text-amber-900"></p>
+                    <p x-show="streakReviewError" x-text="streakReviewError" role="alert" class="mt-2 text-xs text-red-700"></p>
                 </div>
             </div>
-
-            <!-- Modal Footer -->
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2.5">
-                <button type="button" @click="closeDetailModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
-                    Tutup
-                </button>
-                <button type="button" 
-                        @click="const r = selectedReport; closeDetailModal(); openEditModal(r);" 
-                        class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    <span>Edit Laporan Ini</span>
-                </button>
-            </div>
-        </div>
+            <footer class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
+                <button type="button" @click="const r = selectedReport; confirmDeleteReport(r).then(() => { if (!rows.some(row => row.id === r.id)) closeDetailModal(); })" :disabled="deletingId === selectedReport?.id" class="min-h-11 rounded-lg px-3 text-xs font-semibold text-red-700 disabled:opacity-40">Hapus laporan</button>
+                <button type="button" @click="const r = selectedReport; closeDetailModal(); openEditModal(r);" class="min-h-11 rounded-lg bg-emerald-700 px-4 text-xs font-bold text-white">Edit Laporan Ini</button>
+            </footer>
+        </section>
     </div>
 
     <!-- EDIT REPORT MODAL (POP-UP) -->
