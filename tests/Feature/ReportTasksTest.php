@@ -99,4 +99,45 @@ class ReportTasksTest extends TestCase
         $this->getJson('/api/report-tasks')->assertUnauthorized();
         $this->actingAs($this->worker())->getJson('/api/report-tasks?search='.str_repeat('x', 101))->assertUnprocessable();
     }
+
+    public function test_indonesian_labels_synonyms_multiple_keywords_and_minor_typos_find_english_recordings(): void
+    {
+        $this->actingAs($this->worker());
+        foreach (['Wrap a gift', 'Break down cardboard', 'Empty and reorganize the bookshelf', 'Pack a bag for the day'] as $index => $title) {
+            StudioRecording::create(['record_id' => 'language-'.$index, 'participant_email' => 'shared@example.test', 'task_title' => $title, 'recorded_at' => now()]);
+        }
+        foreach (['bungkus hadiah', 'kado bungkus', 'bungk'] as $search) {
+            $this->getJson('/api/report-tasks?search='.urlencode($search))->assertOk()
+                ->assertJsonPath('tasks.0.title', 'Wrap a gift')->assertJsonPath('tasks.0.label', 'Membungkus kado');
+        }
+        $this->getJson('/api/report-tasks?search=kardos%20bongkar')->assertOk()->assertJsonPath('tasks.0.title', 'Break down cardboard');
+        $this->getJson('/api/report-tasks?search=rak%20buku%20rapikan')->assertOk()->assertJsonPath('tasks.0.title', 'Empty and reorganize the bookshelf');
+        $payload = $this->payload(); $payload['phone_tasks']['putih'] = ['Wrap a gift'];
+        $this->putJson('/api/me/work-report', $payload)->assertOk()->assertJsonPath('report.phone_tasks.putih.0', 'Wrap a gift');
+        $this->assertDatabaseHas('studio_recordings', ['record_id' => 'language-0', 'task_title' => 'Wrap a gift']);
+    }
+
+    public function test_admin_can_set_translation_and_extra_search_words_without_rewriting_report_identity(): void
+    {
+        $worker = $this->worker();
+        StudioRecording::create(['record_id' => 'unknown', 'participant_email' => 'shared@example.test', 'task_title' => 'Special studio operation', 'recorded_at' => now()]);
+        $data = ['title' => 'Special studio operation', 'label' => 'Menata perlengkapan studio', 'keywords' => 'kamera, properti, beberes'];
+        $this->actingAs($worker)->putJson('/api/report-tasks/label', $data)->assertForbidden();
+        $this->actingAs(User::factory()->create())->putJson('/api/report-tasks/label', $data)->assertOk();
+        $this->actingAs($worker)->getJson('/api/report-tasks?search=properti%20kamera')->assertOk()
+            ->assertJsonPath('tasks.0.title', 'Special studio operation')->assertJsonPath('tasks.0.label', 'Menata perlengkapan studio')->assertJsonPath('can_edit_labels', false);
+        $this->getJson('/api/report-tasks?selected%5B0%5D=Special%20studio%20operation')->assertOk()
+            ->assertJsonPath('selected_labels.Special studio operation', 'Menata perlengkapan studio');
+        $this->assertDatabaseCount('report_task_translations', 1);
+        $this->assertDatabaseHas('studio_recordings', ['record_id' => 'unknown', 'task_title' => 'Special studio operation']);
+    }
+
+    public function test_atlas_checklist_still_loads_without_optional_catalog_and_translation_tables(): void
+    {
+        StudioRecording::create(['record_id' => 'fallback', 'participant_email' => 'private@example.test', 'task_title' => 'Wrap a gift', 'recorded_at' => now()]);
+        \Illuminate\Support\Facades\Schema::drop('report_task_options');
+        \Illuminate\Support\Facades\Schema::drop('report_task_translations');
+        $this->actingAs($this->worker())->getJson('/api/report-tasks?search=kado')->assertOk()
+            ->assertJsonPath('tasks.0.title', 'Wrap a gift')->assertJsonPath('tasks.0.label', 'Membungkus kado');
+    }
 }

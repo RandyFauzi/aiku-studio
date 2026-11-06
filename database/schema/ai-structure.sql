@@ -33,6 +33,8 @@ CREATE TABLE "recording_owner_confirmations" ("id" integer primary key autoincre
 
 CREATE TABLE "report_task_options" ("id" integer primary key autoincrement not null, "title" varchar not null, "normalized_key" varchar not null, "created_at" datetime not null);
 
+CREATE TABLE "report_task_translations" ("normalized_key" varchar not null, "source_title" varchar not null, "label" varchar not null, "keywords" text not null, "updated_by" integer not null, "created_at" datetime, "updated_at" datetime, primary key ("normalized_key"));
+
 CREATE TABLE "sessions" ("id" varchar not null, "user_id" integer, "ip_address" varchar, "user_agent" text, "payload" text not null, "last_activity" integer not null, primary key ("id"));
 
 CREATE TABLE "shift_days" ("id" integer primary key autoincrement not null, "work_date" date not null, "config" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime);

@@ -32,7 +32,7 @@
             </div>
 
             <!-- Dynamic Phones Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 portal-phone-grid">
+            <div class="grid grid-cols-1 gap-3 portal-phone-grid">
                 <template x-for="(label, key) in options" :key="key">
                     <div :class="phones.includes(key) ? 'border-2 border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-xs' : 'border border-slate-200 hover:border-slate-300 bg-white shadow-2xs'"
                          class="rounded-3xl p-4 transition flex flex-col justify-between">

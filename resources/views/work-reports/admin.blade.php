@@ -353,7 +353,7 @@
                 <!-- Phone List Selection & Durations -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-2">Pilih HP & Atur Menit Durasi:</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-1 gap-2.5">
                         <template x-for="(label, key) in phoneOptions" :key="key">
                             <div class="rounded-2xl border p-3 transition flex flex-col justify-between"
                                  :class="editForm.phones.includes(key) ? 'bg-emerald-50/40 border-emerald-300' : 'bg-slate-50 border-slate-200'">
@@ -510,7 +510,7 @@
                 </div>
 
                 <!-- Dynamic Phones Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 gap-3">
                     <template x-for="(label, key) in phoneOptions" :key="key">
                         <div :class="createForm.phones.includes(key) ? 'border-2 border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-xs' : 'border border-slate-200 hover:border-slate-300 bg-white shadow-2xs'"
                              class="rounded-3xl p-3.5 transition flex flex-col justify-between">

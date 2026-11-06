@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\StudioRecording;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class ReportTasks
@@ -54,17 +55,16 @@ class ReportTasks
                 $rows[$key] = ['title' => $title, 'normalized_key' => $key, 'created_at' => now()];
             }
         }
-        if ($rows) {
+        if ($rows && Schema::hasTable('report_task_options')) {
             DB::table('report_task_options')->insertOrIgnore(array_values($rows));
         }
     }
 
-    public function search(string $search): array
+    public function search(string $search, array $selected = []): array
     {
         $search = self::title($search);
         $atlas = StudioRecording::query()->whereNotNull('task_title')->where('task_title', '!=', '')
-            ->when($search !== '', fn ($q) => $q->where('task_title', 'like', '%'.$search.'%'))
-            ->select('task_title')->selectRaw('MAX(recorded_at) as latest')->groupBy('task_title')->orderByDesc('latest')->limit(60)->get();
+            ->select('task_title')->selectRaw('MAX(recorded_at) as latest')->groupBy('task_title')->orderByDesc('latest')->get();
         $options = [];
         foreach ($atlas as $recording) {
             $title = self::title($recording->task_title);
@@ -72,11 +72,22 @@ class ReportTasks
                 $options[self::key($title)] = ['title' => $title, 'source' => 'atlas'];
             }
         }
-        $custom = DB::table('report_task_options')->when($search !== '', fn ($q) => $q->where('title', 'like', '%'.$search.'%'))
-            ->orderByDesc('id')->limit(60)->get();
+        // Older deployments can still read Atlas titles before the optional catalog migration is applied.
+        $custom = Schema::hasTable('report_task_options') ? DB::table('report_task_options')->orderByDesc('id')->get() : [];
         foreach ($custom as $task) {
             $options[$task->normalized_key] ??= ['title' => $task->title, 'source' => 'report'];
         }
-        return array_slice(array_values($options), 0, 60);
+        foreach ($selected as $title) {
+            $options[self::key($title)] ??= ['title' => self::title($title), 'source' => 'selected'];
+        }
+        $language = app(TaskLanguage::class);
+        $matches = [];
+        foreach ($options as $option) {
+            $option += $language->describe($option['title']);
+            $score = $language->score($search, $option);
+            if ($score > 0) $matches[] = $option + ['score' => $score];
+        }
+        usort($matches, fn ($a, $b) => $b['score'] <=> $a['score']);
+        return array_slice($matches, 0, 80);
     }
 }

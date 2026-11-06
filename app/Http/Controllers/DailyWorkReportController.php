@@ -11,6 +11,7 @@ use App\Services\ContributorAccess;
 use App\Services\ContributorIdentity;
 use App\Services\ShiftSchedule;
 use App\Services\ReportTasks;
+use App\Services\TaskLanguage;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +23,27 @@ class DailyWorkReportController extends Controller
 {
     public function taskOptions(Request $request)
     {
-        $data = $request->validate(['search' => 'nullable|string|max:100']);
-        return response()->json(['tasks' => app(ReportTasks::class)->search($data['search'] ?? '')]);
+        $data = $request->validate(['search' => 'nullable|string|max:100', 'selected' => 'nullable|array|max:30', 'selected.*' => 'string|max:200']);
+        $selected = $data['selected'] ?? [];
+        $language = app(TaskLanguage::class);
+        $labels = [];
+        foreach ($selected as $title) $labels[$title] = $language->describe($title)['label'];
+        return response()->json(['tasks' => app(ReportTasks::class)->search($data['search'] ?? '', $selected), 'selected_labels' => $labels,
+            'can_edit_labels' => $request->user()->role === 'admin' && Schema::hasTable('report_task_translations')]);
+    }
+
+    public function saveTaskLabel(Request $request)
+    {
+        $data = $request->validate(['title' => 'required|string|max:200', 'label' => 'required|string|max:200', 'keywords' => 'nullable|string|max:500']);
+        abort_unless(Schema::hasTable('report_task_translations'), 503, 'Jalankan migrasi aplikasi untuk menyimpan nama Indonesia.');
+        $title = ReportTasks::title($data['title']);
+        $label = ReportTasks::title($data['label']);
+        abort_if($title === '' || $label === '' || preg_match('/[\p{C}]/u', $title.$label), 422, 'Nama task tidak valid.');
+        $keywords = array_values(array_filter(array_map('trim', explode(',', $data['keywords'] ?? ''))));
+        $key = ReportTasks::key($title);
+        DB::table('report_task_translations')->upsert([['normalized_key' => $key, 'source_title' => $title, 'label' => $label,
+            'keywords' => json_encode($keywords, JSON_UNESCAPED_UNICODE), 'updated_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]], ['normalized_key'], ['source_title', 'label', 'keywords', 'updated_by', 'updated_at']);
+        return response()->json(['label' => $label]);
     }
     private function contributor(Request $request): Contributor
     {

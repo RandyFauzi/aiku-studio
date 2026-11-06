@@ -53,6 +53,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/api/payroll/export-live/{worker}', [PayslipController::class, 'exportLive']);
 
     Route::middleware(EnsureAdministrator::class)->group(function () {
+        Route::put('/api/report-tasks/label', [DailyWorkReportController::class, 'saveTaskLabel'])->middleware('throttle:60,1');
         Route::get('/attendance/barcode/poster', [AttendanceController::class, 'barcodePoster'])->name('attendance.barcode.poster');
         Route::get('/api/attendance/wifi-config', [AttendanceController::class, 'getWifiConfig']);
         Route::post('/api/attendance/wifi-config', [AttendanceController::class, 'saveWifiConfig']);
