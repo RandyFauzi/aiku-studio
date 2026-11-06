@@ -71,6 +71,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::delete('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminDestroy']);
         Route::get('/api/work-reports/assist-matches', [DailyWorkReportController::class, 'assistMatches']);
         Route::get('/api/recording-matching', [RecordingMatchingController::class, 'index']);
+        Route::get('/api/studio-recordings/{recordId}/recommendations', [RecordingMatchingController::class, 'recommendations'])->middleware('throttle:120,1');
         Route::post('/api/recording-matching/confirm', [RecordingMatchingController::class, 'confirm'])->middleware('throttle:30,1');
         Route::post('/api/work-reports/assist-assign', [DailyWorkReportController::class, 'assistAssign']);
         Route::post('/api/work-reports/assist-unassign', [DailyWorkReportController::class, 'assistUnassign']);

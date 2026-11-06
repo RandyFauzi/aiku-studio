@@ -6,12 +6,17 @@ use App\Models\Contributor;
 use App\Models\DailyWorkReport;
 use App\Models\StudioRecording;
 use App\Services\RecordingMatching;
+use App\Services\RecordingOwnerRecommendations;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class RecordingMatchingController extends Controller
 {
+    public function recommendations(string $recordId, RecordingOwnerRecommendations $recommendations)
+    {
+        return response()->json($recommendations->recommend(StudioRecording::findOrFail($recordId)));
+    }
     public function index(Request $request, RecordingMatching $matching)
     {
         $data = $request->validate(['recording_date' => 'required|date_format:Y-m-d', 'report_date' => 'required|date_format:Y-m-d',

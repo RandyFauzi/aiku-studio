@@ -1,3 +1,7 @@
+### [2026-11-06 18.39] — CODEX
+- Tambah service RecordingOwnerRecommendations::recommend dan helper window.AIKU.getRecordingOwnerRecommendations(recordId). Picker pekerja List/Grid memakai satu partial: manual tetap ada, rekomendasi berdampingan di desktop / tab mobile, indikator email-HP/task/jadwal dan laporan hingga 2 hari sebelumnya. Email+task harus pada HP yang sama; master lebih lemah dari email laporan, kandidat seri ditandai ambigu, tanpa auto-assign atau probabilitas kepastian.
+- Pilihan rekomendasi memakai konfirmasi pemilik berbukti/revision-lock yang sudah ada; pemilik lama/Paid tidak ditimpa. Validasi: 147 tes/990 assertions, browser 1440/390 List+Grid, lazy fetch/retry, manual, batal/konfirmasi, payload audit, refresh/helper; build dan Graphify lulus. Tanpa migrasi baru atau perubahan rumus payroll. Git pull dua kali gagal koneksi GitHub; verifikasi lokal selesai.
+
 ### [2026-11-06 17:00] — Antigravity
 - Menambahkan fitur Input Absensi Manual dari Admin pada halaman Rekap Absensi Masuk Harian (/attendance). Admin dapat memilih kontributor, tanggal kerja, jam masuk WITA, dan catatan alasan kendala.
 - Backend endpoint POST /api/attendance/manual dengan validasi duplikasi tanggal kerja, auto-sync user kontributor, checkin_method manual terverifikasi, serta DELETE /api/attendance/{attendance} untuk pembatalan absensi manual.

@@ -672,7 +672,7 @@
                                         <div class="relative inline-block text-left">
                                             <!-- Assigned Pill -->
                                             <button x-show="rec.assigned_worker_name"
-                                                    @click="togglePopover(rec.record_id)"
+                                                    @click="togglePopover(rec.record_id, $event)"
                                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold shadow-2xs hover:shadow-sm border transition max-w-[170px]"
                                                     :class="getWorkerStyle(rec.assigned_worker_name)">
                                                 <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black uppercase"
@@ -684,42 +684,13 @@
 
                                             <!-- Unassigned Action Pill -->
                                             <button x-show="!rec.assigned_worker_name"
-                                                    @click="togglePopover(rec.record_id)"
+                                                    @click="togglePopover(rec.record_id, $event)"
                                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100/80 border border-dashed border-amber-300 transition">
                                                 <span class="w-4 h-4 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-[10px]">+</span>
                                                 <span>Tandai Pekerja</span>
                                             </button>
 
-                                            <!-- Popover Picker Menu -->
-                                            <div x-show="activePopover === rec.record_id"
-                                                 x-cloak
-                                                 @click.outside="activePopover = null"
-                                                 class="absolute left-0 mt-1 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-50 p-2 py-2 text-xs">
-                                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">Pilih Pekerja:</div>
-                                                <div class="max-h-60 overflow-y-auto custom-scrollbar space-y-0.5">
-                                                    <!-- Option Unassign -->
-                                                    <button @click="assignWorker(rec.record_id, null); activePopover = null"
-                                                            class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2">
-                                                        <span class="w-5 h-5 rounded-md bg-rose-100 flex items-center justify-center text-[10px]">✕</span>
-                                                        <span>Hapus Tanda (Kosongkan)</span>
-                                                    </button>
-                                                    
-                                                    <!-- List of Contributors -->
-                                                    <template x-for="c in contributors" :key="c.contributor_id || c.id">
-                                                        <button @click="assignWorker(rec.record_id, (c.name || c.nama)); activePopover = null"
-                                                                :class="rec.assigned_worker_name === (c.name || c.nama) ? 'bg-indigo-50 font-bold text-indigo-700' : 'hover:bg-slate-100 text-slate-700'"
-                                                                class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition">
-                                                            <div class="flex items-center gap-2 truncate">
-                                                                <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black"
-                                                                      :class="getWorkerAvatarStyle((c.name || c.nama))"
-                                                                      x-text="getWorkerInitials((c.name || c.nama))"></span>
-                                                                <span class="truncate" x-text="(c.name || c.nama)"></span>
-                                                            </div>
-                                                            <span x-show="rec.assigned_worker_name === (c.name || c.nama)" class="text-indigo-600 font-black">✓</span>
-                                                        </button>
-                                                    </template>
-                                                </div>
-                                            </div>
+                                            @include('panel.partials.recording-worker-picker', ['pickerView' => 'list'])
                                         </div>
                                     </td>
 
@@ -985,7 +956,7 @@
                                         <!-- Assigned Pill -->
                                         <button type="button"
                                                 x-show="rec.assigned_worker_name"
-                                                @click="togglePopover(rec.record_id)"
+                                                @click="togglePopover(rec.record_id, $event)"
                                                 class="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold shadow-2xs hover:shadow-sm border transition cursor-pointer"
                                                 :class="getWorkerStyle(rec.assigned_worker_name)">
                                             <div class="flex items-center gap-1.5 truncate">
@@ -1000,44 +971,13 @@
                                         <!-- Unassigned Action Pill -->
                                         <button type="button"
                                                 x-show="!rec.assigned_worker_name"
-                                                @click="togglePopover(rec.record_id)"
+                                                @click="togglePopover(rec.record_id, $event)"
                                                 class="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100/80 border border-dashed border-amber-300 transition cursor-pointer">
                                             <span class="w-4 h-4 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-[10px]">+</span>
                                             <span>Tandai Pekerja</span>
                                         </button>
 
-                                        <!-- Popover Picker Menu for Card -->
-                                        <div x-show="activePopover === rec.record_id"
-                                             x-cloak
-                                             @click.outside="activePopover = null"
-                                             class="absolute left-0 bottom-full mb-1 w-full min-w-[220px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-50 p-2 text-xs">
-                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">Pilih Pekerja:</div>
-                                            <div class="max-h-56 overflow-y-auto custom-scrollbar space-y-0.5">
-                                                <!-- Option Unassign -->
-                                                <button type="button"
-                                                        @click="assignWorker(rec.record_id, null); activePopover = null"
-                                                        class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2 cursor-pointer">
-                                                    <span class="w-4 h-4 rounded-md bg-rose-100 flex items-center justify-center text-[10px]">✕</span>
-                                                    <span>Hapus Tanda</span>
-                                                </button>
-                                                
-                                                <!-- List of Contributors -->
-                                                <template x-for="c in contributors" :key="c.contributor_id || c.id">
-                                                    <button type="button"
-                                                            @click="assignWorker(rec.record_id, (c.name || c.nama)); activePopover = null"
-                                                            :class="rec.assigned_worker_name === (c.name || c.nama) ? 'bg-indigo-50 font-bold text-indigo-700' : 'hover:bg-slate-100 text-slate-700'"
-                                                            class="w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between transition cursor-pointer">
-                                                        <div class="flex items-center gap-2 truncate">
-                                                            <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black"
-                                                                  :class="getWorkerAvatarStyle((c.name || c.nama))"
-                                                                  x-text="getWorkerInitials((c.name || c.nama))"></span>
-                                                            <span class="truncate" x-text="(c.name || c.nama)"></span>
-                                                        </div>
-                                                        <span x-show="rec.assigned_worker_name === (c.name || c.nama)" class="text-indigo-600 font-black">✓</span>
-                                                    </button>
-                                                </template>
-                                            </div>
-                                        </div>
+                                            @include('panel.partials.recording-worker-picker', ['pickerView' => 'grid'])
                                     </div>
                                 </div>
 
@@ -1661,6 +1601,7 @@
                 selectedIds: [],
                 lastSelectedIndex: null,
                 activePopover: null,
+                workerPickerStyle: {},
                 isLoading: false,
                 isSyncing: false,
                 syncPollingTimer: null,
@@ -2652,8 +2593,18 @@
                 },
 
                 
-                togglePopover(id) {
-                    this.activePopover = this.activePopover === id ? null : id;
+                togglePopover(id, event) {
+                    if (this.activePopover === id) { this.activePopover = null; return; }
+                    const anchor = event.currentTarget.getBoundingClientRect();
+                    const width = Math.min(620, window.innerWidth - 24);
+                    const height = Math.min(540, window.innerHeight - 24);
+                    const left = Math.max(12, Math.min(anchor.left, window.innerWidth - width - 12));
+                    let top = anchor.bottom + 8;
+                    const below = window.innerHeight - anchor.bottom - 20;
+                    const above = anchor.top - 20;
+                    if (below < height && above > below) top = Math.max(12, anchor.top - Math.min(height, above) - 8);
+                    this.workerPickerStyle = { left: left + 'px', top: top + 'px', width: width + 'px', maxHeight: Math.min(height, window.innerHeight - top - 12) + 'px' };
+                    this.activePopover = id;
                 },
 
                 getPendingMin(rec) {
