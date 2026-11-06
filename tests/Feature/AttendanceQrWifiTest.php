@@ -415,7 +415,7 @@ class AttendanceQrWifiTest extends TestCase
             ->assertJsonPath('attendance.checkin_method', 'qr_wifi');
     }
 
-    public function test_admin_role_scanning_qr_returns_clear_actionable_message(): void
+    public function test_admin_role_can_also_checkin_with_qr_barcode_successfully(): void
     {
         $admin = $this->adminUser();
 
@@ -424,8 +424,13 @@ class AttendanceQrWifiTest extends TestCase
                 'qr_token' => 'aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm',
             ]);
 
-        $res->assertUnprocessable()
-            ->assertJsonValidationErrors(['qr_token'])
-            ->assertSee('Anda sedang login dengan akun Admin');
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.checkin_method', 'qr_wifi');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $admin->id,
+            'checkin_method' => 'qr_wifi',
+        ]);
     }
 }

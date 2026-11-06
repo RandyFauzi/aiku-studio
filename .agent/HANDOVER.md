@@ -1,3 +1,8 @@
+### [2026-11-06 23:36] — Antigravity
+- Mengizinkan akun Admin untuk melakukan absensi via scan barcode WiFi Studio: AttendanceController kini auto-link atau membuat profil kontributor untuk admin, dan membebaskan admin dari pemblokiran validasi WiFi/Geofence saat pengujian/kehadiran.
+- Presensi akun admin langsung tercatat ke database attendances dan tampil di rekap harian (/attendance) sama seperti pekerja.
+- Validasi: 36 tests/270 assertions PASS (AttendanceQrWifiTest, AttendanceManualAdminTest, DailyWorkReportTest, RecordStreakTest). State IDLE.
+
 ### [2026-11-06 23:29] — Antigravity
 - Kunci token barcode cetak fisik studio aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm secara permanen pada checkInQr dan getWifiQrConfig agar poster fisik yang sudah dicetak selalu valid.
 - Tangani percobaan scan oleh akun Admin dengan pesan jelas bahwa absensi barcode khusus akun pekerja/kontributor, serta perbaiki ekstraksi pesan error respons server pada attendance.js.

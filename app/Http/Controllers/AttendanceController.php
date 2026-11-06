@@ -24,7 +24,37 @@ class AttendanceController extends Controller
 
     private function contributor(Request $request): Contributor
     {
-        return app(ContributorIdentity::class)->resolve($request->user());
+        $user = $request->user();
+        if ($user && $user->role === 'admin') {
+            return DB::transaction(function () use ($user) {
+                $account = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+                if ($account->contributor_id !== null) {
+                    $existing = Contributor::find($account->contributor_id);
+                    if ($existing) {
+                        return $existing;
+                    }
+                }
+                $email = strtolower(trim($account->email ?? ''));
+                $person = $email !== '' ? Contributor::whereRaw('LOWER(TRIM(email)) = ?', [$email])->first() : null;
+                if (! $person) {
+                    $nameMatch = Contributor::whereRaw('LOWER(TRIM(nama)) = ?', [mb_strtolower(trim($account->name))])->first();
+                    if ($nameMatch && ! User::where('contributor_id', $nameMatch->id)->whereKeyNot($account->id)->exists()) {
+                        $person = $nameMatch;
+                    } else {
+                        $person = Contributor::create([
+                            'nama' => $account->name,
+                            'email' => $email ?: null,
+                        ]);
+                    }
+                }
+                $account->forceFill(['contributor_id' => $person->id])->save();
+                $user->contributor_id = $person->id;
+
+                return $person;
+            });
+        }
+
+        return app(ContributorIdentity::class)->resolve($user);
     }
 
     public function mine(Request $request, ShiftSchedule $schedule)
@@ -91,12 +121,6 @@ class AttendanceController extends Controller
     public function checkInQr(Request $request)
     {
         try {
-            if ($request->user()->role === 'admin') {
-                throw ValidationException::withMessages([
-                    'qr_token' => 'Anda sedang login dengan akun Admin. Absensi masuk barcode ini khusus untuk akun pekerja (kontributor). Silakan coba scan menggunakan akun pekerja.',
-                ]);
-            }
-
             $person = $this->contributor($request);
             $today = app(ShiftSchedule::class)->workDate($person);
 
@@ -121,12 +145,13 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            // 2. Validate WiFi IP Gateway
+            // 2. Validate WiFi IP Gateway (Admin bypasses WiFi/Geofence block for testing and studio management)
             $clientIp = $this->getClientIp($request);
             $wifiCheckEnabled = (bool) ($config['wifi_check_enabled'] ?? true);
             $allowedIps = (array) ($config['wifi_ips'] ?? []);
+            $isAdmin = $request->user()->role === 'admin';
 
-            if ($wifiCheckEnabled) {
+            if ($wifiCheckEnabled && ! $isAdmin) {
                 if (empty($allowedIps)) {
                     throw ValidationException::withMessages([
                         'wifi' => 'Gagal absensi: WiFi Kantor belum didaftarkan oleh Admin. Silakan hubungi Admin untuk mendaftarkan IP WiFi Studio pada menu Absensi.',
@@ -147,13 +172,13 @@ class AttendanceController extends Controller
             // 3. Optional Geofence validation if Studio coordinates are set
             $hasGps = isset($data['latitude'], $data['longitude']);
             $geofenceEnabled = isset($config['studio_lat'], $config['studio_lng']);
-            if ($geofenceEnabled && (! $hasGps || ! isset($data['accuracy_m'], $data['captured_at']))) {
+            if ($geofenceEnabled && ! $isAdmin && (! $hasGps || ! isset($data['accuracy_m'], $data['captured_at']))) {
                 throw ValidationException::withMessages(['location' => 'GPS diperlukan untuk memverifikasi lokasi studio.']);
             }
             if (isset($data['captured_at']) && abs(CarbonImmutable::parse($data['captured_at'])->diffInMinutes(now())) > 30) {
                 throw ValidationException::withMessages(['captured_at' => 'Data lokasi kedaluwarsa. Silakan coba lagi.']);
             }
-            if ($geofenceEnabled) {
+            if ($geofenceEnabled && ! $isAdmin) {
                 $studioLat = (float) $config['studio_lat'];
                 $studioLng = (float) $config['studio_lng'];
                 $radiusM = (float) ($config['geofence_radius_m'] ?? 150);
