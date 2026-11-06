@@ -6,6 +6,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import './shifts';
 import './attendance';
 import './record-streak';
+import './recording-matching';
 import './work-reports';
 import './barcode-wifi';
 

@@ -1,3 +1,7 @@
+### [2026-11-06 13.29] — CODEX
+- Recording: panel kelompok shift mengikuti pola periode/override harian, jeda dan lembur lintas tengah malam; laporan + HP/email dipilih terpisah dari tanggal recording untuk data delay. Konfirmasi manual atomik menolak email salah, pemilik/bayar yang sudah ada, dan revisi laporan usang; bukti disimpan pada recording_owner_confirmations (migrasi 2026_11_06_000001). Payroll tetap memakai aturan periode yang sudah ada.
+- Validasi: 126 tes PHP / 828 assertions, browser desktop 1440px + mobile 390px (pilih laporan sebelumnya, centang, konfirmasi, refresh daftar, tanpa overflow/error), build Vite dan Graphify/schema terisolasi lulus. Jalankan migrasi saat deployment; tidak mengakses atau mengubah data produksi.
+
 ### [2026-11-05 19.03] — CODEX
 - Kartu dan popup Daily Record memakai bar tersambung untuk success + hari libur (tanda minus/warna lembut); pending/open/broken memisahkan bar. Perfect Streak tampil mulai 3 hari kerja terverifikasi dan mengikuti jumlah streak aktif, termasuk rangkaian sebelum jendela tujuh hari.
 - Validasi: 8 tes JS, browser desktop/mobile (bar/libur, batas 2–3, popup GPS/QR, reset, refresh sekali sehari, reduced motion), render dan build Vite lulus; tidak mengubah hitungan backend atau perlu migrasi. Graphify tidak direbuild untuk perubahan UI lokal ini.

@@ -8,6 +8,7 @@ use App\Http\Controllers\DeviceAccountController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\RecordingController;
+use App\Http\Controllers\RecordingMatchingController;
 use App\Http\Controllers\RecordStreakController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShiftDayController;
@@ -65,6 +66,8 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::put('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminUpdate']);
         Route::delete('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminDestroy']);
         Route::get('/api/work-reports/assist-matches', [DailyWorkReportController::class, 'assistMatches']);
+        Route::get('/api/recording-matching', [RecordingMatchingController::class, 'index']);
+        Route::post('/api/recording-matching/confirm', [RecordingMatchingController::class, 'confirm'])->middleware('throttle:30,1');
         Route::post('/api/work-reports/assist-assign', [DailyWorkReportController::class, 'assistAssign']);
         Route::post('/api/work-reports/assist-unassign', [DailyWorkReportController::class, 'assistUnassign']);
         Route::view('/devices', 'panel.devices')->name('devices');

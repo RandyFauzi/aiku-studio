@@ -123,7 +123,7 @@
     <script src="/assets/session.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="portal admin-theme bg-[#F4F6F8] text-[#1E293B] min-h-screen font-sans flex antialiased" x-data="modernRecordingsApp()" x-init="initApp()" x-cloak>
+<body class="portal admin-theme bg-[#F4F6F8] text-[#1E293B] min-h-screen font-sans flex antialiased" x-data="modernRecordingsApp()" x-init="initApp()" @recording-owner-confirmed.window="selectedIds = []; fetchRecordings(pagination.page)" x-cloak>
 
     <!-- LEFT SIDEBAR -->
     @include('layouts.sidebar')
@@ -597,6 +597,8 @@
                 </div>
 
             </div>
+
+            @include('panel.partials.recording-matching')
 
             <!-- TABLE CONTAINER (EXACT DRIBBLE STYLE) -->
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
