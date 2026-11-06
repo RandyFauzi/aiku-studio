@@ -239,6 +239,13 @@ window.dailyWorkReportData = () => ({
 });
 
 window.adminWorkReportsData = () => ({
+    reportTimestamp(value) {
+        if (!value) return '—';
+        const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value) ? value.replace(' ', 'T') + 'Z' : value;
+        const date = new Date(normalized);
+        if (Number.isNaN(date.getTime())) return '—';
+        return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(date).replace(/(\d{2})\.(\d{2})$/, '$1:$2') + ' WITA';
+    },
     date: today(),
     rows: [],
     search: '',

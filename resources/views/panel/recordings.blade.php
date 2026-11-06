@@ -598,8 +598,6 @@
 
             </div>
 
-            @include('panel.partials.recording-matching')
-
             <!-- TABLE CONTAINER (EXACT DRIBBLE STYLE) -->
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                 
@@ -646,10 +644,18 @@
                                 </td>
                             </tr>
 
-                            <!-- Row Loop -->
-                            <template x-for="(rec, index) in recordings" :key="rec.record_id">
+                        </tbody>
+                        <template x-for="group in recordingGroups" :key="group.key">
+                            <tbody class="divide-y divide-slate-100 text-slate-700">
+                                <tr class="bg-slate-50 border-y border-slate-200" data-shift-divider>
+                                    <th colspan="11" scope="colgroup" class="px-3 py-2 text-left font-semibold text-slate-600">
+                                        <span x-text="group.label"></span>
+                                        <span class="ml-3 font-normal text-slate-400" x-text="group.time"></span>
+                                    </th>
+                                </tr>
+                                <template x-for="rec in group.records" :key="rec.record_id">
                                 <tr :class="isRowSelected(rec.record_id) ? 'bg-[#EDFAF8] hover:bg-[#D5F4EF]/80 border-l-[3px] border-l-[#00B090]' : 'hover:bg-slate-50/80 bg-white border-l-[3px] border-l-transparent'"
-                                    @click="toggleRowSelection(rec.record_id, index, $event)"
+                                    @click="toggleRowSelection(rec.record_id, recordings.findIndex(r => r.record_id === rec.record_id), $event)"
                                     class="transition-all duration-150 group cursor-pointer select-none border-b border-slate-100">
                                     
                                     <!-- Checkbox -->
@@ -657,7 +663,7 @@
                                         <input type="checkbox" 
                                                :value="String(rec.record_id)"
                                                :checked="isRowSelected(rec.record_id)"
-                                               @change="toggleRowSelection(rec.record_id, index, $event)"
+                                               @change="toggleRowSelection(rec.record_id, recordings.findIndex(r => r.record_id === rec.record_id), $event)"
                                                class="rounded text-[#00B090] focus:ring-[#00B090] w-4 h-4 cursor-pointer accent-[#00B090]">
                                     </td>
 
@@ -789,8 +795,9 @@
                                         <span x-show="!(getPendingMin(rec) > 0)" class="text-slate-300">-</span>
                                     </td>
                                 </tr>
-                            </template>
-                        </tbody>
+                                </template>
+                            </tbody>
+                        </template>
                     </table>
                 </div>
 
@@ -1130,6 +1137,8 @@
                 </div>
             </template>
         </div>
+
+        <button type="button" @click="$dispatch('open-recording-owner', { ids: [...selectedIds], records: recordings.filter(r => selectedIds.includes(String(r.record_id))) })" class="min-h-11 shrink-0 rounded-lg bg-white px-3 py-2 font-bold text-slate-900">Konfirmasi pemilik</button>
 
         <!-- Worker Assignment Section with Quick Buttons & Searchable Dropdown -->
         <div class="flex items-center gap-1.5">
@@ -1617,6 +1626,8 @@
     </div>
 
     <!-- APPLICATION JAVASCRIPT LOGIC -->
+    @include('panel.partials.recording-matching')
+
     <script>
         function modernRecordingsApp() {
             return {
@@ -1707,6 +1718,16 @@
                     paidCount: 0,
                     belumCount: 0,
                     belumRekapCount: 0
+                },
+
+                get recordingGroups() {
+                    const groups = [];
+                    for (const rec of this.recordings) {
+                        const meta = rec.shift_group || { key: 'unknown', label: 'Tanggal belum tersedia', time: '' };
+                        if (!groups.length || groups[groups.length - 1].key !== meta.key) groups.push({ ...meta, records: [] });
+                        groups[groups.length - 1].records.push(rec);
+                    }
+                    return groups;
                 },
 
                 get isAllSelected() {

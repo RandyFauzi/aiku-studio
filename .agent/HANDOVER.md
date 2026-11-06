@@ -1,3 +1,7 @@
+### [2026-11-06 14.55] — CODEX
+- Recording: hapus panel pencocokan tambahan; pembatas tanggal/shift mengikuti setting langsung dalam tabel utama (kelompok berisi recording saja), termasuk lembur lintas hari. Centang lama tetap dipakai; tombol Konfirmasi pemilik membuka dialog ringkas laporan/HP/email dengan tanggal laporan bebas untuk delay.
+- Laporan kerja: tampilkan hari/tanggal/jam kirim awal dan revisi secara terpisah dalam WITA, juga pada dialog pemilik. Validasi: 38 tes/302 assertions, browser 1440px + 390px untuk pembatas/centang/konfirmasi delay/timestamp, build dan Graphify lulus; tidak ada migrasi baru atau perubahan rumus/periode payroll.
+
 ### [2026-11-06 13.29] — CODEX
 - Recording: panel kelompok shift mengikuti pola periode/override harian, jeda dan lembur lintas tengah malam; laporan + HP/email dipilih terpisah dari tanggal recording untuk data delay. Konfirmasi manual atomik menolak email salah, pemilik/bayar yang sudah ada, dan revisi laporan usang; bukti disimpan pada recording_owner_confirmations (migrasi 2026_11_06_000001). Payroll tetap memakai aturan periode yang sudah ada.
 - Validasi: 126 tes PHP / 828 assertions, browser desktop 1440px + mobile 390px (pilih laporan sebelumnya, centang, konfirmasi, refresh daftar, tanpa overflow/error), build Vite dan Graphify/schema terisolasi lulus. Jalankan migrasi saat deployment; tidak mengakses atau mengubah data produksi.

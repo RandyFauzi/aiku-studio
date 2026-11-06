@@ -97,6 +97,8 @@
                             <td class="p-4">
                                 <p class="font-extrabold text-slate-900" x-text="report.contributor_name"></p>
                                 <p class="text-[11px] text-slate-400" x-text="'Rev: #' + (report.revision || 1)"></p>
+                                <p class="mt-1 text-xs text-slate-600" x-text="'Dikirim: ' + reportTimestamp(report.created_at)"></p>
+                                <p x-show="report.revision > 1" class="text-xs text-slate-500" x-text="'Diperbarui: ' + reportTimestamp(report.updated_at)"></p>
                             </td>
 
                             <!-- Total Minutes -->

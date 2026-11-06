@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Contributor;
 use App\Models\StudioRecording;
+use App\Services\RecordingMatching;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class RecordingController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, RecordingMatching $matching)
     {
         $request->validate(['page' => 'sometimes|integer|min:1', 'limit' => 'sometimes|integer|min:1|max:10000',
             'startDate' => 'nullable|date_format:Y-m-d', 'endDate' => 'nullable|date_format:Y-m-d',
@@ -51,7 +52,11 @@ class RecordingController extends Controller
         $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 50);
 
-        return response()->json(['recordings' => $query->orderByDesc('recorded_at')->orderByDesc('createdAt')->offset(($page - 1) * $limit)->limit($limit)->get(),
+        $recordings = $query->orderByDesc('recorded_at')->orderByDesc('createdAt')->orderByDesc('record_id')->offset(($page - 1) * $limit)->limit($limit)->get();
+        foreach ($recordings as $recording) {
+            $recording->setAttribute('shift_group', $matching->groupFor($recording->getRawOriginal('recorded_at')));
+        }
+        return response()->json(['recordings' => $recordings,
             'total' => (int) $stats['totalRecords'], 'page' => $page, 'limit' => $limit, 'totalPages' => (int) ceil($stats['totalRecords'] / $limit),
             'lastSyncedAt' => StudioRecording::max('last_synced_at'), 'stats' => $stats]);
     }

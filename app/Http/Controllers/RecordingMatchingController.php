@@ -42,7 +42,7 @@ class RecordingMatchingController extends Controller
             return ['id' => $report->id, 'revision' => $report->revision, 'contributor_id' => $report->contributor_id,
                 'name' => $people->get($report->contributor_id)?->nama ?? $report->contributor_name,
                 'can_confirm' => $people->has($report->contributor_id), 'work_date' => $report->work_date,
-                'total_minutes' => $report->total_duration_minutes, 'reported_at' => $report->updated_at?->toIso8601String(),
+                'total_minutes' => $report->total_duration_minutes, 'submitted_at' => $report->created_at?->toIso8601String(), 'reported_at' => $report->updated_at?->toIso8601String(),
                 'shift_label' => empty($worker['sessions']) ? 'Tanpa sesi terjadwal' : 'Shift '.implode(', ', $worker['sessions']),
                 'phones' => $matching->phones($report)];
         });

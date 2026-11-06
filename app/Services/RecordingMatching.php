@@ -9,14 +9,21 @@ use Carbon\CarbonImmutable;
 
 class RecordingMatching
 {
+    private array $configs = [];
+
+    private array $dayWindows = [];
+
     public function config(string $date): array
     {
-        return ShiftDay::where('work_date', $date)->value('config')
+        return $this->configs[$date] ??= ShiftDay::where('work_date', $date)->value('config')
             ?? app(ShiftPatterns::class)->read(app(PayrollPeriod::class)->cutoff(CarbonImmutable::parse($date, 'Asia/Makassar')))['config'];
     }
 
     public function windows(string $date): array
     {
+        if (isset($this->dayWindows[$date])) {
+            return $this->dayWindows[$date];
+        }
         $config = $this->config($date);
         $start = CarbonImmutable::parse($date.' '.$config['start_time'], 'Asia/Makassar');
         $nextDate = CarbonImmutable::parse($date, 'Asia/Makassar')->addDay()->toDateString();
@@ -40,7 +47,30 @@ class RecordingMatching
             $windows[] = $this->window('outside', 'Lembur / di luar shift', $start, $next);
         }
 
-        return $windows;
+        return $this->dayWindows[$date] = $windows;
+    }
+
+    public function groupFor(?string $recordedAt): array
+    {
+        if (! $recordedAt) {
+            return ['key' => 'unknown', 'label' => 'Tanggal belum tersedia', 'time' => ''];
+        }
+        $instant = CarbonImmutable::parse($recordedAt, 'UTC')->setTimezone('Asia/Makassar');
+        $date = $instant->toDateString();
+        $start = CarbonImmutable::parse($date.' '.$this->config($date)['start_time'], 'Asia/Makassar');
+        if ($instant->lt($start)) {
+            $date = $instant->subDay()->toDateString();
+        }
+        foreach ($this->windows($date) as $window) {
+            $start = CarbonImmutable::parse($window['start_at']);
+            $end = CarbonImmutable::parse($window['end_at']);
+            if ($instant->gte($start) && $instant->lt($end)) {
+                return ['key' => $date.':'.$window['id'], 'work_date' => $date,
+                    'label' => CarbonImmutable::parse($date)->locale('id')->translatedFormat('j F Y').' · '.$window['label'],
+                    'time' => $start->format('H:i').'–'.$end->format('H:i').' WITA'];
+            }
+        }
+        return ['key' => $date.':outside', 'work_date' => $date, 'label' => $date.' · Di luar shift', 'time' => ''];
     }
 
     private function window(string $id, string $label, CarbonImmutable $start, CarbonImmutable $end): array

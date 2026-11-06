@@ -143,4 +143,25 @@ class RecordingMatchingTest extends TestCase
             ->assertJsonPath('reports.0.phones.0.emails.0', 'shared@example.test')->assertJsonPath('reports.0.phones.0.email_source', 'report');
         $this->assertSame(0, StudioRecording::whereNotNull('assigned_contributor_id')->count());
     }
+
+    public function test_main_recording_list_includes_shift_dividers_metadata_and_submission_timestamps(): void
+    {
+        $report = $this->report();
+        $report->forceFill(['created_at' => '2026-11-05 04:15:00', 'updated_at' => '2026-11-05 05:30:00', 'revision' => 2])->save();
+        $cfg = config('shifts'); $cfg['start_time'] = '08:00'; $cfg['sessions_count'] = 2;
+        $cfg['session_durations'] = [300, 240]; $cfg['charging_duration_min'] = 0;
+        ShiftDay::create(['work_date' => '2026-11-06', 'config' => $cfg, 'revision' => 1]);
+        $this->recording('shift-one', '2026-11-06 04:59:59');
+        $this->recording('shift-two', '2026-11-06 05:00:00');
+        $this->recording('overnight', '2026-11-06 23:59:00');
+        $this->actingAs(User::factory()->create())->getJson('/api/studio-recordings?limit=2')
+            ->assertOk()->assertJsonPath('total', 3)->assertJsonPath('recordings.0.shift_group.key', '2026-11-06:outside')
+            ->assertJsonPath('recordings.1.shift_group.key', '2026-11-06:shift-2');
+        $this->getJson('/api/studio-recordings?limit=2&page=2')->assertOk()
+            ->assertJsonPath('recordings.0.shift_group.label', '6 November 2026 · Shift 1');
+        $this->getJson('/api/recording-matching?recording_date=2026-11-06&report_date=2026-11-05')->assertOk()
+            ->assertJsonPath('reports.0.submitted_at', '2026-11-05T04:15:00+00:00')->assertJsonPath('reports.0.reported_at', '2026-11-05T05:30:00+00:00');
+        $this->get('/recordings')->assertOk()->assertDontSee('Cocokkan recording per shift')->assertSee('data-shift-divider', false);
+        $this->get('/work-reports')->assertOk()->assertSee('Dikirim:')->assertSee('Diperbarui:');
+    }
 }
