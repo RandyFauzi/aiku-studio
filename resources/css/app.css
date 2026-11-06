@@ -349,6 +349,33 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .portal.admin-theme thead.bg-slate-50 { background:#f3f7ed; }
 .portal.admin-theme ::-webkit-scrollbar-thumb { background:#c8d5bf; }
 .portal.admin-theme ::-webkit-scrollbar-track { background:transparent; }
+
+/* Executive Dashboard Custom Hero Banner */
+.portal.admin-theme .dashboard-hero-banner {
+    background: linear-gradient(125deg, #eff9e1 0%, #e2f6c3 50%, #d4f1ac 100%) !important;
+    border: 1px solid #cce8b0 !important;
+    color: #173420 !important;
+}
+.portal.admin-theme .dashboard-hero-banner h1 {
+    color: #14321d !important;
+}
+.portal.admin-theme .dashboard-hero-banner p {
+    color: #385942 !important;
+}
+.portal.admin-theme .dashboard-hero-banner .hero-chip {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    color: #1a3c25 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.portal.admin-theme .dashboard-hero-banner .hero-chip:hover {
+    background: #ffffff !important;
+    color: #102817 !important;
+}
+.portal.admin-theme .btn-compact {
+    min-height: 32px !important;
+    height: 32px !important;
+}
 @media(max-height:1050px) and (min-width:768px) {
     .portal.admin-theme .portal-sidebar-note { display:none; }
 }

@@ -1,3 +1,11 @@
+### [2026-11-06 23:38] — Antigravity
+- Merapikan seluruh tampilan Executive Dashboard (/ atau /panel):
+  - Hero banner Command Center: memperbaiki bug nesting div yang merusak flexbox, melembutkan palet gradien lime-mint agar ramah di mata dengan teks forest green kontras tinggi, menata logo dalam kartu badge rapi, dan membuat info periode aktif dinamis (Okt/Nov 2026).
+  - 4 KPI cards: menyelaraskan tata letak, label subtext, ukuran font rupiah agar tidak overflow/wrapping, dan mengganti teks statis '5 Shift Kerja' dengan data riil kontributor terdaftar.
+  - 3 Alert cards: mengganti background pastel solid yang berat dengan kartu putih beraksen border warna (amber, blue, emerald), badge status rapi, serta tombol aksi yang proporsional.
+  - Grid analitik & Top Kontributor: menambahkan badge peringkat (#1, #2, #3), merapikan perataan jam & THP, menyeimbangkan tinggi kolom dengan ringkasan status tim agar tidak ada ruang kosong menganga, serta mengompakkan tombol PDF di tabel riwayat slip.
+- Validasi: Blade view cache PASS, Vite build PASS. State IDLE.
+
 ### [2026-11-06 23:36] — Antigravity
 - Mengizinkan akun Admin untuk melakukan absensi via scan barcode WiFi Studio: AttendanceController kini auto-link atau membuat profil kontributor untuk admin, dan membebaskan admin dari pemblokiran validasi WiFi/Geofence saat pengujian/kehadiran.
 - Presensi akun admin langsung tercatat ke database attendances dan tampil di rekap harian (/attendance) sama seperti pekerja.
