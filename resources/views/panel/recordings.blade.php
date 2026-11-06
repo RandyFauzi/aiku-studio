@@ -1086,85 +1086,83 @@
             </template>
         </div>
 
-        <button type="button" @click="$dispatch('open-recording-owner', { ids: [...selectedIds], records: recordings.filter(r => selectedIds.includes(String(r.record_id))) })" class="min-h-11 shrink-0 rounded-lg bg-white px-3 py-2 font-bold text-slate-900">Konfirmasi pemilik</button>
+        <!-- Konfirmasi Pemilik: Searchable Dropdown Button -->
+        <div class="relative">
+            <button type="button" 
+                    @click="dropdownOpen = !dropdownOpen; if(dropdownOpen) $nextTick(() => $refs.workerSearchInput?.focus())" 
+                    class="min-h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 text-slate-900 px-3.5 py-2 font-bold text-xs sm:text-sm flex items-center gap-2 border border-slate-200 shadow-sm transition cursor-pointer"
+                    title="Pilih atau cari pemilik untuk rekaman terpilih">
+                <svg class="w-4 h-4 text-[#00B090] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span>Konfirmasi Pemilik</span>
+                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="dropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
 
-        <!-- Worker Assignment Section with Quick Buttons & Searchable Dropdown -->
-        <div class="flex min-w-0 max-w-full flex-wrap items-center gap-1.5">
-            <span class="text-[11px] text-slate-400 mr-1 hidden sm:inline">Tugaskan:</span>
-            
-            <!-- Quick 1-Click Worker Assignment Buttons (Top 4) -->
-            <div class="flex items-center gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-xs">
-                <template x-for="w in quickWorkers.slice(0, 4)" :key="w.name">
-                    <button @click="applyFastAssign(w.name)" 
-                            class="bg-slate-800 hover:bg-[#00B090] hover:text-white px-2.5 py-1.5 rounded-xl font-semibold transition text-slate-200 shrink-0 border border-slate-700"
-                            x-text="w.short"
-                            :title="'Tugaskan ke ' + w.name"></button>
-                </template>
-            </div>
+            <!-- Floating Searchable Dropdown Menu (Opens Above the floating bar) -->
+            <div x-show="dropdownOpen" 
+                 @click.outside="dropdownOpen = false; searchWorker = ''"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                 class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 w-72 sm:w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3 z-50 text-slate-200"
+                 x-cloak>
+                
+                <!-- Search Header -->
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <span class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Pilih Pemilik / Kontributor</span>
+                    <span class="text-[10px] text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2 py-0.5 rounded font-bold" x-text="allAssignableWorkers.length + ' pekerja'"></span>
+                </div>
 
-            <!-- SEARCHABLE DROPDOWN BUTTON FOR OTHER WORKERS -->
-            <div class="relative">
-                <button @click="dropdownOpen = !dropdownOpen; if(dropdownOpen) $nextTick(() => $refs.workerSearchInput.focus())" 
-                        class="bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-xl font-semibold transition shrink-0 border border-slate-700 flex items-center gap-1.5 shadow-2xs">
-                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <span>Lainnya...</span>
-                    <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="dropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
+                <!-- Search Input Field with clear icon -->
+                <div class="relative mb-2">
+                    <input type="text"
+                           x-ref="workerSearchInput"
+                           x-model="searchWorker"
+                           placeholder="Ketik nama atau tim..."
+                           class="w-full bg-slate-950 border border-slate-700 text-white placeholder-slate-500 rounded-xl pl-8 pr-7 py-2 text-xs focus:ring-1 focus:ring-[#00B090] focus:border-[#00B090] outline-none transition">
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <button x-show="searchWorker" @click="searchWorker = ''" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-white">✕</button>
+                </div>
 
-                <!-- Floating Searchable Dropdown Menu (Opens Above the floating bar) -->
-                <div x-show="dropdownOpen" 
-                     @click.outside="dropdownOpen = false; searchWorker = ''"
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 translate-y-2 scale-95"
-                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                     x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                     class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 w-72 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-2.5 z-50 text-slate-200"
-                     x-cloak>
-                    
-                    <!-- Search Header -->
-                    <div class="flex items-center justify-between px-1 mb-2">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pilih / Cari Kontributor</span>
-                        <span class="text-[10px] text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-1.5 py-0.5 rounded" x-text="allAssignableWorkers.length + ' pekerja'"></span>
-                    </div>
-
-                    <!-- Search Input Field with clear icon -->
-                    <div class="relative mb-2">
-                        <input type="text"
-                               x-ref="workerSearchInput"
-                               x-model="searchWorker"
-                               placeholder="Ketik nama atau tim..."
-                               class="w-full bg-slate-950 border border-slate-700 text-white placeholder-slate-500 rounded-xl pl-8 pr-7 py-2 text-xs focus:ring-1 focus:ring-[#00B090] focus:border-[#00B090] outline-none transition">
-                        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        <button x-show="searchWorker" @click="searchWorker = ''" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-white">✕</button>
-                    </div>
-
-                    <!-- Contributor List -->
-                    <div class="max-h-56 overflow-y-auto space-y-1 custom-scroll pr-1">
-                        <template x-for="c in filteredAssignableWorkers(searchWorker)" :key="c.name">
-                            <button @click="applyFastAssign(c.name); dropdownOpen = false; searchWorker = ''"
-                                    class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-slate-800 transition group border border-transparent hover:border-slate-700">
-                                <div class="flex items-center gap-2.5 truncate">
-                                    <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 text-[#00B090] group-hover:bg-[#00B090] group-hover:text-white font-bold flex items-center justify-center text-[10px] shrink-0 transition"
-                                         x-text="getWorkerInitials(c.name)"></div>
-                                    <div class="truncate">
-                                        <div class="text-xs font-semibold text-slate-200 group-hover:text-white truncate" x-text="c.name"></div>
-                                        <div class="text-[10px] text-slate-400 truncate" x-text="c.team || 'Kontributor Studio'"></div>
-                                    </div>
+                <!-- Contributor List -->
+                <div class="max-h-60 overflow-y-auto space-y-1 custom-scroll pr-1">
+                    <template x-for="c in filteredAssignableWorkers(searchWorker)" :key="c.name">
+                        <button type="button"
+                                @click="applyFastAssign(c.name); dropdownOpen = false; searchWorker = ''"
+                                class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-slate-800 transition group border border-transparent hover:border-slate-700">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 text-[#00B090] group-hover:bg-[#00B090] group-hover:text-white font-bold flex items-center justify-center text-[10px] shrink-0 transition"
+                                     x-text="getWorkerInitials(c.name)"></div>
+                                <div class="truncate">
+                                    <div class="text-xs font-semibold text-slate-200 group-hover:text-white truncate" x-text="c.name"></div>
+                                    <div class="text-[10px] text-slate-400 truncate" x-text="c.team || 'Kontributor Studio'"></div>
                                 </div>
-                                <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#00B090] shrink-0 ml-2">Pilih →</span>
-                            </button>
-                        </template>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#00B090] shrink-0 ml-2">Pilih →</span>
+                        </button>
+                    </template>
 
-                        <!-- Empty State if no match -->
-                        <div x-show="filteredAssignableWorkers(searchWorker).length === 0" 
-                             class="text-center py-5 text-xs text-slate-400">
-                            Tidak ditemukan pekerja dengan nama "<span x-text="searchWorker" class="text-white"></span>"
-                        </div>
+                    <!-- Empty State if no match -->
+                    <div x-show="filteredAssignableWorkers(searchWorker).length === 0" 
+                         class="text-center py-5 text-xs text-slate-400">
+                        Tidak ditemukan pekerja dengan nama "<span x-text="searchWorker" class="text-white"></span>"
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Quick 1-Click Worker Assignment Buttons (Top 4) -->
+        <div class="hidden sm:flex items-center gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-xs">
+            <span class="text-[11px] text-slate-400 mr-0.5">Cepat:</span>
+            <template x-for="w in quickWorkers.slice(0, 4)" :key="w.name">
+                <button type="button"
+                        @click="applyFastAssign(w.name)" 
+                        class="bg-slate-800 hover:bg-[#00B090] hover:text-white px-2.5 py-1.5 rounded-xl font-semibold transition text-slate-200 shrink-0 border border-slate-700 text-xs"
+                        x-text="w.short"
+                        :title="'Tugaskan ke ' + w.name"></button>
+            </template>
         </div>
 
         <!-- Quick Status Buttons -->

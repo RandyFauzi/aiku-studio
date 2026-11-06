@@ -1,3 +1,8 @@
+### [2026-11-06 20:08] — Antigravity
+- Mengembalikan penugasan/konfirmasi pemilik recording ke alur dropdown cepat berfitur search: tombol "Konfirmasi Pemilik" pada floating dock rekaman terpilih kini langsung membuka dropdown pencarian nama/tim pekerja lengkap dengan 1-klik assign, menggantikan modal formulir kaku. Tombol cepat pekerja tetap tersedia di sampingnya.
+- Menambahkan kolom pencarian instan pada picker penugasan pekerja individual (recording-worker-picker) di tampilan tabel dan grid.
+- Validasi: 32 tests/283 assertions PASS (RecordingMatchingTest, RecordingOwnerRecommendationsTest, DailyWorkReportTest), Vite build sukses tanpa error. State IDLE.
+
 ### [2026-11-06 19:57] — CODEX
 - Bar aksi pilihan recording mengikuti area konten: offset sidebar 224/248px saat terbuka, kembali selebar layar saat ditutup; metrik dan tombol pekerja membungkus pada layar kecil. Tidak mengubah fungsi penandaan/status/payroll.
 - Validasi: Vite build, render Blade, diff check, browser fixture 320/390/768/1024/1440/1792px untuk sidebar buka/tutup; bounds bar dan seluruh tombol terlihat lulus, tanpa error JS. Tidak perlu refresh Graphify untuk perubahan layout.

@@ -10,16 +10,32 @@
             <button type="button" @click="mobileTab = 'manual'" :aria-pressed="mobileTab === 'manual'" class="min-h-11 flex-1 rounded-lg border px-2 text-xs font-semibold" :class="mobileTab === 'manual' ? 'border-green-300 bg-green-50 text-green-900' : 'border-slate-200'">Semua pekerja</button>
             <button type="button" @click="mobileTab = 'recommendations'" :aria-pressed="mobileTab === 'recommendations'" class="min-h-11 flex-1 rounded-lg border px-2 text-xs font-semibold" :class="mobileTab === 'recommendations' ? 'border-green-300 bg-green-50 text-green-900' : 'border-slate-200'">Rekomendasi</button>
         </div>
-        <div class="grid gap-3 pt-3 sm:grid-cols-[190px_minmax(0,1fr)]">
-            <div class="min-w-0" :class="mobileTab === 'manual' ? '' : 'hidden sm:block'">
-                <h4 class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Pilih pekerja</h4>
-                <div class="max-h-60 overflow-y-auto space-y-1">
-                    <button type="button" @click="assignWorker(rec.record_id, null); activePopover = null" :disabled="saving" class="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left text-xs text-rose-700 hover:bg-rose-50"><span aria-hidden="true">×</span> Hapus Tanda (Kosongkan)</button>
-                    <template x-for="c in contributors" :key="c.contributor_id || c.id">
-                        <button type="button" @click="assignWorker(rec.record_id, (c.name || c.nama)); activePopover = null" :disabled="saving" class="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left text-xs hover:bg-slate-100" :class="rec.assigned_worker_name === (c.name || c.nama) ? 'bg-green-50 font-bold text-green-900' : ''">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold" x-text="getWorkerInitials(c.name || c.nama)"></span><span class="break-words" x-text="c.name || c.nama"></span>
+        <div class="grid gap-3 pt-3 sm:grid-cols-[210px_minmax(0,1fr)]">
+            <div class="min-w-0" x-data="{ searchWorkerPicker: '' }" :class="mobileTab === 'manual' ? '' : 'hidden sm:block'">
+                <div class="flex items-center justify-between mb-1.5">
+                    <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500">Pilih pekerja</h4>
+                </div>
+                <div class="relative mb-2">
+                    <input type="text"
+                           x-model="searchWorkerPicker"
+                           placeholder="Cari pekerja..."
+                           class="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#00B090] focus:bg-white focus:outline-none transition">
+                    <button x-show="searchWorkerPicker" @click="searchWorkerPicker = ''" class="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                </div>
+                <div class="max-h-60 overflow-y-auto space-y-1 custom-scroll pr-1">
+                    <button type="button" @click="assignWorker(rec.record_id, null); activePopover = null" :disabled="saving" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-2 text-left text-xs text-rose-700 hover:bg-rose-50"><span aria-hidden="true">×</span> Hapus Tanda (Kosongkan)</button>
+                    <template x-for="c in contributors.filter(c => !searchWorkerPicker || (c.name || c.nama || '').toLowerCase().includes(searchWorkerPicker.toLowerCase().trim()))" :key="c.contributor_id || c.id">
+                        <button type="button" @click="assignWorker(rec.record_id, (c.name || c.nama)); activePopover = null" :disabled="saving" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-2 text-left text-xs hover:bg-slate-100 transition" :class="rec.assigned_worker_name === (c.name || c.nama) ? 'bg-green-50 font-bold text-green-900' : 'text-slate-700'">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold" x-text="getWorkerInitials(c.name || c.nama)"></span>
+                                <span class="truncate break-words" x-text="c.name || c.nama"></span>
+                            </div>
+                            <span x-show="rec.assigned_worker_name === (c.name || c.nama)" class="text-[#00B090] font-black text-xs shrink-0">✓</span>
                         </button>
                     </template>
+                    <div x-show="contributors.filter(c => !searchWorkerPicker || (c.name || c.nama || '').toLowerCase().includes(searchWorkerPicker.toLowerCase().trim())).length === 0" class="py-3 text-center text-xs text-slate-400">
+                        Tidak ada pekerja yang cocok
+                    </div>
                 </div>
             </div>
             <div class="min-w-0 border-slate-100 sm:border-l sm:pl-3" :class="mobileTab === 'recommendations' ? '' : 'hidden sm:block'">
