@@ -1,3 +1,8 @@
+### [2026-11-06 23:15] — Antigravity
+- Pengisian task laporan kerja (/portal/work-reports dan /work-reports): menghilangkan tombol toggle 'Pilih task' / 'Selesai memilih' yang membingungkan seolah harus dikonfirmasi. Checklist task dan kolom cari kini tampil langsung (inline) di setiap kartu HP terpilih.
+- Pemilihan task cukup dengan klik checkbox langsung, dilengkapi chip task terpilih yang dapat dihapus cepat serta status counter jumlah task dipilih secara instan tanpa pop-up atau tombol konfirmasi tambahan.
+- Validasi: 27 tests/252 assertions PASS (ReportTasksTest, DailyWorkReportTest), Vite build PASS. State IDLE.
+
 ### [2026-11-06 21:05] — Antigravity
 - Perbaikan fungsi dan UI/UX Assist Pencocokan Rekaman (/work-reports): menangani badge status over_bot dan under_bot agar kartu HP dengan rekaman bot tidak kosong statusnya, format jam rekaman bot ke WITA lokal, integrasi aksi batch "Tandai Semua Rekaman" per HP, serta card UI yang bersih dan rapi.
 - Penerapan Logo resmi AIKu Studio pada Dashboard Command Center dan Sidebar navigasi.

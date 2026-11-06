@@ -30,12 +30,17 @@ async function getOptions(url) {
 }
 
 Alpine.data('phoneTaskPicker', config => ({
-    expanded: false, search: '', results: [], busy: false, taskError: '', notice: '', requestId: 0,
+    expanded: true, search: '', results: [], busy: false, taskError: '', notice: '', requestId: 0,
     canEditLabels: false, editingTitle: '', editLabel: '', editKeywords: '', labelSaving: false, labelError: '', labelVersion: 0,
     init() { this.lookup(); },
     labelFor(title) { void this.labelVersion; return initialLabel(title); },
     get selectedTasks() { return config.read(); },
     get previousTasks() { return config.copy(); },
+    isTaskSelected(title) {
+        if (!title) return false;
+        const key = normalize(title);
+        return (this.selectedTasks || []).some(t => normalize(t) === key);
+    },
     get choices() {
         const choices = new Map(this.results.map(task => [normalize(task.title), task]));
         if (!this.search.trim()) for (const title of this.selectedTasks) if (!choices.has(normalize(title))) choices.set(normalize(title), { title, label: initialLabel(title), source: 'selected' });
