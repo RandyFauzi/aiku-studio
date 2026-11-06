@@ -455,4 +455,109 @@ class DailyWorkReportTest extends TestCase
             'phone_durations' => array_fill_keys(array_keys(DailyWorkReport::REPORT_PHONES), 1440)])
             ->assertOk()->assertJsonCount(7, 'report.phones')->assertJsonPath('report.total_duration_minutes', 10080);
     }
+
+    public function test_employee_can_submit_multiple_work_reports_per_day_for_multiple_shifts(): void
+    {
+        $user = $this->employee('multi_shift_worker@example.com');
+        $this->actingAs($user);
+        $today = now('Asia/Makassar')->toDateString();
+
+        // 1. Submit Shift 1 (Pagi) report
+        $res1 = $this->putJson('/api/me/work-report', [
+            'work_date' => $today,
+            'shift_label' => 'Shift 1 (Pagi)',
+            'is_new' => true,
+            'expected_revision' => 0,
+            'phone_durations' => ['putih' => 120],
+        ])->assertOk();
+
+        $res1->assertJsonPath('success', true)
+            ->assertJsonPath('report.shift_label', 'Shift 1 (Pagi)')
+            ->assertJsonPath('report.total_duration_minutes', 120);
+        $reportId1 = $res1->json('report.id');
+
+        // 2. Submit Shift 2 (Malam) report on same day
+        $res2 = $this->putJson('/api/me/work-report', [
+            'work_date' => $today,
+            'shift_label' => 'Shift 2 (Malam)',
+            'is_new' => true,
+            'expected_revision' => 0,
+            'phone_durations' => ['pink' => 180],
+        ])->assertOk();
+
+        $res2->assertJsonPath('success', true)
+            ->assertJsonPath('report.shift_label', 'Shift 2 (Malam)')
+            ->assertJsonPath('report.total_duration_minutes', 180);
+        $reportId2 = $res2->json('report.id');
+
+        $this->assertNotEquals($reportId1, $reportId2);
+        $this->assertDatabaseCount('daily_work_reports', 2);
+
+        // 3. Check mine endpoint returns both reports and accurate total minutes
+        $mine = $this->getJson('/api/me/work-reports?month='.now('Asia/Makassar')->format('Y-m'))->assertOk();
+        $mine->assertJsonCount(2, 'today_reports')
+            ->assertJsonPath('today_total_minutes', 300)
+            ->assertJsonCount(2, 'reports');
+
+        // 4. Update specific report (Shift 1) using report_id
+        $this->putJson('/api/me/work-report', [
+            'report_id' => $reportId1,
+            'work_date' => $today,
+            'shift_label' => 'Shift 1 (Pagi Diperbarui)',
+            'expected_revision' => 1,
+            'phone_durations' => ['putih' => 150],
+        ])->assertOk()->assertJsonPath('report.total_duration_minutes', 150)->assertJsonPath('report.revision', 2);
+
+        $this->assertDatabaseHas('daily_work_reports', [
+            'id' => $reportId1,
+            'shift_label' => 'Shift 1 (Pagi Diperbarui)',
+            'total_duration_minutes' => 150,
+            'revision' => 2,
+        ]);
+
+        // 5. Worker can delete their own report for today
+        $this->deleteJson('/api/me/work-reports/'.$reportId2)->assertOk();
+        $this->assertDatabaseMissing('daily_work_reports', ['id' => $reportId2]);
+        $this->assertDatabaseCount('daily_work_reports', 1);
+    }
+
+    public function test_admin_can_create_multiple_reports_for_same_worker_with_allow_multiple(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $contributor = Contributor::create([
+            'nama' => 'Rina Shift',
+            'email' => 'rina_shift@example.com',
+            'role' => 'contributor',
+        ]);
+        $today = now('Asia/Makassar')->toDateString();
+
+        // Admin creates Shift 1
+        $res1 = $this->actingAs($admin)->postJson('/api/work-reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'shift_label' => 'Shift 1 (Pagi)',
+            'allow_multiple' => true,
+            'phones' => ['putih'],
+            'phone_durations' => ['putih' => 120],
+            'total_duration_minutes' => 120,
+        ])->assertOk();
+
+        // Admin creates Shift 2 on same day
+        $res2 = $this->actingAs($admin)->postJson('/api/work-reports', [
+            'contributor_id' => $contributor->id,
+            'work_date' => $today,
+            'shift_label' => 'Shift 2 (Malam)',
+            'allow_multiple' => true,
+            'phones' => ['pink'],
+            'phone_durations' => ['pink' => 180],
+            'total_duration_minutes' => 180,
+        ])->assertOk();
+
+        $this->assertNotEquals($res1->json('report.id'), $res2->json('report.id'));
+        $this->assertDatabaseCount('daily_work_reports', 2);
+
+        $index = $this->actingAs($admin)->getJson('/api/work-reports?date='.$today)->assertOk();
+        $index->assertJsonCount(2, 'reports')
+            ->assertJsonPath('total_duration_minutes', 300);
+    }
 }

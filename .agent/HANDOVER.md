@@ -1,3 +1,8 @@
+### [2026-11-06 19:38] — Antigravity
+- Fitur multi-shift laporan kerja harian: pekerja dan admin dapat membuat laporan lebih dari satu kali dalam sehari (misal Shift 1 Pagi dan Shift 2 Malam). Migrasi 2026_11_06_000004 menghapus unique index [user_id, work_date] dan menambah shift_label serta notes.
+- Portal pekerja (/portal/work-reports) menampilkan ringkasan akumulasi seluruh sesi hari ini, daftar kartu sesi tersimpan, tombol edit/hapus per sesi, tombol tambah shift baru, serta pill selector shift (Pagi, Siang, Malam, Lembur, kustom). Admin panel (/work-reports) mendukung multi-sesi per kontributor dengan label shift dan assist pencocokan per laporan.
+- Validasi: DailyWorkReportTest 16 tes/168 assertions PASS, RecordingMatchingTest + RecordingOwnerRecommendationsTest + ReportTasksTest 25 tes/185 assertions PASS, Vite build PASS. State IDLE.
+
 ### [2026-11-06 19.18] — CODEX
 - Portal worker: Live Slip dan pemanggilan API nominal saat startup dihapus; menu Rekaman berisi riwayat milik contributor_id (legacy nama hanya bila unik), filter bulan WITA/search Indonesia/ID, pagination, task/durasi/status proses saja dengan allowlist respons tanpa nilai payroll. Navigasi/home/profil diperbarui.
 - Pengecualian user: arsip slip sendiri tetap tersedia hanya status sudah + periode selesai sebelum cutoff aktif; tampilan/ekspor memakai snapshot tersimpan dan PDF lama dipakai ulang. Halaman/ekspor live, draft, periode berjalan, file live sidecar dan slip orang lain ditolak worker; akses admin dipertahankan. Belum ada penanda sent_at, sehingga arsip memakai status final sudah. Validasi: full suite 151 tes/1048 assertions; browser 1440/390 history/filter/search/page/empty, tanpa nominal/preload slip, arsip lama/profil; build+Graphify lulus, tanpa migrasi baru.

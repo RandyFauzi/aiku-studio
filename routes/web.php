@@ -44,6 +44,8 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
     Route::get('/api/report-tasks', [DailyWorkReportController::class, 'taskOptions'])->middleware('throttle:120,1');
     Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
+    Route::post('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
+    Route::delete('/api/me/work-reports/{report}', [DailyWorkReportController::class, 'destroy'])->middleware('throttle:30,1');
     Route::get('/api/me/recordings', [MyRecordingController::class, 'index']);
     Route::get('/api/me/payslips', [PayslipController::class, 'mine']);
     Route::put('/api/me/password', [AuthController::class, 'updatePassword'])->middleware('throttle:10,1');

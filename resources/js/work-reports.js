@@ -59,6 +59,12 @@ window.dailyWorkReportData = () => ({
     options: labels,
     revision: 0,
     reports: [],
+    todayReports: [],
+    todayTotalMinutes: 0,
+    activeReportId: null,
+    shiftLabel: '',
+    notes: '',
+    reportFormOpen: false,
     loading: true,
     saving: false,
     error: '',
@@ -68,6 +74,14 @@ window.dailyWorkReportData = () => ({
     phoneNames,
     phoneDurationsText,
     dateLabel,
+
+    reportTimestamp(value) {
+        if (!value) return '—';
+        const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value) ? value.replace(' ', 'T') + 'Z' : value;
+        const d = new Date(normalized);
+        if (Number.isNaN(d.getTime())) return value;
+        return d.toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit' }) + ' WITA';
+    },
 
     get totalMinutes() {
         return this.phones.reduce((sum, key) => sum + (Number(this.phoneDurations[key]) || 0), 0);
@@ -79,8 +93,86 @@ window.dailyWorkReportData = () => ({
 
     get dirty() {
         if (this.baseline === '') return false;
-        const current = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks]);
+        const current = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks, this.shiftLabel]);
         return current !== this.baseline;
+    },
+
+    suggestShiftLabel() {
+        const count = (this.todayReports || []).length;
+        if (count === 0) return 'Shift 1 (Pagi)';
+        if (count === 1) return 'Shift 2 (Malam)';
+        return 'Sesi #' + (count + 1);
+    },
+
+    openNewReport(customShift = '') {
+        this.activeReportId = null;
+        this.shiftLabel = customShift || this.suggestShiftLabel();
+        this.notes = '';
+        this.phones = [];
+        this.phoneDurations = {};
+        this.phoneEmails = {};
+        this.phoneTasks = {};
+        this.revision = 0;
+        this.baseline = JSON.stringify([[], {}, {}, {}, this.shiftLabel]);
+        this.error = '';
+        this.message = '';
+        this.reportFormOpen = true;
+    },
+
+    editReport(report) {
+        if (!report) return;
+        this.activeReportId = report.id;
+        this.shiftLabel = report.shift_label || '';
+        this.notes = report.notes || '';
+        this.phones = [...(report.phones || [])];
+        this.phoneDurations = { ...(report.phone_durations || {}) };
+        this.phoneEmails = { ...(report.phone_emails || {}) };
+        this.phoneTasks = copyPhoneTasks(report.phone_tasks);
+
+        if (this.phones.length > 0 && (!report.phone_durations || Object.keys(report.phone_durations).length === 0)) {
+            const splitMins = Math.round((report.total_duration_minutes || 0) / this.phones.length);
+            this.phones.forEach(pk => {
+                if (!this.phoneDurations[pk]) this.phoneDurations[pk] = splitMins;
+            });
+        }
+
+        this.revision = report.revision || 0;
+        this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks, this.shiftLabel]);
+        this.error = '';
+        this.message = '';
+        this.reportFormOpen = true;
+    },
+
+    async deleteReport(report) {
+        if (!report) return;
+        const name = report.shift_label ? ('"' + report.shift_label + '"') : ('Laporan #' + report.id);
+        if (!window.confirm('Hapus ' + name + ' (' + report.total_duration_minutes + ' menit)?')) return;
+        this.loading = true;
+        this.error = '';
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const res = await fetch('/api/me/work-reports/' + report.id, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Gagal menghapus laporan.');
+            if (this.activeReportId === report.id) {
+                this.reportFormOpen = false;
+                this.activeReportId = null;
+            }
+            await this.load(false);
+        } catch (e) {
+            this.error = e.message;
+            if (window.Swal) {
+                window.Swal.fire({ icon: 'error', title: 'Gagal Menghapus', text: e.message });
+            }
+        } finally {
+            this.loading = false;
+        }
     },
 
     togglePhone(key) {
@@ -126,33 +218,27 @@ window.dailyWorkReportData = () => ({
             });
             if (!response.ok) throw new Error('Laporan belum berhasil dimuat.');
             const data = await response.json();
-            this.reports = data.reports;
+            this.reports = data.reports || [];
+            this.todayReports = data.today_reports || (data.today_report ? [data.today_report] : []);
+            this.todayTotalMinutes = data.today_total_minutes ?? this.todayReports.reduce((s, r) => s + (r.total_duration_minutes || 0), 0);
             this.options = data.phone_options || labels;
+            this.date = data.today;
 
             if (reset) {
-                const report = data.today_report;
-                this.date = data.today;
-                this.phones = [...(report?.phones || [])];
-                this.phoneDurations = {};
-                this.phoneEmails = { ...(report?.phone_emails || {}) };
-                this.phoneTasks = copyPhoneTasks(report?.phone_tasks);
-
-                if (report?.phone_durations && typeof report.phone_durations === 'object') {
-                    this.phoneDurations = { ...report.phone_durations };
-                } else if (this.phones.length > 0 && report?.total_duration_minutes) {
-                    const splitMins = Math.round(report.total_duration_minutes / this.phones.length);
-                    this.phones.forEach(pk => {
-                        this.phoneDurations[pk] = splitMins;
-                    });
+                if (this.activeReportId) {
+                    const existing = this.todayReports.find(r => r.id === this.activeReportId);
+                    if (existing) {
+                        this.editReport(existing);
+                    } else {
+                        this.activeReportId = null;
+                        this.reportFormOpen = false;
+                    }
                 }
-
-                this.revision = report?.revision || 0;
-                this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks]);
             }
 
-            const isSubmitted = !!(data.today_report && Number(data.today_report.revision) > 0);
+            const hasSubmitted = this.todayReports.length > 0;
             window.dispatchEvent(new CustomEvent('report-status-updated', {
-                detail: { submitted: isSubmitted, revision: data.today_report?.revision || 0 }
+                detail: { submitted: hasSubmitted, totalReports: this.todayReports.length, totalMinutes: this.todayTotalMinutes }
             }));
         } catch (e) {
             this.error = e.message;
@@ -164,12 +250,16 @@ window.dailyWorkReportData = () => ({
     async reload() {
         if (this.dirty && !window.confirm('Muat ulang dan buang perubahan laporan yang belum disimpan?')) return;
         this.message = '';
-        await this.load(true);
+        if (this.activeReportId) {
+            const existing = this.todayReports.find(r => r.id === this.activeReportId);
+            if (existing) this.editReport(existing);
+        } else {
+            this.openNewReport();
+        }
     },
 
     async submit() {
         if (this.loading || this.saving || !this.isComplete) return;
-        // Unlock inside the submit gesture, before the network request, for mobile browsers.
         unlockReportRewardAudio();
         this.saving = true;
         this.error = '';
@@ -177,6 +267,24 @@ window.dailyWorkReportData = () => ({
 
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const payload = {
+                work_date: this.date,
+                total_duration_minutes: this.totalMinutes,
+                phones: this.phones,
+                phone_durations: this.phoneDurations,
+                phone_emails: this.phoneEmails,
+                phone_tasks: this.phoneTasks,
+                shift_label: this.shiftLabel,
+                notes: this.notes,
+                expected_revision: this.revision
+            };
+
+            if (this.activeReportId) {
+                payload.report_id = this.activeReportId;
+            } else {
+                payload.is_new = true;
+            }
+
             const response = await fetch('/api/me/work-report', {
                 method: 'PUT',
                 headers: {
@@ -184,15 +292,7 @@ window.dailyWorkReportData = () => ({
                     Accept: 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 },
-                body: JSON.stringify({
-                    work_date: this.date,
-                    total_duration_minutes: this.totalMinutes,
-                    phones: this.phones,
-                    phone_durations: this.phoneDurations,
-                    phone_emails: this.phoneEmails,
-                    phone_tasks: this.phoneTasks,
-                    expected_revision: this.revision
-                })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
@@ -202,12 +302,16 @@ window.dailyWorkReportData = () => ({
 
             const report = data.report;
             this.revision = report.revision;
+            this.activeReportId = report.id;
+            this.shiftLabel = report.shift_label || this.shiftLabel;
             this.phones = [...(report.phones || [])];
             this.phoneDurations = { ...(report.phone_durations || this.phoneDurations) };
             this.phoneEmails = { ...(report.phone_emails || {}) };
             this.phoneTasks = copyPhoneTasks(report.phone_tasks);
-            this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks]);
-            this.message = 'Laporan kerja tanggal ' + dateLabel(this.date) + ' berhasil disimpan (' + this.totalMinutes + ' menit).';
+            this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks, this.shiftLabel]);
+            this.message = 'Laporan kerja ' + (report.shift_label ? ('(' + report.shift_label + ') ') : '') + 'berhasil disimpan (' + this.totalMinutes + ' menit).';
+
+            this.reportFormOpen = false;
 
             window.dispatchEvent(new CustomEvent('report-status-updated', {
                 detail: { submitted: true, revision: this.revision }
@@ -218,7 +322,7 @@ window.dailyWorkReportData = () => ({
                     imageUrl: '/assets/object/Gif%20Terimakasih.webp',
                     imageWidth: 280,
                     imageAlt: 'Terimakasih sudah berkontribusi',
-                    html: '<div style="padding: 6px 12px 2px;"><p style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.55; margin: 0;">Terimakasih sudah berkontribusi untuk masa depan hari ini, semangat rekaman besok!</p></div>',
+                    html: '<div style="padding: 6px 12px 2px;"><p style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.55; margin: 0;">Terimakasih sudah berkontribusi untuk masa depan hari ini, semangat rekaman!</p></div>',
                     confirmButtonText: 'Sama-sama',
                     confirmButtonColor: '#00B090',
                     didOpen: playReportCoin,
@@ -378,6 +482,7 @@ window.adminWorkReportsData = () => ({
         this.createForm = {
             contributor_id: '',
             work_date: this.date || today(),
+            shift_label: 'Shift 1 (Pagi)',
             phones: [],
             phone_durations: {},
             phone_tasks: {},
@@ -458,6 +563,9 @@ window.adminWorkReportsData = () => ({
                 body: JSON.stringify({
                     contributor_id: parseInt(this.createForm.contributor_id),
                     work_date: this.createForm.work_date,
+                    shift_label: this.createForm.shift_label || null,
+                    allow_multiple: true,
+                    is_new: true,
                     phones: this.createForm.phones,
                     phone_durations: this.createForm.phone_durations,
                     phone_emails: this.createForm.phone_emails,
@@ -532,6 +640,7 @@ window.adminWorkReportsData = () => ({
         });
 
         this.editForm = {
+            shift_label: report.shift_label || '',
             phones: phones,
             phone_durations: durations,
             phone_tasks: copyPhoneTasks(report.phone_tasks),
@@ -588,6 +697,7 @@ window.adminWorkReportsData = () => ({
                     'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
+                    shift_label: this.editForm.shift_label || null,
                     phones: this.editForm.phones,
                     phone_durations: this.editForm.phone_durations,
                     phone_emails: this.editForm.phone_emails,

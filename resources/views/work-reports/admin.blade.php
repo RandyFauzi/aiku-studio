@@ -53,7 +53,7 @@
     <div class="grid gap-3 sm:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
             <p class="text-xs font-semibold text-slate-500">Pekerja Melapor</p>
-            <p class="mt-2 text-2xl font-black text-slate-900" x-text="rows.length + ' Orang'"></p>
+            <p class="mt-2 text-2xl font-black text-slate-900" x-text="new Set(rows.map(r => r.contributor_id)).size + ' Orang (' + rows.length + ' Sesi)'"></p>
             <p class="text-[11px] text-slate-400 mt-0.5" x-text="dateLabel(date)"></p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
@@ -93,7 +93,10 @@
                         <tr class="grid grid-cols-2 border-t border-slate-100 transition md:table-row"
                             :class="expandedReportId === report.id ? 'bg-emerald-50/20' : 'hover:bg-slate-50/70'">
                             <td class="col-span-2 block px-4 pt-4 pb-2 align-middle md:table-cell md:py-4">
-                                <p class="font-bold text-slate-900" x-text="report.contributor_name"></p>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="font-bold text-slate-900" x-text="report.contributor_name"></p>
+                                    <span x-show="report.shift_label" class="px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300" x-text="report.shift_label"></span>
+                                </div>
                                 <p class="mt-1 text-xs text-slate-500" :title="reportTimestamp(report.created_at)" x-text="'Dikirim ' + (reportTimestamp(report.created_at).match(/\d{2}:\d{2} WITA$/)?.[0] || '—') + (report.revision > 1 ? ' · Direvisi' : '')"></p>
                             </td>
                             <td class="block px-4 py-2 align-middle md:table-cell md:py-4">
@@ -350,6 +353,29 @@
                           x-text="editForm.phones.length + ' HP Dipilih'"></span>
                 </div>
 
+                <!-- Sesi / Shift Selector -->
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+                    <label class="block text-xs font-black uppercase tracking-wider text-slate-700">
+                        Sesi / Shift Kerja
+                    </label>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <button type="button" @click="editForm.shift_label = 'Shift 1 (Pagi)'"
+                                :class="editForm.shift_label === 'Shift 1 (Pagi)' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer">Shift 1 (Pagi)</button>
+                        <button type="button" @click="editForm.shift_label = 'Shift 2 (Siang)'"
+                                :class="editForm.shift_label === 'Shift 2 (Siang)' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer">Shift 2 (Siang)</button>
+                        <button type="button" @click="editForm.shift_label = 'Shift 3 (Malam)'"
+                                :class="editForm.shift_label === 'Shift 3 (Malam)' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer">Shift 3 (Malam)</button>
+                        <button type="button" @click="editForm.shift_label = 'Lembur'"
+                                :class="editForm.shift_label === 'Lembur' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer">Lembur</button>
+                        <input type="text" x-model.trim="editForm.shift_label" placeholder="Nama shift..."
+                               class="h-8 flex-1 min-w-[110px] rounded-xl border border-slate-300 px-2.5 text-xs font-bold text-slate-800 bg-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+
                 <!-- Phone List Selection & Durations -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-2">Pilih HP & Atur Menit Durasi:</label>
@@ -498,6 +524,29 @@
                         <input type="date" 
                                x-model="createForm.work_date" 
                                class="w-full h-11 px-3.5 rounded-2xl border-2 border-slate-200 bg-white text-xs sm:text-sm font-bold text-slate-900 focus:border-emerald-500 focus:outline-none font-mono">
+                    </div>
+                </div>
+
+                <!-- Sesi / Shift Selector -->
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-2">
+                    <label class="block text-xs font-black uppercase tracking-wider text-slate-700">
+                        Sesi / Shift Kerja
+                    </label>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" @click="createForm.shift_label = 'Shift 1 (Pagi)'"
+                                :class="createForm.shift_label === 'Shift 1 (Pagi)' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer">Shift 1 (Pagi)</button>
+                        <button type="button" @click="createForm.shift_label = 'Shift 2 (Siang)'"
+                                :class="createForm.shift_label === 'Shift 2 (Siang)' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer">Shift 2 (Siang)</button>
+                        <button type="button" @click="createForm.shift_label = 'Shift 3 (Malam)'"
+                                :class="createForm.shift_label === 'Shift 3 (Malam)' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer">Shift 3 (Malam)</button>
+                        <button type="button" @click="createForm.shift_label = 'Lembur'"
+                                :class="createForm.shift_label === 'Lembur' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200'"
+                                class="px-2.5 py-1 rounded-xl text-xs font-bold border transition cursor-pointer">Lembur</button>
+                        <input type="text" x-model.trim="createForm.shift_label" placeholder="Atau ketik nama shift..."
+                               class="h-8 flex-1 min-w-[130px] rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-800 bg-white focus:border-emerald-500 focus:outline-none">
                     </div>
                 </div>
 

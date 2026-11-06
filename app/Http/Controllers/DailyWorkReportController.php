@@ -56,12 +56,16 @@ class DailyWorkReportController extends Controller
         $data = $request->validate(['month' => 'required|date_format:Y-m']);
         $start = CarbonImmutable::createFromFormat('!Y-m', $data['month'], 'Asia/Makassar');
         $today = app(ShiftSchedule::class)->workDate($person);
+        $todayReports = DailyWorkReport::where('user_id', $request->user()->id)->where('work_date', $today)->orderBy('id')->get();
+        $monthReports = DailyWorkReport::where('user_id', $request->user()->id)->whereBetween('work_date', [$start->toDateString(), $start->endOfMonth()->toDateString()])->orderByDesc('work_date')->orderByDesc('id')->get();
 
         return response()->json([
             'today' => $today,
             'phone_options' => DailyWorkReport::REPORT_PHONES,
-            'today_report' => DailyWorkReport::where('user_id', $request->user()->id)->where('work_date', $today)->first(),
-            'reports' => DailyWorkReport::where('user_id', $request->user()->id)->whereBetween('work_date', [$start->toDateString(), $start->endOfMonth()->toDateString()])->orderByDesc('work_date')->get(),
+            'today_report' => $todayReports->last(),
+            'today_reports' => $todayReports,
+            'today_total_minutes' => $todayReports->sum('total_duration_minutes'),
+            'reports' => $monthReports,
         ]);
     }
 
@@ -71,6 +75,10 @@ class DailyWorkReportController extends Controller
         $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
 
         $fields = $request->validate([
+            'report_id' => 'nullable|integer|exists:daily_work_reports,id',
+            'is_new' => 'nullable|boolean',
+            'shift_label' => 'nullable|string|max:50',
+            'notes' => 'nullable|string|max:255',
             'work_date' => 'required|date_format:Y-m-d',
             'expected_revision' => 'required|integer|min:0',
             'total_duration_minutes' => 'nullable|integer|min:1|max:10080',
@@ -129,15 +137,54 @@ class DailyWorkReportController extends Controller
 
         $row = DB::transaction(function () use ($request, $person, $fields, $today, $phones, $totalMinutes, $phoneDurations, $phoneEmails) {
             User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
-            $row = DailyWorkReport::where('user_id', $request->user()->id)->where('work_date', $today)->first();
-            abort_if(($row?->revision ?? 0) !== $fields['expected_revision'], 409, 'Laporan sudah berubah di sesi lain. Muat ulang data sebelum menyimpan.');
-            $row ??= new DailyWorkReport(['user_id' => $request->user()->id, 'contributor_id' => $person->id, 'work_date' => $today, 'revision' => 0]);
+
+            $reportId = $fields['report_id'] ?? null;
+            $isNew = $fields['is_new'] ?? false;
+            $expectedRevision = (int) ($fields['expected_revision'] ?? 0);
+
+            if ($reportId) {
+                $row = DailyWorkReport::where('id', $reportId)
+                    ->where('user_id', $request->user()->id)
+                    ->firstOrFail();
+                abort_if($row->revision !== $expectedRevision, 409, 'Laporan sudah berubah di sesi lain. Muat ulang data sebelum menyimpan.');
+            } elseif ($isNew) {
+                $row = new DailyWorkReport([
+                    'user_id' => $request->user()->id,
+                    'contributor_id' => $person->id,
+                    'work_date' => $today,
+                    'revision' => 0,
+                ]);
+            } else {
+                $row = DailyWorkReport::where('user_id', $request->user()->id)
+                    ->where('work_date', $today)
+                    ->latest('id')
+                    ->first();
+
+                if ($row) {
+                    abort_if($row->revision !== $expectedRevision, 409, 'Laporan sudah berubah di sesi lain. Muat ulang data sebelum menyimpan.');
+                } else {
+                    $row = new DailyWorkReport([
+                        'user_id' => $request->user()->id,
+                        'contributor_id' => $person->id,
+                        'work_date' => $today,
+                        'revision' => 0,
+                    ]);
+                }
+            }
 
             $attributes = [
                 'contributor_name' => $person->nama,
                 'total_duration_minutes' => $totalMinutes,
                 'phones' => $phones,
             ];
+
+            if (isset($fields['shift_label']) && Schema::hasColumn('daily_work_reports', 'shift_label')) {
+                $attributes['shift_label'] = $fields['shift_label'];
+            }
+
+            if (isset($fields['notes']) && Schema::hasColumn('daily_work_reports', 'notes')) {
+                $attributes['notes'] = $fields['notes'];
+            }
 
             if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
                 $attributes['phone_durations'] = $phoneDurations;
@@ -156,6 +203,19 @@ class DailyWorkReportController extends Controller
         }, 3);
 
         return response()->json(['success' => true, 'report' => $row]);
+    }
+
+    public function destroy(Request $request, DailyWorkReport $report)
+    {
+        $person = $this->contributor($request);
+        abort_unless($report->user_id === $request->user()->id || $report->contributor_id === $person->id, 403, 'Anda tidak memiliki hak untuk menghapus laporan ini.');
+
+        $today = app(ShiftSchedule::class)->workDate($person);
+        abort_unless($report->work_date === $today, 403, 'Hanya laporan pada tanggal kerja aktif yang dapat dihapus sendiri.');
+
+        $report->delete();
+
+        return response()->json(['success' => true, 'message' => 'Laporan kerja berhasil dihapus.']);
     }
 
     public function index(Request $request)
@@ -406,6 +466,10 @@ class DailyWorkReportController extends Controller
         $fields = $request->validate([
             'contributor_id' => 'required|integer|exists:contributors,id',
             'work_date' => 'required|date_format:Y-m-d',
+            'is_new' => 'nullable|boolean',
+            'allow_multiple' => 'nullable|boolean',
+            'shift_label' => 'nullable|string|max:50',
+            'notes' => 'nullable|string|max:255',
             'phones' => 'nullable|array|max:7',
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
             'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
@@ -468,13 +532,22 @@ class DailyWorkReportController extends Controller
             $phoneEmails = ! empty($cleanedEmails) ? $cleanedEmails : null;
         }
 
-        $existing = DailyWorkReport::where('contributor_id', $contributor->id)
-            ->where('work_date', $fields['work_date'])
-            ->first();
+        $existing = null;
+        if (! $request->boolean('is_new') && ! $request->boolean('allow_multiple')) {
+            $existing = DailyWorkReport::where('contributor_id', $contributor->id)
+                ->where('work_date', $fields['work_date'])
+                ->first();
+        }
 
         if ($existing) {
             $existing->phones = $phones;
             $existing->total_duration_minutes = $totalMinutes;
+            if (isset($fields['shift_label']) && Schema::hasColumn('daily_work_reports', 'shift_label')) {
+                $existing->shift_label = $fields['shift_label'];
+            }
+            if (isset($fields['notes']) && Schema::hasColumn('daily_work_reports', 'notes')) {
+                $existing->notes = $fields['notes'];
+            }
             if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
                 $existing->phone_durations = $phoneDurations;
             }
@@ -502,6 +575,14 @@ class DailyWorkReportController extends Controller
             'revision' => 1,
         ];
 
+        if (isset($fields['shift_label']) && Schema::hasColumn('daily_work_reports', 'shift_label')) {
+            $attributes['shift_label'] = $fields['shift_label'];
+        }
+
+        if (isset($fields['notes']) && Schema::hasColumn('daily_work_reports', 'notes')) {
+            $attributes['notes'] = $fields['notes'];
+        }
+
         if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
             $attributes['phone_durations'] = $phoneDurations;
         }
@@ -525,6 +606,8 @@ class DailyWorkReportController extends Controller
         $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
 
         $fields = $request->validate([
+            'shift_label' => 'nullable|string|max:50',
+            'notes' => 'nullable|string|max:255',
             'phones' => 'nullable|array|max:7',
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
             'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
@@ -575,6 +658,12 @@ class DailyWorkReportController extends Controller
 
         $report->phones = $phones;
         $report->total_duration_minutes = $totalMinutes;
+        if (isset($fields['shift_label']) && Schema::hasColumn('daily_work_reports', 'shift_label')) {
+            $report->shift_label = $fields['shift_label'];
+        }
+        if (isset($fields['notes']) && Schema::hasColumn('daily_work_reports', 'notes')) {
+            $report->notes = $fields['notes'];
+        }
         if (Schema::hasColumn('daily_work_reports', 'phone_durations')) {
             $report->phone_durations = $phoneDurations;
         }

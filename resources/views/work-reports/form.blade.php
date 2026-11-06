@@ -2,18 +2,19 @@
     <!-- Header -->
     <div class="border-b border-slate-100 p-5 sm:p-6 flex items-center justify-between gap-3 bg-white">
         <div class="flex items-center gap-3">
-            <button type="button" @click="$dispatch('close-report-form')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition" aria-label="Tutup form laporan">
+            <button type="button" @click="$dispatch('close-report-form')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition cursor-pointer" aria-label="Tutup form laporan">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
             <div>
-                <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight">Input Laporan Kerja</h3>
+                <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight"
+                    x-text="activeReportId ? ('Ubah Laporan (' + (shiftLabel || 'ID #' + activeReportId) + ')') : ('Input Laporan Baru ' + (todayReports.length > 0 ? '(Sesi #' + (todayReports.length + 1) + ')' : ''))"></h3>
                 <p class="text-xs font-bold text-slate-600 font-mono mt-0.5" x-text="dateLabel(date)"></p>
             </div>
         </div>
 
         <span class="rounded-full px-3.5 py-1 text-xs font-black"
               :class="revision ? 'bg-emerald-100 text-emerald-950 border border-emerald-300' : 'bg-amber-100 text-amber-950 border border-amber-300'"
-              x-text="revision ? '✓ Sudah Dikirim' : 'Belum Dikirim'"></span>
+              x-text="revision ? ('✓ Revisi #' + revision) : 'Laporan Baru'"></span>
     </div>
 
     <form @submit.prevent="submit().then(() => { if (!error) reportFormOpen = false; })" class="space-y-6 p-5 sm:p-6 bg-white">
@@ -22,6 +23,40 @@
 
         <fieldset :disabled="loading || saving" class="space-y-5 disabled:opacity-50">
             <legend class="sr-only">Input durasi pengerjaan</legend>
+
+            <!-- Sesi / Shift Selector -->
+            <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label for="shift-label-input" class="text-xs font-black uppercase tracking-wider text-slate-800">Sesi / Shift Kerja</label>
+                    <span class="text-[11px] font-bold text-slate-500">Pilih atau tentukan shift laporan ini</span>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button type="button" @click="shiftLabel = 'Shift 1 (Pagi)'"
+                            :class="shiftLabel === 'Shift 1 (Pagi)' ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'"
+                            class="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">
+                        Shift 1 (Pagi)
+                    </button>
+                    <button type="button" @click="shiftLabel = 'Shift 2 (Siang)'"
+                            :class="shiftLabel === 'Shift 2 (Siang)' ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'"
+                            class="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">
+                        Shift 2 (Siang)
+                    </button>
+                    <button type="button" @click="shiftLabel = 'Shift 3 (Malam)'"
+                            :class="shiftLabel === 'Shift 3 (Malam)' ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'"
+                            class="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">
+                        Shift 3 (Malam)
+                    </button>
+                    <button type="button" @click="shiftLabel = 'Lembur'"
+                            :class="shiftLabel === 'Lembur' ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'"
+                            class="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">
+                        Lembur
+                    </button>
+                    <div class="flex-1 min-w-[130px]">
+                        <input id="shift-label-input" type="text" maxlength="50" x-model.trim="shiftLabel" placeholder="Atau ketik nama sesi/shift..."
+                               class="h-9 w-full rounded-xl border border-slate-300 px-3 text-xs font-bold text-slate-800 bg-white focus:border-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+            </div>
 
             <!-- Section Label -->
             <div class="flex items-center justify-between">
@@ -126,7 +161,7 @@
                     :disabled="saving || loading || !isComplete || !dirty"
                     class="w-full py-4 rounded-2xl font-black text-sm sm:text-base tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     :class="dirty && isComplete ? 'bg-[#154634] hover:bg-[#0e3325] text-white shadow-lg shadow-emerald-950/20 active:scale-[0.99] cursor-pointer' : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'"
-                    x-text="saving ? 'Menyimpan…' : (revision ? 'Perbarui Laporan' : 'Kirim Laporan Kerja')">
+                    x-text="saving ? 'Menyimpan…' : (activeReportId ? 'Perbarui Laporan Sesi Ini' : 'Kirim Laporan Sesi Ini')">
             </button>
 
             <div class="flex items-center justify-between text-xs font-semibold text-slate-600 px-1">
