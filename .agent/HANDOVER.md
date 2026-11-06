@@ -1,3 +1,7 @@
+### [2026-11-06 19:48] — CODEX
+- Rapikan Riwayat Rekaman dan Arsip Slip Lama: filter responsif 320px, ringkasan durasi, status berlabel warna, judul/ID asli dalam detail yang bisa dibuka, serta kartu arsip dengan aksi mobile 44px. Nominal tetap hanya di arsip final lama; tanpa perubahan backend/payroll.
+- Validasi: Vite build dan browser fixture 320/390/1440px lulus untuk filter/search/pagination/empty/error-retry, detail keyboard, navigasi arsip dan privasi nominal; tanpa overflow/error JS. Graphify tidak diubah karena perapian tampilan.
+
 ### [2026-11-06 19:38] — Antigravity
 - Fitur multi-shift laporan kerja harian: pekerja dan admin dapat membuat laporan lebih dari satu kali dalam sehari (misal Shift 1 Pagi dan Shift 2 Malam). Migrasi 2026_11_06_000004 menghapus unique index [user_id, work_date] dan menambah shift_label serta notes.
 - Portal pekerja (/portal/work-reports) menampilkan ringkasan akumulasi seluruh sesi hari ini, daftar kartu sesi tersimpan, tombol edit/hapus per sesi, tombol tambah shift baru, serta pill selector shift (Pagi, Siang, Malam, Lembur, kustom). Admin panel (/work-reports) mendukung multi-sesi per kontributor dengan label shift dan assist pencocokan per laporan.

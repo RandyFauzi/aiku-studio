@@ -25,11 +25,18 @@ Alpine.data('myRecordings', () => ({
             if (!response.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || 'Riwayat rekaman belum dapat dimuat.');
             if (id !== this.requestId) return;
             this.rows = data.recordings; this.summary = data.summary; this.lastPage = data.pagination.last_page;
-        } catch (error) { if (id === this.requestId) { this.rows = []; this.error = error.message; } }
+        } catch (error) { if (id === this.requestId) { this.rows = []; this.summary = { total_recordings: 0, total_minutes: 0 }; this.error = error.message; } }
         finally { if (id === this.requestId) this.loading = false; }
     },
     minutes(value) { return Number(value || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' menit'; },
     day(value) { return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value + 'T12:00:00+08:00')); },
     at(value) { return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)).replace('.', ':') + ' WITA'; },
     status(value) { return ({ ready_for_review: 'Menunggu pemeriksaan', pending: 'Menunggu pemeriksaan', processing: 'Sedang diproses', processed: 'Selesai diproses', completed: 'Selesai diproses', failed: 'Perlu diperiksa' })[value] || 'Dalam proses'; },
+    statusClass(value) {
+        if (['processed', 'completed'].includes(value)) return 'bg-emerald-50 text-emerald-800';
+        if (['ready_for_review', 'pending'].includes(value)) return 'bg-amber-50 text-amber-800';
+        if (value === 'processing') return 'bg-blue-50 text-blue-800';
+        if (value === 'failed') return 'bg-red-50 text-red-800';
+        return 'bg-slate-100 text-slate-600';
+    },
 }));
