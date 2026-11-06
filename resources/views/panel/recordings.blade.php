@@ -1029,6 +1029,14 @@
 
     </main>
 
+    <style>
+        .recording-action-position { position:fixed; inset:auto 8px 16px; z-index:40; display:flex; justify-content:center; pointer-events:none; }
+        @media (min-width:640px) { .recording-action-position { left:16px; right:16px; bottom:24px; } }
+        @media (min-width:768px) { .recording-action-position.sidebar-visible { left:240px; } }
+        @media (min-width:1101px) { .recording-action-position.sidebar-visible { left:264px; } }
+    </style>
+    <!-- Keep the selection dock inside the available content area. -->
+    <div class="recording-action-position" :class="{ 'sidebar-visible': sidebarOpen }">
     <!-- FLOATING ACTION DOCK (Modern Linear-Style Quick Assignment Bar) -->
     <div x-show="selectedIds.length > 0" 
          x-transition:enter="transition ease-out duration-200"
@@ -1037,7 +1045,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-6"
-         class="fixed bottom-4 sm:bottom-6 inset-x-2 sm:inset-x-0 mx-auto w-auto sm:w-max max-w-[calc(100vw-1rem)] sm:max-w-[95vw] bg-slate-900/95 backdrop-blur-md text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 z-40 text-xs"
+         class="pointer-events-auto w-fit max-w-full bg-slate-900/95 backdrop-blur-md text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 z-40 text-xs"
          x-data="{ dropdownOpen: false, searchWorker: '' }"
          x-cloak>
         
@@ -1048,7 +1056,7 @@
         </div>
 
         <!-- Live Selected Duration Metrics (Approved & Rejected Hours) -->
-        <div class="flex items-center gap-2 border-r border-slate-700 pr-3 shrink-0">
+        <div class="flex min-w-0 flex-wrap items-center gap-2 border-r border-slate-700 pr-3">
             <!-- Approved Hours Badge -->
             <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-mono shadow-xs" 
                  title="Total Durasi Approved yang Dipilih">
@@ -1081,7 +1089,7 @@
         <button type="button" @click="$dispatch('open-recording-owner', { ids: [...selectedIds], records: recordings.filter(r => selectedIds.includes(String(r.record_id))) })" class="min-h-11 shrink-0 rounded-lg bg-white px-3 py-2 font-bold text-slate-900">Konfirmasi pemilik</button>
 
         <!-- Worker Assignment Section with Quick Buttons & Searchable Dropdown -->
-        <div class="flex items-center gap-1.5">
+        <div class="flex min-w-0 max-w-full flex-wrap items-center gap-1.5">
             <span class="text-[11px] text-slate-400 mr-1 hidden sm:inline">Tugaskan:</span>
             
             <!-- Quick 1-Click Worker Assignment Buttons (Top 4) -->
@@ -1173,6 +1181,8 @@
         <button @click="selectedIds = []" class="text-slate-400 hover:text-white p-1 ml-1 rounded-lg transition" title="Batal Pilih">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
+
+    </div>
 
     </div>
 

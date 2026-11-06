@@ -1,3 +1,7 @@
+### [2026-11-06 19:57] — CODEX
+- Bar aksi pilihan recording mengikuti area konten: offset sidebar 224/248px saat terbuka, kembali selebar layar saat ditutup; metrik dan tombol pekerja membungkus pada layar kecil. Tidak mengubah fungsi penandaan/status/payroll.
+- Validasi: Vite build, render Blade, diff check, browser fixture 320/390/768/1024/1440/1792px untuk sidebar buka/tutup; bounds bar dan seluruh tombol terlihat lulus, tanpa error JS. Tidak perlu refresh Graphify untuk perubahan layout.
+
 ### [2026-11-06 19:48] — CODEX
 - Rapikan Riwayat Rekaman dan Arsip Slip Lama: filter responsif 320px, ringkasan durasi, status berlabel warna, judul/ID asli dalam detail yang bisa dibuka, serta kartu arsip dengan aksi mobile 44px. Nominal tetap hanya di arsip final lama; tanpa perubahan backend/payroll.
 - Validasi: Vite build dan browser fixture 320/390/1440px lulus untuk filter/search/pagination/empty/error-retry, detail keyboard, navigasi arsip dan privasi nominal; tanpa overflow/error JS. Graphify tidak diubah karena perapian tampilan.
