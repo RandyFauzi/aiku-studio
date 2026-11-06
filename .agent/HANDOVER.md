@@ -1,3 +1,7 @@
+### [2026-11-06 20:22] — Antigravity
+- Menghilangkan modal pop-up "Konfirmasi pemilik" sepenuhnya dari DOM: menghapus @include recording-matching dan menonaktifkan modal backdrop dialog. Penugasan pemilik berjalan in-place melalui dropdown menu di dock bawah dan notifikasi dialihkan ke toast pojok atas tanpa pop-up.
+- Validasi: 16 tes RecordingMatchingTest + RecordingOwnerRecommendationsTest PASS, Vite build PASS. State IDLE.
+
 ### [2026-11-06 20:20] — CODEX
 - Laporan sesi kedua: migrasi multi-shift kini aman diulang setelah DDL parsial; tambah forward repair 000005 untuk indeks unik user/tanggal yang tertinggal. Worker/admin mendapat 503 yang jelas pada skema lama, tanpa menimpa laporan pertama. Tes legacy-index membuktikan repair + retry menyimpan sesi kedua dan mempertahankan semua data sesi pertama.
 - Validasi: full suite 155 tes/1090 assertions PASS; Graphify/schema diperbarui, tanpa build karena backend saja. Produksi BELUM diverifikasi/dimigrasi: akses log hosting tersimpan ditolak HTTP403. Setelah deploy kode jalankan php artisan migrate --force dan cek migrate:status (000004/000005); dugaan indeks legacy belum dikonfirmasi dari log produksi. Perubahan recording-matching/recordings milik agen lain tidak di-stage.

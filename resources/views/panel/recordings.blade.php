@@ -1574,7 +1574,6 @@
     </div>
 
     <!-- APPLICATION JAVASCRIPT LOGIC -->
-    @include('panel.partials.recording-matching')
 
     <script>
         function modernRecordingsApp() {
@@ -2331,10 +2330,11 @@
                                 }
                             });
                             Swal.fire({
+                                toast: true,
+                                position: 'top-end',
                                 icon: 'success',
-                                title: 'Berhasil Ditugaskan',
-                                text: `${this.selectedIds.length} rekaman ditugaskan ke ${workerName}`,
-                                timer: 1500,
+                                title: `${this.selectedIds.length} rekaman ditugaskan ke ${workerName}`,
+                                timer: 2000,
                                 showConfirmButton: false
                             });
                             this.selectedIds = [];
