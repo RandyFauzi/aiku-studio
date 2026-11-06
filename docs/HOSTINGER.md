@@ -12,6 +12,12 @@ Aplikasi berjalan sebagai PHP biasa. Build frontend dilakukan di komputer lokal;
 
 ## Struktur aman
 
+### Pembaruan laporan beberapa sesi per hari
+
+Setelah menarik kode fitur multi-shift, jalankan `php artisan migrate --force` dari root aplikasi sebelum worker menambah sesi kedua. Migrasi `2026_11_06_000004` menghapus batas unik `(user_id, work_date)` dan mempertahankan indeks pencarian; migrasi `2026_11_06_000005` memperbaiki instalasi parsial secara aman tanpa menghapus laporan. Keduanya aman diulang untuk langkah pembaruan ini. Pastikan `php artisan migrate:status` menampilkan keduanya sudah dijalankan.
+
+Jika kode sudah baru tetapi indeks unik lama masih aktif, sesi kedua ditolak dengan pesan database belum diperbarui; laporan pertama tidak ditimpa. Jangan menghapus laporan atau menjalankan `migrate:fresh` di produksi untuk mengatasi masalah ini.
+
 Pilihan utama: document root domain diarahkan ke folder `public` Laravel jika pengaturan hosting memungkinkan.
 
 Jika root harus `public_html`, gunakan struktur sibling:

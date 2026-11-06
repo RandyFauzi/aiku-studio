@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Services\ContributorAccess;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class DailyWorkReportTest extends TestCase
@@ -24,6 +26,39 @@ class DailyWorkReportTest extends TestCase
     private function payload(): array
     {
         return ['work_date' => now('Asia/Makassar')->toDateString(), 'total_duration_minutes' => 150, 'phones' => ['putih', 'pink_st'], 'expected_revision' => 0];
+    }
+
+    public function test_legacy_unique_index_is_repaired_without_losing_first_session(): void
+    {
+        Schema::table('daily_work_reports', fn (Blueprint $table) => $table->unique(['user_id', 'work_date']));
+        $this->actingAs($this->employee());
+        $data = $this->payload() + ['is_new' => true, 'phone_tasks' => ['putih' => ['Wrap a gift'], 'pink_st' => ['Break down cardboard']]];
+        $this->putJson('/api/me/work-report', $data)->assertOk();
+        $first = DailyWorkReport::first()->toArray();
+        $this->putJson('/api/me/work-report', $data)->assertStatus(503)
+            ->assertJsonPath('message', 'Sesi tambahan belum bisa disimpan karena database server belum diperbarui. Laporan sebelumnya tetap aman. Hubungi admin untuk pembaruan database, lalu coba lagi.');
+        $this->assertDatabaseCount('daily_work_reports', 1);
+
+        $repair = require database_path('migrations/2026_11_06_000005_repair_daily_work_report_session_index.php');
+        $repair->up();
+        $repair->up(); // Retrying after partial MySQL DDL must also be safe.
+        $this->putJson('/api/me/work-report', $data + ['shift_label' => 'Shift 2'])->assertOk()
+            ->assertJsonPath('report.revision', 1)->assertJsonPath('report.shift_label', 'Shift 2');
+        $this->assertDatabaseCount('daily_work_reports', 2);
+        $this->assertSame($first, DailyWorkReport::findOrFail($first['id'])->toArray());
+        $this->assertTrue(Schema::hasIndex('daily_work_reports', ['user_id', 'work_date']));
+        $this->assertFalse(Schema::hasIndex('daily_work_reports', ['user_id', 'work_date'], 'unique'));
+    }
+
+    public function test_admin_second_session_on_legacy_schema_returns_actionable_error(): void
+    {
+        Schema::table('daily_work_reports', fn (Blueprint $table) => $table->unique(['user_id', 'work_date']));
+        $employee = $this->employee();
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $data = $this->payload() + ['contributor_id' => $employee->contributor_id, 'is_new' => true];
+        $this->postJson('/api/work-reports', $data)->assertOk();
+        $this->postJson('/api/work-reports', $data)->assertStatus(503);
+        $this->assertDatabaseCount('daily_work_reports', 1);
     }
 
     public function test_employee_submits_and_updates_own_daily_duration_and_multiple_phones(): void

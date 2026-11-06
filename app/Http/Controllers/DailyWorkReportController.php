@@ -148,6 +148,7 @@ class DailyWorkReportController extends Controller
                     ->firstOrFail();
                 abort_if($row->revision !== $expectedRevision, 409, 'Laporan sudah berubah di sesi lain. Muat ulang data sebelum menyimpan.');
             } elseif ($isNew) {
+                $this->ensureMultipleReportsReady($request->user()->id, $today);
                 $row = new DailyWorkReport([
                     'user_id' => $request->user()->id,
                     'contributor_id' => $person->id,
@@ -459,6 +460,19 @@ class DailyWorkReportController extends Controller
         ]);
     }
 
+    private function ensureMultipleReportsReady(int $userId, string $workDate): void
+    {
+        if (! DailyWorkReport::where('user_id', $userId)->where('work_date', $workDate)->exists()) {
+            return;
+        }
+
+        foreach (Schema::getIndexes('daily_work_reports') as $index) {
+            if ($index['unique'] && $index['columns'] === ['user_id', 'work_date']) {
+                abort(503, 'Sesi tambahan belum bisa disimpan karena database server belum diperbarui. Laporan sebelumnya tetap aman. Hubungi admin untuk pembaruan database, lalu coba lagi.');
+            }
+        }
+    }
+
     public function adminStore(Request $request)
     {
         $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
@@ -564,6 +578,8 @@ class DailyWorkReportController extends Controller
                 'report' => $existing,
             ]);
         }
+
+        $this->ensureMultipleReportsReady($user->id, $fields['work_date']);
 
         $attributes = [
             'user_id' => $user->id,

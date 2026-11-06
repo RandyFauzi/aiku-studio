@@ -1,3 +1,7 @@
+### [2026-11-06 20:20] — CODEX
+- Laporan sesi kedua: migrasi multi-shift kini aman diulang setelah DDL parsial; tambah forward repair 000005 untuk indeks unik user/tanggal yang tertinggal. Worker/admin mendapat 503 yang jelas pada skema lama, tanpa menimpa laporan pertama. Tes legacy-index membuktikan repair + retry menyimpan sesi kedua dan mempertahankan semua data sesi pertama.
+- Validasi: full suite 155 tes/1090 assertions PASS; Graphify/schema diperbarui, tanpa build karena backend saja. Produksi BELUM diverifikasi/dimigrasi: akses log hosting tersimpan ditolak HTTP403. Setelah deploy kode jalankan php artisan migrate --force dan cek migrate:status (000004/000005); dugaan indeks legacy belum dikonfirmasi dari log produksi. Perubahan recording-matching/recordings milik agen lain tidak di-stage.
+
 ### [2026-11-06 20:08] — Antigravity
 - Mengembalikan penugasan/konfirmasi pemilik recording ke alur dropdown cepat berfitur search: tombol "Konfirmasi Pemilik" pada floating dock rekaman terpilih kini langsung membuka dropdown pencarian nama/tim pekerja lengkap dengan 1-klik assign, menggantikan modal formulir kaku. Tombol cepat pekerja tetap tersedia di sampingnya.
 - Menambahkan kolom pencarian instan pada picker penugasan pekerja individual (recording-worker-picker) di tampilan tabel dan grid.
