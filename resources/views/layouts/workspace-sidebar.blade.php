@@ -19,7 +19,8 @@
     @endif>
     <div class="workspace-brand-row">
         <a href="{{ $workspaceHome }}" class="portal-brand" aria-label="AIKu Studio, halaman utama">
-            <span class="portal-brand-mark" aria-hidden="true">ai.</span> AIKu Studio
+            <img src="/assets/logo.png" alt="AIKu Studio Logo" class="h-9 w-auto object-contain shrink-0">
+            <span>AIKu Studio</span>
         </a>
         @if($workspaceAdmin)
             <button type="button" @click="sidebarOpen=false" aria-label="Tutup menu samping" class="workspace-sidebar-close md:hidden">

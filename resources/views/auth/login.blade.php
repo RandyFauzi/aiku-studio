@@ -22,6 +22,15 @@
         }
         [x-cloak] { display: none !important; }
     </style>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="AIKu Studio">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body class="min-h-screen bg-white text-slate-800 relative overflow-x-hidden flex flex-col justify-center selection:bg-emerald-100 selection:text-emerald-900"
       x-data="{ showPassword: false, showForgotModal: false }">

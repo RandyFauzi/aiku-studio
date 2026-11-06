@@ -126,66 +126,136 @@
                         </tr>
 
                         <!-- EXPANDED ASSIST DRAWER ROW -->
-                        <tr x-show="expandedReportId === report.id" class="block border-t border-slate-200/60 bg-slate-50/80 md:table-row">
+                        <tr x-show="expandedReportId === report.id" class="block border-t border-slate-200/80 bg-slate-50/90 md:table-row">
                             <td colspan="4" class="block p-4 sm:p-6 md:table-cell">
                                 <div class="space-y-4">
-                                    <div class="flex items-center justify-between">
+                                    <!-- Header Assist Drawer -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/70">
                                         <div>
-                                            <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                                                <span>Assist Pencocokan Rekaman:</span>
-                                                <span class="text-emerald-700" x-text="report.contributor_name"></span>
-                                            </h3>
+                                            <div class="flex items-center gap-2">
+                                                <span class="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                <h3 class="text-sm font-extrabold text-slate-900">
+                                                    Assist Pencocokan: <span class="text-emerald-700" x-text="report.contributor_name"></span>
+                                                </h3>
+                                                <span x-show="report.shift_label" class="rounded-md bg-slate-200/80 px-2 py-0.5 text-[11px] font-bold text-slate-700" x-text="report.shift_label"></span>
+                                            </div>
                                             <p class="text-xs text-slate-500 mt-0.5">
-                                                Menampilkan kandidat rekaman bot yang cocok dengan akun email HP pekerja pada tanggal ini.
+                                                Mencocokkan durasi HP laporan pekerja dengan rekaman bot otomatis pada hari yang sama.
                                             </p>
                                         </div>
-                                        <button type="button" @click="reloadAssistOnly()" :disabled="assistLoading" class="text-xs font-semibold text-brand-700 hover:text-brand-800 flex items-center gap-1">
-                                            <svg class="w-3 h-3" :class="assistLoading ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                            <span>Segarkan</span>
-                                        </button>
+
+                                        <!-- Header Right Actions & Quick Assign All -->
+                                        <div class="flex items-center gap-2.5">
+                                            <!-- Batch Assign All candidates from all phones -->
+                                            <template x-if="getAssistSummary(report.id).totalCandidates > 0">
+                                                <button type="button"
+                                                        @click="assignCandidates(report.contributor_id, report.contributor_name, getAssistSummary(report.id).allCandidateIds)"
+                                                        :disabled="assigning"
+                                                        class="min-h-9 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                    <span x-text="'Tandai Semua (' + getAssistSummary(report.id).totalCandidates + ' Rekaman)'"></span>
+                                                </button>
+                                            </template>
+
+                                            <button type="button" @click="reloadAssistOnly()" :disabled="assistLoading" class="min-h-9 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-1.5 shadow-2xs transition">
+                                                <svg class="w-3.5 h-3.5 text-slate-500" :class="assistLoading ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                <span>Segarkan</span>
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    <!-- Assist Phones Cards -->
+                                    <!-- Assist Phones Cards Grid -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <template x-for="pMatch in (getAssistForReport(report.id)?.phones || [])" :key="pMatch.phone_key">
-                                            <div class="rounded-2xl border p-4.5 bg-white shadow-2xs space-y-3"
-                                                 :class="pMatch.status === 'fully_verified' ? 'border-emerald-300 ring-1 ring-emerald-300' : 'border-slate-200'">
+                                            <div x-data="{ showTasks: false }"
+                                                 class="rounded-2xl border p-4.5 bg-white shadow-xs space-y-3 transition"
+                                                 :class="{
+                                                     'border-emerald-300 ring-2 ring-emerald-400/20 bg-emerald-50/15': pMatch.unassigned_count > 0,
+                                                     'border-emerald-200 bg-emerald-50/10': pMatch.status === 'fully_verified',
+                                                     'border-slate-200/80 bg-slate-50/60 opacity-80 hover:opacity-100': pMatch.status === 'no_bot_data' && pMatch.already_assigned_count === 0,
+                                                     'border-slate-200 bg-white': pMatch.status !== 'fully_verified' && pMatch.unassigned_count === 0 && pMatch.status !== 'no_bot_data'
+                                                 }">
                                                 
-                                                <!-- Card Header -->
+                                                <!-- Card Header: Device Name & Status Badge -->
                                                 <div class="flex items-start justify-between gap-2">
-                                                    <div>
-                                                        <span class="text-xs font-extrabold text-slate-800" x-text="'HP ' + pMatch.phone_label"></span>
-                                                        <span class="block text-xs text-slate-600 break-words" x-text="'Task laporan: ' + (pMatch.reported_tasks?.join(' · ') || 'Belum dicatat')"></span>
-                                                        <p class="text-[11px] text-slate-400 font-mono" x-text="pMatch.emails.length ? pMatch.emails.join(', ') : 'Belum ada akun di HP ini'"></p>
+                                                    <div class="min-w-0">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                                            </div>
+                                                            <span class="text-xs font-black text-slate-900 tracking-tight" x-text="'HP ' + pMatch.phone_label"></span>
+                                                        </div>
+
+                                                        <!-- Task info -->
+                                                        <div class="mt-1.5 flex flex-wrap items-center gap-1 text-xs">
+                                                            <span class="text-slate-400 text-[11px] font-semibold">Task:</span>
+                                                            <template x-if="pMatch.reported_tasks && pMatch.reported_tasks.length > 0">
+                                                                <div class="flex flex-wrap gap-1">
+                                                                    <template x-for="tk in pMatch.reported_tasks" :key="tk">
+                                                                        <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-medium" x-text="tk"></span>
+                                                                    </template>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="!pMatch.reported_tasks || !pMatch.reported_tasks.length">
+                                                                <span class="text-slate-400 italic text-[11px]">Tanpa rincian task</span>
+                                                            </template>
+                                                        </div>
+
+                                                        <!-- Email accounts -->
+                                                        <div class="mt-1 flex flex-wrap gap-1">
+                                                            <template x-if="pMatch.emails && pMatch.emails.length > 0">
+                                                                <div class="flex flex-wrap gap-1">
+                                                                    <template x-for="em in pMatch.emails" :key="em">
+                                                                        <span class="inline-block px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200/80 font-mono text-[10px] text-slate-500 break-all" x-text="em"></span>
+                                                                    </template>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="!pMatch.emails || !pMatch.emails.length">
+                                                                <span class="text-[11px] text-amber-700">Belum ada akun di HP ini</span>
+                                                            </template>
+                                                        </div>
                                                     </div>
 
                                                     <!-- Status Badge -->
-                                                    <div>
+                                                    <div class="shrink-0 text-right">
                                                         <template x-if="pMatch.status === 'fully_verified'">
-                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                                                                ✓ Terverifikasi Penuh
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs">
+                                                                <svg class="w-3 h-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                                Terverifikasi Penuh
                                                             </span>
                                                         </template>
                                                         <template x-if="pMatch.status === 'exact_match'">
-                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
                                                                 Sangat Cocok (±15m)
                                                             </span>
                                                         </template>
                                                         <template x-if="pMatch.status === 'close_match'">
-                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
                                                                 Mendekati (±45m)
                                                             </span>
                                                         </template>
+                                                        <template x-if="pMatch.status === 'over_bot'">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
+                                                                <span x-text="'Bot +' + pMatch.difference_minutes + 'm'"></span>
+                                                            </span>
+                                                        </template>
+                                                        <template x-if="pMatch.status === 'under_bot'">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                                                                <span x-text="'Bot ' + pMatch.difference_minutes + 'm'"></span>
+                                                            </span>
+                                                        </template>
                                                         <template x-if="pMatch.status === 'no_bot_data'">
-                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-600">
+                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-slate-100 text-slate-500">
                                                                 Belum Ada Data Bot
                                                             </span>
                                                         </template>
                                                         <template x-if="pMatch.status === 'personal_phone'">
-                                                            <span class="text-xs text-slate-500">HP Sendiri · isi email laporan untuk mencocokkan rekaman bot</span>
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                                                                HP Sendiri
+                                                            </span>
                                                         </template>
                                                         <template x-if="pMatch.status === 'no_device_account'">
-                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-red-50 text-red-700">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
                                                                 Email HP Belum Terdaftar
                                                             </span>
                                                         </template>
@@ -195,24 +265,32 @@
                                                 <!-- Comparison Numbers Box -->
                                                 <div class="grid grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
                                                     <div>
-                                                        <span class="text-slate-400 block text-[10px] font-bold uppercase">Laporan Pekerja:</span>
-                                                        <strong class="font-mono text-slate-800 text-sm" x-text="pMatch.reported_minutes + ' menit'"></strong>
+                                                        <span class="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Laporan Pekerja</span>
+                                                        <div class="mt-0.5 flex items-baseline gap-1">
+                                                            <strong class="font-mono text-slate-800 text-base font-black" x-text="pMatch.reported_minutes"></strong>
+                                                            <span class="text-slate-500 text-[11px] font-semibold">menit</span>
+                                                        </div>
                                                     </div>
                                                     <div>
-                                                        <span class="text-slate-400 block text-[10px] font-bold uppercase">Rekaman Bot Siap Ditandai:</span>
-                                                        <strong class="font-mono text-emerald-700 text-sm" x-text="pMatch.unassigned_count + ' task (' + pMatch.unassigned_minutes + 'm)'"></strong>
+                                                        <span class="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Rekaman Bot</span>
+                                                        <div class="mt-0.5 flex items-baseline gap-1">
+                                                            <strong class="font-mono text-emerald-700 text-base font-black" x-text="(pMatch.unassigned_minutes + pMatch.already_assigned_minutes).toFixed(1)"></strong>
+                                                            <span class="text-slate-500 text-[11px] font-semibold">m</span>
+                                                            <span class="text-[11px] text-slate-400 font-normal" x-text="'(' + (pMatch.unassigned_count + pMatch.already_assigned_count) + ' task)'"></span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <!-- Action Buttons -->
-                                                <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                                <!-- Action Buttons Row -->
+                                                <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
                                                     <!-- 1-Click Assign Button -->
                                                     <template x-if="pMatch.candidate_record_ids && pMatch.candidate_record_ids.length > 0">
                                                         <button type="button" 
                                                                 @click="assignCandidates(report.contributor_id, report.contributor_name, pMatch.candidate_record_ids)" 
                                                                 :disabled="assigning"
-                                                                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 disabled:opacity-50">
-                                                            <span>✓ Tandai</span>
+                                                                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
+                                                            <svg class="w-3.5 h-3.5 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                            <span>Tandai</span>
                                                             <span x-text="pMatch.candidate_record_ids.length + ' Rekaman ke ' + report.contributor_name"></span>
                                                         </button>
                                                     </template>
@@ -222,33 +300,73 @@
                                                         <button type="button" 
                                                                 @click="unassignRecords(pMatch.my_record_ids)" 
                                                                 :disabled="assigning"
-                                                                class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-red-50 hover:text-red-700 text-xs font-semibold text-slate-600 transition">
+                                                                class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 text-xs font-semibold text-slate-600 transition cursor-pointer">
                                                             <span x-text="'Lepas Penugasan (' + pMatch.my_record_ids.length + ' task)'"></span>
+                                                        </button>
+                                                    </template>
+
+                                                    <!-- Task preview toggle button -->
+                                                    <template x-if="pMatch.tasks && pMatch.tasks.length > 0">
+                                                        <button type="button"
+                                                                @click="showTasks = !showTasks"
+                                                                class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-800 py-1 transition cursor-pointer">
+                                                            <span x-text="showTasks ? 'Tutup daftar task' : ('Lihat ' + pMatch.tasks.length + ' task rekaman')"></span>
+                                                            <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="showTasks ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                                         </button>
                                                     </template>
                                                 </div>
 
-                                                <!-- Tasks Preview Accordion -->
+                                                <!-- Tasks Preview Modern List (Toggled via showTasks) -->
                                                 <template x-if="pMatch.tasks && pMatch.tasks.length > 0">
-                                                    <details class="pt-2 border-t border-slate-100 text-xs">
-                                                        <summary class="cursor-pointer font-bold text-slate-500 hover:text-slate-700 text-[11px]">
-                                                            Lihat daftar <span x-text="pMatch.tasks.length"></span> task rekaman...
-                                                        </summary>
-                                                        <div class="mt-2 space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                                                    <div x-show="showTasks" 
+                                                         x-transition:enter="transition ease-out duration-150"
+                                                         x-transition:enter-start="opacity-0 -translate-y-1"
+                                                         x-transition:enter-end="opacity-100 translate-y-0"
+                                                         class="pt-2 border-t border-slate-100 text-xs space-y-1.5">
+                                                        <div class="max-h-52 overflow-y-auto space-y-1.5 custom-scroll pr-1">
                                                             <template x-for="t in pMatch.tasks" :key="t.record_id">
-                                                                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50/70 border border-slate-100 text-[11px]">
+                                                                <div class="flex items-center justify-between p-2 rounded-xl border text-[11px] transition"
+                                                                     :class="t.is_assigned_to_me ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50/70 border-slate-100'">
                                                                     <div class="min-w-0 pr-2">
                                                                         <p class="font-bold text-slate-800 truncate" x-text="t.task_title"></p>
-                                                                        <p class="text-slate-400 font-mono text-[10px]" x-text="t.recorded_utc || t.record_id"></p>
+                                                                        <div class="flex items-center gap-2 mt-0.5">
+                                                                            <span class="text-slate-500 font-mono text-[10px]" x-text="t.recorded_wita || t.recorded_utc"></span>
+                                                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider"
+                                                                                  :class="{
+                                                                                      'bg-emerald-100 text-emerald-800': t.processing_status === 'approved',
+                                                                                      'bg-rose-100 text-rose-800': t.processing_status === 'rejected',
+                                                                                      'bg-amber-100 text-amber-800': t.processing_status === 'pending'
+                                                                                  }"
+                                                                                  x-text="t.processing_status"></span>
+                                                                        </div>
                                                                     </div>
-                                                                    <div class="text-right shrink-0">
-                                                                        <span class="font-mono font-bold" :class="t.is_assigned_to_me ? 'text-emerald-700' : 'text-slate-700'" x-text="t.duration_min + 'm'"></span>
-                                                                        <span class="block text-[10px]" :class="t.is_assigned_to_me ? 'text-emerald-600 font-bold' : 'text-slate-400'" x-text="t.is_assigned_to_me ? 'Terverifikasi' : 'Belum Ditandai'"></span>
+                                                                    <div class="text-right shrink-0 flex items-center gap-2">
+                                                                        <div>
+                                                                            <span class="font-mono font-bold block" :class="t.is_assigned_to_me ? 'text-emerald-700' : 'text-slate-700'" x-text="t.duration_min + 'm'"></span>
+                                                                            <span class="block text-[10px]" :class="t.is_assigned_to_me ? 'text-emerald-600 font-bold' : 'text-slate-400'" x-text="t.is_assigned_to_me ? 'Ditandai' : 'Belum Ditandai'"></span>
+                                                                        </div>
+                                                                        <!-- Single task assign button -->
+                                                                        <template x-if="!t.is_assigned_to_me">
+                                                                            <button type="button"
+                                                                                    @click="assignCandidates(report.contributor_id, report.contributor_name, [t.record_id])"
+                                                                                    :disabled="assigning"
+                                                                                    class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-2xs transition">
+                                                                                Tandai
+                                                                            </button>
+                                                                        </template>
+                                                                        <template x-if="t.is_assigned_to_me">
+                                                                            <button type="button"
+                                                                                    @click="unassignRecords([t.record_id])"
+                                                                                    :disabled="assigning"
+                                                                                    class="px-2 py-1 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 text-rose-600 font-semibold text-[10px] transition">
+                                                                                Lepas
+                                                                            </button>
+                                                                        </template>
                                                                     </div>
                                                                 </div>
                                                             </template>
                                                         </div>
-                                                    </details>
+                                                    </div>
                                                 </template>
                                             </div>
                                         </template>

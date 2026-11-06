@@ -366,10 +366,11 @@ class DailyWorkReportController extends Controller
                     }
                 }
 
-                $tasksSample = $unassignedRecs->concat($myAssignedRecs)->take(20)->map(fn ($r) => [
+                $tasksSample = $unassignedRecs->concat($myAssignedRecs)->take(30)->map(fn ($r) => [
                     'record_id' => $r->record_id,
                     'task_title' => $r->task_title ?: 'Tanpa Judul',
                     'recorded_utc' => $r->recorded_utc,
+                    'recorded_wita' => $r->recorded_at ? CarbonImmutable::parse($r->recorded_at)->setTimezone('Asia/Makassar')->format('H:i') . ' WITA' : ($r->recorded_utc ? substr($r->recorded_utc, 11, 5) . ' UTC' : '-'),
                     'duration_min' => round($r->duration_min, 1),
                     'billable_min' => round($r->billable_min, 1),
                     'processing_status' => $r->processing_status,

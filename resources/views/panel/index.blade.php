@@ -7,6 +7,14 @@
     <meta name="theme-color" content="#edf6d9">
     <link rel="preload" href="/fonts/manrope-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="AIKu Studio">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
     
@@ -67,16 +75,18 @@
                 <div class="absolute top-0 right-1/4 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
                 <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                        <div class="flex items-center gap-2.5 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span>AIKu Studio Command Center</span>
-                            <span class="text-slate-500">•</span>
-                            <span class="text-slate-300">Live Production Overview</span>
-                        </div>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
-                            Selamat datang, {{ auth()->user()->name }}
-                        </h1>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                        <img src="/assets/logo.png" alt="AIKu Studio Logo" class="h-16 sm:h-20 w-auto object-contain shrink-0 drop-shadow-md self-start sm:self-center">
+                        <div>
+                            <div class="flex items-center gap-2.5 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                <span>AIKu Studio Command Center</span>
+                                <span class="text-slate-500">•</span>
+                                <span class="text-slate-300">Live Production Overview</span>
+                            </div>
+                            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
+                                Selamat datang, {{ auth()->user()->name }}
+                            </h1>
                         <p class="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
                             Pantau validasi rekaman video, tingkat kelulusan QC, performa kerja kontributor tim, serta distribusi pembayaran payroll secara akurat dan transparan.
                         </p>

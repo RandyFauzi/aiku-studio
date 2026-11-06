@@ -863,6 +863,40 @@ window.adminWorkReportsData = () => ({
         return this.assistData.find(a => a.report_id === reportId) || null;
     },
 
+    getAssistSummary(reportId) {
+        const assist = this.getAssistForReport(reportId);
+        if (!assist || !assist.phones || !assist.phones.length) {
+            return { totalCandidates: 0, totalCandidateMinutes: 0, totalAssigned: 0, totalAssignedMinutes: 0, actionablePhones: 0, allCandidateIds: [] };
+        }
+        let totalCandidates = 0;
+        let totalCandidateMinutes = 0;
+        let totalAssigned = 0;
+        let totalAssignedMinutes = 0;
+        let actionablePhones = 0;
+        const allCandidateIds = [];
+
+        assist.phones.forEach(p => {
+            const candCount = (p.candidate_record_ids || []).length;
+            if (candCount > 0) {
+                totalCandidates += candCount;
+                totalCandidateMinutes += (p.unassigned_minutes || 0);
+                actionablePhones++;
+                allCandidateIds.push(...p.candidate_record_ids);
+            }
+            totalAssigned += (p.already_assigned_count || 0);
+            totalAssignedMinutes += (p.already_assigned_minutes || 0);
+        });
+
+        return {
+            totalCandidates,
+            totalCandidateMinutes: Math.round(totalCandidateMinutes * 10) / 10,
+            totalAssigned,
+            totalAssignedMinutes: Math.round(totalAssignedMinutes * 10) / 10,
+            actionablePhones,
+            allCandidateIds
+        };
+    },
+
     toggleExpandReport(reportId) {
         this.expandedReportId = this.expandedReportId === reportId ? null : reportId;
     },
@@ -890,9 +924,11 @@ window.adminWorkReportsData = () => ({
 
             if (window.Swal) {
                 window.Swal.fire({
+                    toast: true,
+                    position: 'top-end',
                     icon: 'success',
                     title: 'Berhasil Ditandai!',
-                    text: `${data.updated_count} rekaman berhasil ditugaskan ke ${workerName}`,
+                    text: `${data.updated_count} rekaman ditugaskan ke ${workerName}`,
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -901,7 +937,7 @@ window.adminWorkReportsData = () => ({
             await this.reloadAssistOnly();
         } catch (e) {
             if (window.Swal) {
-                window.Swal.fire({ icon: 'error', title: 'Gagal', text: e.message });
+                window.Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Gagal', text: e.message, timer: 3000, showConfirmButton: false });
             } else {
                 alert(e.message);
             }
@@ -928,6 +964,18 @@ window.adminWorkReportsData = () => ({
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Gagal membatalkan penugasan');
+
+            if (window.Swal) {
+                window.Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Penugasan Dilepas',
+                    text: `${recordIds.length} rekaman dikembalikan ke unassigned`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
 
             await this.reloadAssistOnly();
         } catch (e) {
