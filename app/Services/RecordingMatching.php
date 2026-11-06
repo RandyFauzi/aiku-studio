@@ -98,6 +98,7 @@ class RecordingMatching
             $emails = $override !== '' ? [$override] : ($key === 'sendiri' ? [] : $accounts->where('phone_key', $key)->pluck('email')->map(fn ($email) => mb_strtolower(trim($email)))->filter()->unique()->values()->all());
 
             return ['key' => $key, 'label' => 'HP '.(DailyWorkReport::REPORT_PHONES[$key] ?? $key), 'emails' => $emails,
+                'tasks' => $report->phone_tasks[$key] ?? [],
                 'email_source' => $override !== '' ? 'report' : ($key === 'sendiri' ? 'missing' : 'master_candidates'),
                 'duration_minutes' => $report->phone_durations[$key] ?? null];
         }, $report->phones ?? []);

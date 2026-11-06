@@ -12,12 +12,22 @@ class DailyWorkReport extends Model
 
     protected $guarded = ['id'];
 
+    protected static function booted(): void
+    {
+        static::saved(function (self $report) {
+            if ($report->wasChanged('phone_tasks') || $report->wasRecentlyCreated) {
+                app(\App\Services\ReportTasks::class)->remember($report->phone_tasks ?? []);
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
             'phones' => 'array',
             'phone_durations' => 'array',
             'phone_emails' => 'array',
+            'phone_tasks' => 'array',
             'total_duration_minutes' => 'integer',
             'revision' => 'integer',
         ];

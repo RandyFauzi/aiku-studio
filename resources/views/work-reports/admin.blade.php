@@ -98,6 +98,7 @@
                                 <p class="font-extrabold text-slate-900" x-text="report.contributor_name"></p>
                                 <p class="text-[11px] text-slate-400" x-text="'Rev: #' + (report.revision || 1)"></p>
                                 <p class="mt-1 text-xs text-slate-600" x-text="'Dikirim: ' + reportTimestamp(report.created_at)"></p>
+                                <template x-for="pkey in report.phones" :key="pkey"><p class="mt-1 text-xs text-slate-600 break-words" x-text="formatPhoneName(pkey) + ' · Task: ' + (report.phone_tasks?.[pkey]?.join(' · ') || 'Belum dicatat')"></p></template>
                                 <p x-show="report.revision > 1" class="text-xs text-slate-500" x-text="'Diperbarui: ' + reportTimestamp(report.updated_at)"></p>
                             </td>
 
@@ -214,6 +215,7 @@
                                                 <div class="flex items-start justify-between gap-2">
                                                     <div>
                                                         <span class="text-xs font-extrabold text-slate-800" x-text="'HP ' + pMatch.phone_label"></span>
+                                                        <span class="block text-xs text-slate-600 break-words" x-text="'Task laporan: ' + (pMatch.reported_tasks?.join(' · ') || 'Belum dicatat')"></span>
                                                         <p class="text-[11px] text-slate-400 font-mono" x-text="pMatch.emails.length ? pMatch.emails.join(', ') : 'Belum ada akun di HP ini'"></p>
                                                     </div>
 
@@ -395,6 +397,8 @@
                                     </div>
                                 </div>
 
+                                <p class="mb-2 break-words text-sm text-slate-600" x-text="'Task: ' + (selectedReport?.phone_tasks?.[pkey]?.join(' · ') || 'Belum dicatat')"></p>
+
                                 <!-- Akun Studio yang Terhubung ke HP ini -->
                                 <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs flex-wrap gap-2">
                                     <div class="space-y-1">
@@ -556,7 +560,8 @@
                                     </div>
 
                                     <!-- Email Akun Terhubung Input -->
-                                    <div class="pt-2 border-t border-slate-200/50">
+                                    @include('work-reports.task-picker', ['taskMap' => 'editForm.phone_tasks', 'phoneList' => 'editForm.phones'])
+                                <div class="pt-2 border-t border-slate-200/50">
                                         <div class="flex items-center justify-between mb-1">
                                             <label class="block text-[10px] font-bold text-slate-600"><span x-text="key === 'sendiri' ? 'Email HP Sendiri (opsional):' : 'Email Akun Terhubung:'"></span></label>
                                             <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">Khusus Laporan Ini</span>
@@ -664,7 +669,7 @@
                 </div>
 
                 <!-- Dynamic Phones Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <template x-for="(label, key) in phoneOptions" :key="key">
                         <div :class="createForm.phones.includes(key) ? 'border-2 border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-xs' : 'border border-slate-200 hover:border-slate-300 bg-white shadow-2xs'"
                              class="rounded-3xl p-3.5 transition flex flex-col justify-between">
@@ -716,6 +721,7 @@
                                 </div>
 
                                 <!-- Email Akun Terhubung Input -->
+                                @include('work-reports.task-picker', ['taskMap' => 'createForm.phone_tasks', 'phoneList' => 'createForm.phones'])
                                 <div class="pt-2 border-t border-slate-200/50">
                                     <div class="flex items-center justify-between mb-1">
                                         <label class="block text-[10px] font-bold text-slate-600"><span x-text="key === 'sendiri' ? 'Email HP Sendiri (opsional):' : 'Email Akun Terhubung:'"></span></label>

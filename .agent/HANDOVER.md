@@ -1,3 +1,7 @@
+### [2026-11-06 15.34] — CODEX
+- Laporan: task per HP dengan pencarian + multi-checkbox, tombol Task sama (salinan independen), tambah judul baru disimpan bersama laporan. Katalog menggabungkan judul Atlas terbaru dan task tim, dedup normalisasi; label task tim otomatis menjadi Atlas bila judul tersedia. Worker mobile satu kolom; create/edit admin memakai picker yang sama. Migrasi 2026_11_06_000002 menambah phone_tasks dan report_task_options.
+- Admin: task per HP tampil di daftar/detail/Assist dan dialog konfirmasi, penanda task recording berbeda, snapshot task ikut bukti konfirmasi. Laporan/API lama tetap terbaca; revisi lama yang tidak mengirim task mempertahankan data. Validasi: 134 tes/917 assertions, browser 390/1440 (3 HP, search/multi-select/copy/tambah, simpan+reload, admin create/edit), build dan Graphify/schema SQLite terisolasi lulus. Jalankan migrasi saat deploy; tidak mengubah rumus/periode payroll.
+
 ### [2026-11-06 15.01] — CODEX
 - Pembatas list recording memakai konfigurasi cutoff upload terpisah dari sesi kerja/charging: Shift 1 09–13, Shift 2 >13–19, Shift 3 >19–23, lembur >23–08 besok (tanggal hari sebelumnya); >08–<09 ditandai sebelum Shift 1. Cutoff akhir inklusif, tanpa celah/duplikasi; tidak mengubah pemilik atau payroll.
 - Validasi: 25 tes terkait/195 assertions, termasuk 16 waktu batas dan tanggal WITA; 10 tes pencocokan/86 assertions setelah fallback cache konfigurasi. Browser desktop/mobile dan Graphify lulus; PHP/config saja, tanpa build aset atau migrasi baru.

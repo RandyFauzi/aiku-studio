@@ -8,6 +8,7 @@ import './attendance';
 import './record-streak';
 import './recording-matching';
 import './work-reports';
+import './report-task-picker';
 import './barcode-wifi';
 
 window.Swal = Swal;

@@ -9,6 +9,11 @@ Alpine.data('recordingMatching', () => ({
     },
     get owner() { return this.options.find(option => option.key === this.target); },
     get selectedMinutes() { return this.chosen.reduce((sum, record) => sum + Number(record.duration_min || 0), 0).toFixed(2); },
+    get unmatchedTasks() {
+        const key = title => (title || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        const tasks = (this.owner?.phone.tasks || []).map(key);
+        return tasks.length ? [...new Set(this.chosen.filter(record => !tasks.includes(key(record.task_title))).map(record => record.task_title || 'Tanpa judul'))] : [];
+    },
     get canConfirm() {
         return !this.loading && !this.saving && this.owner?.report.can_confirm && this.selected.length > 0
             && this.selected.length === this.chosen.length && this.reason.trim().length >= 8

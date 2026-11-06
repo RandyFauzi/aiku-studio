@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\ContributorAccess;
 use App\Services\ContributorIdentity;
 use App\Services\ShiftSchedule;
+use App\Services\ReportTasks;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,11 @@ use Illuminate\Validation\ValidationException;
 
 class DailyWorkReportController extends Controller
 {
+    public function taskOptions(Request $request)
+    {
+        $data = $request->validate(['search' => 'nullable|string|max:100']);
+        return response()->json(['tasks' => app(ReportTasks::class)->search($data['search'] ?? '')]);
+    }
     private function contributor(Request $request): Contributor
     {
         return app(ContributorIdentity::class)->resolve($request->user());
@@ -55,6 +61,9 @@ class DailyWorkReportController extends Controller
             'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_emails.*' => 'nullable|string|max:100',
             'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
+            'phone_tasks' => ['sometimes', 'array:'.implode(',', $allowedKeys)],
+            'phone_tasks.*' => 'required|array|min:1|max:30',
+            'phone_tasks.*.*' => 'required|string|max:200',
         ]);
 
         $today = app(ShiftSchedule::class)->workDate($person);
@@ -118,6 +127,7 @@ class DailyWorkReportController extends Controller
                 $attributes['phone_emails'] = $phoneEmails;
             }
 
+            $attributes['phone_tasks'] = app(ReportTasks::class)->forReport($fields, $phones, $row->phone_tasks ?? []);
             $row->fill($attributes);
             $row->revision++;
             $row->save();
@@ -293,6 +303,7 @@ class DailyWorkReportController extends Controller
                     'active_email' => $activeEmail,
                     'is_email_overridden' => $isEmailOverridden,
                     'reported_minutes' => (int) $reportedMinutes,
+                    'reported_tasks' => $report->phone_tasks[$phoneKey] ?? [],
                     'emails' => $phoneEmails,
                     'status' => $status,
                     'unassigned_count' => $unassignedRecs->count(),
@@ -382,6 +393,9 @@ class DailyWorkReportController extends Controller
             'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_emails.*' => 'nullable|string|max:100',
             'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
+            'phone_tasks' => ['sometimes', 'array:'.implode(',', $allowedKeys)],
+            'phone_tasks.*' => 'required|array|min:1|max:30',
+            'phone_tasks.*.*' => 'required|string|max:200',
             'total_duration_minutes' => 'nullable|integer|min:1|max:10080',
         ]);
 
@@ -447,6 +461,7 @@ class DailyWorkReportController extends Controller
             if (Schema::hasColumn('daily_work_reports', 'phone_emails')) {
                 $existing->phone_emails = $phoneEmails;
             }
+            $existing->phone_tasks = app(ReportTasks::class)->forReport($fields, $phones, $existing->phone_tasks ?? []);
             $existing->revision++;
             $existing->save();
 
@@ -475,6 +490,7 @@ class DailyWorkReportController extends Controller
             $attributes['phone_emails'] = $phoneEmails;
         }
 
+        $attributes['phone_tasks'] = app(ReportTasks::class)->forReport($fields, $phones);
         $report = DailyWorkReport::create($attributes);
 
         return response()->json([
@@ -496,6 +512,9 @@ class DailyWorkReportController extends Controller
             'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
             'phone_emails.*' => 'nullable|string|max:100',
             'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
+            'phone_tasks' => ['sometimes', 'array:'.implode(',', $allowedKeys)],
+            'phone_tasks.*' => 'required|array|min:1|max:30',
+            'phone_tasks.*.*' => 'required|string|max:200',
             'total_duration_minutes' => 'nullable|integer|min:1|max:10080',
         ]);
 
@@ -542,6 +561,7 @@ class DailyWorkReportController extends Controller
         if (Schema::hasColumn('daily_work_reports', 'phone_emails')) {
             $report->phone_emails = $phoneEmails;
         }
+        $report->phone_tasks = app(ReportTasks::class)->forReport($fields, $phones, $report->phone_tasks ?? []);
         $report->revision++;
         $report->save();
 

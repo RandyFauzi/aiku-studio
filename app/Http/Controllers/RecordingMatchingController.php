@@ -74,6 +74,7 @@ class RecordingMatchingController extends Controller
                     'report_id' => $report->id, 'report_revision' => $report->revision, 'work_date' => $report->work_date,
                     'contributor_id' => $person->id, 'phone_key' => $data['phone_key'], 'email' => $record->participant_email,
                     'email_source' => $phone['email_source'], 'reason' => $data['reason'],
+                    'reported_tasks' => $phone['tasks'], 'recording_task' => $record->task_title,
                     'reported_minutes' => $phone['duration_minutes'], 'report_total_minutes' => $report->total_duration_minutes,
                     'recording_minutes' => $record->duration_min, 'atlas_recorded_at' => $record->getRawOriginal('recorded_at'),
                     'at' => now()->toIso8601String()], JSON_UNESCAPED_UNICODE);

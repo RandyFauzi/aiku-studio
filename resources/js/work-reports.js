@@ -1,3 +1,4 @@
+const copyPhoneTasks = value => Object.fromEntries(Object.entries(value || {}).map(([key, tasks]) => [key, [...tasks]]));
 const today = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Makassar', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const duration = value => {
     const mins = Number(value) || 0;
@@ -54,6 +55,7 @@ window.dailyWorkReportData = () => ({
     phones: [],
     phoneDurations: {},
     phoneEmails: {},
+    phoneTasks: {},
     options: labels,
     revision: 0,
     reports: [],
@@ -72,12 +74,12 @@ window.dailyWorkReportData = () => ({
     },
 
     get isComplete() {
-        return this.phones.length > 0 && this.phones.every(k => (Number(this.phoneDurations[k]) || 0) > 0);
+        return this.phones.length > 0 && this.phones.every(k => (Number(this.phoneDurations[k]) || 0) > 0 && (this.phoneTasks[k] || []).length > 0);
     },
 
     get dirty() {
         if (this.baseline === '') return false;
-        const current = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails]);
+        const current = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks]);
         return current !== this.baseline;
     },
 
@@ -86,6 +88,7 @@ window.dailyWorkReportData = () => ({
             this.phones = this.phones.filter(k => k !== key);
             delete this.phoneDurations[key];
             delete this.phoneEmails[key];
+            delete this.phoneTasks[key];
         } else {
             this.phones.push(key);
             if (!this.phoneDurations[key] || Number(this.phoneDurations[key]) <= 0) {
@@ -132,6 +135,7 @@ window.dailyWorkReportData = () => ({
                 this.phones = [...(report?.phones || [])];
                 this.phoneDurations = {};
                 this.phoneEmails = { ...(report?.phone_emails || {}) };
+                this.phoneTasks = copyPhoneTasks(report?.phone_tasks);
 
                 if (report?.phone_durations && typeof report.phone_durations === 'object') {
                     this.phoneDurations = { ...report.phone_durations };
@@ -143,7 +147,7 @@ window.dailyWorkReportData = () => ({
                 }
 
                 this.revision = report?.revision || 0;
-                this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails]);
+                this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks]);
             }
 
             const isSubmitted = !!(data.today_report && Number(data.today_report.revision) > 0);
@@ -186,6 +190,7 @@ window.dailyWorkReportData = () => ({
                     phones: this.phones,
                     phone_durations: this.phoneDurations,
                     phone_emails: this.phoneEmails,
+                    phone_tasks: this.phoneTasks,
                     expected_revision: this.revision
                 })
             });
@@ -200,7 +205,8 @@ window.dailyWorkReportData = () => ({
             this.phones = [...(report.phones || [])];
             this.phoneDurations = { ...(report.phone_durations || this.phoneDurations) };
             this.phoneEmails = { ...(report.phone_emails || {}) };
-            this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails]);
+            this.phoneTasks = copyPhoneTasks(report.phone_tasks);
+            this.baseline = JSON.stringify([[...this.phones].sort(), this.phoneDurations, this.phoneEmails, this.phoneTasks]);
             this.message = 'Laporan kerja tanggal ' + dateLabel(this.date) + ' berhasil disimpan (' + this.totalMinutes + ' menit).';
 
             window.dispatchEvent(new CustomEvent('report-status-updated', {
@@ -343,6 +349,7 @@ window.adminWorkReportsData = () => ({
         work_date: today(),
         phones: [],
         phone_durations: {},
+        phone_tasks: {},
         phone_emails: {}
     },
     createError: '',
@@ -373,6 +380,7 @@ window.adminWorkReportsData = () => ({
             work_date: this.date || today(),
             phones: [],
             phone_durations: {},
+            phone_tasks: {},
             phone_emails: initialEmails
         };
         if (!this.contributorsList.length) {
@@ -390,6 +398,7 @@ window.adminWorkReportsData = () => ({
         if (this.createForm.phones.includes(key)) {
             this.createForm.phones = this.createForm.phones.filter(p => p !== key);
             delete this.createForm.phone_durations[key];
+            delete this.createForm.phone_tasks[key];
         } else {
             this.createForm.phones.push(key);
             this.createForm.phone_durations[key] = this.createForm.phone_durations[key] || 60;
@@ -452,6 +461,7 @@ window.adminWorkReportsData = () => ({
                     phones: this.createForm.phones,
                     phone_durations: this.createForm.phone_durations,
                     phone_emails: this.createForm.phone_emails,
+                    phone_tasks: this.createForm.phone_tasks,
                     total_duration_minutes: total
                 })
             });
@@ -489,6 +499,7 @@ window.adminWorkReportsData = () => ({
     editForm: {
         phones: [],
         phone_durations: {},
+        phone_tasks: {},
         phone_emails: {}
     },
     editError: '',
@@ -523,6 +534,7 @@ window.adminWorkReportsData = () => ({
         this.editForm = {
             phones: phones,
             phone_durations: durations,
+            phone_tasks: copyPhoneTasks(report.phone_tasks),
             phone_emails: emails
         };
         this.editModalOpen = true;
@@ -538,6 +550,7 @@ window.adminWorkReportsData = () => ({
         if (this.editForm.phones.includes(key)) {
             this.editForm.phones = this.editForm.phones.filter(p => p !== key);
             delete this.editForm.phone_durations[key];
+            delete this.editForm.phone_tasks[key];
         } else {
             this.editForm.phones.push(key);
             this.editForm.phone_durations[key] = this.editForm.phone_durations[key] || 60;
@@ -578,6 +591,7 @@ window.adminWorkReportsData = () => ({
                     phones: this.editForm.phones,
                     phone_durations: this.editForm.phone_durations,
                     phone_emails: this.editForm.phone_emails,
+                    phone_tasks: this.editForm.phone_tasks,
                     total_duration_minutes: total
                 })
             });

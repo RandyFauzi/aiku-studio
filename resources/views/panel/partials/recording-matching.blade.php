@@ -19,6 +19,8 @@
         </label>
         <div x-show="owner" class="rounded-lg bg-slate-50 p-3 text-sm space-y-1">
             <p class="break-all" x-text="owner?.phone.emails.join(', ')"></p>
+            <p class="break-words" x-text="'Task laporan: ' + (owner?.phone.tasks?.join(' · ') || 'Belum dicatat')"></p>
+            <p x-show="unmatchedTasks.length" class="text-xs text-amber-800 break-words" x-text="'Task recording berbeda dari laporan: ' + unmatchedTasks.join(' · ') + '. Periksa kembali sebelum konfirmasi.'"></p>
             <p x-text="owner ? (owner.phone.duration_minutes == null ? 'Durasi HP tidak dirinci' : owner.phone.duration_minutes + ' menit pada HP ini') + ' · total laporan ' + owner.report.total_minutes + ' menit' : ''"></p>
             <p x-text="'Dikirim: ' + time(owner?.report.submitted_at)"></p>
             <p x-show="owner?.report.revision > 1" x-text="'Diperbarui: ' + time(owner?.report.reported_at)"></p>

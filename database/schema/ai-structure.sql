@@ -9,7 +9,7 @@ CREATE TABLE "cache_locks" ("key" varchar not null, "owner" varchar not null, "e
 
 CREATE TABLE "contributors" ("id" integer primary key autoincrement not null, "nama" varchar, "no_wa" varchar, "domisili" varchar, "no_rek" varchar, "shift" varchar, "hp" varchar, "email" varchar, "role" varchar not null default 'contributor');
 
-CREATE TABLE "daily_work_reports" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "total_duration_minutes" integer not null, "phones" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime, "phone_durations" text, "phone_emails" text);
+CREATE TABLE "daily_work_reports" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "total_duration_minutes" integer not null, "phones" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime, "phone_durations" text, "phone_emails" text, "phone_tasks" text);
 
 CREATE TABLE "device_accounts" ("id" integer primary key autoincrement not null, "phone_key" varchar not null, "email" varchar not null, "account_name" varchar, "is_active" tinyint(1) not null default '0', "activated_at" datetime, "created_at" datetime, "updated_at" datetime);
 
@@ -30,6 +30,8 @@ CREATE TABLE "payslips" ("id" integer primary key autoincrement not null, "emplo
 CREATE TABLE "record_streak_days" ("id" integer primary key autoincrement not null, "contributor_id" integer not null, "work_date" date not null, "schedule_snapshot" text not null, "deadline_at" datetime not null, "target_minutes" integer not null, "rule_version" integer not null default '1', "status" varchar not null default 'open', "reason" varchar, "attendance_id" integer, "verified_minutes" numeric not null default '0', "evidence_ids" text, "manual_report_id" integer, "manual_report_revision" integer, "verified_by" integer, "verified_at" datetime, "celebrated_at" datetime, "created_at" datetime, "updated_at" datetime);
 
 CREATE TABLE "recording_owner_confirmations" ("id" integer primary key autoincrement not null, "record_id" varchar not null, "contributor_id" integer not null, "admin_id" integer not null, "report_id" integer not null, "work_date" date not null, "evidence" text not null, "created_at" datetime not null);
+
+CREATE TABLE "report_task_options" ("id" integer primary key autoincrement not null, "title" varchar not null, "normalized_key" varchar not null, "created_at" datetime not null);
 
 CREATE TABLE "sessions" ("id" varchar not null, "user_id" integer, "ip_address" varchar, "user_agent" text, "payload" text not null, "last_activity" integer not null, primary key ("id"));
 
@@ -92,6 +94,8 @@ CREATE INDEX "recording_owner_confirmations_contributor_id_index" on "recording_
 CREATE INDEX "recording_owner_confirmations_record_id_index" on "recording_owner_confirmations" ("record_id");
 
 CREATE INDEX "recording_owner_confirmations_report_id_index" on "recording_owner_confirmations" ("report_id");
+
+CREATE UNIQUE INDEX "report_task_options_normalized_key_unique" on "report_task_options" ("normalized_key");
 
 CREATE INDEX "sessions_last_activity_index" on "sessions" ("last_activity");
 

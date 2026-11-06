@@ -16,7 +16,7 @@
               x-text="revision ? '✓ Sudah Dikirim' : 'Belum Dikirim'"></span>
     </div>
 
-    <form @submit.prevent="submit().then(() => { reportFormOpen = false; })" class="space-y-6 p-5 sm:p-6 bg-white">
+    <form @submit.prevent="submit().then(() => { if (!error) reportFormOpen = false; })" class="space-y-6 p-5 sm:p-6 bg-white">
         <p x-show="error" x-text="error" role="alert" class="rounded-2xl bg-red-50 p-4 text-xs font-bold text-red-800 border border-red-200"></p>
         <p x-show="message" x-text="message" role="status" aria-live="polite" class="rounded-2xl bg-emerald-50 p-4 text-xs font-bold text-emerald-900 border border-emerald-300"></p>
 
@@ -32,7 +32,7 @@
             </div>
 
             <!-- Dynamic Phones Grid -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 portal-phone-grid">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 portal-phone-grid">
                 <template x-for="(label, key) in options" :key="key">
                     <div :class="phones.includes(key) ? 'border-2 border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-xs' : 'border border-slate-200 hover:border-slate-300 bg-white shadow-2xs'"
                          class="rounded-3xl p-4 transition flex flex-col justify-between">
@@ -73,6 +73,8 @@
                                 <span class="text-xs font-bold text-slate-600 shrink-0">menit</span>
                             </div>
 
+                            @include('work-reports.task-picker', ['taskMap' => 'phoneTasks', 'phoneList' => 'phones'])
+
                             <!-- Fast Increment Pill Chips -->
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="setMinutes(key, 60)" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-emerald-100 hover:text-emerald-900 active:scale-95 text-[11px] font-bold text-slate-700 border border-slate-200 transition">60m</button>
@@ -104,7 +106,7 @@
                     <template x-if="!isComplete">
                         <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black bg-slate-900 text-lime-300 shadow-sm border border-slate-800">
                             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                            Pilih HP & Isi Menit
+                            Lengkapi menit & task setiap HP
                         </span>
                     </template>
                     <template x-if="isComplete">
