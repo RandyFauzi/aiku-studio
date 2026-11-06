@@ -59,7 +59,6 @@ class ContributorPayslipTest extends TestCase
         $response = $this->actingAs($user)->getJson('/api/me/payslips');
 
         $response->assertOk()
-            ->assertJsonPath('worker_name', 'Budi Santoso')
             ->assertJsonCount(1, 'slips')
             ->assertJsonPath('slips.0.id', $slipBudi->id)
             ->assertJsonPath('slips.0.employee_name', 'Budi Santoso');
@@ -101,14 +100,13 @@ class ContributorPayslipTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_contributor_can_view_own_live_slip_but_forbidden_on_others(): void
+    public function test_contributor_cannot_view_any_live_slip_even_their_own(): void
     {
         $user = $this->contributorUser('Budi Santoso', 'budi@example.com');
 
-        // Own live slip -> OK
+        // Current amounts are no longer visible to workers.
         $this->actingAs($user)->get('/slip/live/Budi Santoso')
-            ->assertOk()
-            ->assertSee('Budi Santoso');
+            ->assertForbidden();
 
         // Other worker live slip -> 403 Forbidden
         $this->actingAs($user)->get('/slip/live/Other Worker')

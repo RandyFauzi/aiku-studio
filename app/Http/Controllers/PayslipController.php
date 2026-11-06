@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\PayrollStatus;
 use App\Models\Payslip;
-use App\Services\ContributorIdentity;
 use App\Services\PayrollCalculator;
 use App\Services\PayrollFiles;
 use App\Services\PayrollPaymentStatus;
 use App\Services\PayrollPeriod;
 use App\Services\PayslipPdf;
+use App\Services\WorkerSlipArchive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -17,37 +17,23 @@ use Illuminate\Support\Facades\Storage;
 
 class PayslipController extends Controller
 {
-    private function validateSlipOwner(Request $request, string $employeeName): void
+    private function requireAdministrator(Request $request): void
     {
-        if ($request->user()->role === 'contributor') {
-            abort_unless($employeeName === app(ContributorIdentity::class)->payrollName($request->user()), 403, 'Anda tidak berhak mengakses slip ini.');
-        }
+        abort_unless($request->user()->role === 'admin', 403, 'Informasi penghasilan hanya tersedia untuk admin.');
     }
 
-    public function mine(Request $request, PayrollPeriod $resolver, PayrollCalculator $calculator)
+    private function validateArchiveAccess(Request $request, Payslip $slip): void
+    {
+        if ($request->user()->role === 'admin') return;
+        abort_unless(app(WorkerSlipArchive::class)->canView($request->user(), $slip), 403, 'Slip ini belum tersedia dalam arsip Anda.');
+    }
+
+    public function mine(Request $request, WorkerSlipArchive $archive)
     {
         abort_unless($request->user()->role === 'contributor', 403);
-        $workerName = app(ContributorIdentity::class)->payrollName($request->user());
-        $validNames = [$workerName];
-
-        $slips = Payslip::whereIn('employee_name', $validNames)
-            ->orderByDesc('id')
-            ->get();
-
-        $currentPeriod = $resolver->cutoff();
-        $liveSlip = null;
-        try {
-            $liveSlip = $calculator->liveSlip($currentPeriod, $workerName);
-        } catch (\Throwable $e) {
-            // Live calculation is optional if recordings don't exist
-        }
-
-        return response()->json([
-            'worker_name' => $workerName,
-            'slips' => $slips,
-            'current_period' => $currentPeriod,
-            'live_slip' => $liveSlip,
-        ]);
+        $slips = $archive->forUser($request->user());
+        return response()->json(['slips' => $slips->map(fn ($slip) => $slip->only(['id', 'employee_name', 'period', 'total_thp', 'status', 'created_at']))])
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function index()
@@ -162,23 +148,28 @@ class PayslipController extends Controller
 
     public function page(Request $request, Payslip $payslip, PayrollCalculator $calculator)
     {
-        $this->validateSlipOwner($request, $payslip->employee_name);
+        $this->validateArchiveAccess($request, $payslip);
 
-        return view('slips.web', $calculator->displaySlip($payslip));
+        return view('slips.web', $request->user()->role === 'admin' ? $calculator->displaySlip($payslip) : $payslip->toArray());
     }
 
     public function live(Request $request, string $worker, PayrollPeriod $resolver, PayrollCalculator $calculator)
     {
-        $this->validateSlipOwner($request, $worker);
+        $this->requireAdministrator($request);
 
         return view('slips.web', $calculator->liveSlip($resolver->resolve($request->query()), $worker));
     }
 
     public function export(Request $request, Payslip $payslip, PayrollCalculator $calculator, PayslipPdf $pdf)
     {
-        $this->validateSlipOwner($request, $payslip->employee_name);
+        $this->validateArchiveAccess($request, $payslip);
 
-        $result = $pdf->export($calculator->displaySlip($payslip));
+        if ($request->user()->role !== 'admin' && $payslip->file_path && preg_match('#^/pdf_slips/[A-Za-z0-9_. -]+\.pdf$#D', $payslip->file_path)
+            && Storage::disk('local')->exists('payroll'.$payslip->file_path)) {
+            return response()->json(['success' => true, 'url' => $payslip->file_path, 'fileName' => basename($payslip->file_path)]);
+        }
+
+        $result = $pdf->export($request->user()->role === 'admin' ? $calculator->displaySlip($payslip) : $payslip->toArray());
         $payslip->update(['file_path' => $result['url']]);
 
         return response()->json($result);
@@ -186,7 +177,7 @@ class PayslipController extends Controller
 
     public function exportLive(Request $request, string $worker, PayrollPeriod $resolver, PayrollCalculator $calculator, PayslipPdf $pdf)
     {
-        $this->validateSlipOwner($request, $worker);
+        $this->requireAdministrator($request);
 
         return response()->json($pdf->export($calculator->liveSlip($resolver->resolve($request->query()), $worker)));
     }
@@ -214,18 +205,11 @@ class PayslipController extends Controller
         $key = 'payroll/'.$type.'/'.$path;
         abort_unless($disk->exists($key), 404);
         if ($request->user()->role !== 'admin') {
-            $name = app(ContributorIdentity::class)->payrollName($request->user());
             $url = '/'.$type.'/'.$path;
-            $slips = Payslip::where('employee_name', $name)->get();
-            $allowed = $type === 'pdf_slips'
-                ? $slips->contains('file_path', $url)
-                : $slips->contains(fn ($slip) => in_array($url, app(PayrollFiles::class)->evidenceUrls($slip->evidence_data ?? []), true));
-            if (! $allowed && $type === 'pdf_slips' && $disk->exists($key.'.owner.json')) {
-                $owner = json_decode($disk->get($key.'.owner.json'), true);
-                $allowed = ($owner['employee_name'] ?? null) === $name
-                    && ($owner['contributor_id'] ?? null) === $request->user()->contributor_id;
-            }
-            abort_unless($allowed, 403, 'Anda tidak berhak mengakses file ini.');
+            $allowed = app(WorkerSlipArchive::class)->forUser($request->user())->contains(function ($slip) use ($type, $url) {
+                return $type === 'pdf_slips' ? $slip->file_path === $url : in_array($url, app(PayrollFiles::class)->evidenceUrls($slip->evidence_data ?? []), true);
+            });
+            abort_unless($allowed, 403, 'File ini belum tersedia dalam arsip Anda.');
         }
         $mime = $disk->mimeType($key);
         abort_unless(in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp']), 404);

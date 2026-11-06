@@ -7,6 +7,7 @@ use App\Http\Controllers\DailyWorkReportController;
 use App\Http\Controllers\DeviceAccountController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
+use App\Http\Controllers\MyRecordingController;
 use App\Http\Controllers\RecordingController;
 use App\Http\Controllers\RecordingMatchingController;
 use App\Http\Controllers\RecordStreakController;
@@ -31,6 +32,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/me', fn () => view('portal.home'))->name('portal.home');
     Route::get('/me/laporan', fn () => view('portal.work-reports'))->name('portal.work-reports');
     Route::get('/me/jadwal', fn () => view('portal.schedule'))->name('portal.schedule');
+    Route::get('/me/rekaman', fn () => view('portal.recordings'))->name('portal.recordings');
     Route::get('/me/slip', fn () => view('portal.payslips'))->name('portal.payslips');
     Route::get('/me/profil', fn () => view('portal.profile'))->name('portal.profile');
     Route::get('/me/profile', fn () => redirect('/me/profil'));
@@ -42,15 +44,16 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
     Route::get('/api/report-tasks', [DailyWorkReportController::class, 'taskOptions'])->middleware('throttle:120,1');
     Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
+    Route::get('/api/me/recordings', [MyRecordingController::class, 'index']);
     Route::get('/api/me/payslips', [PayslipController::class, 'mine']);
     Route::put('/api/me/password', [AuthController::class, 'updatePassword'])->middleware('throttle:10,1');
 
-    // Web view of payslips and download endpoints (accessible to admin and the owner contributor)
-    Route::get('/slip/live/{worker}', [PayslipController::class, 'live']);
+    // Workers may only open their final archived slips; live calculations are admin-only.
+    Route::get('/slip/live/{worker}', [PayslipController::class, 'live'])->middleware(EnsureAdministrator::class);
     Route::get('/slip/{payslip}', [PayslipController::class, 'page'])->whereNumber('payslip');
     Route::get('/{type}/{path}', [PayslipController::class, 'file'])->where('type', 'evidence_images|pdf_slips')->where('path', '.+');
     Route::get('/api/payslips/{payslip}/export', [PayslipController::class, 'export'])->whereNumber('payslip');
-    Route::get('/api/payroll/export-live/{worker}', [PayslipController::class, 'exportLive']);
+    Route::get('/api/payroll/export-live/{worker}', [PayslipController::class, 'exportLive'])->middleware(EnsureAdministrator::class);
 
     Route::middleware(EnsureAdministrator::class)->group(function () {
         Route::put('/api/report-tasks/label', [DailyWorkReportController::class, 'saveTaskLabel'])->middleware('throttle:60,1');

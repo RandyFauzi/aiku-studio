@@ -6,7 +6,7 @@ const mapUrl = row => 'https://www.openstreetmap.org/?mlat=' + row.latitude + '&
 window.attendancePortalData = () => ({
     activeTab: window.location.pathname.includes('/laporan') ? 'laporan' 
              : (window.location.pathname.includes('/jadwal') ? 'jadwal' 
-             : (window.location.pathname.includes('/slip') ? 'slip' 
+             : ((window.location.pathname.includes('/rekaman') || window.location.pathname.includes('/slip')) ? 'rekaman'
              : (window.location.pathname.includes('/profil') ? 'akun' : 'absensi'))),
     mobileSidebarOpen: false,
     todayReportSubmitted: null,
@@ -17,11 +17,6 @@ window.attendancePortalData = () => ({
     activeSchedule: null,
     attendances: [],
     todayAttendance: null,
-    slips: [],
-    liveSlip: null,
-    currentPeriod: null,
-    loadingSlips: false,
-    downloadingSlipId: null,
     loading: true,
     checking: false,
     scannerOpen: false,
@@ -315,10 +310,6 @@ window.attendancePortalData = () => ({
         this.timer.modalOpen = false;
     },
 
-    formatRupiah(num) {
-        return 'Rp ' + (Number(num) || 0).toLocaleString('id-ID');
-    },
-
     get todaySchedule() {
         return this.activeSchedule || this.schedule.find(day => day.date === this.today) || { sessions: [] };
     },
@@ -363,7 +354,7 @@ window.attendancePortalData = () => ({
             'home': '/me',
             'laporan': '/me/laporan',
             'jadwal': '/me/jadwal',
-            'slip': '/me/slip',
+            'rekaman': '/me/rekaman',
             'akun': '/me/profil',
             'profil': '/me/profil'
         };
@@ -371,99 +362,17 @@ window.attendancePortalData = () => ({
             window.location.href = routes[tab];
             return;
         }
-        if (!['absensi', 'laporan', 'jadwal', 'slip', 'akun'].includes(tab)) return;
+        if (!['absensi', 'laporan', 'jadwal', 'rekaman', 'akun'].includes(tab)) return;
         this.activeTab = tab;
         if (window.history && window.history.replaceState) {
             window.history.replaceState(null, '', '#' + tab);
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (tab === 'slip' && !this.slips.length && !this.liveSlip) {
-            this.loadSlips();
-        }
-    },
-
-    async loadSlips() {
-        this.loadingSlips = true;
-        try {
-            const res = await fetch('/api/me/payslips', {
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!res.ok) throw new Error('Gagal memuat slip gaji.');
-            const data = await res.json();
-            this.slips = data.slips || [];
-            this.currentPeriod = data.current_period;
-            this.liveSlip = data.live_slip;
-        } catch (e) {
-            console.error('Error loading payslips:', e);
-        } finally {
-            this.loadingSlips = false;
-        }
-    },
-
-    openLiveSlip() {
-        if (!this.liveSlip) return;
-        const worker = encodeURIComponent(this.liveSlip.employee_name);
-        const periodId = encodeURIComponent(this.currentPeriod?.id || '');
-        window.open(`/slip/live/${worker}?periodId=${periodId}`, '_blank');
-    },
-
-    openSlip(slipId) {
-        window.open(`/slip/${slipId}`, '_blank');
-    },
-
-    async downloadSlipPdf(slip) {
-        if (this.downloadingSlipId) return;
-        this.downloadingSlipId = slip.id;
-        try {
-            const res = await fetch(`/api/payslips/${slip.id}/export`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            const data = await res.json();
-            if (!res.ok || !data.success) throw new Error(data.message || data.error || 'Gagal membuat PDF');
-            const a = document.createElement('a');
-            a.href = data.url;
-            a.download = data.fileName;
-            a.click();
-        } catch (err) {
-            if (window.Swal) {
-                window.Swal.fire({ icon: 'error', title: 'Unduh Gagal', text: err.message, confirmButtonColor: '#009B7E' });
-            } else {
-                alert(err.message);
-            }
-        } finally {
-            this.downloadingSlipId = null;
-        }
-    },
-
-    async downloadLiveSlipPdf() {
-        if (!this.liveSlip || this.downloadingSlipId) return;
-        this.downloadingSlipId = 'live';
-        try {
-            const worker = encodeURIComponent(this.liveSlip.employee_name);
-            const periodId = encodeURIComponent(this.currentPeriod?.id || '');
-            const res = await fetch(`/api/payroll/export-live/${worker}?periodId=${periodId}`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            const data = await res.json();
-            if (!res.ok || !data.success) throw new Error(data.message || data.error || 'Gagal membuat PDF');
-            const a = document.createElement('a');
-            a.href = data.url;
-            a.download = data.fileName;
-            a.click();
-        } catch (err) {
-            if (window.Swal) {
-                window.Swal.fire({ icon: 'error', title: 'Unduh Gagal', text: err.message, confirmButtonColor: '#009B7E' });
-            } else {
-                alert(err.message);
-            }
-        } finally {
-            this.downloadingSlipId = null;
-        }
     },
 
     async init() {
         const initialHash = window.location.hash.replace('#', '');
-        if (['absensi', 'laporan', 'jadwal', 'slip', 'akun'].includes(initialHash)) {
+        if (['absensi', 'laporan', 'jadwal', 'rekaman', 'akun'].includes(initialHash)) {
             this.activeTab = initialHash;
         } else if (initialHash === 'laporan-harian') {
             this.activeTab = 'laporan';
@@ -471,7 +380,7 @@ window.attendancePortalData = () => ({
 
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#', '');
-            if (['absensi', 'laporan', 'jadwal', 'slip', 'akun'].includes(h)) {
+            if (['absensi', 'laporan', 'jadwal', 'rekaman', 'akun'].includes(h)) {
                 this.activeTab = h;
             } else if (h === 'laporan-harian') {
                 this.activeTab = 'laporan';
@@ -484,7 +393,7 @@ window.attendancePortalData = () => ({
             }
         });
 
-        await Promise.all([this.load(), this.loadSlips(), this.loadReportStatus()]);
+        await Promise.all([this.load(), this.loadReportStatus()]);
 
         // Auto-checkin if URL has ?qr_token=... (e.g. from native phone camera scanning poster)
         const urlParams = new URLSearchParams(window.location.search);

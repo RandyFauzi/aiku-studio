@@ -42,7 +42,7 @@ class SystemAuditRegressionTest extends TestCase
     {
         Storage::fake('local');
         $worker = $this->worker();
-        $this->slip('Worker', ['file_path' => '/pdf_slips/own.pdf', 'evidence_data' => [['image_urls' => ['/evidence_images/own.png']]]]);
+        $this->slip('Worker', ['period' => '22 Sep 2026 - 21 Okt 2026', 'status' => 'sudah', 'file_path' => '/pdf_slips/own.pdf', 'evidence_data' => [['image_urls' => ['/evidence_images/own.png']]]]);
         $this->slip('Other', ['file_path' => '/pdf_slips/other.pdf', 'evidence_data' => [['image_urls' => ['/evidence_images/other.png']]]]);
         foreach (['own', 'other'] as $key) {
             Storage::disk('local')->put('payroll/pdf_slips/'.$key.'.pdf', "%PDF-1.4\n%%EOF");
@@ -55,14 +55,16 @@ class SystemAuditRegressionTest extends TestCase
         $this->actingAs(User::factory()->create())->get('/pdf_slips/other.pdf')->assertOk();
     }
 
-    public function test_exported_live_pdf_is_downloadable_only_by_its_owner(): void
+    public function test_live_pdf_exports_are_admin_only_even_for_the_worker_owner(): void
     {
         Storage::fake('local');
         $worker = $this->worker();
         $other = $this->worker('Other', 'other@example.test');
-        $result = $this->actingAs($worker)->getJson('/api/payroll/export-live/Worker')->assertOk();
+        $this->actingAs($worker)->getJson('/api/payroll/export-live/Worker')->assertForbidden();
+        $admin = User::factory()->create();
+        $result = $this->actingAs($admin)->getJson('/api/payroll/export-live/Worker')->assertOk();
         $url = $result->json('url');
-        $this->get($url)->assertOk();
+        $this->actingAs($worker)->get($url)->assertForbidden();
         $this->actingAs($other)->get($url)->assertForbidden();
     }
 

@@ -61,7 +61,7 @@
             <div class="portal-status-pills">
                 <span class="portal-status-pill highlight"><b x-text="todaySchedule.sessions.length"></b> Sesi</span>
                 <span class="portal-status-pill"><b x-text="totalMonthAttendances"></b> Hari hadir</span>
-                <span class="portal-status-pill"><b x-text="slips.length"></b> Slip</span>
+                <a href="/me/rekaman" class="portal-status-pill">Riwayat rekaman ↗</a>
             </div>
             <template x-for="session in todaySchedule.sessions" :key="session.id">
                 <a href="/me/jadwal" class="portal-session-card">

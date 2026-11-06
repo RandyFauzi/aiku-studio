@@ -8,6 +8,8 @@ import './attendance';
 import './record-streak';
 import './recording-matching';
 import './recording-recommendations';
+import './my-recordings';
+import './slip-archive';
 import './work-reports';
 import './report-task-picker';
 import './barcode-wifi';
