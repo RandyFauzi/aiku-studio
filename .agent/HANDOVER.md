@@ -1,3 +1,11 @@
+### [2026-11-07 17:20] — Antigravity
+- Analisis total data kontributor dashboard & pemisahan siklus bulanan resmi vs all-time:
+  - Mengatasi discrepancy total: meluruskan bahwa data kartu kontributor sebelumnya menjumlahkan seluruh slip masa lalu (all-time), perbedaan urutan jam vs THP terjadi karena adanya bonus/pending carry-over pada slip gaji, dan kontributor tanpa slip terbit sebelumnya belum terhitung.
+  - Menambahkan tab filter performa interaktif: 'Kinerja Bulan Ini (Siklus 22-21)' sebagai fokus utama (default) terintegrasi dengan /api/payroll/live-summary, serta opsi 'Semua Waktu (All-Time)' terintegrasi dengan /api/slips.
+  - Menambahkan Grafik Informasi Produktivitas Tim (Visual Horizontal Bar Chart) dengan bar proporsional gradien toska-emerald, rasio kontribusi tim (share %), persentase approval rate, serta ringkasan transparansi perhitungan THP.
+  - Menambahkan selector dropdown periode cutoff cut-off 22 s/d 21 bulan berikutnya dan chip header dinamis di Executive Dashboard.
+- Validasi: Blade view clear & cache PASS, Vite build PASS. State IDLE.
+
 ### [2026-11-07 16:57] — Antigravity
 - Menjadikan header top bar sticky di halaman Laporan Kerja (/work-reports) dan Absensi (/attendance): menambahkan kelas `sticky top-0 z-20 shrink-0` pada elemen `<header>` di `resources/views/work-reports/admin.blade.php` dan `resources/views/attendance/admin.blade.php` agar tetap melayang di bagian atas saat halaman di-scroll ke bawah, seragam dengan halaman panel lainnya.
 - Validasi: Blade view cache PASS, sintaks bersih. State IDLE.
@@ -147,7 +155,8 @@
 - Validasi: full suite 103 tes/620 assertion, 3 tes JS, browser desktop 1440 & mobile 390 (drag asli, kapasitas, simpan pola/revisi, izin/sakit, ringkasan; tanpa error/overflow), build Vite dan refresh Graphify lulus. QA memakai fixture, bukan data operasional.
 
 # Agent Collaboration Log (Antigravity & CODEX)
-
+
+
 ### [2026-11-05 14:58] — Antigravity
 - Selesai: Menambahkan fitur Buat Laporan Kerja oleh admin pada halaman Laporan Kerja (work-reports/admin.blade.php, work-reports.js). Admin dapat memilih kontributor via dropdown, tanggal WITA, memilih HP, mengatur menit durasi dengan chip 60m/120m/180m/240m, serta memantau akumulasi total secara langsung persis seperti formulir kontributor.
 - Backend & Tests: Endpoint POST /api/work-reports di DailyWorkReportController::adminStore dengan proteksi admin dan resolusi user kontributor. Pengujian terarah DailyWorkReportTest 9/9 PASS (85 assertions), Vite build PASS. Lock dilepas ke IDLE.

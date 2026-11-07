@@ -61,6 +61,24 @@ document.addEventListener('alpine:init', () => {
         },
         contributors: [],
         syncStatus: null,
+
+        // Performance Mode: 'monthly' (Siklus 22-21) vs 'all_time'
+        performanceTab: 'monthly',
+        periods: [],
+        currentPeriod: null,
+        selectedPeriodId: '',
+        monthlyStats: {
+            totalWorkers: 0,
+            totalThp: 0,
+            totalApprovedHours: 0,
+            totalRejectedHours: 0,
+            totalLoggedHours: 0,
+            totalPendingHours: 0,
+            totalSudah: 0,
+            totalBelum: 0
+        },
+        monthlyWorkers: [],
+
         formatRupiah,
         formatDate,
         formatTime,
@@ -73,12 +91,19 @@ document.addEventListener('alpine:init', () => {
         async loadAllDashboardData() {
             this.loading = true;
             try {
-                const [slipsRes, recRes, contRes, syncRes] = await Promise.all([
+                const [periodsRes, slipsRes, recRes, contRes, syncRes] = await Promise.all([
+                    fetch('/api/payroll/periods').then(r => r.json()).catch(() => ({ periods: [], currentPeriod: null })),
                     fetch('/api/slips').then(r => r.json()).catch(() => []),
                     fetch('/api/studio-recordings?limit=1').then(r => r.json()).catch(() => ({ stats: {} })),
                     fetch('/api/contributors').then(r => r.json()).catch(() => []),
                     fetch('/api/studio-recordings/sync-status').then(r => r.json()).catch(() => null)
                 ]);
+
+                this.periods = (periodsRes && periodsRes.periods) ? periodsRes.periods : [];
+                this.currentPeriod = (periodsRes && periodsRes.currentPeriod) ? periodsRes.currentPeriod : null;
+                this.selectedPeriodId = (periodsRes && periodsRes.defaultPeriodId) 
+                    ? periodsRes.defaultPeriodId 
+                    : (this.currentPeriod ? this.currentPeriod.id : (this.periods[0] ? this.periods[0].id : ''));
 
                 this.slips = Array.isArray(slipsRes) ? slipsRes : [];
                 if (recRes && recRes.stats) {
@@ -86,11 +111,46 @@ document.addEventListener('alpine:init', () => {
                 }
                 this.contributors = Array.isArray(contRes) ? contRes : [];
                 this.syncStatus = syncRes;
+
+                if (this.selectedPeriodId) {
+                    await this.loadMonthlyData(this.selectedPeriodId);
+                }
             } catch (e) {
                 console.error("Failed to load executive dashboard data:", e);
             } finally {
                 this.loading = false;
             }
+        },
+
+        async loadMonthlyData(periodId) {
+            try {
+                const res = await fetch(`/api/payroll/live-summary?periodId=${encodeURIComponent(periodId)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    this.monthlyStats = data.stats || {
+                        totalWorkers: 0, totalThp: 0, totalApprovedHours: 0, totalRejectedHours: 0, totalLoggedHours: 0, totalPendingHours: 0, totalSudah: 0, totalBelum: 0
+                    };
+                    this.monthlyWorkers = data.workers || [];
+                }
+            } catch (err) {
+                console.error("Failed to load monthly payroll live summary:", err);
+            }
+        },
+
+        async changePeriod(periodId) {
+            this.selectedPeriodId = periodId;
+            this.loading = true;
+            await this.loadMonthlyData(periodId);
+            this.loading = false;
+        },
+
+        get activePeriodObj() {
+            if (!this.selectedPeriodId) return this.currentPeriod;
+            return this.periods.find(p => p.id === this.selectedPeriodId) || this.currentPeriod;
+        },
+
+        get activePeriodName() {
+            return this.activePeriodObj ? this.activePeriodObj.name : 'Siklus 22 - 21';
         },
 
         get totalPayrollPaid() {
@@ -143,7 +203,37 @@ document.addEventListener('alpine:init', () => {
                 .slice(0, 5);
         },
 
-        get topContributors() {
+        // Monthly Contributors (Cut-off 22 - 21)
+        get monthlyContributors() {
+            if (!this.monthlyWorkers || this.monthlyWorkers.length === 0) return [];
+            
+            const sorted = [...this.monthlyWorkers].sort((a, b) => (parseFloat(b.approved_hours) || 0) - (parseFloat(a.approved_hours) || 0));
+            const maxHours = sorted.length > 0 ? (parseFloat(sorted[0].approved_hours) || 1) : 1;
+            const totalHours = sorted.reduce((sum, w) => sum + (parseFloat(w.approved_hours) || 0), 0) || 1;
+
+            return sorted.map((w, idx) => {
+                const appHours = parseFloat(w.approved_hours) || 0;
+                return {
+                    rank: idx + 1,
+                    name: w.worker_name,
+                    approvedHours: appHours,
+                    loggedHours: parseFloat(w.logged_hours) || 0,
+                    rejectedHours: parseFloat(w.rejected_hours) || 0,
+                    pendingHours: parseFloat(w.pending_hours) || 0,
+                    thp: parseFloat(w.thp) || 0,
+                    bonus: parseFloat(w.bonus) || 0,
+                    carryOver: parseFloat(w.pending_carry_over_amount) || 0,
+                    tasksCount: parseInt(w.total_tasks) || 0,
+                    status: w.status,
+                    hasSlip: Boolean(w.has_slip),
+                    barPercentage: Math.max(8, Math.min(100, Math.round((appHours / maxHours) * 100))),
+                    sharePercentage: totalHours > 0 ? ((appHours / totalHours) * 100).toFixed(1) : '0.0'
+                };
+            });
+        },
+
+        // All-Time Contributors (Akumulasi Slip Gaji Terbit)
+        get allTimeContributors() {
             const workerMap = {};
             this.slips.forEach(s => {
                 const name = s.employee_name || 'Unknown';
@@ -161,9 +251,79 @@ document.addEventListener('alpine:init', () => {
                 workerMap[name].thp += (parseFloat(s.total_thp) || 0);
                 workerMap[name].slipCount += 1;
             });
-            return Object.values(workerMap).sort((a, b) => b.approvedHours - a.approvedHours).slice(0, 6);
+
+            const sorted = Object.values(workerMap).sort((a, b) => b.approvedHours - a.approvedHours);
+            const maxHours = sorted.length > 0 ? (sorted[0].approvedHours || 1) : 1;
+            const totalHours = sorted.reduce((sum, w) => sum + w.approvedHours, 0) || 1;
+
+            return sorted.map((w, idx) => ({
+                rank: idx + 1,
+                name: w.name,
+                approvedHours: w.approvedHours,
+                loggedHours: w.loggedHours,
+                thp: w.thp,
+                slipCount: w.slipCount,
+                tasksCount: 0,
+                status: 'sudah',
+                hasSlip: true,
+                barPercentage: Math.max(8, Math.min(100, Math.round((w.approvedHours / maxHours) * 100))),
+                sharePercentage: totalHours > 0 ? ((w.approvedHours / totalHours) * 100).toFixed(1) : '0.0'
+            }));
         },
 
+        get currentContributors() {
+            return this.performanceTab === 'monthly' ? this.monthlyContributors : this.allTimeContributors;
+        },
+
+        get topContributors() {
+            return this.currentContributors.slice(0, 6);
+        },
+
+        get topContributorsTotalShare() {
+            const top3 = this.topContributors.slice(0, 3);
+            const total = top3.reduce((sum, c) => sum + parseFloat(c.sharePercentage || 0), 0);
+            return total.toFixed(1);
+        },
+
+        // Metrik Bulanan Terpilih
+        get monthlyApprovedHours() {
+            return (parseFloat(this.monthlyStats.totalApprovedHours) || 0).toFixed(1);
+        },
+
+        get monthlyLoggedHours() {
+            return (parseFloat(this.monthlyStats.totalLoggedHours) || 0).toFixed(1);
+        },
+
+        get monthlyApprovalRate() {
+            const logged = parseFloat(this.monthlyStats.totalLoggedHours) || 0;
+            const approved = parseFloat(this.monthlyStats.totalApprovedHours) || 0;
+            if (logged <= 0) return '0.0';
+            return ((approved / logged) * 100).toFixed(1);
+        },
+
+        get monthlyRejectedHours() {
+            return (parseFloat(this.monthlyStats.totalRejectedHours) || 0).toFixed(1);
+        },
+
+        get monthlyPendingHours() {
+            return (parseFloat(this.monthlyStats.totalPendingHours) || 0).toFixed(1);
+        },
+
+        get monthlyThp() {
+            return parseFloat(this.monthlyStats.totalThp) || 0;
+        },
+
+        get monthlyWorkersCount() {
+            return parseInt(this.monthlyStats.totalWorkers) || 0;
+        },
+
+        get monthlySudahCount() {
+            return parseInt(this.monthlyStats.totalSudah) || 0;
+        },
+
+        get monthlyBelumCount() {
+            return parseInt(this.monthlyStats.totalBelum) || 0;
+        },
         getWorkerInitials(name) {
             if (!name) return '??';
             const parts = name.trim().split(/\s+/);

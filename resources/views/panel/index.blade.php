@@ -98,9 +98,9 @@
 
                     <!-- Right: Quick Action Chips -->
                     <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap self-start lg:self-center shrink-0">
-                        <div class="hero-chip px-3.5 py-2 rounded-full text-xs font-medium flex items-center gap-2">
+                        <div class="hero-chip px-3.5 py-2 rounded-full text-xs font-medium flex items-center gap-2 shadow-2xs">
                             <svg class="w-4 h-4 text-[#20502f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span>Periode Aktif: <strong>{{ \Carbon\Carbon::now()->locale('id')->isoFormat('MMM Y') }}</strong></span>
+                            <span>Siklus Cutoff: <strong x-text="activePeriodName">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('MMM Y') }}</strong></span>
                         </div>
                         <button @click="loadAllDashboardData()" 
                                 class="hero-chip hover:bg-white px-3.5 py-2 rounded-full text-xs font-medium transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
@@ -262,158 +262,355 @@
 
             </div>
 
-            <!-- ANALYTICAL VISUAL GRIDS (2 COLUMNS: 7 / 5) -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- PRODUCTIVITY ANALYTICS & LEADERBOARD SECTION -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-6">
                 
-                <!-- LEFT COLUMN (7 COLS): QC Breakdown & Production Distribution -->
-                <div class="lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-6">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
-                        <div>
-                            <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Kualitas Produksi & Breakdown QC</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Distribusi status durasi dari seluruh rekaman studio</p>
+                <!-- Section Header with Mode Tabs & Period Selector -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                    <div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Analisis Produktivitas & Kontribusi Tim</h2>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+                                  :class="performanceTab === 'monthly' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/70' : 'bg-blue-50 text-blue-800 border border-blue-200/70'">
+                                <span class="w-1.5 h-1.5 rounded-full mr-1.5 animate-pulse" :class="performanceTab === 'monthly' ? 'bg-emerald-500' : 'bg-blue-500'"></span>
+                                <span x-text="performanceTab === 'monthly' ? 'Fokus Siklus Bulanan (22 - 21)' : 'Akumulasi Semua Waktu'"></span>
+                            </span>
                         </div>
-                        <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/70 self-start sm:self-auto">
-                            Total: <strong class="text-slate-900" x-text="totalRecordedHours + ' Jam'"></strong>
-                        </span>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Pantau perbandingan jam kerja disetujui, pembagian beban produksi tim, dan estimasi penerimaan kompensasi.
+                        </p>
                     </div>
 
-                    <!-- Multi-segment Progress Bar -->
-                    <div class="space-y-2.5">
-                        <div class="flex items-center justify-between text-xs font-semibold">
-                            <span class="text-slate-600">Rasio Status Rekaman Studio</span>
-                            <span class="text-[#009B7E] font-bold" x-text="billablePercentage + '% Approved Rate'"></span>
-                        </div>
-                        
-                        <div class="h-3.5 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
-                            <div class="bg-[#00B090] transition-all duration-500" :style="'width: ' + billablePercentage + '%'" title="Billable Approved"></div>
-                            <div class="bg-rose-500 transition-all duration-500" :style="'width: ' + rejectedPercentage + '%'" title="Rejected"></div>
-                            <div class="bg-amber-400 transition-all duration-500" :style="'width: ' + pendingPercentage + '%'" title="Pending"></div>
+                    <div class="flex items-center gap-2.5 flex-wrap self-start lg:self-auto">
+                        <!-- Segmented Mode Tabs -->
+                        <div class="inline-flex p-1 bg-slate-100/90 rounded-xl text-xs font-bold border border-slate-200/70 shadow-2xs">
+                            <button type="button" 
+                                    @click="performanceTab = 'monthly'" 
+                                    class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                                    :class="performanceTab === 'monthly' ? 'bg-white text-emerald-800 shadow-xs font-extrabold' : 'text-slate-500 hover:text-slate-800'">
+                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <span>Kinerja Bulan Ini</span>
+                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100/80 text-emerald-800 font-bold">22-21</span>
+                            </button>
+                            <button type="button" 
+                                    @click="performanceTab = 'all_time'" 
+                                    class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                                    :class="performanceTab === 'all_time' ? 'bg-white text-blue-800 shadow-xs font-extrabold' : 'text-slate-500 hover:text-slate-800'">
+                                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                <span>Semua Waktu (All-Time)</span>
+                            </button>
                         </div>
 
-                        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-[#00B090]"></span>
-                                <span>Billable: <strong class="text-slate-700" x-text="billableHours + 'h (' + billablePercentage + '%)'"></strong></span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                                <span>Reject: <strong class="text-slate-700" x-text="rejectedHours + 'h (' + rejectedPercentage + '%)'"></strong></span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                                <span>Pending: <strong class="text-slate-700" x-text="pendingHours + 'h (' + pendingPercentage + '%)'"></strong></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4 Metric Mini-Cards Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                        <div class="bg-emerald-50/50 rounded-xl p-3 border border-emerald-100/80">
-                            <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Billable (Appr)</div>
-                            <div class="text-lg font-black text-[#009B7E] mt-1" x-text="billableHours + 'h'"></div>
-                            <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.billableMinutes || 0).toLocaleString() + ' mnt'"></div>
-                        </div>
-                        <div class="bg-rose-50/50 rounded-xl p-3 border border-rose-100/80">
-                            <div class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">Rejected</div>
-                            <div class="text-lg font-black text-rose-500 mt-1" x-text="rejectedHours + 'h'"></div>
-                            <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.rejectedMinutes || 0).toLocaleString() + ' mnt'"></div>
-                        </div>
-                        <div class="bg-amber-50/50 rounded-xl p-3 border border-amber-100/80">
-                            <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Pending QC</div>
-                            <div class="text-lg font-black text-amber-500 mt-1" x-text="pendingHours + 'h'"></div>
-                            <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.pendingMinutes || 0).toLocaleString() + ' mnt'"></div>
-                        </div>
-                        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/70">
-                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Logged</div>
-                            <div class="text-lg font-black text-slate-800 mt-1" x-text="totalRecordedHours + 'h'"></div>
-                            <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.totalMinutes || 0).toLocaleString() + ' mnt'"></div>
-                        </div>
-                    </div>
-
-                    <!-- Progress Assignment Tim -->
-                    <div class="pt-3 border-t border-slate-100 space-y-2">
-                        <div class="flex items-center justify-between text-xs">
-                            <span class="font-semibold text-slate-700">Tingkat Penugasan Tugas ke Kontributor</span>
-                            <span class="font-bold text-slate-900" x-text="assignedPercentage + '% Selesai Ditandai'"></span>
-                        </div>
-                        <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                            <div class="bg-[#00B090] transition-all duration-500" :style="'width: ' + assignedPercentage + '%'"></div>
-                        </div>
-                        <div class="flex items-center justify-between text-[11px] text-slate-400">
-                            <span>Ditandai: <strong class="text-slate-700" x-text="(recordingsStats.assignedCount || 0) + ' tugas'"></strong></span>
-                            <span>Belum Ditandai: <strong class="text-amber-600" x-text="(recordingsStats.unassignedCount || 0) + ' tugas'"></strong></span>
-                        </div>
+                        <!-- Dropdown Siklus bila di tab Bulanan -->
+                        <template x-if="performanceTab === 'monthly' && periods.length > 0">
+                            <select x-model="selectedPeriodId" @change="changePeriod(selectedPeriodId)" 
+                                    class="text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-xl px-3 py-1.5 cursor-pointer outline-none focus:ring-2 focus:ring-[#00B090] shadow-2xs">
+                                <template x-for="p in periods" :key="p.id">
+                                    <option :value="p.id" x-text="p.name + (p.isCurrent ? ' (Siklus Aktif)' : '')"></option>
+                                </template>
+                            </select>
+                        </template>
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN (5 COLS): Top Kontributor Leaderboard -->
-                <div class="lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <!-- 4 Interactive Mini-KPI Pills based on active mode -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <!-- Stat 1 -->
+                    <div class="rounded-xl p-3.5 border transition"
+                         :class="performanceTab === 'monthly' ? 'bg-emerald-50/50 border-emerald-100/90' : 'bg-slate-50 border-slate-200/70'">
+                        <div class="text-[11px] font-bold uppercase tracking-wider"
+                             :class="performanceTab === 'monthly' ? 'text-emerald-800' : 'text-slate-500'">
+                            <span x-text="performanceTab === 'monthly' ? 'Disetujui Siklus Ini' : 'Disetujui Sepanjang Masa'"></span>
+                        </div>
+                        <div class="text-xl font-black mt-1"
+                             :class="performanceTab === 'monthly' ? 'text-[#009B7E]' : 'text-slate-900'"
+                             x-text="performanceTab === 'monthly' ? (monthlyApprovedHours + 'h') : (billableHours + 'h')"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5"
+                             x-text="performanceTab === 'monthly' ? (monthlyApprovalRate + '% Approved Rate') : (billablePercentage + '% Approved Rate')"></div>
+                    </div>
+
+                    <!-- Stat 2 -->
+                    <div class="rounded-xl p-3.5 border transition"
+                         :class="performanceTab === 'monthly' ? 'bg-blue-50/50 border-blue-100/90' : 'bg-slate-50 border-slate-200/70'">
+                        <div class="text-[11px] font-bold uppercase tracking-wider"
+                             :class="performanceTab === 'monthly' ? 'text-blue-800' : 'text-slate-500'">
+                            <span x-text="performanceTab === 'monthly' ? 'Estimasi Beban Payroll' : 'Total Payroll Dicairkan'"></span>
+                        </div>
+                        <div class="text-xl font-black mt-1 font-mono"
+                             :class="performanceTab === 'monthly' ? 'text-blue-700' : 'text-slate-900'"
+                             x-text="formatRupiah(performanceTab === 'monthly' ? monthlyThp : totalPayrollPaid)"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5"
+                             x-text="performanceTab === 'monthly' ? (monthlySudahCount + ' Slip Terbit • ' + monthlyBelumCount + ' Draft') : (totalSlipsCount + ' Dokumen Slip')"></div>
+                    </div>
+
+                    <!-- Stat 3 -->
+                    <div class="rounded-xl p-3.5 border transition"
+                         :class="performanceTab === 'monthly' ? 'bg-teal-50/50 border-teal-100/90' : 'bg-slate-50 border-slate-200/70'">
+                        <div class="text-[11px] font-bold uppercase tracking-wider"
+                             :class="performanceTab === 'monthly' ? 'text-teal-800' : 'text-slate-500'">
+                            <span x-text="performanceTab === 'monthly' ? 'Kontributor Aktif Siklus Ini' : 'Total Pekerja Terdaftar'"></span>
+                        </div>
+                        <div class="text-xl font-black text-slate-900 mt-1"
+                             x-text="performanceTab === 'monthly' ? (monthlyWorkersCount + ' Pekerja') : (contributors.length + ' Pekerja')"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5"
+                             x-text="performanceTab === 'monthly' ? ('Dari ' + contributors.length + ' total tim terdaftar') : 'Database kontributor studio'"></div>
+                    </div>
+
+                    <!-- Stat 4 -->
+                    <div class="rounded-xl p-3.5 border transition"
+                         :class="performanceTab === 'monthly' ? 'bg-amber-50/50 border-amber-100/90' : 'bg-slate-50 border-slate-200/70'">
+                        <div class="text-[11px] font-bold uppercase tracking-wider"
+                             :class="performanceTab === 'monthly' ? 'text-amber-800' : 'text-slate-500'">
+                            <span x-text="performanceTab === 'monthly' ? 'Total Jam Log Siklus Ini' : 'Total Jam Log Sepanjang Masa'"></span>
+                        </div>
+                        <div class="text-xl font-black mt-1"
+                             :class="performanceTab === 'monthly' ? 'text-amber-700' : 'text-slate-800'"
+                             x-text="performanceTab === 'monthly' ? (monthlyLoggedHours + 'h') : (totalRecordedHours + 'h')"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5"
+                             x-text="performanceTab === 'monthly' ? (monthlyRejectedHours + 'h Reject • ' + monthlyPendingHours + 'h Pending') : (rejectedHours + 'h Reject • ' + pendingHours + 'h Pending')"></div>
+                    </div>
+                </div>
+
+                <!-- 2-COLUMN ANALYTICS: Visual Chart (7 COLS) vs Leaderboard (5 COLS) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-2">
+                    
+                    <!-- LEFT COLUMN (7 COLS): Visual Horizontal Productivity Bar Chart -->
+                    <div class="lg:col-span-7 bg-slate-50/70 border border-slate-200/70 rounded-2xl p-5 sm:p-6 space-y-5">
+                        <div class="flex items-center justify-between border-b border-slate-200/70 pb-3">
+                            <div>
+                                <h3 class="text-sm font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-[#009B7E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <span>Grafik Jam Kerja & Produktivitas Kontributor</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400 mt-0.5"
+                                   x-text="performanceTab === 'monthly' ? ('Perbandingan jam disetujui periode: ' + activePeriodName) : 'Akumulasi jam kerja disetujui dari seluruh slip gaji yang pernah terbit'"></p>
+                            </div>
+                            <span class="text-[11px] font-bold text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs shrink-0">
+                                Top 6 Kontributor
+                            </span>
+                        </div>
+
+                        <!-- Bar Chart List -->
+                        <div class="space-y-4">
+                            <template x-if="topContributors.length === 0">
+                                <div class="py-10 text-center text-xs text-slate-400 font-medium">
+                                    <span x-text="performanceTab === 'monthly' ? 'Belum ada data rekaman tugas pada siklus ini.' : 'Belum ada data slip gaji yang tercatat.'"></span>
+                                </div>
+                            </template>
+
+                            <template x-for="(worker, idx) in topContributors" :key="idx">
+                                <div class="space-y-1.5">
+                                    <!-- Worker Header Row -->
+                                    <div class="flex items-center justify-between text-xs">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <span class="w-5 text-center font-bold text-[11px] shrink-0"
+                                                  :class="idx === 0 ? 'text-amber-500 font-black' : (idx === 1 ? 'text-slate-400 font-black' : (idx === 2 ? 'text-amber-700 font-bold' : 'text-slate-400'))"
+                                                  x-text="'#' + worker.rank">
+                                            </span>
+                                            <span class="font-bold text-slate-800 truncate" x-text="worker.name"></span>
+                                            
+                                            <!-- Mini badge status/tasks -->
+                                            <template x-if="performanceTab === 'monthly'">
+                                                <span class="hidden sm:inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium"
+                                                      :class="worker.hasSlip ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'"
+                                                      x-text="worker.hasSlip ? 'Slip Terbit' : (worker.tasksCount + ' Tugas')">
+                                                </span>
+                                            </template>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <span class="font-black text-[#009B7E]" x-text="worker.approvedHours.toFixed(1) + 'h'"></span>
+                                            <span class="text-[11px] text-slate-400 font-mono" x-text="'(' + worker.sharePercentage + '%)'"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Visual Progress Bar -->
+                                    <div class="h-3 w-full bg-slate-200/80 rounded-full overflow-hidden p-0.5 shadow-inner">
+                                        <div class="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
+                                             :class="idx === 0 ? 'bg-gradient-to-r from-emerald-500 to-[#00B090]' : (idx === 1 ? 'bg-gradient-to-r from-teal-500 to-teal-400' : 'bg-[#00B090]/80')"
+                                             :style="'width: ' + worker.barPercentage + '%'">
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Meta Row -->
+                                    <div class="flex items-center justify-between text-[10px] text-slate-400 px-0.5">
+                                        <span x-text="performanceTab === 'monthly' ? ('Total Log: ' + worker.loggedHours.toFixed(1) + 'h') : (worker.slipCount + ' slip gaji resmi')"></span>
+                                        <span class="font-semibold text-slate-600 font-mono" x-text="formatRupiah(worker.thp)"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Insight Share & Transparency Box -->
+                        <div class="pt-3 border-t border-slate-200/80 space-y-2">
+                            <div class="flex items-center justify-between text-xs text-slate-600">
+                                <span class="font-semibold">Kontribusi Top 3 Tim:</span>
+                                <span class="font-bold text-slate-900" x-text="topContributorsTotalShare + '% dari total jam disetujui'"></span>
+                            </div>
+
+                            <div class="p-3 bg-white rounded-xl border border-slate-200/70 text-[11px] text-slate-500 leading-relaxed">
+                                <strong class="text-slate-700">💡 Transparansi Perhitungan Finansial:</strong>
+                                Nilai THP dihitung dari Jam Approved (Rp 50.000/jam) ditambah bonus performa dan carry-over klaim pending bulan lalu. Oleh sebab itu, kontributor dengan jam kerja lebih sedikit dapat menerima THP lebih tinggi bila menerima bonus atau pencairan pending.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN (5 COLS): Leaderboard Card -->
+                    <div class="lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
                         <div>
-                            <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Top Kontributor Tim</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Produktivitas jam approved tertinggi</p>
-                        </div>
-                        <a href="/contributors" class="text-xs font-semibold text-[#009B7E] hover:underline flex items-center gap-1">
-                            <span>Kelola Tim</span>
-                            <span>→</span>
-                        </a>
-                    </div>
-
-                    <!-- Kontributor List -->
-                    <div class="space-y-2.5">
-                        <template x-if="topContributors.length === 0">
-                            <div class="py-8 text-center text-xs text-slate-400 font-medium">
-                                Belum ada data kontributor dengan slip gaji.
-                            </div>
-                        </template>
-
-                        <template x-for="(worker, idx) in topContributors" :key="idx">
-                            <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <!-- Rank Badge -->
-                                    <span class="w-5 text-center text-xs font-bold shrink-0"
-                                          :class="idx === 0 ? 'text-amber-500 font-black' : (idx === 1 ? 'text-slate-400 font-black' : (idx === 2 ? 'text-amber-700 font-bold' : 'text-slate-300'))"
-                                          x-text="'#' + (idx + 1)">
-                                    </span>
-
-                                    <!-- Avatar -->
-                                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-2xs shrink-0"
-                                         :class="['bg-emerald-600', 'bg-teal-600', 'bg-indigo-600', 'bg-blue-600', 'bg-purple-600', 'bg-slate-700'][idx % 6]"
-                                         x-text="getWorkerInitials(worker.name)">
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="text-xs font-bold text-slate-900 truncate" x-text="worker.name"></div>
-                                        <div class="text-[11px] text-slate-400" x-text="worker.slipCount + ' slip gaji diterbitkan'"></div>
-                                    </div>
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-slate-900 tracking-tight">Papan Peringkat Tim</h3>
+                                    <p class="text-xs text-slate-400 mt-0.5"
+                                       x-text="performanceTab === 'monthly' ? 'Peringkat produktivitas siklus berjalan' : 'Peringkat akumulasi slip gaji all-time'"></p>
                                 </div>
-                                <div class="text-right shrink-0 pl-3">
-                                    <div class="text-xs font-black text-[#009B7E]" x-text="worker.approvedHours.toFixed(1) + 'h'"></div>
-                                    <div class="text-[11px] font-semibold text-slate-500 font-mono" x-text="formatRupiah(worker.thp)"></div>
-                                </div>
+                                <a href="/contributors" class="text-xs font-semibold text-[#009B7E] hover:underline flex items-center gap-1">
+                                    <span>Kelola Tim</span>
+                                    <span>→</span>
+                                </a>
                             </div>
-                        </template>
-                    </div>
 
-                    <!-- Mini Team Overview Box when few contributors -->
-                    <div class="mt-4 p-3 bg-slate-50/80 rounded-xl border border-slate-100/90 flex items-center justify-between text-xs text-slate-500">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>Total Anggota Tim:</span>
+                            <!-- List Items -->
+                            <div class="space-y-2">
+                                <template x-if="topContributors.length === 0">
+                                    <div class="py-8 text-center text-xs text-slate-400 font-medium">
+                                        Belum ada kontributor pada kategori ini.
+                                    </div>
+                                </template>
+
+                                <template x-for="(worker, idx) in topContributors" :key="idx">
+                                    <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <!-- Rank Badge -->
+                                            <span class="w-5 text-center text-xs font-bold shrink-0"
+                                                  :class="idx === 0 ? 'text-amber-500 font-black' : (idx === 1 ? 'text-slate-400 font-black' : (idx === 2 ? 'text-amber-700 font-bold' : 'text-slate-300'))"
+                                                  x-text="'#' + worker.rank">
+                                            </span>
+
+                                            <!-- Avatar -->
+                                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-2xs shrink-0"
+                                                 :class="['bg-emerald-600', 'bg-teal-600', 'bg-indigo-600', 'bg-blue-600', 'bg-purple-600', 'bg-slate-700'][idx % 6]"
+                                                 x-text="getWorkerInitials(worker.name)">
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <div class="text-xs font-bold text-slate-900 truncate" x-text="worker.name"></div>
+                                                <div class="text-[10px] text-slate-400 truncate"
+                                                     x-text="performanceTab === 'monthly' ? (worker.tasksCount + ' Tugas • ' + (worker.hasSlip ? 'Slip Terbit' : 'Draft')) : (worker.slipCount + ' slip gaji diterbitkan')">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-right shrink-0 pl-2">
+                                            <div class="text-xs font-black text-[#009B7E]" x-text="worker.approvedHours.toFixed(1) + 'h'"></div>
+                                            <div class="text-[11px] font-semibold text-slate-500 font-mono" x-text="formatRupiah(worker.thp)"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
-                        <span class="font-bold text-slate-800" x-text="contributors.length + ' Pekerja Terdaftar'"></span>
+
+                        <!-- Footer Box -->
+                        <div class="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span>Pekerja Terdaftar:</span>
+                                </div>
+                                <span class="font-bold text-slate-800" x-text="contributors.length + ' Orang'"></span>
+                            </div>
+
+                            <a href="/contributors" class="text-xs font-semibold text-slate-600 hover:text-[#00B090] transition flex items-center justify-center gap-1.5">
+                                <span>Lihat Semua Daftar Tim (<span x-text="contributors.length"></span> Pekerja)</span>
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>
+                        </div>
                     </div>
 
-                    <!-- Footer Link -->
-                    <div class="pt-4 border-t border-slate-100 mt-4 text-center">
-                        <a href="/contributors" class="text-xs font-semibold text-slate-600 hover:text-[#00B090] transition flex items-center justify-center gap-1.5">
-                            <span>Lihat Semua Daftar Tim (<span x-text="contributors.length"></span> Pekerja)</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </a>
-                    </div>
                 </div>
 
             </div>
 
+            <!-- QC BREAKDOWN & PRODUCTION QUALITY MONITORING -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Kualitas Produksi & Breakdown QC Rekaman</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Distribusi kelulusan QC dan durasi dari seluruh rekaman studio</p>
+                    </div>
+                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200/70 self-start sm:self-auto">
+                        Total Rekaman: <strong class="text-slate-900" x-text="totalRecordedHours + ' Jam'"></strong>
+                    </span>
+                </div>
+
+                <!-- Multi-segment Progress Bar -->
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between text-xs font-semibold">
+                        <span class="text-slate-600">Rasio Status Rekaman Studio</span>
+                        <span class="text-[#009B7E] font-bold" x-text="billablePercentage + '% Approved Rate'"></span>
+                    </div>
+                    
+                    <div class="h-3.5 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                        <div class="bg-[#00B090] transition-all duration-500" :style="'width: ' + billablePercentage + '%'" title="Billable Approved"></div>
+                        <div class="bg-rose-500 transition-all duration-500" :style="'width: ' + rejectedPercentage + '%'" title="Rejected"></div>
+                        <div class="bg-amber-400 transition-all duration-500" :style="'width: ' + pendingPercentage + '%'" title="Pending"></div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#00B090]"></span>
+                            <span>Billable: <strong class="text-slate-700" x-text="billableHours + 'h (' + billablePercentage + '%)'"></strong></span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span>Reject: <strong class="text-slate-700" x-text="rejectedHours + 'h (' + rejectedPercentage + '%)'"></strong></span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                            <span>Pending: <strong class="text-slate-700" x-text="pendingHours + 'h (' + pendingPercentage + '%)'"></strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 Metric Mini-Cards Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                    <div class="bg-emerald-50/50 rounded-xl p-3 border border-emerald-100/80">
+                        <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Billable (Appr)</div>
+                        <div class="text-lg font-black text-[#009B7E] mt-1" x-text="billableHours + 'h'"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.billableMinutes || 0).toLocaleString() + ' mnt'"></div>
+                    </div>
+                    <div class="bg-rose-50/50 rounded-xl p-3 border border-rose-100/80">
+                        <div class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">Rejected</div>
+                        <div class="text-lg font-black text-rose-500 mt-1" x-text="rejectedHours + 'h'"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.rejectedMinutes || 0).toLocaleString() + ' mnt'"></div>
+                    </div>
+                    <div class="bg-amber-50/50 rounded-xl p-3 border border-amber-100/80">
+                        <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Pending QC</div>
+                        <div class="text-lg font-black text-amber-500 mt-1" x-text="pendingHours + 'h'"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.pendingMinutes || 0).toLocaleString() + ' mnt'"></div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/70">
+                        <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Logged</div>
+                        <div class="text-lg font-black text-slate-800 mt-1" x-text="totalRecordedHours + 'h'"></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5" x-text="Math.round(recordingsStats.totalMinutes || 0).toLocaleString() + ' mnt'"></div>
+                    </div>
+                </div>
+
+                <!-- Progress Assignment Tim -->
+                <div class="pt-3 border-t border-slate-100 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-slate-700">Tingkat Penugasan Tugas ke Kontributor</span>
+                        <span class="font-bold text-slate-900" x-text="assignedPercentage + '% Selesai Ditandai'"></span>
+                    </div>
+                    <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                        <div class="bg-[#00B090] transition-all duration-500" :style="'width: ' + assignedPercentage + '%'"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Ditandai: <strong class="text-slate-700" x-text="(recordingsStats.assignedCount || 0) + ' tugas'"></strong></span>
+                        <span>Belum Ditandai: <strong class="text-amber-600" x-text="(recordingsStats.unassignedCount || 0) + ' tugas'"></strong></span>
+                    </div>
+                </div>
+            </div>
             <!-- RECENT PAYSLIPS FEED -->
             <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
                 <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
