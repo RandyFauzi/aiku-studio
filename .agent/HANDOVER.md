@@ -1,3 +1,7 @@
+### [2026-11-07 16:57] — Antigravity
+- Menjadikan header top bar sticky di halaman Laporan Kerja (/work-reports) dan Absensi (/attendance): menambahkan kelas `sticky top-0 z-20 shrink-0` pada elemen `<header>` di `resources/views/work-reports/admin.blade.php` dan `resources/views/attendance/admin.blade.php` agar tetap melayang di bagian atas saat halaman di-scroll ke bawah, seragam dengan halaman panel lainnya.
+- Validasi: Blade view cache PASS, sintaks bersih. State IDLE.
+
 ### [2026-11-07 16:54] — CODEX
 - Form admin tambah/edit laporan menghapus input/pilihan email HP studio; HP Sendiri tetap input email opsional. Keterangan email di detail laporan tetap tampil. Backend worker/admin memakai email akun aktif dari setting admin untuk sesi baru, mengabaikan override studio dari payload, mempertahankan snapshot email sesi lama saat edit; email HP Sendiri tidak dihubungkan ke master.
 - Validasi: full suite 158 tes/1105 assertions PASS (termasuk otomatisasi/snapshot/personal email dan assist); browser 1440/390 create/edit tanpa email studio, personal email opsional/binding/overflow/error JS lulus; Vite build dan refresh Graphify lulus. Tanpa migrasi baru; aset build identik, tidak ada file aset baru.
