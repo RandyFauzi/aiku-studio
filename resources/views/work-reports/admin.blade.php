@@ -544,36 +544,15 @@
                                         </div>
                                     </div>
 
-                                    <!-- Email Akun Terhubung Input -->
+                                    <!-- Tasks per phone; optional email only for personal phones. -->
                                     @include('work-reports.task-picker', ['taskMap' => 'editForm.phone_tasks', 'phoneList' => 'editForm.phones'])
-                                <div class="pt-2 border-t border-slate-200/50">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <label class="block text-[10px] font-bold text-slate-600"><span x-text="key === 'sendiri' ? 'Email HP Sendiri (opsional):' : 'Email Akun Terhubung:'"></span></label>
-                                            <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">Khusus Laporan Ini</span>
-                                        </div>
-                                        <input type="text" 
-                                               x-model.trim="editForm.phone_emails[key]" :type="key === 'sendiri' ? 'email' : 'text'" :aria-label="key === 'sendiri' ? 'Email HP Sendiri (opsional)' : 'Email HP ' + label" maxlength="100"
-                                               :placeholder="getPhoneInfo(key)?.active_email || 'email@gmail.com'"
-                                               class="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs text-slate-800 focus:border-emerald-500 focus:outline-none">
-                                        
-                                        <!-- Quick Suggestions from Known Accounts -->
-                                        <template x-if="getPhoneInfo(key)?.accounts && getPhoneInfo(key).accounts.length > 0">
-                                            <div class="mt-1 flex items-center gap-1 flex-wrap">
-                                                <span class="text-[9px] text-slate-400">Pilihan akun:</span>
-                                                <template x-for="acc in getPhoneInfo(key).accounts" :key="acc.email">
-                                                    <button type="button" 
-                                                            @click="editForm.phone_emails[key] = acc.email" 
-                                                            class="text-[9px] px-1.5 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 font-mono transition cursor-pointer"
-                                                            :class="editForm.phone_emails[key] === acc.email ? 'border-emerald-400 bg-emerald-50 text-emerald-800 font-bold' : ''"
-                                                            x-text="acc.account_name || acc.email"></button>
-                                                </template>
-                                            </div>
-                                        </template>
-
-                                        <p class="text-[10px] text-slate-400 mt-1 leading-tight">
-                                            <span x-text="key === 'sendiri' ? 'Email opsional untuk mencocokkan rekaman bot pada tanggal laporan, tanpa dihubungkan ke akun master HP studio.' : 'Perubahan email hanya untuk laporan ini dan tidak mengubah akun master HP.'"></span>
-                                        </p>
-                                    </div>
+                                <template x-if="key === 'sendiri'">
+                                    <label class="block border-t border-slate-200/50 pt-3 text-xs font-semibold text-slate-600">Email HP Sendiri (opsional)
+                                        <input type="email" x-model.trim="editForm.phone_emails[key]" maxlength="100" placeholder="nama@email.com"
+                                               class="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-base text-slate-800 focus:border-emerald-500 focus:outline-none">
+                                        <span class="mt-2 block text-xs font-normal leading-5 text-slate-500">Jika diisi, email dipakai untuk mencocokkan rekaman bot pada tanggal laporan. Tidak dihubungkan ke akun master HP studio.</span>
+                                    </label>
+                                </template>
                                 </div>
                             </div>
                         </template>
@@ -728,36 +707,15 @@
                                     </div>
                                 </div>
 
-                                <!-- Email Akun Terhubung Input -->
+                                <!-- Tasks per phone; optional email only for personal phones. -->
                                 @include('work-reports.task-picker', ['taskMap' => 'createForm.phone_tasks', 'phoneList' => 'createForm.phones'])
-                                <div class="pt-2 border-t border-slate-200/50">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <label class="block text-[10px] font-bold text-slate-600"><span x-text="key === 'sendiri' ? 'Email HP Sendiri (opsional):' : 'Email Akun Terhubung:'"></span></label>
-                                        <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">Khusus Laporan Ini</span>
-                                    </div>
-                                    <input type="text" 
-                                           x-model.trim="createForm.phone_emails[key]" :type="key === 'sendiri' ? 'email' : 'text'" :aria-label="key === 'sendiri' ? 'Email HP Sendiri (opsional)' : 'Email HP ' + label" maxlength="100"
-                                           :placeholder="getPhoneInfo(key)?.active_email || 'email@gmail.com'"
-                                           class="w-full h-8 px-2.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-800 focus:border-emerald-500 focus:outline-none">
-                                    
-                                    <!-- Quick Suggestions from Known Accounts -->
-                                    <template x-if="getPhoneInfo(key)?.accounts && getPhoneInfo(key).accounts.length > 0">
-                                        <div class="mt-1 flex items-center gap-1 flex-wrap">
-                                            <span class="text-[9px] text-slate-400">Pilihan:</span>
-                                            <template x-for="acc in getPhoneInfo(key).accounts" :key="acc.email">
-                                                <button type="button" 
-                                                        @click="createForm.phone_emails[key] = acc.email" 
-                                                        class="text-[9px] px-1.5 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 font-mono transition cursor-pointer"
-                                                        :class="createForm.phone_emails[key] === acc.email ? 'border-emerald-400 bg-emerald-50 text-emerald-800 font-bold' : ''"
-                                                        x-text="acc.account_name || acc.email"></button>
-                                            </template>
-                                        </div>
-                                    </template>
-
-                                    <p class="text-[10px] text-slate-400 mt-1 leading-tight">
-                                        <span x-text="key === 'sendiri' ? 'Email opsional untuk mencocokkan rekaman bot pada tanggal laporan, tanpa dihubungkan ke akun master HP studio.' : 'Email ini hanya tersimpan di laporan dan tidak mengubah master HP.'"></span>
-                                    </p>
-                                </div>
+                                <template x-if="key === 'sendiri'">
+                                    <label class="block border-t border-slate-200/50 pt-3 text-xs font-semibold text-slate-600">Email HP Sendiri (opsional)
+                                        <input type="email" x-model.trim="createForm.phone_emails[key]" maxlength="100" placeholder="nama@email.com"
+                                               class="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-base text-slate-800 focus:border-emerald-500 focus:outline-none">
+                                        <span class="mt-2 block text-xs font-normal leading-5 text-slate-500">Jika diisi, email dipakai untuk mencocokkan rekaman bot pada tanggal laporan. Tidak dihubungkan ke akun master HP studio.</span>
+                                    </label>
+                                </template>
                             </div>
                         </div>
                     </template>

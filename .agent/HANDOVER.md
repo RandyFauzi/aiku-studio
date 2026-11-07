@@ -1,3 +1,7 @@
+### [2026-11-07 16:54] — CODEX
+- Form admin tambah/edit laporan menghapus input/pilihan email HP studio; HP Sendiri tetap input email opsional. Keterangan email di detail laporan tetap tampil. Backend worker/admin memakai email akun aktif dari setting admin untuk sesi baru, mengabaikan override studio dari payload, mempertahankan snapshot email sesi lama saat edit; email HP Sendiri tidak dihubungkan ke master.
+- Validasi: full suite 158 tes/1105 assertions PASS (termasuk otomatisasi/snapshot/personal email dan assist); browser 1440/390 create/edit tanpa email studio, personal email opsional/binding/overflow/error JS lulus; Vite build dan refresh Graphify lulus. Tanpa migrasi baru; aset build identik, tidak ada file aset baru.
+
 ### [2026-11-06 23:38] — Antigravity
 - Merapikan seluruh tampilan Executive Dashboard (/ atau /panel):
   - Hero banner Command Center: memperbaiki bug nesting div yang merusak flexbox, melembutkan palet gradien lime-mint agar ramah di mata dengan teks forest green kontras tinggi, menata logo dalam kartu badge rapi, dan membuat info periode aktif dinamis (Okt/Nov 2026).

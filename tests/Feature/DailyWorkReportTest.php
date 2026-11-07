@@ -334,7 +334,22 @@ class DailyWorkReportTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_report_scoped_phone_emails_does_not_modify_master_device_accounts(): void
+    public function test_worker_studio_email_is_automatic_and_preserves_session_snapshot(): void
+    {
+        $user = $this->employee();
+        $account = DeviceAccount::create(['phone_key' => 'putih', 'email' => 'first@example.test', 'is_active' => true]);
+        $data = array_replace($this->payload(), ['is_new' => true, 'phones' => ['putih', 'sendiri'], 'phone_emails' => ['sendiri' => 'personal@example.test']]);
+        $first = $this->actingAs($user)->putJson('/api/me/work-report', $data)->assertOk()
+            ->assertJsonPath('report.phone_emails.putih', 'first@example.test')
+            ->assertJsonPath('report.phone_emails.sendiri', 'personal@example.test')->json('report.id');
+        $account->update(['email' => 'next@example.test']);
+        $this->putJson('/api/me/work-report', array_replace($data, ['report_id' => $first, 'expected_revision' => 1]))->assertOk()
+            ->assertJsonPath('report.phone_emails.putih', 'first@example.test');
+        $this->putJson('/api/me/work-report', $data)->assertOk()->assertJsonPath('report.phone_emails.putih', 'next@example.test');
+        $this->assertDatabaseCount('device_accounts', 1);
+    }
+
+    public function test_studio_email_automatically_uses_admin_setting_and_ignores_manual_overrides(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $contributor = Contributor::create([
@@ -352,7 +367,7 @@ class DailyWorkReportTest extends TestCase
 
         $today = now('Asia/Makassar')->toDateString();
 
-        // Admin creates work report with custom overridden email
+        // A submitted override must not replace the configured active studio account.
         $res = $this->actingAs($admin)->postJson('/api/work-reports', [
             'contributor_id' => $contributor->id,
             'work_date' => $today,
@@ -364,7 +379,7 @@ class DailyWorkReportTest extends TestCase
 
         $res->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('report.phone_emails.putih', 'override_khusus_laporan@gmail.com');
+            ->assertJsonPath('report.phone_emails.putih', 'master_putih@gmail.com');
 
         $reportId = $res->json('report.id');
 
@@ -377,11 +392,11 @@ class DailyWorkReportTest extends TestCase
             'is_active' => true,
         ]);
 
-        // Verify report in database has the overridden email
+        // The report stores the configured studio email.
         $report = DailyWorkReport::find($reportId);
-        $this->assertEquals('override_khusus_laporan@gmail.com', $report->phone_emails['putih'] ?? null);
+        $this->assertEquals('master_putih@gmail.com', $report->phone_emails['putih'] ?? null);
 
-        // Admin updates report with another email
+        // Editing the report cannot inject another studio email.
         $updateRes = $this->actingAs($admin)->putJson('/api/work-reports/'.$reportId, [
             'phones' => ['putih'],
             'phone_durations' => ['putih' => 130],
@@ -390,16 +405,16 @@ class DailyWorkReportTest extends TestCase
         ]);
 
         $updateRes->assertOk()
-            ->assertJsonPath('report.phone_emails.putih', 'updated_override@gmail.com');
+            ->assertJsonPath('report.phone_emails.putih', 'master_putih@gmail.com');
 
         // Master device account is STILL untouched!
         $this->assertEquals('master_putih@gmail.com', $masterDevice->fresh()->email);
 
-        // Assist matches checks the overridden email
+        // Assist uses the stored active account.
         $assistRes = $this->actingAs($admin)->getJson('/api/work-reports/assist-matches?date='.$today);
         $assistRes->assertOk();
         $phoneData = $assistRes->json('assist_data.0.phones.0');
-        $this->assertEquals('updated_override@gmail.com', $phoneData['active_email']);
+        $this->assertEquals('master_putih@gmail.com', $phoneData['active_email']);
         $this->assertTrue($phoneData['is_email_overridden']);
     }
 

@@ -81,7 +81,8 @@ class ReportTasksTest extends TestCase
     public function test_admin_can_create_edit_and_read_tasks_in_matching_and_confirm_audit(): void
     {
         $worker = $this->worker(); $admin = User::factory()->create(); $payload = $this->payload();
-        $payload['contributor_id'] = $worker->contributor_id; $payload['phone_emails'] = ['putih' => 'shared@example.test'];
+        $payload['contributor_id'] = $worker->contributor_id;
+        \App\Models\DeviceAccount::create(['phone_key' => 'putih', 'email' => 'shared@example.test', 'is_active' => true]);
         $result = $this->actingAs($admin)->postJson('/api/work-reports', $payload)->assertOk();
         $id = $result->json('report.id');
         $payload['phone_tasks']['putih'] = ['Changed task'];
