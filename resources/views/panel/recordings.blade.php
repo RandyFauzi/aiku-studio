@@ -50,63 +50,7 @@
             border: 1px solid #E2E8F0;
         }
 
-        /* Walking Robot & Cyber Sync Animations */
-        .robot-bobbing {
-            animation: robot-bob 0.8s ease-in-out infinite alternate;
-        }
-        @keyframes robot-bob {
-            0% { transform: translateY(0px); }
-            100% { transform: translateY(-8px); }
-        }
-        .robot-leg-left-anim {
-            transform-origin: 48px 101px;
-            animation: leg-swing-left 0.5s ease-in-out infinite alternate;
-        }
-        .robot-leg-right-anim {
-            transform-origin: 72px 101px;
-            animation: leg-swing-right 0.5s ease-in-out infinite alternate;
-        }
-        @keyframes leg-swing-left {
-            0% { transform: rotate(20deg); }
-            100% { transform: rotate(-20deg); }
-        }
-        @keyframes leg-swing-right {
-            0% { transform: rotate(-20deg); }
-            100% { transform: rotate(20deg); }
-        }
-        .robot-arm-left-anim {
-            transform-origin: 34px 72px;
-            animation: arm-swing-left 0.5s ease-in-out infinite alternate;
-        }
-        .robot-arm-right-anim {
-            transform-origin: 86px 72px;
-            animation: arm-swing-right 0.5s ease-in-out infinite alternate;
-        }
-        @keyframes arm-swing-left {
-            0% { transform: rotate(-15deg); }
-            100% { transform: rotate(15deg); }
-        }
-        @keyframes arm-swing-right {
-            0% { transform: rotate(15deg); }
-            100% { transform: rotate(-15deg); }
-        }
-        .conveyor-track {
-            background: repeating-linear-gradient(90deg, #475569 0px, #475569 8px, #1e293b 8px, #1e293b 16px);
-        }
-        .conveyor-active {
-            animation: conveyor-move 0.5s linear infinite;
-        }
-        @keyframes conveyor-move {
-            from { background-position: 0 0; }
-            to { background-position: 32px 0; }
-        }
-        .laser-scanner {
-            animation: laser-sweep 1s ease-in-out infinite alternate;
-        }
-        @keyframes laser-sweep {
-            0% { transform: translateX(-9px); opacity: 0.3; }
-            100% { transform: translateX(9px); opacity: 1; }
-        }
+        /* Synchronization progress animation */
         .progress-shimmer {
             background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
             animation: shimmer 1.5s infinite;
@@ -152,7 +96,7 @@
             <!-- Right Header Controls: Bot, Auto-Sync, Exit, Admin -->
             <div class="flex items-center gap-3">
 
-                <!-- REALTIME BOT RUNNING PILL (Click to open Walking Robot tracker) -->
+                <!-- REALTIME BOT RUNNING PILL (Click to open Bot progress tracker) -->
                 <button x-show="isSyncing || botProgress.isRunning" 
                         @click="openConsoleModal()"
                         x-transition:enter="transition ease-out duration-200"
@@ -1372,102 +1316,22 @@
                     </div>
                 </div>
 
-                <!-- Center: WALKING ROBOT & REAL-TIME PROGRESS INFO -->
+                <!-- Center: BOT & REAL-TIME PROGRESS INFO -->
                 <div class="relative flex flex-col sm:flex-row items-center justify-between gap-5 py-1 z-10">
                     
-                    <!-- Left: Animated Walking Robot Character -->
+                    <!-- GIF loops natively and is mounted only while synchronization is running. -->
                     <div class="flex flex-col items-center justify-center shrink-0">
-                        <div class="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
-                            
-                            <!-- Floating Data Particles -->
-                            <div class="absolute -top-1 left-3 text-[10px] font-mono text-cyan-400 font-bold" :class="(isSyncing || botProgress.isRunning) ? 'animate-pulse' : ''">0101</div>
-                            <div class="absolute top-3 -right-1 text-[10px] font-mono text-emerald-400 font-bold" :class="(isSyncing || botProgress.isRunning) ? 'animate-bounce' : ''">Atlas✓</div>
-                            <div class="absolute bottom-6 -left-2 text-[10px] font-mono text-teal-300 font-bold opacity-80" :class="(isSyncing || botProgress.isRunning) ? 'animate-pulse' : ''">Sync⚡</div>
-
-                            <!-- Glow Halo behind Robot -->
-                            <div class="absolute w-28 h-28 rounded-full bg-emerald-500/15 blur-xl"></div>
-
-                            <!-- Custom SVG Walking Robot -->
-                            <svg viewBox="0 0 120 120" class="w-28 h-28 sm:w-32 sm:h-32 relative z-10 transition-transform" :class="(isSyncing || botProgress.isRunning) ? 'robot-bobbing' : ''">
-                                <!-- Head Antenna -->
-                                <line x1="60" y1="28" x2="60" y2="12" stroke="#00B090" stroke-width="3" stroke-linecap="round"/>
-                                <circle cx="60" cy="10" r="5" fill="#00E5B8" class="animate-pulse"/>
-                                <!-- Radar Signal Ping -->
-                                <circle cx="60" cy="10" r="10" stroke="#00E5B8" stroke-width="1.5" fill="none" opacity="0.6" class="animate-ping" x-show="isSyncing || botProgress.isRunning"/>
-
-                                <!-- Robot Head -->
-                                <rect x="36" y="26" width="48" height="34" rx="10" fill="#1E293B" stroke="#00B090" stroke-width="2.5"/>
-                                <!-- Ears / Bolts -->
-                                <rect x="30" y="38" width="6" height="10" rx="2" fill="#334155"/>
-                                <rect x="84" y="38" width="6" height="10" rx="2" fill="#334155"/>
-
-                                <!-- Visor Face / Screen -->
-                                <rect x="42" y="32" width="36" height="20" rx="6" fill="#0F172A"/>
-                                
-                                <!-- LED Scanning Eyes (Running vs Idle) -->
-                                <g x-show="isSyncing || botProgress.isRunning">
-                                    <line x1="46" y1="42" x2="74" y2="42" stroke="#065F46" stroke-width="3" stroke-linecap="round"/>
-                                    <circle cx="50" cy="42" r="3.5" fill="#10B981" class="animate-pulse"/>
-                                    <circle cx="70" cy="42" r="3.5" fill="#10B981" class="animate-pulse"/>
-                                    <ellipse cx="60" cy="42" rx="4" ry="2" fill="#6EE7B7" opacity="0.9" class="laser-scanner"/>
-                                </g>
-                                <g x-show="!isSyncing && !botProgress.isRunning">
-                                    <circle cx="51" cy="42" r="3.5" fill="#10B981"/>
-                                    <circle cx="69" cy="42" r="3.5" fill="#10B981"/>
-                                    <!-- Friendly Smile -->
-                                    <path d="M 55 47 Q 60 50 65 47" stroke="#10B981" stroke-width="2" fill="none" stroke-linecap="round"/>
-                                </g>
-
-                                <!-- Neck -->
-                                <rect x="54" y="60" width="12" height="5" fill="#475569"/>
-
-                                <!-- Robot Body / Chest -->
-                                <rect x="34" y="65" width="52" height="36" rx="8" fill="#1E293B" stroke="#00B090" stroke-width="2.5"/>
-                                
-                                <!-- Chest Heartbeat Pulse -->
-                                <rect x="42" y="71" width="36" height="14" rx="4" fill="#0F172A"/>
-                                <path d="M 44 78 L 49 78 L 52 74 L 56 82 L 60 76 L 63 78 L 76 78" stroke="#00E5B8" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" class="pulse-path"/>
-
-                                <!-- Battery / Progress Indicator Dots -->
-                                <circle cx="48" cy="92" r="2.5" :fill="(botProgress.percent || 0) >= 25 ? '#10B981' : '#475569'"/>
-                                <circle cx="56" cy="92" r="2.5" :fill="(botProgress.percent || 0) >= 50 ? '#10B981' : '#475569'"/>
-                                <circle cx="64" cy="92" r="2.5" :fill="(botProgress.percent || 0) >= 75 ? '#10B981' : '#475569'"/>
-                                <circle cx="72" cy="92" r="2.5" :fill="(botProgress.percent || 0) >= 95 ? '#10B981' : '#475569'"/>
-
-                                <!-- Left Arm -->
-                                <g :class="(isSyncing || botProgress.isRunning) ? 'robot-arm-left-anim' : ''">
-                                    <path d="M 34 72 L 20 84" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
-                                    <circle cx="20" cy="84" r="4" fill="#00B090"/>
-                                </g>
-                                <!-- Right Arm -->
-                                <g :class="(isSyncing || botProgress.isRunning) ? 'robot-arm-right-anim' : ''">
-                                    <path d="M 86 72 L 100 84" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
-                                    <circle cx="100" cy="84" r="4" fill="#00B090"/>
-                                </g>
-
-                                <!-- Left Leg (Animated Walking) -->
-                                <g :class="(isSyncing || botProgress.isRunning) ? 'robot-leg-left-anim' : ''">
-                                    <line x1="48" y1="101" x2="48" y2="114" stroke="#475569" stroke-width="5" stroke-linecap="round"/>
-                                    <rect x="42" y="112" width="13" height="5" rx="2.5" fill="#00B090"/>
-                                </g>
-
-                                <!-- Right Leg (Animated Walking) -->
-                                <g :class="(isSyncing || botProgress.isRunning) ? 'robot-leg-right-anim' : ''">
-                                    <line x1="72" y1="101" x2="72" y2="114" stroke="#475569" stroke-width="5" stroke-linecap="round"/>
-                                    <rect x="67" y="112" width="13" height="5" rx="2.5" fill="#00B090"/>
-                                </g>
+                        <div class="w-40 h-32 sm:w-48 sm:h-36 flex items-center justify-center" aria-hidden="true">
+                            <template x-if="isSyncing || botProgress.isRunning">
+                                <img src="/assets/object/Loading%20BOT.gif" width="479" height="359" alt=""
+                                     class="w-full h-full object-contain">
+                            </template>
+                            <svg x-show="!isSyncing && !botProgress.isRunning" class="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="4" y="5" width="16" height="14" rx="4"/>
+                                <path d="M12 2v3M8 11h1m6 0h1m-7 4h6" stroke-linecap="round"/>
                             </svg>
-
-                            <!-- Conveyor Belt under robot feet -->
-                            <div class="absolute bottom-1 w-32 sm:w-36 h-2 rounded-full overflow-hidden bg-slate-800 border border-slate-700/80">
-                                <div class="w-full h-full conveyor-track" :class="(isSyncing || botProgress.isRunning) ? 'conveyor-active' : ''"></div>
-                            </div>
                         </div>
-                        
-                        <div class="mt-1 text-[11px] font-mono text-emerald-400 font-semibold tracking-wide flex items-center gap-1.5">
-                            <span>Bot AIKu Studio</span>
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" :class="(isSyncing || botProgress.isRunning) ? 'animate-ping' : ''"></span>
-                        </div>
+                        <div class="mt-1 text-[11px] font-mono text-emerald-400 font-semibold tracking-wide">Bot AIKu Studio</div>
                     </div>
 
                     <!-- Right: Progress Percentage, Shimmer Bar, Account & Pipeline -->
@@ -2559,7 +2423,7 @@
                         recordsCount: 0,
                         recent_logs: ['[00:00:00] Memulai bot AIKu Studio...']
                     };
-                    // Open the Walking Robot progress modal so user sees it right away!
+                    // Open the progress modal immediately.
                     this.showConsoleModal = true;
 
                     try {

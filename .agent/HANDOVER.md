@@ -1,3 +1,7 @@
+### [2026-11-08] — Codex: GIF progres bot
+- Ganti SVG robot berjalan dengan Loading BOT.gif milik pengguna (loop native tanpa batas), hanya dimuat selama sinkronisasi aktif; hapus CSS animasi robot lama.
+- Validasi: Vite build, Blade view cache, diff check dan preview browser komponen lulus. Perubahan kosmetik; tanpa PHPUnit/rebuild Graphify.
+
 ### [2026-11-08] — Codex: verifikasi produksi
 - Deploy server ke 6051601; cron per menit terbukti memproses antrean. Sesi Atlas diperbarui privat; sinkronisasi selesai 2.296 Atlas + 605 1618. Verifikasi ulang seluruh 71 akun aktif: 2.296 ID sumber ditemukan di DB, nol selisih jumlah/nol ID hilang. Auto-sync tetap mengikuti pengaturan pengguna (nonaktif).
 - Dua contoh akun pada screenshot (hajimaryam77 dan hajibiru77) ditemukan di Atlas tetapi tidak terdaftar pada StudioAccount maupun DeviceAccount produksi; karena itu belum termasuk cakupan 71 akun. Belum menambah akun atau mengklaim riwayat kedua akun lengkap. Endpoint administrasi sementara menghapus diri.
