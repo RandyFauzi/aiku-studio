@@ -482,26 +482,258 @@
                 <!-- Center & Right: Presets Tanggal WITA & Dropdowns -->
                 <div class="flex items-center gap-2.5 flex-wrap">
                     
-                    <!-- Atur Range Tanggal (Start Date s/d End Date) -->
-                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs text-slate-700">
-                        <span class="text-[11px] font-semibold text-slate-400 hidden sm:inline">Range Tanggal:</span>
-                        <input type="date" 
-                               x-model="filters.startDate" 
-                               @change="applyFilters(1)" 
-                               title="Tanggal Mulai"
-                               class="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer">
-                        <span class="text-slate-400 text-[11px] font-medium">s/d</span>
-                        <input type="date" 
-                               x-model="filters.endDate" 
-                               @change="applyFilters(1)" 
-                               title="Tanggal Selesai"
-                               class="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer">
-                        <button x-show="filters.startDate || filters.endDate" 
-                                @click="filters.startDate = ''; filters.endDate = ''; applyFilters(1)" 
-                                class="text-slate-400 hover:text-rose-500 p-0.5 rounded transition" 
-                                title="Reset filter tanggal">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <!-- Atur Range Tanggal (Ala Tiket.com) -->
+                    <div class="relative shrink-0" @click.outside="datePickerOpen = false">
+                        <button type="button" 
+                                @click="toggleDatePicker()" 
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                                :class="(filters.startDate || filters.endDate) ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
+                            <svg class="w-4 h-4 shrink-0 transition" 
+                                 :class="(filters.startDate || filters.endDate) ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="font-bold whitespace-nowrap" x-text="getDateRangeLabel()"></span>
+
+                            <!-- Reset Button inside trigger -->
+                            <template x-if="filters.startDate || filters.endDate">
+                                <span @click.stop="clearDateFilter()" 
+                                      class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                                      title="Hapus filter tanggal">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </span>
+                            </template>
+                            <svg x-show="!filters.startDate && !filters.endDate" 
+                                 class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                                 :class="datePickerOpen ? 'rotate-180' : ''" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
+
+                        <!-- Floating Dual-Month Calendar Popover (Ala Tiket.com) -->
+                        <div x-show="datePickerOpen" 
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute top-full left-0 sm:left-auto sm:right-0 md:left-0 md:right-auto mt-2 z-50 bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-5 w-[330px] sm:w-[350px] md:w-[670px] max-w-[calc(100vw-2rem)] select-none"
+                             x-cloak>
+                            
+                            <!-- Header Modal: Judul & Tombol Tutup -->
+                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-50 text-[#009B7E]">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </span>
+                                    <h3 class="text-sm font-extrabold text-slate-800 tracking-tight">Atur Rentang Tanggal</h3>
+                                </div>
+                                <button type="button" @click="datePickerOpen = false" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" title="Tutup">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+
+                            <!-- Presets Quick Bar -->
+                            <div class="flex items-center gap-1.5 flex-wrap pb-3 mb-4 border-b border-slate-100">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Pilihan Cepat:</span>
+                                <button type="button" @click="selectDatePreset('today')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'today' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Hari Ini</button>
+                                <button type="button" @click="selectDatePreset('yesterday')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'yesterday' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Kemarin</button>
+                                <button type="button" @click="selectDatePreset('last7')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'last7' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">7 Hari Terakhir</button>
+                                <button type="button" @click="selectDatePreset('last30')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'last30' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">30 Hari Terakhir</button>
+                                <button type="button" @click="selectDatePreset('thisMonth')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'thisMonth' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Bulan Ini</button>
+                                <button type="button" @click="clearDateFilter(); datePickerOpen = false" class="ml-auto px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">Semua (Reset)</button>
+                            </div>
+
+                            <!-- Dual-Month Calendars Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Month 1 (Current / Left) -->
+                                <template x-if="datePickerMonth1">
+                                    <div>
+                                        <!-- Header Month 1 -->
+                                        <div class="flex items-center justify-between mb-3 px-1">
+                                            <button type="button" 
+                                                    @click="datePickerPrevMonth()" 
+                                                    class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition" 
+                                                    title="Bulan Sebelumnya">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                                            </button>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-800" x-text="datePickerMonth1.title"></h4>
+                                            <!-- On mobile, show next button here -->
+                                            <button type="button" 
+                                                    @click="datePickerNextMonth()" 
+                                                    class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition md:hidden" 
+                                                    title="Bulan Berikutnya">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                            </button>
+                                            <div class="hidden md:block w-7"></div>
+                                        </div>
+
+                                        <!-- Days of Week -->
+                                        <div class="grid grid-cols-7 mb-1 text-center">
+                                            <span class="text-[11px] font-bold text-rose-500">Min</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Sen</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Sel</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Rab</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Kam</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Jum</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Sab</span>
+                                        </div>
+
+                                        <!-- Calendar Days Grid -->
+                                        <div class="grid grid-cols-7">
+                                            <template x-for="item in datePickerMonth1.days" :key="'m1-' + item.dateStr">
+                                                <div class="relative py-0.5 flex items-center justify-center"
+                                                     @mouseenter="onDatePickerDateHover(item.dateStr)">
+                                                    
+                                                    <template x-if="isDatePickerInRange(item.dateStr)">
+                                                        <div class="absolute inset-y-0.5 inset-x-0 bg-[#EDFAF8]"
+                                                             :class="{
+                                                                 'rounded-l-full': item.dayOfWeek === 0,
+                                                                 'rounded-r-full': item.dayOfWeek === 6
+                                                             }">
+                                                        </div>
+                                                    </template>
+
+                                                    <template x-if="isDatePickerStart(item.dateStr) && !isDatePickerSingle(item.dateStr) && (datePickerSelectingStart ? (datePickerHoverDate && datePickerHoverDate !== datePickerSelectingStart) : (filters.endDate && filters.endDate !== filters.startDate))">
+                                                        <div class="absolute inset-y-0.5 right-0 left-1/2 bg-[#EDFAF8]"
+                                                             :class="{ 'rounded-r-full': item.dayOfWeek === 6 }">
+                                                        </div>
+                                                    </template>
+
+                                                    <template x-if="isDatePickerEnd(item.dateStr) && !isDatePickerSingle(item.dateStr)">
+                                                        <div class="absolute inset-y-0.5 left-0 right-1/2 bg-[#EDFAF8]"
+                                                             :class="{ 'rounded-l-full': item.dayOfWeek === 0 }">
+                                                        </div>
+                                                    </template>
+
+                                                    <button type="button"
+                                                            @click="onDatePickerDateClick(item.dateStr)"
+                                                            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold relative z-10 transition-all select-none"
+                                                            :class="{
+                                                                'bg-[#00B090] text-white font-bold shadow-xs scale-105': isDatePickerStart(item.dateStr) || isDatePickerEnd(item.dateStr) || isDatePickerSingle(item.dateStr),
+                                                                'text-[#007F67] font-bold': isDatePickerInRange(item.dateStr),
+                                                                'border border-[#00B090] text-[#009B7E] font-bold': isDatePickerToday(item.dateStr) && !isDatePickerStart(item.dateStr) && !isDatePickerEnd(item.dateStr) && !isDatePickerInRange(item.dateStr),
+                                                                'text-slate-700 hover:bg-slate-100': item.isCurrentMonth && !isDatePickerStart(item.dateStr) && !isDatePickerEnd(item.dateStr) && !isDatePickerInRange(item.dateStr),
+                                                                'text-slate-300': !item.isCurrentMonth
+                                                            }"
+                                                            x-text="item.day">
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Month 2 (Next / Right, Desktop only) -->
+                                <template x-if="datePickerMonth2">
+                                    <div class="hidden md:block">
+                                        <!-- Header Month 2 -->
+                                        <div class="flex items-center justify-between mb-3 px-1">
+                                            <div class="w-7"></div>
+                                            <h4 class="text-sm font-bold text-slate-800" x-text="datePickerMonth2.title"></h4>
+                                            <button type="button" 
+                                                    @click="datePickerNextMonth()" 
+                                                    class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition" 
+                                                    title="Bulan Berikutnya">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Days of Week -->
+                                        <div class="grid grid-cols-7 mb-1 text-center">
+                                            <span class="text-[11px] font-bold text-rose-500">Min</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Sen</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Sel</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Rab</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Kam</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Jum</span>
+                                            <span class="text-[11px] font-semibold text-slate-400">Sab</span>
+                                        </div>
+
+                                        <!-- Calendar Days Grid -->
+                                        <div class="grid grid-cols-7">
+                                            <template x-for="item in datePickerMonth2.days" :key="'m2-' + item.dateStr">
+                                                <div class="relative py-0.5 flex items-center justify-center"
+                                                     @mouseenter="onDatePickerDateHover(item.dateStr)">
+                                                    
+                                                    <template x-if="isDatePickerInRange(item.dateStr)">
+                                                        <div class="absolute inset-y-0.5 inset-x-0 bg-[#EDFAF8]"
+                                                             :class="{
+                                                                 'rounded-l-full': item.dayOfWeek === 0,
+                                                                 'rounded-r-full': item.dayOfWeek === 6
+                                                             }">
+                                                        </div>
+                                                    </template>
+
+                                                    <template x-if="isDatePickerStart(item.dateStr) && !isDatePickerSingle(item.dateStr) && (datePickerSelectingStart ? (datePickerHoverDate && datePickerHoverDate !== datePickerSelectingStart) : (filters.endDate && filters.endDate !== filters.startDate))">
+                                                        <div class="absolute inset-y-0.5 right-0 left-1/2 bg-[#EDFAF8]"
+                                                             :class="{ 'rounded-r-full': item.dayOfWeek === 6 }">
+                                                        </div>
+                                                    </template>
+
+                                                    <template x-if="isDatePickerEnd(item.dateStr) && !isDatePickerSingle(item.dateStr)">
+                                                        <div class="absolute inset-y-0.5 left-0 right-1/2 bg-[#EDFAF8]"
+                                                             :class="{ 'rounded-l-full': item.dayOfWeek === 0 }">
+                                                        </div>
+                                                    </template>
+
+                                                    <button type="button"
+                                                            @click="onDatePickerDateClick(item.dateStr)"
+                                                            class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold relative z-10 transition-all select-none"
+                                                            :class="{
+                                                                'bg-[#00B090] text-white font-bold shadow-xs scale-105': isDatePickerStart(item.dateStr) || isDatePickerEnd(item.dateStr) || isDatePickerSingle(item.dateStr),
+                                                                'text-[#007F67] font-bold': isDatePickerInRange(item.dateStr),
+                                                                'border border-[#00B090] text-[#009B7E] font-bold': isDatePickerToday(item.dateStr) && !isDatePickerStart(item.dateStr) && !isDatePickerEnd(item.dateStr) && !isDatePickerInRange(item.dateStr),
+                                                                'text-slate-700 hover:bg-slate-100': item.isCurrentMonth && !isDatePickerStart(item.dateStr) && !isDatePickerEnd(item.dateStr) && !isDatePickerInRange(item.dateStr),
+                                                                'text-slate-300': !item.isCurrentMonth
+                                                            }"
+                                                            x-text="item.day">
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Footer / Status Bar -->
+                            <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+                                <div class="text-xs">
+                                    <template x-if="datePickerSelectingStart">
+                                        <span class="inline-flex items-center gap-1.5 text-emerald-800 font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                                            <span class="w-2 h-2 rounded-full bg-[#00B090] animate-pulse"></span>
+                                            <span>Pilih tanggal selesai, atau <strong>klik lagi tanggal yang sama untuk 1 hari</strong></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="!datePickerSelectingStart && (filters.startDate || filters.endDate)">
+                                        <span class="inline-flex items-center gap-1.5 text-slate-700 font-medium">
+                                            <span class="w-2 h-2 rounded-full bg-[#00B090]"></span>
+                                            <span x-text="getDateRangeSummary()"></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="!datePickerSelectingStart && !filters.startDate && !filters.endDate">
+                                        <span class="text-slate-400">Klik tanggal pertama untuk mulai memilih rentang.</span>
+                                    </template>
+                                </div>
+
+                                <div class="flex items-center gap-2 ml-auto">
+                                    <template x-if="filters.startDate || filters.endDate">
+                                        <button type="button" 
+                                                @click="clearDateFilter(); datePickerOpen = false" 
+                                                class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 text-xs font-semibold transition">
+                                            Reset
+                                        </button>
+                                    </template>
+                                    <button type="button" 
+                                            @click="datePickerOpen = false" 
+                                            class="px-4 py-1.5 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white text-xs font-bold transition shadow-2xs">
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Filter Pekerja -->
@@ -1524,6 +1756,12 @@
                     startDate: '',
                     endDate: ''
                 },
+                datePickerOpen: false,
+                datePickerViewDate: new Date(),
+                datePickerSelectingStart: null,
+                datePickerHoverDate: null,
+                datePickerMonth1: null,
+                datePickerMonth2: null,
                 pagination: {
                     page: 1,
                     limit: 50,
@@ -1840,6 +2078,7 @@
                 },
 
                 async initApp() {
+                    this.updateDatePickerMonths();
                     // Watch sidebarOpen in recordingsApp
                     this.$watch('sidebarOpen', val => { if (window.innerWidth >= 768) { try { localStorage.setItem('aiku_sidebar_open', String(val)); } catch(e) {} } });
                     this.$watch('viewMode', val => { try { localStorage.setItem('aiku_recordings_view_mode', String(val)); } catch(e) {} });
@@ -2126,6 +2365,234 @@
                         endDate: ''
                     };
                     this.applyFilters(1);
+                },
+
+                toggleDatePicker() {
+                    this.datePickerOpen = !this.datePickerOpen;
+                    if (this.datePickerOpen) {
+                        this.datePickerSelectingStart = null;
+                        this.datePickerHoverDate = null;
+                        if (this.filters.startDate) {
+                            const parts = this.filters.startDate.split('-');
+                            if (parts.length === 3) {
+                                this.datePickerViewDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+                            }
+                        } else {
+                            this.datePickerViewDate = new Date();
+                        }
+                        this.updateDatePickerMonths();
+                    }
+                },
+
+                datePickerPrevMonth() {
+                    this.datePickerViewDate = new Date(this.datePickerViewDate.getFullYear(), this.datePickerViewDate.getMonth() - 1, 1);
+                    this.updateDatePickerMonths();
+                },
+
+                datePickerNextMonth() {
+                    this.datePickerViewDate = new Date(this.datePickerViewDate.getFullYear(), this.datePickerViewDate.getMonth() + 1, 1);
+                    this.updateDatePickerMonths();
+                },
+
+                updateDatePickerMonths() {
+                    this.datePickerMonth1 = this.buildMonthDays(this.datePickerViewDate, 0);
+                    this.datePickerMonth2 = this.buildMonthDays(this.datePickerViewDate, 1);
+                },
+
+                buildMonthDays(baseDate, offsetMonth) {
+                    const d = new Date(baseDate.getFullYear(), baseDate.getMonth() + offsetMonth, 1);
+                    const year = d.getFullYear();
+                    const month = d.getMonth();
+                    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+                    const firstDayIndex = d.getDay(); // 0 = Minggu
+                    const totalDays = new Date(year, month + 1, 0).getDate();
+
+                    const days = [];
+                    // Hari dari bulan sebelumnya untuk padding grid
+                    const prevMonthDays = new Date(year, month, 0).getDate();
+                    for (let i = firstDayIndex - 1; i >= 0; i--) {
+                        const prevM = month === 0 ? 11 : month - 1;
+                        const prevY = month === 0 ? year - 1 : year;
+                        const dayNum = prevMonthDays - i;
+                        days.push({
+                            day: dayNum,
+                            dateStr: `${prevY}-${String(prevM + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`,
+                            isCurrentMonth: false,
+                            dayOfWeek: (firstDayIndex - 1 - i + 7) % 7
+                        });
+                    }
+
+                    // Hari bulan ini
+                    for (let i = 1; i <= totalDays; i++) {
+                        const dayOfWeek = (firstDayIndex + i - 1) % 7;
+                        days.push({
+                            day: i,
+                            dateStr: `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+                            isCurrentMonth: true,
+                            dayOfWeek: dayOfWeek
+                        });
+                    }
+
+                    // Hari bulan berikutnya untuk mengisi sisa grid (kelipatan 7)
+                    const remaining = (7 - (days.length % 7)) % 7;
+                    for (let i = 1; i <= remaining; i++) {
+                        const nextM = month === 11 ? 0 : month + 1;
+                        const nextY = month === 11 ? year + 1 : year;
+                        days.push({
+                            day: i,
+                            dateStr: `${nextY}-${String(nextM + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+                            isCurrentMonth: false,
+                            dayOfWeek: (days.length) % 7
+                        });
+                    }
+
+                    return {
+                        year,
+                        month,
+                        title: `${monthNames[month]} ${year}`,
+                        days
+                    };
+                },
+
+                onDatePickerDateClick(dateStr) {
+                    if (!this.datePickerSelectingStart) {
+                        // Klik pertama: pilih tanggal mulai
+                        this.datePickerSelectingStart = dateStr;
+                        this.datePickerHoverDate = dateStr;
+                    } else {
+                        // Klik kedua:
+                        if (dateStr === this.datePickerSelectingStart) {
+                            // Klik 2x pada tanggal yang SAMA -> Filter 1 Hari Saja!
+                            this.filters.startDate = dateStr;
+                            this.filters.endDate = dateStr;
+                        } else if (dateStr < this.datePickerSelectingStart) {
+                            this.filters.startDate = dateStr;
+                            this.filters.endDate = this.datePickerSelectingStart;
+                        } else {
+                            this.filters.startDate = this.datePickerSelectingStart;
+                            this.filters.endDate = dateStr;
+                        }
+                        this.filters.datePreset = 'custom';
+                        this.datePickerSelectingStart = null;
+                        this.datePickerHoverDate = null;
+                        this.datePickerOpen = false;
+                        this.applyFilters(1);
+                    }
+                },
+
+                onDatePickerDateHover(dateStr) {
+                    if (this.datePickerSelectingStart) {
+                        this.datePickerHoverDate = dateStr;
+                    }
+                },
+
+                isDatePickerStart(dateStr) {
+                    if (this.datePickerSelectingStart) {
+                        if (this.datePickerHoverDate && this.datePickerHoverDate < this.datePickerSelectingStart) {
+                            return dateStr === this.datePickerHoverDate;
+                        }
+                        return dateStr === this.datePickerSelectingStart;
+                    }
+                    return Boolean(this.filters.startDate && dateStr === this.filters.startDate);
+                },
+
+                isDatePickerEnd(dateStr) {
+                    if (this.datePickerSelectingStart) {
+                        if (!this.datePickerHoverDate || this.datePickerHoverDate === this.datePickerSelectingStart) {
+                            return false;
+                        }
+                        if (this.datePickerHoverDate < this.datePickerSelectingStart) {
+                            return dateStr === this.datePickerSelectingStart;
+                        }
+                        return dateStr === this.datePickerHoverDate;
+                    }
+                    return Boolean(this.filters.endDate && dateStr === this.filters.endDate && this.filters.endDate !== this.filters.startDate);
+                },
+
+                isDatePickerInRange(dateStr) {
+                    let start = this.datePickerSelectingStart || this.filters.startDate;
+                    let end = this.datePickerSelectingStart ? this.datePickerHoverDate : this.filters.endDate;
+                    if (!start || !end) return false;
+                    if (start > end) {
+                        const tmp = start;
+                        start = end;
+                        end = tmp;
+                    }
+                    return dateStr > start && dateStr < end;
+                },
+
+                isDatePickerSingle(dateStr) {
+                    if (this.datePickerSelectingStart) {
+                        return false;
+                    }
+                    return Boolean(this.filters.startDate && this.filters.startDate === this.filters.endDate && dateStr === this.filters.startDate);
+                },
+
+                isDatePickerToday(dateStr) {
+                    const now = new Date();
+                    const ymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                    return dateStr === ymd;
+                },
+
+                getDateRangeLabel() {
+                    if (!this.filters.startDate && !this.filters.endDate) {
+                        return 'Rentang Tanggal';
+                    }
+                    const formatIndo = (ymd) => {
+                        if (!ymd) return '';
+                        const parts = ymd.split('-');
+                        if (parts.length !== 3) return ymd;
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                        return `${parseInt(parts[2], 10)} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
+                    };
+
+                    if (this.filters.startDate && this.filters.startDate === this.filters.endDate) {
+                        return `${formatIndo(this.filters.startDate)} (1 Hari)`;
+                    }
+                    if (this.filters.startDate && this.filters.endDate) {
+                        return `${formatIndo(this.filters.startDate)} – ${formatIndo(this.filters.endDate)}`;
+                    }
+                    if (this.filters.startDate) {
+                        return `Mulai ${formatIndo(this.filters.startDate)}`;
+                    }
+                    return 'Rentang Tanggal';
+                },
+
+                getDateRangeSummary() {
+                    if (!this.filters.startDate && !this.filters.endDate) return 'Belum ada filter tanggal';
+                    const formatIndo = (ymd) => {
+                        if (!ymd) return '';
+                        const parts = ymd.split('-');
+                        if (parts.length !== 3) return ymd;
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                        return `${parseInt(parts[2], 10)} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
+                    };
+
+                    if (this.filters.startDate === this.filters.endDate) {
+                        return `Terpilih: ${formatIndo(this.filters.startDate)} (1 Hari)`;
+                    }
+                    const d1 = new Date(this.filters.startDate);
+                    const d2 = new Date(this.filters.endDate);
+                    const diffDays = Math.round(Math.abs((d2 - d1) / (1000 * 60 * 60 * 24))) + 1;
+                    return `Terpilih: ${formatIndo(this.filters.startDate)} s/d ${formatIndo(this.filters.endDate)} (${diffDays} Hari)`;
+                },
+
+                clearDateFilter() {
+                    this.filters.startDate = '';
+                    this.filters.endDate = '';
+                    this.filters.datePreset = 'all';
+                    this.datePickerSelectingStart = null;
+                    this.datePickerHoverDate = null;
+                    this.applyFilters(1);
+                },
+
+                selectDatePreset(preset) {
+                    this.filters.datePreset = preset;
+                    this.applyDatePreset();
+                    this.datePickerSelectingStart = null;
+                    this.datePickerHoverDate = null;
+                    this.datePickerOpen = false;
                 },
 
                 applyDatePreset() {

@@ -1,3 +1,10 @@
+### [2026-11-08 15:50] — Antigravity
+- Implementasi Date Range Picker custom ala Tiket.com menggunakan Alpine.js di halaman rekaman (/recordings):
+  - Menggantikan dua `<input type="date">` native browser yang kaku dengan 1 tombol dropdown kompak + popover kalender interaktif.
+  - Mendukung seleksi 1 hari dengan klik 2x (atau double click) pada tanggal yang sama, serta seleksi rentang tanggal dengan klik 2 tanggal berbeda (dengan live hover preview highlight).
+  - Tampilan dual-month (2 bulan bersanding) di desktop dan single-month di mobile, dilengkapi preset cepat (Hari Ini, Kemarin, 7 Hari, 30 Hari, Bulan Ini, Reset) dan styling seamless sesuai tema toska `#00B090`.
+- Validasi: Sintaks PHP Blade dan tag balance HTML lulus (div 251/251, template 32/32, button 65/65). State IDLE.
+
 ### [2026-11-08] — Codex: optimasi Atlas berdasarkan benchmark produksi
 - Benchmark 87 akun: per akun 170 halaman / 2.596 rekaman vs global 652 halaman / 16.288 rekaman; pageSize=100 diabaikan Atlas (tetap 25). Pertahankan per akun, proses maksimal 50 langkah dengan budget 25 detik per tick (sebelumnya 3); discovery peserta sekali per run, progres akun aktual, validasi email sumber. Semua akun aktif/nonaktif ikut untuk Atlas dan 1618; tanpa CSV Atlas.
 - Validasi: 167 tes / 1.132 assertions lulus, Blade/diff dan Graphify lulus. Deploy c80d0c6; satu tick produksi 656 rekaman dalam 25,47 detik. Antrean dilanjutkan hingga selesai: 87 akun, 2.596 Atlas, nol warning; DB 2.902 → 3.202; lima rekaman tanggal 24 Oktober untuk dua akun contoh kini ada. Endpoint sementara menghapus diri dan metadata benchmark privat dihapus.
