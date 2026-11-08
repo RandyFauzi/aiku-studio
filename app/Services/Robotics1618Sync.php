@@ -145,7 +145,7 @@ class Robotics1618Sync
     public function getAllowedStudioEmails(): array
     {
         $deviceEmails = DeviceAccount::pluck('email')->all();
-        $studioEmails = StudioAccount::where('active', true)->pluck('email')->all();
+        $studioEmails = StudioAccount::pluck('email')->all();
 
         $combined = array_merge($deviceEmails, $studioEmails);
         $normalized = [];

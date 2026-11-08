@@ -44,4 +44,22 @@ class RecordingSyncTest extends TestCase
         $this->assertCount(2, app(RecordingSync::class)->state()['sources']);
         $this->assertNotNull(ShiftSetting::where('setting_key', 'atlas_auto_sync')->value('setting_value')['nextRun']);
     }
+    public function test_atlas_continues_past_three_pages_until_finished_in_one_tick(): void
+    {
+        $pages = 0;
+        $atlas = $this->mock(\App\Services\AtlasSync::class);
+        $atlas->shouldReceive('auto')->andReturn(['enabled' => false]);
+        $atlas->shouldReceive('tick')->times(8)->andReturnUsing(function () use (&$pages) { $pages++; });
+        // Capture by reference because each processed page changes the remaining work.
+        $atlas->shouldReceive('state')->andReturnUsing(function () use (&$pages) {
+            return ['isRunning' => $pages < 8, 'stage' => $pages < 8 ? 'scraping' : 'completed', 'percent' => $pages < 8 ? 0 : 100, 'message' => 'Atlas selesai'];
+        });
+        ShiftSetting::create(['setting_key' => 'recording_sync_state', 'setting_value' => [
+            'isRunning' => true, 'stage' => 'queued', 'message' => 'Menunggu',
+            'sources' => ['atlas' => ['stage' => 'queued'], 'robotics' => ['stage' => 'completed', 'percent' => 100]],
+        ]]);
+        app(RecordingSync::class)->tick();
+        $this->assertSame(8, $pages);
+        $this->assertSame('completed', app(RecordingSync::class)->state()['stage']);
+    }
 }

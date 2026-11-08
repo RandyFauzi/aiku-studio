@@ -23,6 +23,9 @@ class RecordingSync
         unset($source);
         $sources = $state['sources'];
         $state['percent'] = $sources ? (int) floor(array_sum(array_map(fn ($s) => (float) ($s['percent'] ?? 0), $sources)) / count($sources)) : 0;
+        foreach (['currentAccount', 'currentIndex', 'totalAccounts', 'page'] as $field) {
+            if (isset($sources['atlas'][$field])) $state[$field] = $sources['atlas'][$field];
+        }
         $state['recordsCount'] = array_sum(array_map(fn ($s) => $s['recordsCount'] ?? $s['matchedStudioRows'] ?? 0, $sources));
         $state['recent_logs'] = [];
         foreach ($sources as $key => $source) {
@@ -107,7 +110,8 @@ class RecordingSync
                         $source = $this->robotics->state();
                     } else {
                         $started = microtime(true);
-                        for ($page = 0; $page < 3; $page++) {
+                        // Use the available time budget rather than idling after only three pages.
+                        for ($page = 0; $page < 50; $page++) {
                             $this->atlas->tick();
                             if (! ($this->atlas->state()['isRunning'] ?? false) || microtime(true) - $started > 25) {
                                 break;

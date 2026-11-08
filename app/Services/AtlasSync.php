@@ -55,16 +55,16 @@ class AtlasSync
             if ($this->cookie() === '') {
                 throw new \RuntimeException('Sesi Atlas belum tersedia atau kedaluwarsa. Perbarui ATLAS_COOKIE atau file sesi privat.');
             }
-            // Include historical device emails, but respect explicit deactivation in Studio Accounts.
+            // Include every registered studio/device email, including historical and inactive accounts.
             foreach (DeviceAccount::pluck('email')->unique() as $email) {
                 $email = strtolower(trim((string) $email));
                 if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     StudioAccount::firstOrCreate(['email' => $email], ['name' => $email, 'active' => true]);
                 }
             }
-            $ids = StudioAccount::where('active', true)->orderBy('id')->pluck('id')->all();
+            $ids = StudioAccount::orderBy('id')->pluck('id')->all();
             if (! $ids) {
-                throw new \RuntimeException('Tidak ada akun studio aktif.');
+                throw new \RuntimeException('Tidak ada akun studio terdaftar.');
             }
             $this->save(['isRunning' => true, 'stage' => 'queued', 'accountIds' => $ids, 'currentIndex' => 0, 'totalAccounts' => count($ids),
                 'page' => 1, 'percent' => 0, 'recordsCount' => 0, 'warnings' => [], 'skippedCount' => 0, 'message' => 'Menunggu cron Laravel. Sinkronisasi diproses bertahap.', 'recent_logs' => [], 'startedAt' => now()->toIso8601String()]);
@@ -83,15 +83,18 @@ class AtlasSync
             try {
                 $index = $state['currentIndex'];
                 $account = StudioAccount::find($state['accountIds'][$index] ?? null);
-                if (! $account || ! $account->active) {
+                if (! $account) {
                     $this->advance($state);
 
                     return;
                 }
                 if (! $account->participant_id) {
-                    $html = $this->fetch('/recordings');
-                    foreach (app(AtlasParser::class)->participants($html) as $email => $id) {
-                        StudioAccount::where('email', $email)->update(['participant_id' => $id]);
+                    if (! ($state['participantsLoaded'] ?? false)) {
+                        $html = $this->fetch('/recordings');
+                        foreach (app(AtlasParser::class)->participants($html) as $email => $id) {
+                            StudioAccount::where('email', $email)->update(['participant_id' => $id]);
+                        }
+                        $state['participantsLoaded'] = true;
                     }
                     $account->refresh();
                     if (! $account->participant_id) {
@@ -113,6 +116,10 @@ class AtlasSync
                 }
                 foreach ($records as $record) {
                     try {
+                        $sourceEmail = strtolower(trim((string) ($record['participantEmail'] ?? $account->email)));
+                        if ($sourceEmail !== strtolower(trim($account->email))) {
+                            throw new \InvalidArgumentException('Email pada rekaman Atlas tidak cocok dengan akun yang diminta; rekaman tidak disimpan.');
+                        }
                         $this->ingest($record, $account->email);
                         $state['recordsCount']++;
                     } catch (\InvalidArgumentException $e) {
@@ -131,7 +138,7 @@ class AtlasSync
                         throw new \RuntimeException('Batas halaman sinkronisasi tercapai. Periksa akun atau naikkan batas konfigurasi.');
                     }
                     $state['page']++;
-                    $state['percent'] = (int) floor($index / $state['totalAccounts'] * 100);
+                    $state['percent'] = min(99, (int) floor(($index + $page / $totalPages) / $state['totalAccounts'] * 100));
                     $this->save($state);
                 } else {
                     $this->advance($state);

@@ -1271,7 +1271,7 @@
                 <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3.5 flex items-start gap-3 text-xs text-emerald-900">
                     <svg class="w-5 h-5 text-[#00B090] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <div class="leading-relaxed">
-                        <strong>Bot Sinkronisasi Otomatis Terhubung:</strong> Setiap akun yang berstatus <em>Aktif</em> di daftar ini akan otomatis dibaca oleh bot saat sinkronisasi dijalankan (baik via tombol Web Panel maupun file .bat). Anda tidak perlu merevisi script secara manual lagi!
+                        <strong>Bot Sinkronisasi Otomatis Terhubung:</strong> Semua akun di daftar ini, baik aktif maupun nonaktif, akan diperiksa oleh bot saat sinkronisasi dijalankan (baik via tombol Web Panel maupun file .bat). Anda tidak perlu merevisi script secara manual lagi!
                     </div>
                 </div>
 
@@ -1279,7 +1279,7 @@
 
             <!-- Modal Footer -->
             <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span class="text-slate-500">Tersimpan di: <code class="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">storage/studio_accounts.json</code></span>
+                <span class="text-slate-500">Tersimpan di: <code class="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">database AIKu Studio</code></span>
                 <button @click="showAccountsModal = false" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition">
                     Selesai
                 </button>

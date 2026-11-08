@@ -53,4 +53,29 @@ class AtlasSyncTest extends TestCase
         $this->assertSame(1, $sync->state()['skippedCount']);
         $this->assertSame('failed', $sync->state()['stage']);
     }
+    public function test_inactive_registered_account_is_included_but_foreign_email_is_not_saved(): void
+    {
+        config(['payroll.atlas_cookie' => 'test=1']);
+        StudioAccount::create(['name' => 'Historical', 'email' => 'studio@example.test', 'active' => false, 'participant_id' => 'id']);
+        $base = ['recordedAt' => '2026-10-24T06:30:00Z', 'durationSeconds' => 60];
+        Http::fake(['*' => Http::response($this->page([
+            array_merge($base, ['userTaskId' => 'foreign', 'participantEmail' => 'foreign@example.test']),
+            array_merge($base, ['userTaskId' => 'ours', 'participantEmail' => 'studio@example.test']),
+        ], 2))]);
+        $sync = app(AtlasSync::class); $sync->request(); $sync->tick();
+        $this->assertSame(1, $sync->state()['totalAccounts']);
+        $this->assertDatabaseHas('studio_recordings', ['record_id' => 'ours']);
+        $this->assertDatabaseMissing('studio_recordings', ['record_id' => 'foreign']);
+        $this->assertSame('failed', $sync->state()['stage']);
+    }
+
+    public function test_unknown_participants_share_one_discovery_request(): void
+    {
+        config(['payroll.atlas_cookie' => 'test=1']);
+        foreach (['one', 'two'] as $name) StudioAccount::create(['name' => $name, 'email' => $name.'@example.test', 'active' => true]);
+        Http::fake(['*' => Http::response('<html></html>')]);
+        $sync = app(AtlasSync::class); $sync->request(); $sync->tick(); $sync->tick();
+        Http::assertSentCount(1);
+        $this->assertSame('failed', $sync->state()['stage']);
+    }
 }

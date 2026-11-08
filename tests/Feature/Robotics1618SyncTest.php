@@ -30,7 +30,7 @@ class Robotics1618SyncTest extends TestCase
         ]);
     }
 
-    public function test_get_allowed_studio_emails_combines_device_and_active_studio_accounts(): void
+    public function test_get_allowed_studio_emails_combines_device_and_all_studio_accounts(): void
     {
         DeviceAccount::create([
             'phone_key' => 'putih',
@@ -44,7 +44,7 @@ class Robotics1618SyncTest extends TestCase
             'active' => true,
         ]);
 
-        // Inactive account should not be included from StudioAccount
+        // Historical inactive accounts still need their recordings synchronized.
         StudioAccount::create([
             'email' => 'inactive@kamerakitaid.site',
             'name' => 'Inactive',
@@ -56,7 +56,7 @@ class Robotics1618SyncTest extends TestCase
 
         $this->assertContains('aikuputih2@kamerakitaid.site', $emails);
         $this->assertContains('aikupink2@kamerakitaid.site', $emails);
-        $this->assertNotContains('inactive@kamerakitaid.site', $emails);
+        $this->assertContains('inactive@kamerakitaid.site', $emails);
     }
 
     public function test_csv_stream_only_ingests_allowed_studio_emails(): void
