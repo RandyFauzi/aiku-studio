@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\DeviceAccount;
+use App\Models\ShiftDay;
 use App\Models\ShiftSetting;
 use App\Models\StudioAccount;
 use App\Services\ShiftConfiguration;
 use App\Services\ShiftPatterns;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -41,12 +43,69 @@ class SettingController extends Controller
     public function saveShifts(Request $request)
     {
         if ($request->has('periodId')) {
-            $fields = $request->validate(['periodId' => 'required|string|max:64', 'expected_revision' => 'required|integer|min:0', 'config' => 'required|array']);
+            $fields = $request->validate([
+                'periodId' => 'required|string|max:64',
+                'expected_revision' => 'required|integer|min:0',
+                'config' => 'required|array',
+                'sync_person' => 'sometimes|array',
+                'sync_person.contributor_id' => 'sometimes|nullable|integer',
+                'sync_person.name' => 'sometimes|nullable|string',
+                'sync_person.sessions' => 'sometimes|array',
+                'sync_person.status' => 'sometimes|string|in:scheduled,izin,sakit,libur',
+            ]);
             $patterns = app(ShiftPatterns::class);
             $period = $patterns->period($fields['periodId']);
             $config = app(ShiftConfiguration::class)->normalize($fields['config'], true);
 
-            return response()->json(['success' => true, 'period' => $period, ...$patterns->save($period, $config, $fields['expected_revision'])]);
+            $savedResult = $patterns->save($period, $config, $fields['expected_revision']);
+
+            if (!empty($fields['sync_person'])) {
+                $targetId = $fields['sync_person']['contributor_id'] ?? null;
+                $targetName = $fields['sync_person']['name'] ?? null;
+                $targetSessions = array_map('intval', $fields['sync_person']['sessions'] ?? []);
+                $targetStatus = $fields['sync_person']['status'] ?? 'scheduled';
+
+                $days = ShiftDay::whereBetween('work_date', [$period['startDate'], $period['endDate']])->get();
+                $configService = app(ShiftConfiguration::class);
+                foreach ($days as $dayRecord) {
+                    $dayConfig = $dayRecord->config;
+                    if (!isset($dayConfig['karyawan']) || !is_array($dayConfig['karyawan'])) {
+                        continue;
+                    }
+                    $weekday = strtolower(CarbonImmutable::parse($dayRecord->work_date, 'Asia/Makassar')->englishDayOfWeek);
+                    $isOff = $weekday === ($config['day_off'] ?? 'none');
+
+                    $found = false;
+                    foreach ($dayConfig['karyawan'] as &$w) {
+                        $matches = (!empty($w['contributor_id']) && (int)$w['contributor_id'] === (int)$targetId)
+                            || (!empty($targetName) && mb_strtolower(trim($w['name'])) === mb_strtolower(trim($targetName)));
+                        if ($matches) {
+                            $found = true;
+                            if ($isOff && $targetStatus === 'scheduled') {
+                                $w['status'] = 'libur';
+                                $w['sessions'] = [];
+                            } else {
+                                $w['status'] = $targetStatus;
+                                $w['sessions'] = $targetSessions;
+                            }
+                            break;
+                        }
+                    }
+                    unset($w);
+
+                    if ($found) {
+                        try {
+                            $dayRecord->config = $configService->normalize($dayConfig, ($dayConfig['planner_version'] ?? 1) === 2, true);
+                            $dayRecord->revision++;
+                            $dayRecord->save();
+                        } catch (\Throwable $e) {
+                            // Pertahankan perubahan jika ada konflik kuota pada hari tertentu
+                        }
+                    }
+                }
+            }
+
+            return response()->json(['success' => true, 'period' => $period, ...$savedResult]);
         }
         $data = app(ShiftConfiguration::class)->normalize($request->all());
         ShiftSetting::updateOrCreate(['setting_key' => 'main_shift_config'], ['setting_value' => $data]);

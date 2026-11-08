@@ -225,14 +225,37 @@ window.shiftsData=()=>({
                     body:JSON.stringify({
                         periodId:this.period.id,
                         config:this.config,
-                        expected_revision:this.revision
+                        expected_revision:this.revision,
+                        sync_person:{
+                            contributor_id:cell.contributorId?Number(cell.contributorId):null,
+                            name:cell.personName,
+                            sessions:cell.sessions,
+                            status:cell.status||'scheduled'
+                        }
                     })
+                });
+                // Perbarui seluruh hari aktif di memory agar tampilan matriks berubah seketika
+                Object.keys(this.days).forEach(date=>{
+                    const dConfig=this.days[date]?.config;
+                    if(dConfig&&Array.isArray(dConfig.karyawan)){
+                        const isOff=this.isDateDayOff(date);
+                        let w=dConfig.karyawan.find(p=>(cell.contributorId&&Number(p.contributor_id)===Number(cell.contributorId))||p.name===cell.personName);
+                        if(w){
+                            if(isOff&&(cell.status||'scheduled')==='scheduled'){
+                                w.status='libur';
+                                w.sessions=[];
+                            }else{
+                                w.status=cell.status||'scheduled';
+                                w.sessions=[...cell.sessions];
+                            }
+                        }
+                    }
                 });
                 this.config=prepareConfig(res.config,this.contributors);
                 this.baseline=JSON.stringify(this.config);
                 this.revision=res.revision;
                 this.inherited=false;
-                this.saved=`Pola shift rutin ${cell.personName} berhasil disimpan dan aktif di akun worker.`;
+                this.saved=`Pola shift rutin ${cell.personName} berhasil disimpan dan diterapkan ke seluruh hari di periode ini.`;
             }else{
                 const targetDate=cell.date;
                 const baseDayConfig=clone(this.days[targetDate]?.config||patternForDate(this.config,targetDate));

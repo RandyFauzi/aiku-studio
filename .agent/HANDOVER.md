@@ -1,3 +1,9 @@
+### [2026-11-08 19:35] — Antigravity
+- Sinkronisasi opsi "Sepanjang Periode (Rutin)" ke seluruh hari aktif di periode (/shifts):
+  - Memperbarui `SettingController::saveShifts` agar saat menyimpan pola periode dengan `sync_person`, seluruh rekaman harian (`ShiftDay`) dalam periode tersebut otomatis diperbarui untuk pekerja yang dipilih (kecuali hari libur yang tetap Libur).
+  - Memperbarui `shifts.js` agar data `this.days` in-memory langsung ikut terbarui secara instan tanpa perlu reload, sehingga matriks kalender seketika menampilkan shift baru di seluruh tanggal periode.
+- Validasi: Vite build sukses, syntax check PHP lolos, cache view dibersihkan. State IDLE.
+
 ### [2026-11-08 19:30] — Antigravity
 - Perbaikan validasi "The selected karyawan.12.status is invalid" pada penyimpanan shift (/shifts):
   - Memperbarui `ShiftConfiguration::normalize` agar aturan validasi `karyawan.*.status` menerima status `scheduled,izin,sakit,libur` baik pada penyimpanan revisi harian maupun pola periode.
