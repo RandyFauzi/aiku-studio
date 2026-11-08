@@ -1,3 +1,7 @@
+### [2026-11-08] — Codex
+- Satukan progres dan jadwal Atlas/1618 melalui RecordingSync + cron; panel menampilkan hasil per sumber, retry, dan error HTTP. Atlas memindai seluruh halaman, melaporkan akun/baris terlewat, dan mempertahankan data manual.
+- Validasi: full suite 164 lulus; 31 tes terarah lulus setelah koreksi terakhir; Vite/Blade/JS syntax/preview kartu mobile lulus; Graphify diperbarui. Belum memverifikasi data atau cron produksi.
+
 ### [2026-11-08 13:05] — Antigravity
 - Sinkronisasi nama Akun Studio di tabel rekaman (/recordings) dengan Catatan Akun dari halaman HP & Akun Studio (/devices):
   - Memperbaiki penyebab munculnya angka gundul "5": data lama pada `studio_accounts.name` berisi string angka nomor perangkat. Kini `SettingController::accounts` memetakan langsung ke master `DeviceAccount`, memprioritaskan `account_name` (Catatan Akun), fallback terstruktur label HP (`HP Putih 5`), serta menyinkronkan balik ke database jika terdeteksi angka gundul.

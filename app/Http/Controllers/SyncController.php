@@ -10,41 +10,14 @@ use Illuminate\Http\Request;
 
 class SyncController extends Controller
 {
-    public function requestSync(AtlasSync $sync, Robotics1618Sync $sync1618)
+    public function requestSync(\App\Services\RecordingSync $sync)
     {
         try {
-            // First trigger 1618 sync if credentials are configured
-            $result1618 = null;
-            $error1618 = null;
-            if (config('payroll.robotics_1618_username') && config('payroll.robotics_1618_password')) {
-                try {
-                    $result1618 = $sync1618->sync();
-                } catch (\Throwable $e) {
-                    // Log and continue to Atlas
-                    report($e);
-                    $error1618 = $e->getMessage();
-                }
-            }
-
-            // Also trigger Atlas sync if cookie exists
-            if ($sync->cookie() !== '') {
-                $atlasRes = $sync->request();
-
-                return response()->json([
-                    'status' => 'started',
-                    'message' => 'Sinkronisasi rekaman berhasil diproses.',
-                    'result_1618' => $result1618,
-                    'result_atlas' => $atlasRes,
-                ]);
-            }
-
-            if ($result1618) {
-                return response()->json($result1618);
-            }
-
-            return response()->json(['status' => 'failed', 'error' => $error1618 ?? 'Tidak ada sumber sinkronisasi yang dikonfigurasi.'], 422);
+            return response()->json($sync->request(), 202);
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+            return response()->json(['error' => 'Bot sedang memproses permintaan lain. Periksa progres beberapa saat lagi.'], 409);
         } catch (\RuntimeException $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            return response()->json(['status' => 'failed', 'error' => $e->getMessage()], 422);
         }
     }
 
@@ -53,7 +26,7 @@ class SyncController extends Controller
         try {
             return response()->json($sync->sync());
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            return response()->json(['status' => 'failed', 'error' => $e->getMessage()], 422);
         }
     }
 
@@ -68,14 +41,14 @@ class SyncController extends Controller
         ]);
     }
 
-    public function status(AtlasSync $sync)
+    public function status(\App\Services\RecordingSync $sync, AtlasSync $atlas)
     {
         $state = $sync->state();
 
         return response()->json(['isRunning' => $state['isRunning'] ?? false, 'progress' => $state,
             'liveOutput' => implode("\n", $state['recent_logs'] ?? []),
             'lastResult' => empty($state['completedAt']) && empty($state['error']) ? null : ['timestamp' => $state['updatedAt'], 'exitCode' => empty($state['error']) ? 0 : 1, 'output' => $state['message'], 'error' => $state['error'] ?? ''],
-            'lastSyncedAt' => StudioRecording::max('last_synced_at'), 'autoSync' => $sync->auto()]);
+            'lastSyncedAt' => StudioRecording::max('last_synced_at'), 'autoSync' => $atlas->auto()]);
     }
 
     public function toggle(Request $request, AtlasSync $sync)

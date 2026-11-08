@@ -210,7 +210,7 @@
                         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
                                 <div class="font-bold text-slate-900 text-sm">Jadwal Auto-Sync</div>
-                                <div class="text-[11px] text-slate-400">Sinkronkan rekaman berkala</div>
+                                <div class="text-[11px] text-slate-400">Jadwal bersama Atlas dan 1618</div>
                             </div>
                             <!-- Switch -->
                             <button @click="toggleAutoSync()" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none" :class="autoSync.enabled ? 'bg-[#00B090]' : 'bg-slate-200'">
@@ -1523,25 +1523,18 @@
                             </div>
                         </div>
 
-                        <!-- 4 Stages Pipeline Tracker -->
-                        <div class="grid grid-cols-4 gap-1.5 pt-0.5 text-[10px] font-mono text-center">
-                            <div class="py-1 px-1 rounded-lg border transition truncate"
-                                 :class="(botProgress.percent || 0) >= 2 && (botProgress.percent || 0) <= 75 ? 'bg-emerald-950/90 border-emerald-500 text-emerald-300 font-bold shadow-xs' : ((botProgress.percent || 0) > 75 ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-slate-900/50 border-slate-800 text-slate-600')">
-                                1. Atlas Live
-                            </div>
-                            <div class="py-1 px-1 rounded-lg border transition truncate"
-                                 :class="(botProgress.percent || 0) > 75 && (botProgress.percent || 0) <= 88 ? 'bg-emerald-950/90 border-emerald-500 text-emerald-300 font-bold shadow-xs' : ((botProgress.percent || 0) > 88 ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-slate-900/50 border-slate-800 text-slate-600')">
-                                2. Web MySQL
-                            </div>
-                            <div class="py-1 px-1 rounded-lg border transition truncate"
-                                 :class="(botProgress.percent || 0) > 88 && (botProgress.percent || 0) < 100 ? 'bg-emerald-950/90 border-emerald-500 text-emerald-300 font-bold shadow-xs' : ((botProgress.percent || 0) >= 100 ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-slate-900/50 border-slate-800 text-slate-600')">
-                                3. Database Sync
-                            </div>
-                            <div class="py-1 px-1 rounded-lg border transition truncate"
-                                 :class="botProgress.stage === 'error' ? 'bg-rose-950/90 border-rose-500 text-rose-300 font-bold shadow-xs' : ((botProgress.percent || 0) >= 100 ? 'bg-emerald-950/90 border-emerald-500 text-emerald-300 font-bold shadow-xs' : 'bg-slate-900/50 border-slate-800 text-slate-600')">
-                                <span x-text="botProgress.stage === 'error' ? '4. Gagal ✕' : '4. Selesai ✓'"></span>
-                            </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" aria-live="polite">
+                            <template x-for="key in ['atlas', 'robotics']" :key="key">
+                                <div class="rounded-xl border border-slate-700 bg-slate-900 p-3 min-w-0">
+                                    <div class="flex justify-between text-xs font-bold text-white">
+                                        <span x-text="key === 'atlas' ? 'Atlas' : '1618 Robotics'"></span>
+                                        <span x-text="(botProgress.sources?.[key]?.percent || 0) + '%'"></span>
+                                    </div>
+                                    <p class="text-xs mt-2 break-words" :class="botProgress.sources?.[key]?.stage === 'failed' ? 'text-rose-300' : 'text-slate-300'" x-text="botProgress.sources?.[key]?.message || 'Menunggu proses.'"></p>
+                                </div>
+                            </template>
                         </div>
+                        <button x-show="!isSyncing && botProgress.stage === 'error'" @click="triggerSyncAtlas()" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm">Jalankan Ulang Kedua Sumber</button>
 
                     </div>
 
@@ -1638,7 +1631,8 @@
                     stage: 'idle',
                     currentAccount: '',
                     currentIndex: 0,
-                    totalAccounts: 29,
+                    totalAccounts: 0,
+                    sources: {},
                     percent: 0,
                     message: 'Bot siap dijalankan kapan saja.',
                     recordsCount: 0,
@@ -1826,6 +1820,14 @@
                     }
                 },
 
+                async syncRequest(url, options = {}) {
+                    const res = await fetch(url, { ...options, headers: { Accept: 'application/json', ...(options.headers || {}) } });
+                    let data;
+                    try { data = await res.json(); } catch (_) { throw new Error('Respons server tidak valid (HTTP ' + res.status + '). Muat ulang halaman.'); }
+                    if (!res.ok) throw new Error(data.error || data.message || 'Permintaan gagal (HTTP ' + res.status + ').');
+                    return data;
+                },
+
                 async fetchAutoSyncStatus() {
                     try {
                         const res = await fetch('/api/studio-recordings/sync-status');
@@ -1861,8 +1863,8 @@
                     if (this.syncPollingTimer) clearInterval(this.syncPollingTimer);
                     this.syncPollingTimer = setInterval(async () => {
                         try {
-                            const res = await fetch('/api/studio-recordings/sync-status');
-                            const data = await res.json();
+                            const data = await this.syncRequest('/api/studio-recordings/sync-status');
+                            if (data.autoSync) this.autoSync = data.autoSync;
                             this.isSyncing = Boolean(data.isRunning);
                             if (data.lastSyncedAt) this.lastSyncedAt = data.lastSyncedAt;
                             if (data.progress) {
@@ -1903,7 +1905,7 @@
                                         Swal.fire({
                                             icon: 'success',
                                             title: 'Sinkronisasi Selesai!',
-                                            text: 'Seluruh data rekaman studio terbaru telah tersinkronkan ke database web.',
+                                            text: data.progress?.message || 'Kedua sumber selesai diproses.',
                                             timer: 2500,
                                             showConfirmButton: false
                                         });
@@ -1911,26 +1913,24 @@
                                 }
                             }
                         } catch (e) {
-                            clearInterval(this.syncPollingTimer);
-                            this.syncPollingTimer = null;
+                            this.botProgress.message = 'Gagal membaca progres: ' + e.message + ' Pemeriksaan akan dicoba kembali.';
                         }
-                    }, 1200);
+                    }, 2000);
                 },
 
                 async toggleAutoSync() {
                     try {
-                        const res = await fetch('/api/studio-recordings/auto-sync-toggle', {
+                        const data = await this.syncRequest('/api/studio-recordings/auto-sync-toggle', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ enabled: !this.autoSync.enabled, intervalMinutes: this.autoSync.intervalMinutes })
                         });
-                        const data = await res.json();
                         if (data.autoSync) {
                             this.autoSync = data.autoSync;
                             Swal.fire({
                                 icon: this.autoSync.enabled ? 'success' : 'info',
                                 title: this.autoSync.enabled ? 'Auto-Sync Diaktifkan' : 'Auto-Sync Dinonaktifkan',
-                                text: this.autoSync.enabled ? `Bot akan otomatis menarik data setiap ${this.autoSync.intervalMinutes} menit.` : 'Bot hanya berjalan ketika tombol diklik manual.',
+                                text: this.autoSync.enabled ? `Atlas dan 1618 disinkronkan setiap ${this.autoSync.intervalMinutes} menit.` : 'Jadwal otomatis Atlas dan 1618 dinonaktifkan.',
                                 timer: 2000,
                                 showConfirmButton: false
                             });
@@ -1942,17 +1942,16 @@
 
                 async changeAutoSyncInterval(mins) {
                     try {
-                        const res = await fetch('/api/studio-recordings/auto-sync-toggle', {
+                        const data = await this.syncRequest('/api/studio-recordings/auto-sync-toggle', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ enabled: true, intervalMinutes: mins })
                         });
-                        const data = await res.json();
                         if (data.autoSync) {
                             this.autoSync = data.autoSync;
                         }
                     } catch (e) {
-                        console.error(e);
+                        Swal.fire({ icon: 'error', title: 'Jadwal Gagal Disimpan', text: e.message });
                     }
                 },
 
@@ -2551,6 +2550,7 @@
                     this.botProgress = {
                         isRunning: true,
                         stage: 'starting',
+                        sources: {},
                         currentAccount: 'Memulai proses...',
                         currentIndex: 0,
                         totalAccounts: this.studioEmails.length,
@@ -2563,12 +2563,13 @@
                     this.showConsoleModal = true;
 
                     try {
-                        const res = await fetch('/api/studio-recordings/sync-now', { method: 'POST' });
-                        const data = await res.json();
+                        await this.syncRequest('/api/studio-recordings/sync-now', { method: 'POST' });
                         this.startLiveSyncPolling();
                     } catch (err) {
                         this.isSyncing = false;
                         this.botProgress.isRunning = false;
+                        this.botProgress.stage = 'error';
+                        this.botProgress.message = err.message;
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({ icon: 'error', title: 'Gagal Menjalankan Bot', text: err.message });
                         }

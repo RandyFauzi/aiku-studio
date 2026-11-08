@@ -10,11 +10,9 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// One short PHP operation per minute. No persistent worker or shell process.
-Schedule::call(fn () => Artisan::call('atlas:tick'))->name('atlas-sync-tick')->everyMinute()->withoutOverlapping(3);
+// Shared schedule for Atlas and 1618; the panel toggle controls both sources.
+Schedule::call(fn () => Artisan::call('atlas:tick'))->name('atlas-sync-tick')->everyMinute()->withoutOverlapping(5);
 
-// Automatically synchronize 1618 Robotics recordings every 15 minutes without overloading server.
-Schedule::command('1618:sync')->name('1618-sync-schedule')->everyFifteenMinutes()->withoutOverlapping(10);
 
 Artisan::command('streak:reconcile', function () {
     User::where('role', 'contributor')->where('is_active', true)->whereNotNull('contributor_id')

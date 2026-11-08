@@ -2,45 +2,21 @@
 
 namespace App\Console\Commands;
 
-use App\Services\AtlasSync;
-use Carbon\CarbonImmutable;
+use App\Services\RecordingSync;
 use Illuminate\Console\Command;
 
 class AtlasTick extends Command
 {
     protected $signature = 'atlas:tick';
 
-    protected $description = 'Process one bounded Atlas synchronization page for shared-hosting cron';
+    protected $description = 'Process the shared Atlas and 1618 synchronization schedule';
 
-    public function handle(AtlasSync $sync): int
+    public function handle(RecordingSync $sync): int
     {
-        $auto = $sync->auto();
-        if ($auto['enabled'] && ! ($sync->state()['isRunning'] ?? false) && (! $auto['nextRun'] || now()->gte(CarbonImmutable::parse($auto['nextRun'])))) {
-            try {
-                $sync->request();
-            } catch (\RuntimeException $e) {
-                $this->error($e->getMessage());
-
-                return self::FAILURE;
-            }
-        }
-        $started = microtime(true);
-        for ($page = 0; $page < 3; $page++) {
-            $sync->tick();
-            if (! ($sync->state()['isRunning'] ?? false) || microtime(true) - $started > 25) {
-                break;
-            }
-        }
+        $sync->tick();
         $state = $sync->state();
-        if (($state['stage'] ?? '') === 'failed') {
-            $this->error($state['message']);
+        $this->line($state['message']);
 
-            return self::FAILURE;
-        }
-        if ($state['isRunning'] ?? false) {
-            $this->line($state['message']);
-        }
-
-        return self::SUCCESS;
+        return ($state['stage'] ?? '') === 'error' ? self::FAILURE : self::SUCCESS;
     }
 }

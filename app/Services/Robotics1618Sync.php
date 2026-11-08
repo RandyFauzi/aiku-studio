@@ -52,6 +52,9 @@ class Robotics1618Sync
         $this->saveState([
             'isRunning' => true,
             'stage' => 'starting',
+            'matchedStudioRows' => 0,
+            'totalSourceRows' => 0,
+            'skippedCount' => 0,
             'percent' => 5,
             'message' => 'Memulai koneksi ke portal 1618 Robotics...',
             'recent_logs' => [$this->logMsg('Memulai bot sinkronisasi 1618 Robotics...')],
@@ -94,16 +97,18 @@ class Robotics1618Sync
             $elapsed = round(microtime(true) - $startedAt, 2);
             $msg = "Sinkronisasi 1618 selesai! Ditemukan {$stats['matched']} rekaman dari total {$stats['total']} baris data ({$elapsed}s).";
 
+            $warning = $stats['skipped'] > 0 ? $stats['skipped'].' rekaman studio tidak valid dilewati. Periksa ID, tanggal, dan durasi pada CSV 1618 lalu jalankan ulang.' : null;
             $this->saveState([
                 'isRunning' => false,
-                'stage' => 'completed',
+                'stage' => $warning ? 'failed' : 'completed',
                 'percent' => 100,
-                'message' => $msg,
+                'message' => $warning ? $msg.' '.$warning : $msg,
+                'skippedCount' => $stats['skipped'],
                 'totalSourceRows' => $stats['total'],
                 'matchedStudioRows' => $stats['matched'],
                 'completedAt' => now()->toIso8601String(),
                 'recent_logs' => array_merge($this->state()['recent_logs'] ?? [], [$this->logMsg($msg)]),
-                'error' => null,
+                'error' => $warning,
             ]);
 
             return [
@@ -111,6 +116,7 @@ class Robotics1618Sync
                 'message' => $msg,
                 'total_source_rows' => $stats['total'],
                 'matched_studio_rows' => $stats['matched'],
+                'skipped_rows' => $stats['skipped'],
                 'monitored_emails_count' => count($allowedEmails),
                 'elapsed_seconds' => $elapsed,
             ];
@@ -258,6 +264,7 @@ class Robotics1618Sync
 
         $totalRows = 0;
         $matchedRows = 0;
+        $skippedRows = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
             $totalRows++;
@@ -274,6 +281,7 @@ class Robotics1618Sync
 
             $recordingId = strtolower(trim((string) ($row[$colIndex['recording_id']] ?? '')));
             if ($recordingId === '' || strlen($recordingId) > 64) {
+                $skippedRows++;
                 continue;
             }
 
@@ -283,6 +291,7 @@ class Robotics1618Sync
                 || ! checkdate((int) $dateParts[2], (int) $dateParts[3], (int) $dateParts[1])
                 || ! is_numeric($row[$colIndex['duration_s']] ?? null)
                 || (float) $row[$colIndex['duration_s']] < 0) {
+                $skippedRows++;
                 continue;
             }
             $durationSec = (float) ($row[$colIndex['duration_s']] ?? 0);
@@ -304,10 +313,12 @@ class Robotics1618Sync
                     $recordedAt = $dt->utc()->format('Y-m-d H:i:s');
                     $formattedWita = $dt->setTimezone('Asia/Makassar')->format('M j, Y, g:i A').' WITA';
                 } catch (\Throwable $e) {
+                    $skippedRows++;
                     continue; // Never move malformed historical records into today's payroll.
                 }
             }
             if ($recordedAt === null) {
+                $skippedRows++;
                 continue;
             }
 
@@ -359,6 +370,7 @@ class Robotics1618Sync
         return [
             'total' => $totalRows,
             'matched' => $matchedRows,
+            'skipped' => $skippedRows,
         ];
     }
 
