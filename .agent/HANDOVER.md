@@ -1,3 +1,10 @@
+### [2026-11-08 13:05] — Antigravity
+- Sinkronisasi nama Akun Studio di tabel rekaman (/recordings) dengan Catatan Akun dari halaman HP & Akun Studio (/devices):
+  - Memperbaiki penyebab munculnya angka gundul "5": data lama pada `studio_accounts.name` berisi string angka nomor perangkat. Kini `SettingController::accounts` memetakan langsung ke master `DeviceAccount`, memprioritaskan `account_name` (Catatan Akun), fallback terstruktur label HP (`HP Putih 5`), serta menyinkronkan balik ke database jika terdeteksi angka gundul.
+  - Memperbarui `DeviceAccountController` (`store`, `activate`, `update`) agar selalu menyelaraskan `StudioAccount.name` dengan Catatan Akun / Label HP saat admin mengelola perangkat.
+  - Memperbarui `recordings.blade.php`: fungsi `getAccountName()` dan filter dropdown akun studio kini memprioritaskan Catatan Akun resmi dan mendukung pencarian berdasarkan catatan akun maupun email.
+- Validasi: Blade view cache cleared. State IDLE.
+
 ### [2026-11-08 12:45] — Antigravity
 - Menambahkan metrik Total Jam yang diseleksi pada task list rekaman (/recordings):
   - Menambahkan badge Total Durasi (`TOTAL: X.XX jam (XX.Xm)`) berlatar sky blue dengan icon durasi pada Floating Action Dock di bagian bawah halaman, bersanding dengan rincian Approved, Reject, dan Pending.

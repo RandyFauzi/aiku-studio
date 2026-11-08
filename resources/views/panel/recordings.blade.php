@@ -451,7 +451,7 @@
                                 :class="filters.email !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
                             <div class="flex items-center gap-1.5 truncate max-w-[140px]">
                                 <span class="w-2 h-2 rounded-full shrink-0" :class="filters.email !== 'all' ? 'bg-[#00B090]' : 'bg-slate-400'"></span>
-                                <span class="truncate" x-text="filters.email === 'all' ? 'Semua Akun' : filters.email.split('@')[0]"></span>
+                                <span class="truncate" x-text="filters.email === 'all' ? 'Semua Akun' : getAccountName(filters.email)"></span>
                             </div>
                             <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openAccountDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
@@ -508,7 +508,7 @@
                                         <div class="flex items-center gap-2 truncate">
                                             <span class="w-2 h-2 rounded-full shrink-0" :class="filters.email === email ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
                                             <div class="truncate">
-                                                <div class="text-xs font-semibold leading-tight" x-text="email.split('@')[0]"></div>
+                                                <div class="text-xs font-semibold leading-tight" x-text="getAccountName(email)"></div>
                                                 <div class="text-[10px] text-slate-400 truncate leading-tight" x-text="email"></div>
                                             </div>
                                         </div>
@@ -2055,10 +2055,28 @@
                     if (!email) return '-';
                     const cleanEmail = String(email).trim().toLowerCase();
                     const found = (this.accountsList || []).find(a => a.email && a.email.toLowerCase() === cleanEmail);
-                    if (found && found.name) {
-                        return found.name;
+                    if (found) {
+                        // Prioritaskan Catatan Akun dari halaman HP & Akun Studio
+                        if (found.account_name && String(found.account_name).trim() !== '') {
+                            return String(found.account_name).trim();
+                        }
+                        if (found.name && !/^\d+$/.test(String(found.name).trim())) {
+                            return String(found.name).trim();
+                        }
+                        if (found.phone_label) {
+                            return 'HP ' + found.phone_label;
+                        }
                     }
-                    return cleanEmail.split('@')[0];
+                    const prefix = cleanEmail.split('@')[0];
+                    const match = prefix.match(/aiku([a-z]+)(\d*)/i);
+                    if (match) {
+                        const phone = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+                        return 'HP ' + phone + (match[2] ? ' ' + match[2] : '');
+                    }
+                    if (/^\d+$/.test(prefix)) {
+                        return 'Akun #' + prefix;
+                    }
+                    return prefix;
                 },
 
                 async fetchStudioAccounts() {
@@ -2188,7 +2206,10 @@
                 filteredStudioEmails(query) {
                     if (!query || !query.trim()) return this.studioEmails;
                     const q = query.trim().toLowerCase();
-                    return this.studioEmails.filter(email => email.toLowerCase().includes(q));
+                    return this.studioEmails.filter(email => {
+                        const name = this.getAccountName(email).toLowerCase();
+                        return email.toLowerCase().includes(q) || name.includes(q);
+                    });
                 },
 
                 async fetchRecordings(page = 1) {
@@ -2450,7 +2471,7 @@
                 },
 
                 async openQuickAssignAccountModal() {
-                    const accName = this.filters.email.split('@')[0];
+                    const accName = this.getAccountName(this.filters.email);
                     const { value: workerName } = await Swal.fire({
                         title: `Tandai Akun ${accName}`,
                         text: `Pilih kontributor untuk SEMUA rekaman kosong di akun ${this.filters.email}:`,

@@ -86,10 +86,11 @@ class DeviceAccountController extends Controller
                 ]
             );
 
-            // Register in studio accounts so Atlas recordings can be linked
-            StudioAccount::firstOrCreate(
+            // Register / update in studio accounts with Catatan Akun or HP Label
+            $phoneLabel = DailyWorkReport::PHONES[$phoneKey] ?? ucfirst($phoneKey);
+            StudioAccount::updateOrCreate(
                 ['email' => $email],
-                ['name' => $name ?: $email, 'active' => true]
+                ['name' => $name ?: ('HP ' . $phoneLabel), 'active' => true]
             );
 
             return $entry;
@@ -118,9 +119,10 @@ class DeviceAccountController extends Controller
                 'activated_at' => now(),
             ]);
 
+            $phoneLabel = DailyWorkReport::PHONES[$deviceAccount->phone_key] ?? ucfirst($deviceAccount->phone_key);
             StudioAccount::updateOrCreate(['email' => $deviceAccount->email], [
                 'active' => true,
-                'name' => $deviceAccount->account_name ?: $deviceAccount->email,
+                'name' => $deviceAccount->account_name ?: ('HP ' . $phoneLabel),
             ]);
         });
 
@@ -171,8 +173,10 @@ class DeviceAccountController extends Controller
 
             // Studio accounts are shared references. Never rename an old email
             // or carry its external participant_id over to a different account.
-            StudioAccount::firstOrCreate(['email' => $newEmail], [
-                'name' => $name ?: $newEmail, 'active' => true,
+            $phoneLabel = DailyWorkReport::PHONES[$phoneKey] ?? ucfirst($phoneKey);
+            StudioAccount::updateOrCreate(['email' => $newEmail], [
+                'name' => $name ?: ('HP ' . $phoneLabel),
+                'active' => true,
             ]);
         });
 

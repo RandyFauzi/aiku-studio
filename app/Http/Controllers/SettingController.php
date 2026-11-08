@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DeviceAccount;
 use App\Models\ShiftSetting;
 use App\Models\StudioAccount;
 use App\Services\ShiftConfiguration;
@@ -55,9 +56,102 @@ class SettingController extends Controller
 
     public function accounts()
     {
-        $accounts = StudioAccount::orderBy('id')->get();
+        $deviceAccounts = DeviceAccount::orderByDesc('is_active')
+            ->orderByDesc('id')
+            ->get();
+        $devByEmail = $deviceAccounts->keyBy(fn ($item) => strtolower(trim($item->email)));
 
-        return response()->json(['success' => true, 'count' => $accounts->count(), 'accounts' => $accounts]);
+        $accounts = StudioAccount::orderBy('id')->get()->map(function ($acc) use ($devByEmail) {
+            $cleanEmail = strtolower(trim($acc->email));
+            $dev = $devByEmail->get($cleanEmail);
+
+            $catatanAkun = ($dev && trim((string) $dev->account_name) !== '') ? trim($dev->account_name) : null;
+            $phoneLabel = $dev ? ('HP ' . $dev->phone_label) : null;
+
+            // Prioritaskan Catatan Akun dari HP & Akun Studio
+            if ($catatanAkun) {
+                $displayName = $catatanAkun;
+            } elseif ($phoneLabel) {
+                if (preg_match('/aiku[a-z]+(\d+)/i', $cleanEmail, $m)) {
+                    $displayName = $phoneLabel . ' ' . $m[1];
+                } else {
+                    $displayName = $phoneLabel;
+                }
+            } else {
+                $rawName = trim((string) $acc->name);
+                if (is_numeric($rawName) || preg_match('/^\d+$/', $rawName)) {
+                    if (preg_match('/aiku([a-z]+)(\d*)/i', $cleanEmail, $matches)) {
+                        $pName = ucfirst($matches[1]);
+                        $num = $matches[2] ? ' ' . $matches[2] : '';
+                        $displayName = 'HP ' . $pName . $num;
+                    } else {
+                        $displayName = 'Akun #' . $rawName;
+                    }
+                } elseif ($rawName !== '' && ! str_contains($rawName, '@')) {
+                    $displayName = $rawName;
+                } else {
+                    $displayName = explode('@', $acc->email)[0];
+                }
+            }
+
+            // Jika di DB studio_accounts namanya masih angka gundul (seperti '5'), perbarui
+            if (is_numeric($acc->name) || preg_match('/^\d+$/', (string) $acc->name)) {
+                try {
+                    StudioAccount::where('id', $acc->id)->update(['name' => $displayName]);
+                } catch (\Throwable $e) {
+                    // Ignore DB errors
+                }
+            }
+
+            return [
+                'id' => $acc->id,
+                'email' => $acc->email,
+                'name' => $displayName,
+                'raw_name' => $acc->name,
+                'account_name' => $catatanAkun,
+                'phone_key' => $dev?->phone_key,
+                'phone_label' => $dev?->phone_label,
+                'active' => (bool) $acc->active,
+                'participant_id' => $acc->participant_id,
+            ];
+        });
+
+        // Sertakan juga akun dari DeviceAccount jika ada yang belum terdaftar di StudioAccount
+        $existingEmails = $accounts->pluck('email')->map(fn ($e) => strtolower(trim($e)))->all();
+        $extraAccounts = collect();
+        foreach ($deviceAccounts as $dev) {
+            $cleanDevEmail = strtolower(trim($dev->email));
+            if (! in_array($cleanDevEmail, $existingEmails, true)) {
+                $catatanAkun = trim((string) $dev->account_name) ?: null;
+                $phoneLabel = 'HP ' . $dev->phone_label;
+                if ($catatanAkun) {
+                    $displayName = $catatanAkun;
+                } else {
+                    if (preg_match('/aiku[a-z]+(\d+)/i', $cleanDevEmail, $m)) {
+                        $displayName = $phoneLabel . ' ' . $m[1];
+                    } else {
+                        $displayName = $phoneLabel;
+                    }
+                }
+
+                $extraAccounts->push([
+                    'id' => null,
+                    'email' => $dev->email,
+                    'name' => $displayName,
+                    'raw_name' => $catatanAkun,
+                    'account_name' => $catatanAkun,
+                    'phone_key' => $dev->phone_key,
+                    'phone_label' => $dev->phone_label,
+                    'active' => (bool) $dev->is_active,
+                    'participant_id' => null,
+                ]);
+                $existingEmails[] = $cleanDevEmail;
+            }
+        }
+
+        $allAccounts = $accounts->concat($extraAccounts)->values();
+
+        return response()->json(['success' => true, 'count' => $allAccounts->count(), 'accounts' => $allAccounts]);
     }
 
     public function addAccounts(Request $request)
