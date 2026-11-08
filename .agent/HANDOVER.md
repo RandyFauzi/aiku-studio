@@ -1,3 +1,9 @@
+### [2026-11-08 16:20] — Antigravity
+- Implementasi Matriks Kalender Shift Roster inovatif di halaman Pengaturan Shift (/shifts) berbasis format spreadsheet pengguna:
+  - Menyediakan tampilan Matriks Roster interaktif (Nama Kontributor vs Tanggal) dengan opsi mode Perminggu (7 hari) & Perbulan (siklus 22–21).
+  - Dilengkapi sel interaktif untuk ubah shift perorangan/multi-shift (misal 1-2), status khusus (Libur, Izin, Sakit), opsi terapkan ke semua hari aktif, live counter kuota per shift (X / 3), warna merah otomatis hari libur rutin (Senin), keterangan jam shift WITA, serta ekspor CSV/Excel dan cetak.
+- Validasi: Vite build sukses, syntax check PHP Blade lolos, cache view dibersihkan. State IDLE.
+
 ### [2026-11-08 15:55] — Antigravity
 - Perbaikan layout popover Date Range Picker agar tidak gepeng/menumpuk:
   - Menambahkan styling eksplisit `.tiket-datepicker-popover` (lebar 640px di desktop dan 320px di mobile) dengan `min-width: 270px` per bulan agar 2 bulan dan angka tanggal tidak menyusut atau bertumpuk.

@@ -2,7 +2,8 @@ import {clone,statusLabels,prepareConfig,sessionRows,workHours,members,problems,
 
 window.shiftsData=()=>({
     sidebarOpen:window.innerWidth>=768&&localStorage.getItem('aiku_sidebar_open')!=='false',
-    loading:true,saving:false,error:'',saved:'',mode:'period',view:'board',search:'',
+    loading:true,saving:false,error:'',saved:'',mode:'period',view:'roster',search:'',
+    rosterViewMode:'weekly',rosterWeekIndex:0,rosterSearch:'',rosterEditCell:null,
     config:null,baseline:'',revision:0,inherited:false,period:null,contributors:[],
     days:{},selectedDate:'',dayDraft:null,dayBaseline:'',dayRevision:0,drag:null,dropTarget:null,chosenPerson:'',chosenShift:1,
     today:new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),statuses:statusLabels,
@@ -23,6 +24,7 @@ window.shiftsData=()=>({
         this.period=result.period;this.config=prepareConfig(result.config,this.contributors);this.revision=result.revision;this.inherited=result.inherited;
         this.baseline=JSON.stringify(this.config);this.days=dates.days||{};Object.values(this.days).forEach(d=>d.config=prepareConfig(d.config,this.contributors));
         this.chosenShift=1;this.selectDate(this.today>=this.period.startDate&&this.today<=this.period.endDate?this.today:this.period.startDate);
+        this.setRosterWeekToToday();
     },
     get periodDirty(){return !!this.config&&this.baseline!==JSON.stringify(this.config);},
     get dayDirty(){return !!this.dayDraft&&this.dayBaseline!==JSON.stringify(this.dayDraft);},
@@ -31,6 +33,256 @@ window.shiftsData=()=>({
     get activeDirty(){return this.daily?this.dayDirty:this.periodDirty||this.inherited;},
     get conflicts(){return problems(this.activeConfig);},get shifts(){return sessionRows(this.activeConfig);},
     get dates(){return this.period?dateRange(this.period.startDate,this.period.endDate):[];},
+    get rosterWeeks(){
+        if(!this.dates.length)return [];
+        const chunks=[];
+        for(let i=0;i<this.dates.length;i+=7){chunks.push(this.dates.slice(i,i+7));}
+        return chunks;
+    },
+    get activeWeekDates(){
+        const w=this.rosterWeeks;
+        if(!w.length)return [];
+        const idx=Math.max(0,Math.min(this.rosterWeekIndex,w.length-1));
+        return w[idx]||[];
+    },
+    get activeRosterDates(){
+        return this.rosterViewMode==='weekly'?this.activeWeekDates:this.dates;
+    },
+    get activeWeekLabel(){
+        const d=this.activeWeekDates;
+        if(!d.length)return '';
+        return `Minggu ${this.rosterWeekIndex+1} (${this.formatDateShort(d[0])} – ${this.formatDateShort(d[d.length-1])})`;
+    },
+    moveRosterWeek(delta){
+        const max=this.rosterWeeks.length-1;
+        this.rosterWeekIndex=Math.max(0,Math.min(max,this.rosterWeekIndex+delta));
+    },
+    setRosterWeekToToday(){
+        const w=this.rosterWeeks;
+        if(!w.length)return;
+        const target=(this.today>=this.dates[0]&&this.today<=this.dates[this.dates.length-1])?this.today:this.dates[0];
+        const idx=w.findIndex(chunk=>chunk.includes(target));
+        this.rosterWeekIndex=idx>=0?idx:0;
+    },
+    get rosterEmployees(){
+        if(!this.config)return [];
+        const list=(this.config.karyawan||[]).map(p=>({
+            contributor_id:p.contributor_id,
+            name:p.name,
+            initials:this.initials(p.name)
+        }));
+        (this.contributors||[]).forEach(c=>{
+            if(!list.some(item=>Number(item.contributor_id)===Number(c.id))){
+                list.push({contributor_id:c.id,name:c.nama,initials:this.initials(c.nama)});
+            }
+        });
+        if(!this.rosterSearch)return list;
+        return list.filter(e=>e.name.toLowerCase().includes(this.rosterSearch.toLowerCase()));
+    },
+    isDateDayOff(date){
+        if(!this.config?.day_off||this.config.day_off==='none'||!date)return false;
+        const days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+        const d=new Date(date+'T12:00:00Z');
+        return days[d.getUTCDay()]===this.config.day_off;
+    },
+    getRosterCellInfo(emp,date){
+        const hasCustomRevision=!!this.days[date];
+        const cfg=this.effectiveDate(date);
+        if(!cfg||!cfg.karyawan)return {type:'normal',text:'-',hasCustomRevision};
+        const p=cfg.karyawan.find(k=>(emp.contributor_id&&Number(k.contributor_id)===Number(emp.contributor_id))||k.name===emp.name);
+        if(!p)return {type:'normal',text:'-',hasCustomRevision};
+        if(p.status==='libur')return {type:'libur',text:'Libur',hasCustomRevision};
+        if(p.status==='izin')return {type:'izin',text:'Izin',hasCustomRevision};
+        if(p.status==='sakit')return {type:'sakit',text:'Sakit',hasCustomRevision};
+        if(this.isDateDayOff(date)&&(!p.sessions||!p.sessions.length))return {type:'libur',text:'Libur',hasCustomRevision};
+        if(p.sessions&&p.sessions.length>1){
+            return {type:'multi',text:p.sessions.join('-'),hasCustomRevision};
+        }
+        if(p.sessions&&p.sessions.length===1){
+            return {type:'shift',text:String(p.sessions[0]),hasCustomRevision};
+        }
+        return {type:'normal',text:'-',hasCustomRevision};
+    },
+    formatDateHeader(date){
+        if(!date)return '';
+        const p=date.split('-');
+        return p.length===3?`${p[2]}/${p[1]}`:date;
+    },
+    formatDayName(date){
+        if(!date)return '';
+        const d=new Date(date+'T12:00:00Z');
+        return ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][d.getUTCDay()];
+    },
+    formatDateShort(date){
+        if(!date)return '';
+        const d=new Date(date+'T12:00:00Z');
+        return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',timeZone:'UTC'});
+    },
+    getShiftCountForDate(shiftId,date){
+        const cfg=this.effectiveDate(date);
+        if(!cfg||!cfg.karyawan)return 0;
+        return cfg.karyawan.filter(p=>(p.status||'scheduled')==='scheduled'&&(p.sessions||[]).includes(Number(shiftId))).length;
+    },
+    openRosterEdit(emp,date){
+        const cfg=this.effectiveDate(date);
+        const existing=(cfg?.karyawan||[]).find(p=>(emp.contributor_id&&Number(p.contributor_id)===Number(emp.contributor_id))||p.name===emp.name);
+        this.rosterEditCell={
+            emp,
+            personName:emp.name,
+            contributorId:emp.contributor_id,
+            date,
+            sessions:existing?.sessions?[...existing.sessions]:[],
+            status:existing?.status||(this.isDateDayOff(date)?'libur':'scheduled'),
+            applyToAll:false
+        };
+    },
+    closeRosterEdit(){
+        this.rosterEditCell=null;
+    },
+    toggleRosterEditSession(shiftId){
+        if(!this.rosterEditCell)return;
+        const s=Number(shiftId);
+        let cur=this.rosterEditCell.sessions||[];
+        if(cur.includes(s)){
+            this.rosterEditCell.sessions=cur.filter(x=>x!==s);
+        }else{
+            this.rosterEditCell.sessions=[...cur,s].sort((a,b)=>a-b);
+        }
+        if(this.rosterEditCell.sessions.length>0){
+            this.rosterEditCell.status='scheduled';
+        }
+    },
+    setRosterEditStatus(status){
+        if(!this.rosterEditCell)return;
+        if(this.rosterEditCell.status===status){
+            this.rosterEditCell.status='scheduled';
+        }else{
+            this.rosterEditCell.status=status;
+            if(status!=='scheduled'){
+                this.rosterEditCell.sessions=[];
+            }
+        }
+    },
+    async saveRosterEdit(){
+        if(!this.rosterEditCell||this.saving)return;
+        const cell=this.rosterEditCell;
+        this.clearFeedback();
+        this.saving=true;
+        try{
+            if(cell.applyToAll){
+                let person=this.config.karyawan.find(p=>(cell.contributorId&&Number(p.contributor_id)===Number(cell.contributorId))||p.name===cell.personName);
+                if(!person){
+                    person={
+                        contributor_id:cell.contributorId,
+                        name:cell.personName,
+                        short:cell.personName.split(' ')[0],
+                        role:'Reguler',
+                        alat:'Alat 1',
+                        sessions:[...cell.sessions],
+                        status:cell.status==='scheduled'?'scheduled':'scheduled',
+                        note:''
+                    };
+                    this.config.karyawan.push(person);
+                }else{
+                    person.sessions=[...cell.sessions];
+                    if(cell.status==='scheduled')person.status='scheduled';
+                }
+                const errs=problems(this.config);
+                if(errs.length){this.error=errs[0];this.saving=false;return;}
+                const res=await this.request('/api/shifts/config',{
+                    method:'POST',
+                    body:JSON.stringify({
+                        periodId:this.period.id,
+                        config:this.config,
+                        expected_revision:this.revision
+                    })
+                });
+                this.config=prepareConfig(res.config,this.contributors);
+                this.baseline=JSON.stringify(this.config);
+                this.revision=res.revision;
+                this.inherited=false;
+                this.saved=`Pola shift rutin untuk ${cell.personName} berhasil disimpan ke seluruh periode.`;
+            }else{
+                const targetDate=cell.date;
+                const baseDayConfig=clone(this.days[targetDate]?.config||patternForDate(this.config,targetDate));
+                let person=baseDayConfig.karyawan.find(p=>(cell.contributorId&&Number(p.contributor_id)===Number(cell.contributorId))||p.name===cell.personName);
+                if(!person){
+                    person={
+                        contributor_id:cell.contributorId,
+                        name:cell.personName,
+                        short:cell.personName.split(' ')[0],
+                        role:'Reguler',
+                        alat:'Alat 1',
+                        sessions:[...cell.sessions],
+                        status:cell.status,
+                        note:''
+                    };
+                    baseDayConfig.karyawan.push(person);
+                }else{
+                    person.sessions=[...cell.sessions];
+                    person.status=cell.status;
+                }
+                const errs=problems(baseDayConfig);
+                if(errs.length){this.error=errs[0];this.saving=false;return;}
+                const expectedRev=this.days[targetDate]?.revision||0;
+                const res=await this.request('/api/shifts/days/'+targetDate,{
+                    method:'PUT',
+                    body:JSON.stringify({
+                        config:baseDayConfig,
+                        expected_revision:expectedRev
+                    })
+                });
+                this.days[targetDate]={
+                    config:prepareConfig(res.day.config,this.contributors),
+                    revision:res.day.revision
+                };
+                if(targetDate===this.selectedDate){
+                    this.selectDate(targetDate);
+                }
+                this.saved=`Shift ${cell.personName} untuk tanggal ${this.formatDateShort(targetDate)} berhasil diperbarui.`;
+            }
+            this.closeRosterEdit();
+        }catch(e){
+            this.error=e.message||'Gagal menyimpan shift.';
+        }finally{
+            this.saving=false;
+        }
+    },
+    exportRosterCsv(){
+        if(!this.period)return;
+        const dates=this.activeRosterDates;
+        const headers=['No','Nama Kontributor',...dates.map(d=>`${this.formatDateHeader(d)} (${this.formatDayName(d)})`)];
+        const rows=[headers.map(h=>`"${h}"`).join(',')];
+        this.rosterEmployees.forEach((emp,idx)=>{
+            const rowData=[idx+1,`"${emp.name.replace(/"/g,'""')}"`];
+            dates.forEach(d=>{
+                const info=this.getRosterCellInfo(emp,d);
+                rowData.push(`"${info.text||'-'}"`);
+            });
+            rows.push(rowData.join(','));
+        });
+        this.shifts.forEach(s=>{
+            const sRow=[`S${s.id}`,`"Kuota Shift ${s.id}"`];
+            dates.forEach(d=>{
+                if(this.isDateDayOff(d)){
+                    sRow.push('"Libur"');
+                }else{
+                    sRow.push(`"${this.getShiftCountForDate(s.id,d)} / 3"`);
+                }
+            });
+            rows.push(sRow.join(','));
+        });
+        const csvContent='\uFEFF'+rows.join('\r\n');
+        const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download=`Jadwal_Shift_${this.period.name.replace(/[^a-zA-Z0-9_-]/g,'_')}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
     get roster(){
         const cfg=this.activeConfig;if(!cfg)return [];
         const rows=this.contributors.map(c=>({id:c.id,name:c.nama,linked:c.login_enabled,person:cfg.karyawan.find(p=>Number(p.contributor_id)===Number(c.id))}));

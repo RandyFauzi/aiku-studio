@@ -17,9 +17,16 @@
                 <div class="flex gap-2"><button type="button" @click="movePeriod(-1)" :disabled="loading||saving" aria-label="Periode sebelumnya" class="h-11 w-11 rounded-xl border border-slate-200">←</button><button type="button" @click="movePeriod(1)" :disabled="loading||saving" aria-label="Periode berikutnya" class="h-11 w-11 rounded-xl border border-slate-200">→</button></div>
             </section>
             <nav aria-label="Tampilan shift" class="flex flex-wrap gap-2">
+                <button type="button" @click="view='roster'" :aria-pressed="view==='roster'" :class="view==='roster'?'bg-slate-900 text-white shadow-xs':'bg-white text-slate-600 hover:text-slate-900'" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-sm font-semibold flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Matriks Kalender Roster</span>
+                </button>
                 <button type="button" @click="view='board'" :aria-pressed="view==='board'" :class="view==='board'?'bg-slate-900 text-white':'bg-white text-slate-600'" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-sm font-semibold">Papan shift</button>
                 <button type="button" @click="view='summary'" :aria-pressed="view==='summary'" :class="view==='summary'?'bg-slate-900 text-white':'bg-white text-slate-600'" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-sm font-semibold">Analitik & ringkasan</button>
             </nav>
+            <div x-show="view==='roster'" class="space-y-6">
+                @include('shifts.roster')
+            </div>
             <div x-show="view==='board'" class="space-y-5">
                 <section class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                     <div class="flex flex-wrap items-center justify-between gap-3"><div class="flex flex-wrap gap-2"><button type="button" @click="switchMode('period')" :aria-pressed="!daily" :class="!daily?'border-brand-600 bg-brand-50 text-brand-800':'border-slate-200 text-slate-600'" class="min-h-[44px] rounded-xl border px-4 text-sm font-semibold">1. Pola periode</button><button type="button" @click="switchMode('day')" :aria-pressed="daily" :class="daily?'border-brand-600 bg-brand-50 text-brand-800':'border-slate-200 text-slate-600'" class="min-h-[44px] rounded-xl border px-4 text-sm font-semibold">2. Revisi harian</button></div><button x-show="daily" type="button" @click="resetDate()" :disabled="saving||loading" class="min-h-[44px] px-3 text-xs font-semibold text-slate-600 underline">Kembali ke pola periode</button></div>
