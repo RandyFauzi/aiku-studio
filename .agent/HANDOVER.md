@@ -1,3 +1,9 @@
+### [2026-11-08 12:21] — Antigravity
+- Pengecualian akun admin dari skor evaluasi persentase produksi dan distribusi kinerja tim (/contributors):
+  - `ContributorPerformanceService`: akun role `admin` kini otomatis mendapat grade `Manajemen` (badge ungu netral), skor null, dan deskripsi evaluasi operasional. Dikecualikan dari penghitungan distribusi status tim studio (`grade_distribution`) agar akun admin tidak masuk ke status `Perlu Evaluasi` atau menurunkan rata-rata approval % tim.
+  - `contributors.blade.php`: kolom Kinerja & Kehadiran pada akun admin menampilkan badge `Manajemen` & `Akses Operasional` (tanpa skor 48/100 atau approval 0%). Modal analisis kinerja untuk admin menampilkan ringkasan hak akses manajerial, presensi, dan aktivitas operasional yang bebas target produksi bot.
+- Validasi: Blade view cache cleared, Vite build PASS. State IDLE.
+
 ### [2026-11-07 17:20] — Antigravity
 - Analisis total data kontributor dashboard & pemisahan siklus bulanan resmi vs all-time:
   - Mengatasi discrepancy total: meluruskan bahwa data kartu kontributor sebelumnya menjumlahkan seluruh slip masa lalu (all-time), perbedaan urutan jam vs THP terjadi karena adanya bonus/pending carry-over pada slip gaji, dan kontributor tanpa slip terbit sebelumnya belum terhitung.

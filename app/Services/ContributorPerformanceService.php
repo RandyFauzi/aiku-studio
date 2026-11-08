@@ -93,18 +93,38 @@ class ContributorPerformanceService
         $totalReportedMin = (int) $workReports->sum('total_duration_minutes');
 
         // 4. Smart Evaluation Engine (Score: 0 - 100)
-        $eval = $this->evaluatePerformance(
-            $totalRecordings,
-            $totalRecordedMin,
-            $totalBillableMin,
-            $totalRejectedMin,
-            $approvalRate,
-            $rejectRate,
-            $totalAttendances,
-            $leaveCount,
-            $sickCount,
-            $scheduledCount
-        );
+        $isAdmin = ($contributor->role === 'admin');
+        if ($isAdmin) {
+            $eval = [
+                'score' => null,
+                'grade' => 'Manajemen',
+                'badge_color' => 'purple',
+                'is_admin' => true,
+                'summary' => 'Akun Administrator / Manajemen Studio. Berfokus pada tata kelola operasional, verifikasi validasi tugas, dan administrasi tim.',
+                'reasons' => [
+                    'Akun memiliki hak akses administratif penuh ke seluruh sistem studio.',
+                    'Dikecualikan dari penilaian target rekaman bot lapangan dan rasio persetujuan QA.',
+                    "Tercatat {$totalAttendances} sesi presensi masuk dan {$totalWorkReports} laporan kerja operasional.",
+                ],
+                'recommendations' => [
+                    'Lakukan pemantauan berkala terhadap status rekaman harian dan asistensi kontributor.',
+                    'Pastikan antrean validasi QC dan rekap payroll per siklus 22-21 berjalan tepat waktu.',
+                ],
+            ];
+        } else {
+            $eval = $this->evaluatePerformance(
+                $totalRecordings,
+                $totalRecordedMin,
+                $totalBillableMin,
+                $totalRejectedMin,
+                $approvalRate,
+                $rejectRate,
+                $totalAttendances,
+                $leaveCount,
+                $sickCount,
+                $scheduledCount
+            );
+        }
 
         return [
             'contributor' => [
@@ -297,17 +317,22 @@ class ContributorPerformanceService
         foreach ($contributors as $person) {
             $perf = $this->getContributorPerformance($person);
             $grade = $perf['evaluation']['grade'];
-            if (isset($gradeCounts[$grade])) {
+            $isAdmin = ($person->role === 'admin');
+
+            // Hanya pekerja produksi yang masuk ke penghitungan distribusi grade
+            if (! $isAdmin && isset($gradeCounts[$grade])) {
                 $gradeCounts[$grade]++;
             }
+
             $contributorStats[] = [
                 'id' => $person->id,
                 'nama' => $person->nama,
                 'role' => $person->role,
+                'is_admin' => $isAdmin,
                 'score' => $perf['evaluation']['score'],
                 'grade' => $grade,
                 'badge_color' => $perf['evaluation']['badge_color'],
-                'approval_rate' => $perf['recordings']['approval_rate'],
+                'approval_rate' => $isAdmin ? null : $perf['recordings']['approval_rate'],
                 'total_hours' => $perf['recordings']['total_duration_hours'],
                 'attendances' => $perf['attendance']['verified_attendances'],
                 'leaves' => $perf['attendance']['total_leaves'],

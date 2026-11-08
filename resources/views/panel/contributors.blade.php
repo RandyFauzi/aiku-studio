@@ -263,28 +263,50 @@
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <template x-if="perfLookup[c.id]">
                                         <div class="space-y-1">
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold"
-                                                      :class="{
-                                                          'bg-emerald-100 text-emerald-800 border border-emerald-200': perfLookup[c.id].grade === 'Sangat Baik',
-                                                          'bg-teal-100 text-teal-800 border border-teal-200': perfLookup[c.id].grade === 'Bagus',
-                                                          'bg-amber-100 text-amber-800 border border-amber-200': perfLookup[c.id].grade === 'Cukup',
-                                                          'bg-rose-100 text-rose-800 border border-rose-200': perfLookup[c.id].grade === 'Perlu Evaluasi'
-                                                      }"
-                                                      x-text="perfLookup[c.id].grade">
-                                                </span>
-                                                <span class="text-[11px] font-semibold text-slate-600" x-text="'Skor ' + perfLookup[c.id].score + '/100'"></span>
-                                            </div>
-                                            <div class="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
-                                                <span>Approval: <strong class="text-slate-800 font-semibold" x-text="perfLookup[c.id].approval_rate + '%'"></strong></span>
-                                                <span>•</span>
-                                                <span x-text="perfLookup[c.id].total_hours + ' jam'"></span>
-                                                <span>•</span>
-                                                <span x-text="perfLookup[c.id].attendances + ' hadir'"></span>
-                                                <template x-if="perfLookup[c.id].leaves > 0">
-                                                    <span class="text-amber-600 font-semibold" x-text="'(' + perfLookup[c.id].leaves + ' izin)'"></span>
-                                                </template>
-                                            </div>
+                                            <!-- Mode Admin: Dikecualikan dari skor %an produksi -->
+                                            <template x-if="c.role === 'admin' || perfLookup[c.id]?.is_admin">
+                                                <div>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 shadow-2xs">
+                                                            Manajemen
+                                                        </span>
+                                                        <span class="text-[11px] font-semibold text-slate-400">Non-Produksi</span>
+                                                    </div>
+                                                    <div class="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap mt-1">
+                                                        <span class="font-medium text-slate-600">Akses Operasional</span>
+                                                        <span>•</span>
+                                                        <span x-text="perfLookup[c.id].attendances + ' hadir'"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+
+                                            <!-- Mode Pekerja: Evaluasi normal target produksi -->
+                                            <template x-if="c.role !== 'admin' && !perfLookup[c.id]?.is_admin">
+                                                <div>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold"
+                                                              :class="{
+                                                                  'bg-emerald-100 text-emerald-800 border border-emerald-200': perfLookup[c.id].grade === 'Sangat Baik',
+                                                                  'bg-teal-100 text-teal-800 border border-teal-200': perfLookup[c.id].grade === 'Bagus',
+                                                                  'bg-amber-100 text-amber-800 border border-amber-200': perfLookup[c.id].grade === 'Cukup',
+                                                                  'bg-rose-100 text-rose-800 border border-rose-200': perfLookup[c.id].grade === 'Perlu Evaluasi'
+                                                              }"
+                                                              x-text="perfLookup[c.id].grade">
+                                                        </span>
+                                                        <span class="text-[11px] font-semibold text-slate-600" x-text="'Skor ' + perfLookup[c.id].score + '/100'"></span>
+                                                    </div>
+                                                    <div class="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap mt-1">
+                                                        <span>Approval: <strong class="text-slate-800 font-semibold" x-text="perfLookup[c.id].approval_rate + '%'"></strong></span>
+                                                        <span>•</span>
+                                                        <span x-text="perfLookup[c.id].total_hours + ' jam'"></span>
+                                                        <span>•</span>
+                                                        <span x-text="perfLookup[c.id].attendances + ' hadir'"></span>
+                                                        <template x-if="perfLookup[c.id].leaves > 0">
+                                                            <span class="text-amber-600 font-semibold" x-text="'(' + perfLookup[c.id].leaves + ' izin)'"></span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
                                         </div>
                                     </template>
                                     <template x-if="!perfLookup[c.id]">
@@ -418,16 +440,18 @@
                             <!-- 2. Smart Evaluation Status Banner -->
                             <div class="p-4 rounded-xl border transition-all"
                                  :class="{
-                                     'bg-emerald-50/70 border-emerald-200 text-emerald-950': selectedPerf.evaluation.grade === 'Sangat Baik',
-                                     'bg-teal-50/70 border-teal-200 text-teal-950': selectedPerf.evaluation.grade === 'Bagus',
-                                     'bg-amber-50/70 border-amber-200 text-amber-950': selectedPerf.evaluation.grade === 'Cukup',
-                                     'bg-rose-50/70 border-rose-200 text-rose-950': selectedPerf.evaluation.grade === 'Perlu Evaluasi'
+                                     'bg-purple-50/80 border-purple-200 text-purple-950': selectedPerf.contributor.role === 'admin' || selectedPerf.evaluation.is_admin,
+                                     'bg-emerald-50/70 border-emerald-200 text-emerald-950': (selectedPerf.contributor.role !== 'admin' && !selectedPerf.evaluation.is_admin) && selectedPerf.evaluation.grade === 'Sangat Baik',
+                                     'bg-teal-50/70 border-teal-200 text-teal-950': (selectedPerf.contributor.role !== 'admin' && !selectedPerf.evaluation.is_admin) && selectedPerf.evaluation.grade === 'Bagus',
+                                     'bg-amber-50/70 border-amber-200 text-amber-950': (selectedPerf.contributor.role !== 'admin' && !selectedPerf.evaluation.is_admin) && selectedPerf.evaluation.grade === 'Cukup',
+                                     'bg-rose-50/70 border-rose-200 text-rose-950': (selectedPerf.contributor.role !== 'admin' && !selectedPerf.evaluation.is_admin) && selectedPerf.evaluation.grade === 'Perlu Evaluasi'
                                  }">
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-black/10 pb-3">
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <span class="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                            <span class="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full"
                                                   :class="{
+                                                      'bg-purple-200 text-purple-900 border border-purple-300': selectedPerf.contributor.role === 'admin' || selectedPerf.evaluation.is_admin,
                                                       'bg-emerald-200 text-emerald-900': selectedPerf.evaluation.grade === 'Sangat Baik',
                                                       'bg-teal-200 text-teal-900': selectedPerf.evaluation.grade === 'Bagus',
                                                       'bg-amber-200 text-amber-900': selectedPerf.evaluation.grade === 'Cukup',
@@ -440,15 +464,17 @@
                                         <p class="text-xs font-medium mt-1 leading-relaxed text-slate-700" x-text="selectedPerf.evaluation.summary"></p>
                                     </div>
                                     <div class="sm:text-right shrink-0">
-                                        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Skor Kinerja</p>
-                                        <p class="text-2xl font-black"
+                                        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider"
+                                           x-text="(selectedPerf.contributor.role === 'admin' || selectedPerf.evaluation.is_admin) ? 'Kategori Penilaian' : 'Skor Kinerja'"></p>
+                                        <p class="text-xl sm:text-2xl font-black"
                                            :class="{
+                                               'text-purple-700': selectedPerf.contributor.role === 'admin' || selectedPerf.evaluation.is_admin,
                                                'text-emerald-700': selectedPerf.evaluation.grade === 'Sangat Baik',
                                                'text-teal-700': selectedPerf.evaluation.grade === 'Bagus',
                                                'text-amber-700': selectedPerf.evaluation.grade === 'Cukup',
                                                'text-rose-700': selectedPerf.evaluation.grade === 'Perlu Evaluasi'
                                            }"
-                                           x-text="selectedPerf.evaluation.score + ' / 100'">
+                                           x-text="(selectedPerf.contributor.role === 'admin' || selectedPerf.evaluation.is_admin) ? 'Operasional' : (selectedPerf.evaluation.score + ' / 100')">
                                         </p>
                                     </div>
                                 </div>
@@ -466,47 +492,83 @@
 
                             <!-- 3. Key Performance Metrics Grid -->
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                <!-- Metric 1: Approval Rate -->
-                                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Approval Rate</p>
-                                    <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.recordings.approval_rate + '%'"></p>
-                                    <div class="text-[10px] text-slate-500 mt-1 leading-tight">
-                                        <div>Billable: <strong class="text-emerald-700" x-text="selectedPerf.recordings.billable_hours + ' jam'"></strong></div>
-                                        <div>Reject: <strong class="text-rose-600" x-text="selectedPerf.recordings.rejected_hours + ' jam'"></strong></div>
-                                        <div class="text-slate-400 mt-0.5" x-text="selectedPerf.recordings.total_count + ' sesi rekaman'"></div>
+                                <!-- Mode Admin -->
+                                <template x-if="selectedPerf.contributor.role === 'admin' || selectedPerf.evaluation.is_admin">
+                                    <div class="contents">
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-purple-600 uppercase tracking-wider">Peran Akun</p>
+                                            <p class="text-lg font-black text-slate-900 mt-0.5">Administrator</p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Akses Penuh Panel</div>
+                                                <div class="text-slate-400 mt-0.5">Non-Pekerja Lapangan</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Target Produksi</p>
+                                            <p class="text-lg font-black text-emerald-700 mt-0.5">Bebas Target</p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Dikecualikan dari QA bot</div>
+                                                <div class="text-slate-400 mt-0.5">Fokus Manajemen Studio</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Presensi Masuk</p>
+                                            <p class="text-lg font-black text-slate-900 mt-0.5" x-text="selectedPerf.attendance.verified_attendances + ' hari'"></p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Presensi operasional</div>
+                                                <div class="text-slate-400 mt-0.5">Terverifikasi sistem</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Laporan Kerja</p>
+                                            <p class="text-lg font-black text-slate-900 mt-0.5" x-text="(selectedPerf.work_reports?.total_reports || 0) + ' sesi'"></p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Aktivitas operasional</div>
+                                                <div class="text-slate-400 mt-0.5">Tercatat di sistem</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                </template>
 
-                                <!-- Metric 2: Total Durasi Rekaman -->
-                                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Total Durasi Rekaman</p>
-                                    <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.recordings.total_duration_hours + ' jam'"></p>
-                                    <div class="text-[10px] text-slate-500 mt-1 leading-tight">
-                                        <div>Setara: <span x-text="selectedPerf.recordings.total_duration_min + ' menit'"></span></div>
-                                        <div>Pending: <span x-text="selectedPerf.recordings.pending_hours + ' jam'"></span></div>
+                                <!-- Mode Pekerja Lapangan -->
+                                <template x-if="selectedPerf.contributor.role !== 'admin' && !selectedPerf.evaluation.is_admin">
+                                    <div class="contents">
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Approval Rate</p>
+                                            <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.recordings.approval_rate + '%'"></p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Billable: <strong class="text-emerald-700" x-text="selectedPerf.recordings.billable_hours + ' jam'"></strong></div>
+                                                <div>Reject: <strong class="text-rose-600" x-text="selectedPerf.recordings.rejected_hours + ' jam'"></strong></div>
+                                                <div class="text-slate-400 mt-0.5" x-text="selectedPerf.recordings.total_count + ' sesi rekaman'"></div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Total Durasi Rekaman</p>
+                                            <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.recordings.total_duration_hours + ' jam'"></p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Setara: <span x-text="selectedPerf.recordings.total_duration_min + ' menit'"></span></div>
+                                                <div>Pending: <span x-text="selectedPerf.recordings.pending_hours + ' jam'"></span></div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Presensi Masuk</p>
+                                            <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.attendance.verified_attendances + ' hari'"></p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Hadir terverifikasi</div>
+                                                <div class="text-slate-400" x-text="selectedPerf.attendance.scheduled_count + ' shift jadwal'"></div>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Frekuensi Izin / Sakit</p>
+                                            <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.attendance.total_leaves + ' hari'"></p>
+                                            <div class="text-[10px] text-slate-500 mt-1 leading-tight">
+                                                <div>Izin: <strong class="text-amber-700" x-text="selectedPerf.attendance.leave_count + 'x'"></strong></div>
+                                                <div>Sakit: <strong class="text-blue-700" x-text="selectedPerf.attendance.sick_count + 'x'"></strong></div>
+                                                <div>Libur: <span x-text="selectedPerf.attendance.off_count + ' hari'"></span></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <!-- Metric 3: Presensi Hadir -->
-                                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Presensi Masuk</p>
-                                    <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.attendance.verified_attendances + ' hari'"></p>
-                                    <div class="text-[10px] text-slate-500 mt-1 leading-tight">
-                                        <div>Hadir terverifikasi</div>
-                                        <div class="text-slate-400" x-text="selectedPerf.attendance.scheduled_count + ' shift jadwal'"></div>
-                                    </div>
-                                </div>
-
-                                <!-- Metric 4: Absensi & Izin -->
-                                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Frekuensi Izin / Sakit</p>
-                                    <p class="text-xl font-black text-slate-900 mt-0.5" x-text="selectedPerf.attendance.total_leaves + ' hari'"></p>
-                                    <div class="text-[10px] text-slate-500 mt-1 leading-tight">
-                                        <div>Izin: <strong class="text-amber-700" x-text="selectedPerf.attendance.leave_count + 'x'"></strong></div>
-                                        <div>Sakit: <strong class="text-blue-700" x-text="selectedPerf.attendance.sick_count + 'x'"></strong></div>
-                                        <div>Libur: <span x-text="selectedPerf.attendance.off_count + ' hari'"></span></div>
-                                    </div>
-                                </div>
+                                </template>
                             </div>
 
                             <!-- 4. Actionable Learning & Improvement Plan -->
