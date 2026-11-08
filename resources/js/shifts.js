@@ -202,17 +202,22 @@ window.shiftsData=()=>({
                         role:'Reguler',
                         alat:'Alat 1',
                         sessions:[...cell.sessions],
-                        status:cell.status,
+                        status:cell.status||'scheduled',
                         note:''
                     };
                     this.config.karyawan.push(person);
                 }else{
                     person.sessions=[...cell.sessions];
-                    person.status=cell.status;
+                    person.status=cell.status||'scheduled';
                     if(cell.contributorId&&!person.contributor_id){
                         person.contributor_id=Number(cell.contributorId);
                     }
                 }
+                this.config.karyawan.forEach(p=>{
+                    if(!p.status||!['scheduled','izin','sakit','libur'].includes(p.status)){
+                        p.status='scheduled';
+                    }
+                });
                 const errs=problems(this.config);
                 if(errs.length){this.error=errs[0];this.saving=false;return;}
                 const res=await this.request('/api/shifts/config',{
@@ -240,17 +245,22 @@ window.shiftsData=()=>({
                         role:'Reguler',
                         alat:'Alat 1',
                         sessions:[...cell.sessions],
-                        status:cell.status,
+                        status:cell.status||'scheduled',
                         note:''
                     };
                     baseDayConfig.karyawan.push(person);
                 }else{
                     person.sessions=[...cell.sessions];
-                    person.status=cell.status;
+                    person.status=cell.status||'scheduled';
                     if(cell.contributorId&&!person.contributor_id){
                         person.contributor_id=Number(cell.contributorId);
                     }
                 }
+                baseDayConfig.karyawan.forEach(p=>{
+                    if(!p.status||!['scheduled','izin','sakit','libur'].includes(p.status)){
+                        p.status='scheduled';
+                    }
+                });
                 const errs=problems(baseDayConfig);
                 if(errs.length){this.error=errs[0];this.saving=false;return;}
                 const expectedRev=this.days[targetDate]?.revision||0;
@@ -387,7 +397,13 @@ window.shiftsData=()=>({
     async save(){
         if(this.saving||this.loading||!this.activeDirty||this.conflicts.length)return;this.saving=true;this.clearFeedback();
         try{
-            const payload=clone(this.activeConfig),result=await this.request(this.daily?'/api/shifts/days/'+this.selectedDate:'/api/shifts/config',{method:this.daily?'PUT':'POST',body:JSON.stringify(this.daily?{config:payload,expected_revision:this.dayRevision}:{periodId:this.period.id,config:payload,expected_revision:this.revision})});
+            const payload=clone(this.activeConfig);
+            (payload.karyawan||[]).forEach(p=>{
+                if(!p.status||!['scheduled','izin','sakit','libur'].includes(p.status)){
+                    p.status='scheduled';
+                }
+            });
+            const result=await this.request(this.daily?'/api/shifts/days/'+this.selectedDate:'/api/shifts/config',{method:this.daily?'PUT':'POST',body:JSON.stringify(this.daily?{config:payload,expected_revision:this.dayRevision}:{periodId:this.period.id,config:payload,expected_revision:this.revision})});
             if(this.daily){const day=result.day;this.days[this.selectedDate]={config:prepareConfig(day.config,this.contributors),revision:day.revision};this.selectDate(this.selectedDate);}
             else{this.config=prepareConfig(result.config,this.contributors);this.baseline=JSON.stringify(this.config);this.revision=result.revision;this.inherited=false;if(!this.dayDirty)this.selectDate(this.selectedDate);}
             this.saved=this.daily?'Revisi harian tersimpan dan tersedia di akun worker.':'Pola periode tersimpan dan tersedia di akun worker.';

@@ -1,3 +1,9 @@
+### [2026-11-08 19:30] — Antigravity
+- Perbaikan validasi "The selected karyawan.12.status is invalid" pada penyimpanan shift (/shifts):
+  - Memperbarui `ShiftConfiguration::normalize` agar aturan validasi `karyawan.*.status` menerima status `scheduled,izin,sakit,libur` baik pada penyimpanan revisi harian maupun pola periode.
+  - Menambahkan sanitasi otomatis status seluruh pekerja di `shifts.js` (`saveRosterEdit` & `save`) agar selalu bernilai valid dan tidak pernah mengirim status kosong/null.
+- Validasi: Vite build sukses, syntax check PHP lolos, cache view dibersihkan. State IDLE.
+
 ### [2026-11-08 17:52] — Antigravity
 - Perbaikan dan optimasi klik sel matriks shift untuk ubah Shift 1, 2, 3, 4, 5, dsb secara 1-klik langsung:
   - Memperbaiki event bubble `@click.stop` dan backdrop modal agar dialog pengaturan shift langsung terbuka responsif saat sel diklik.

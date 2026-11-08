@@ -24,7 +24,7 @@ class ShiftConfiguration
             'planner_version' => 'sometimes|integer|in:2',
             'session_durations' => (($input['planner_version'] ?? 1) === 2 ? 'required' : 'sometimes').'|array|size:'.(int) ($input['sessions_count'] ?? 0),
             'session_durations.*' => 'required|integer|min:1|max:1440',
-            'karyawan.*.status' => $daily ? 'sometimes|in:scheduled,izin,sakit,libur' : 'sometimes|in:scheduled',
+            'karyawan.*.status' => 'sometimes|nullable|in:scheduled,izin,sakit,libur',
             'karyawan.*.note' => 'sometimes|nullable|string|max:300'])->validate();
         $durations = $data['session_durations'] ?? array_fill(0, (int) $data['sessions_count'], (int) $data['session_duration_min']);
         if (array_sum($durations) + ($data['sessions_count'] - 1) * $data['charging_duration_min'] > 1440) {
