@@ -177,6 +177,15 @@ window.shiftsData=()=>({
             }
         }
     },
+    async quickSetShift(sessions, status='scheduled'){
+        if(!this.rosterEditCell||this.saving)return;
+        this.rosterEditCell.sessions=[...sessions];
+        this.rosterEditCell.status=status;
+        if(status!=='scheduled'){
+            this.rosterEditCell.sessions=[];
+        }
+        await this.saveRosterEdit();
+    },
     async saveRosterEdit(){
         if(!this.rosterEditCell||this.saving)return;
         const cell=this.rosterEditCell;
@@ -187,19 +196,22 @@ window.shiftsData=()=>({
                 let person=this.config.karyawan.find(p=>(cell.contributorId&&Number(p.contributor_id)===Number(cell.contributorId))||p.name===cell.personName);
                 if(!person){
                     person={
-                        contributor_id:cell.contributorId,
+                        contributor_id:cell.contributorId?Number(cell.contributorId):null,
                         name:cell.personName,
                         short:cell.personName.split(' ')[0],
                         role:'Reguler',
                         alat:'Alat 1',
                         sessions:[...cell.sessions],
-                        status:cell.status==='scheduled'?'scheduled':'scheduled',
+                        status:cell.status,
                         note:''
                     };
                     this.config.karyawan.push(person);
                 }else{
                     person.sessions=[...cell.sessions];
-                    if(cell.status==='scheduled')person.status='scheduled';
+                    person.status=cell.status;
+                    if(cell.contributorId&&!person.contributor_id){
+                        person.contributor_id=Number(cell.contributorId);
+                    }
                 }
                 const errs=problems(this.config);
                 if(errs.length){this.error=errs[0];this.saving=false;return;}
@@ -215,14 +227,14 @@ window.shiftsData=()=>({
                 this.baseline=JSON.stringify(this.config);
                 this.revision=res.revision;
                 this.inherited=false;
-                this.saved=`Pola shift rutin untuk ${cell.personName} berhasil disimpan ke seluruh periode.`;
+                this.saved=`Pola shift rutin ${cell.personName} berhasil disimpan dan aktif di akun worker.`;
             }else{
                 const targetDate=cell.date;
                 const baseDayConfig=clone(this.days[targetDate]?.config||patternForDate(this.config,targetDate));
                 let person=baseDayConfig.karyawan.find(p=>(cell.contributorId&&Number(p.contributor_id)===Number(cell.contributorId))||p.name===cell.personName);
                 if(!person){
                     person={
-                        contributor_id:cell.contributorId,
+                        contributor_id:cell.contributorId?Number(cell.contributorId):null,
                         name:cell.personName,
                         short:cell.personName.split(' ')[0],
                         role:'Reguler',
@@ -235,6 +247,9 @@ window.shiftsData=()=>({
                 }else{
                     person.sessions=[...cell.sessions];
                     person.status=cell.status;
+                    if(cell.contributorId&&!person.contributor_id){
+                        person.contributor_id=Number(cell.contributorId);
+                    }
                 }
                 const errs=problems(baseDayConfig);
                 if(errs.length){this.error=errs[0];this.saving=false;return;}
@@ -253,7 +268,7 @@ window.shiftsData=()=>({
                 if(targetDate===this.selectedDate){
                     this.selectDate(targetDate);
                 }
-                this.saved=`Shift ${cell.personName} untuk tanggal ${this.formatDateShort(targetDate)} berhasil diperbarui.`;
+                this.saved=`Shift ${cell.personName} pada ${this.formatDateShort(targetDate)} berhasil disimpan dan langsung tampil di worker.`;
             }
             this.closeRosterEdit();
         }catch(e){

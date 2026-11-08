@@ -1,3 +1,10 @@
+### [2026-11-08 17:52] — Antigravity
+- Perbaikan dan optimasi klik sel matriks shift untuk ubah Shift 1, 2, 3, 4, 5, dsb secara 1-klik langsung:
+  - Memperbaiki event bubble `@click.stop` dan backdrop modal agar dialog pengaturan shift langsung terbuka responsif saat sel diklik.
+  - Menambahkan tombol 1-Click Instant Shift (`Shift 1` s/d `5`, `Shift 1-2`, `Libur`, `Izin`, `Sakit`, `Kosongkan`) yang langsung menyimpan perubahan ke database secara otomatis.
+  - Memastikan sinkronisasi ke portal worker: data tersimpan ke `ShiftDay` (harian) atau `ShiftSetting` (periode) yang langsung dibaca oleh `ShiftSchedule` saat worker membuka `/me` dan `/me/jadwal`.
+- Validasi: Vite build sukses, syntax check PHP Blade lolos, cache view dibersihkan. State IDLE.
+
 ### [2026-11-08 17:35] — Antigravity
 - Penyesuaian urutan kalender mingguan roster (/shifts) agar selalu berurutan dari Selasa sampai Senin:
   - Memperbarui kalkulasi `rosterWeeks` dan query tanggal harian agar siklus mingguan dimulai tepat pada hari Selasa dan berakhir di hari Senin (hari libur rutin studio).

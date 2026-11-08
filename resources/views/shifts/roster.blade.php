@@ -127,7 +127,8 @@
 
                             <!-- Dynamic Date Shift Cells -->
                             <template x-for="date in activeRosterDates" :key="'cell-' + (emp.contributor_id || emp.name) + '-' + date">
-                                <td @click="openRosterEdit(emp, date)"
+                                <td @click.stop="openRosterEdit(emp, date)"
+                                    title="Klik untuk ubah shift"
                                     class="py-2.5 px-1.5 text-center cursor-pointer transition-all border-r border-slate-100/80 hover:ring-2 hover:ring-inset hover:ring-[#00B090]/50"
                                     :class="isDateDayOff(date) ? 'bg-rose-50/40 hover:bg-rose-100/50' : (date === today ? 'bg-emerald-50/20 hover:bg-emerald-50/50' : 'hover:bg-slate-100/70')">
                                     
@@ -250,7 +251,9 @@
 
     <!-- QUICK EDIT MODAL / POPOVER FOR ROSTER CELL -->
     <template x-if="rosterEditCell">
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs select-none"
+             @click="closeRosterEdit()"
+             @keydown.escape.window="closeRosterEdit()"
              x-transition:enter="transition ease-out duration-150"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
@@ -258,91 +261,165 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0">
             
-            <div @click.outside="closeRosterEdit()"
-                 class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-5 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
+            <div @click.stop
+                 class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-lg p-6 space-y-4 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
                 
                 <!-- Modal Header -->
-                <div class="flex items-start justify-between border-b border-slate-100 pb-4">
-                    <div>
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-[#009B7E] border border-emerald-100 mb-1">
-                            <span>Atur Shift Pekerja</span>
+                <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-2xl bg-emerald-100/70 text-[#007F67] flex items-center justify-center text-xs font-black shrink-0" x-text="rosterEditCell.emp.initials"></span>
+                        <div>
+                            <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight" x-text="rosterEditCell.personName"></h3>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-xs text-slate-500 font-mono" x-text="dateLabel(rosterEditCell.date)"></span>
+                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                <span class="text-[11px] font-bold" 
+                                      :class="rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.length ? 'text-[#009B7E]' : 'text-slate-500'" 
+                                      x-text="rosterEditCell.status === 'scheduled' ? (rosterEditCell.sessions.length ? 'Saat ini: Shift ' + rosterEditCell.sessions.join('-') : 'Belum ada shift') : 'Status: ' + rosterEditCell.status"></span>
+                            </div>
                         </div>
-                        <h3 class="text-lg font-black text-slate-900" x-text="rosterEditCell.personName"></h3>
-                        <p class="text-xs text-slate-500 font-mono mt-0.5" x-text="dateLabel(rosterEditCell.date)"></p>
                     </div>
-                    <button type="button" @click="closeRosterEdit()" class="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                    <button type="button" @click="closeRosterEdit()" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
 
-                <!-- Section: Shift Buttons (1 to 5) -->
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-700">Pilih Shift Kerja (Bisa Lebih dari 1):</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <template x-for="s in shifts" :key="'modal-s-' + s.id">
-                            <button type="button" 
-                                    @click="toggleRosterEditSession(s.id)"
-                                    class="p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-1 shadow-2xs"
-                                    :class="rosterEditCell.sessions.includes(s.id) ? 'bg-emerald-50 border-[#00B090] text-emerald-900 font-bold ring-2 ring-[#00B090]/20' : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100 text-slate-700'">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-black" x-text="'Shift ' + s.id"></span>
-                                    <span x-show="rosterEditCell.sessions.includes(s.id)" class="text-[#00B090] font-black text-xs">✓</span>
-                                </div>
-                                <span class="text-[10px] font-mono text-slate-500" x-text="s.start + '–' + s.end"></span>
-                            </button>
-                        </template>
+                <!-- Scope Switcher: Hanya Hari Ini vs Sepanjang Periode -->
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Terapkan Perubahan Untuk:</label>
+                    <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/60 text-xs font-bold">
+                        <button type="button" 
+                                @click="rosterEditCell.applyToAll = false" 
+                                :class="!rosterEditCell.applyToAll ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                                class="py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full" :class="!rosterEditCell.applyToAll ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                            <span x-text="'Hanya Tanggal Ini (' + formatDateHeader(rosterEditCell.date) + ')'"></span>
+                        </button>
+                        <button type="button" 
+                                @click="rosterEditCell.applyToAll = true" 
+                                :class="rosterEditCell.applyToAll ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                                class="py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full" :class="rosterEditCell.applyToAll ? 'bg-indigo-600' : 'bg-slate-300'"></span>
+                            <span>Sepanjang Periode (Rutin)</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Section: Status Khusus (Libur / Izin / Sakit) -->
-                <div class="space-y-2 pt-2 border-t border-slate-100">
-                    <label class="block text-xs font-bold text-slate-700">Atau Tetapkan Status Khusus:</label>
-                    <div class="grid grid-cols-3 gap-2">
+                <!-- 1-Click Shift Selector (1, 2, 3, 4, 5) -->
+                <div class="space-y-2 pt-1">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-black text-slate-800">Klik 1x untuk Langsung Ubah Shift:</label>
+                        <span x-show="saving" class="text-xs font-bold text-[#009B7E] flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <span>Menyimpan...</span>
+                        </span>
+                    </div>
+
+                    <!-- Single Shifts 1 to 5 Buttons -->
+                    <div class="grid grid-cols-5 gap-2">
+                        <template x-for="s in shifts" :key="'quick-btn-' + s.id">
+                            <button type="button" 
+                                    @click="quickSetShift([s.id])" 
+                                    :disabled="saving"
+                                    class="p-2.5 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-1 hover:scale-105 active:scale-95 shadow-2xs group"
+                                    :class="{
+                                        'bg-blue-50 border-blue-400 text-blue-900 ring-2 ring-blue-400/30 font-black': rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.length === 1 && rosterEditCell.sessions[0] === s.id && s.id === 1,
+                                        'bg-teal-50 border-teal-400 text-teal-900 ring-2 ring-teal-400/30 font-black': rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.length === 1 && rosterEditCell.sessions[0] === s.id && s.id === 2,
+                                        'bg-emerald-50 border-emerald-400 text-emerald-950 ring-2 ring-emerald-400/30 font-black': rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.length === 1 && rosterEditCell.sessions[0] === s.id && s.id === 3,
+                                        'bg-amber-50 border-amber-400 text-amber-900 ring-2 ring-amber-400/30 font-black': rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.length === 1 && rosterEditCell.sessions[0] === s.id && s.id === 4,
+                                        'bg-purple-50 border-purple-400 text-purple-900 ring-2 ring-purple-400/30 font-black': rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.length === 1 && rosterEditCell.sessions[0] === s.id && s.id === 5,
+                                        'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300': !(rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.length === 1 && rosterEditCell.sessions[0] === s.id)
+                                    }">
+                                <span class="text-sm font-black" x-text="'Shift ' + s.id"></span>
+                                <span class="text-[9px] font-mono opacity-75" x-text="s.start"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Common Combination & Status Options -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                         <button type="button" 
-                                @click="setRosterEditStatus('libur')"
-                                class="py-2 px-3 rounded-xl border text-xs font-bold transition text-center"
-                                :class="rosterEditCell.status === 'libur' ? 'bg-rose-500 border-rose-600 text-white shadow-2xs' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'">
+                                @click="quickSetShift([1, 2])"
+                                :disabled="saving"
+                                class="p-2.5 rounded-xl border text-xs font-black transition text-center hover:scale-105 active:scale-95 shadow-2xs"
+                                :class="rosterEditCell.status === 'scheduled' && rosterEditCell.sessions.join('-') === '1-2' ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300' : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'">
+                            Shift 1-2
+                        </button>
+                        
+                        <button type="button" 
+                                @click="quickSetShift([], 'libur')"
+                                :disabled="saving"
+                                class="p-2.5 rounded-xl border text-xs font-black transition text-center hover:scale-105 active:scale-95 shadow-2xs"
+                                :class="rosterEditCell.status === 'libur' ? 'bg-rose-600 text-white border-rose-700 ring-2 ring-rose-300' : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'">
                             Libur
                         </button>
+
                         <button type="button" 
-                                @click="setRosterEditStatus('izin')"
-                                class="py-2 px-3 rounded-xl border text-xs font-bold transition text-center"
-                                :class="rosterEditCell.status === 'izin' ? 'bg-amber-500 border-amber-600 text-white shadow-2xs' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'">
+                                @click="quickSetShift([], 'izin')"
+                                :disabled="saving"
+                                class="p-2.5 rounded-xl border text-xs font-black transition text-center hover:scale-105 active:scale-95 shadow-2xs"
+                                :class="rosterEditCell.status === 'izin' ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100'">
                             Izin
                         </button>
+
                         <button type="button" 
-                                @click="setRosterEditStatus('sakit')"
-                                class="py-2 px-3 rounded-xl border text-xs font-bold transition text-center"
-                                :class="rosterEditCell.status === 'sakit' ? 'bg-purple-600 border-purple-700 text-white shadow-2xs' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'">
+                                @click="quickSetShift([], 'sakit')"
+                                :disabled="saving"
+                                class="p-2.5 rounded-xl border text-xs font-black transition text-center hover:scale-105 active:scale-95 shadow-2xs"
+                                :class="rosterEditCell.status === 'sakit' ? 'bg-purple-600 text-white border-purple-700 ring-2 ring-purple-300' : 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'">
                             Sakit
                         </button>
                     </div>
                 </div>
 
-                <!-- Section: Apply Scope Checkbox -->
-                <div class="pt-2 border-t border-slate-100">
-                    <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 cursor-pointer hover:bg-emerald-50 transition">
-                        <input type="checkbox" x-model="rosterEditCell.applyToAll" class="mt-0.5 rounded text-[#00B090] focus:ring-[#00B090]">
-                        <div class="text-xs">
-                            <span class="font-bold text-slate-900 block">Terapkan ke Semua Hari Aktif</span>
-                            <span class="text-slate-500 block text-[11px] mt-0.5">Jadikan shift ini sebagai jadwal rutin sepanjang periode (kecuali hari libur).</span>
+                <!-- Custom Multi-Shift Accordion for Advanced Combinations -->
+                <details class="group pt-2 border-t border-slate-100">
+                    <summary class="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center justify-between py-1">
+                        <span>Atur kombinasi shift custom manual...</span>
+                        <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="mt-2 space-y-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                        <div class="grid grid-cols-5 gap-1.5">
+                            <template x-for="s in shifts" :key="'custom-cb-' + s.id">
+                                <label class="p-2 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center gap-1"
+                                       :class="rosterEditCell.sessions.includes(s.id) ? 'bg-emerald-50 border-[#00B090] text-emerald-900 font-bold' : 'bg-white border-slate-200 text-slate-600'">
+                                    <input type="checkbox" :checked="rosterEditCell.sessions.includes(s.id)" @change="toggleRosterEditSession(s.id)" class="sr-only">
+                                    <span class="text-xs font-black" x-text="'S' + s.id"></span>
+                                    <span x-show="rosterEditCell.sessions.includes(s.id)" class="text-[10px] text-[#00B090] font-black">✓ Terpilih</span>
+                                </label>
+                            </template>
                         </div>
-                    </label>
-                </div>
+                        <div class="flex items-center justify-end">
+                            <button type="button" 
+                                    @click="saveRosterEdit()" 
+                                    :disabled="saving"
+                                    class="px-4 py-2 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5">
+                                <span x-text="saving ? 'Menyimpan...' : 'Simpan Kombinasi Manual'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </details>
 
-                <!-- Modal Actions -->
-                <div class="flex items-center justify-end gap-2 pt-2">
+                <!-- Feedback Error if any -->
+                <template x-if="error">
+                    <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 font-semibold flex items-center justify-between">
+                        <span x-text="error"></span>
+                        <button type="button" @click="error=''" class="text-rose-500 hover:text-rose-800 font-bold">×</button>
+                    </div>
+                </template>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
                     <button type="button" 
-                            @click="closeRosterEdit()" 
-                            class="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition">
-                        Batal
+                            @click="quickSetShift([], 'scheduled')" 
+                            :disabled="saving"
+                            class="text-xs font-semibold text-slate-400 hover:text-rose-600 underline transition">
+                        Kosongkan Jadwal (-)
                     </button>
                     <button type="button" 
-                            @click="saveRosterEdit()" 
-                            :disabled="saving"
-                            class="px-5 py-2.5 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white text-xs font-extrabold transition shadow-sm flex items-center gap-2 disabled:opacity-50">
-                        <svg x-show="saving" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <span x-text="saving ? 'Menyimpan...' : 'Simpan Shift'"></span>
+                            @click="closeRosterEdit()" 
+                            class="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition">
+                        Tutup
                     </button>
                 </div>
             </div>
