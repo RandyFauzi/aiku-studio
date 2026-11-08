@@ -1,3 +1,7 @@
+### [2026-11-08] — Codex: optimasi Atlas berdasarkan benchmark produksi
+- Benchmark 87 akun: per akun 170 halaman / 2.596 rekaman vs global 652 halaman / 16.288 rekaman; pageSize=100 diabaikan Atlas (tetap 25). Pertahankan per akun, proses maksimal 50 langkah dengan budget 25 detik per tick (sebelumnya 3); discovery peserta sekali per run, progres akun aktual, validasi email sumber. Semua akun aktif/nonaktif ikut untuk Atlas dan 1618; tanpa CSV Atlas.
+- Validasi: 167 tes / 1.132 assertions lulus, Blade/diff dan Graphify lulus. Deploy c80d0c6; satu tick produksi 656 rekaman dalam 25,47 detik. Antrean dilanjutkan hingga selesai: 87 akun, 2.596 Atlas, nol warning; DB 2.902 → 3.202; lima rekaman tanggal 24 Oktober untuk dua akun contoh kini ada. Endpoint sementara menghapus diri dan metadata benchmark privat dihapus.
+
 ### [2026-11-08] — Codex: GIF progres bot
 - Ganti SVG robot berjalan dengan Loading BOT.gif milik pengguna (loop native tanpa batas), hanya dimuat selama sinkronisasi aktif; hapus CSS animasi robot lama.
 - Validasi: Vite build, Blade view cache, diff check dan preview browser komponen lulus. Perubahan kosmetik; tanpa PHPUnit/rebuild Graphify.
