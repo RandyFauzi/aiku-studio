@@ -1,3 +1,9 @@
+### [2026-11-08 12:45] — Antigravity
+- Menambahkan metrik Total Jam yang diseleksi pada task list rekaman (/recordings):
+  - Menambahkan badge Total Durasi (`TOTAL: X.XX jam (XX.Xm)`) berlatar sky blue dengan icon durasi pada Floating Action Dock di bagian bawah halaman, bersanding dengan rincian Approved, Reject, dan Pending.
+  - Menambahkan counter total jam pada chip indikator seleksi di atas grid rekaman.
+- Validasi: Blade view cache cleared, Vite build PASS. State IDLE.
+
 ### [2026-11-08 12:21] — Antigravity
 - Pengecualian akun admin dari skor evaluasi persentase produksi dan distribusi kinerja tim (/contributors):
   - `ContributorPerformanceService`: akun role `admin` kini otomatis mendapat grade `Manajemen` (badge ungu netral), skor null, dan deskripsi evaluasi operasional. Dikecualikan dari penghitungan distribusi status tim studio (`grade_distribution`) agar akun admin tidak masuk ke status `Perlu Evaluasi` atau menurunkan rata-rata approval % tim.

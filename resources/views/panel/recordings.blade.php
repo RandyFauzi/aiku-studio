@@ -794,7 +794,7 @@
                                 <span>Pilih Semua di Halaman Ini</span>
                             </label>
                             <span x-show="selectedIds.length > 0" class="text-xs px-2.5 py-0.5 rounded-full bg-[#00B090]/15 text-[#008970] font-extrabold shadow-2xs">
-                                <span x-text="selectedIds.length"></span> terpilih
+                                <span x-text="selectedIds.length"></span> terpilih (<span x-text="selectedStats.totalHours + ' jam'"></span>)
                             </span>
                         </div>
                         <div class="text-xs text-slate-500 font-medium">
@@ -1063,8 +1063,17 @@
             <span class="font-medium text-slate-300 whitespace-nowrap">item terpilih</span>
         </div>
 
-        <!-- Live Selected Duration Metrics (Approved & Rejected Hours) -->
+        <!-- Live Selected Duration Metrics (Total, Approved, Rejected & Pending Hours) -->
         <div class="flex min-w-0 flex-wrap items-center gap-2 border-r border-slate-700 pr-3">
+            <!-- Total Hours Badge -->
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/50 text-sky-200 font-mono shadow-xs" 
+                 title="Total Seluruh Durasi yang Dipilih">
+                <svg class="w-3.5 h-3.5 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-[10px] text-sky-300 font-bold uppercase tracking-wider hidden sm:inline">Total:</span>
+                <span class="font-black text-xs text-white" x-text="selectedStats.totalHours + ' jam'"></span>
+                <span class="text-[10px] text-sky-300 font-normal" x-text="'(' + selectedStats.totalMin.toFixed(1) + 'm)'"></span>
+            </div>
+
             <!-- Approved Hours Badge -->
             <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-mono shadow-xs" 
                  title="Total Durasi Approved yang Dipilih">
