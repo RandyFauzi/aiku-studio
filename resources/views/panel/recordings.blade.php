@@ -19,6 +19,16 @@
     
     <style>
         [x-cloak] { display: none !important; }
+        .tiket-datepicker-popover {
+            width: 320px !important;
+            max-width: calc(100vw - 2rem) !important;
+        }
+        @media (min-width: 768px) {
+            .tiket-datepicker-popover {
+                width: 640px !important;
+                max-width: 640px !important;
+            }
+        }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -519,7 +529,7 @@
                              x-transition:leave="transition ease-in duration-100"
                              x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                              x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-                             class="absolute top-full left-0 sm:left-auto sm:right-0 md:left-0 md:right-auto mt-2 z-50 bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-5 w-[330px] sm:w-[350px] md:w-[670px] max-w-[calc(100vw-2rem)] select-none"
+                             class="tiket-datepicker-popover absolute top-full left-0 sm:left-auto sm:right-0 md:left-0 md:right-auto mt-2 z-50 bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-5 select-none"
                              x-cloak>
                             
                             <!-- Header Modal: Judul & Tombol Tutup -->
@@ -537,20 +547,20 @@
 
                             <!-- Presets Quick Bar -->
                             <div class="flex items-center gap-1.5 flex-wrap pb-3 mb-4 border-b border-slate-100">
-                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Pilihan Cepat:</span>
-                                <button type="button" @click="selectDatePreset('today')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'today' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Hari Ini</button>
-                                <button type="button" @click="selectDatePreset('yesterday')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'yesterday' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Kemarin</button>
-                                <button type="button" @click="selectDatePreset('last7')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'last7' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">7 Hari Terakhir</button>
-                                <button type="button" @click="selectDatePreset('last30')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'last30' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">30 Hari Terakhir</button>
-                                <button type="button" @click="selectDatePreset('thisMonth')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition" :class="filters.datePreset === 'thisMonth' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Bulan Ini</button>
-                                <button type="button" @click="clearDateFilter(); datePickerOpen = false" class="ml-auto px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">Semua (Reset)</button>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 whitespace-nowrap">Pilihan Cepat:</span>
+                                <button type="button" @click="selectDatePreset('today')" class="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition" :class="filters.datePreset === 'today' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Hari Ini</button>
+                                <button type="button" @click="selectDatePreset('yesterday')" class="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition" :class="filters.datePreset === 'yesterday' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Kemarin</button>
+                                <button type="button" @click="selectDatePreset('last7')" class="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition" :class="filters.datePreset === 'last7' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">7 Hari Terakhir</button>
+                                <button type="button" @click="selectDatePreset('last30')" class="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition" :class="filters.datePreset === 'last30' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">30 Hari Terakhir</button>
+                                <button type="button" @click="selectDatePreset('thisMonth')" class="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition" :class="filters.datePreset === 'thisMonth' ? 'bg-[#00B090] text-white shadow-2xs font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Bulan Ini</button>
+                                <button type="button" @click="clearDateFilter(); datePickerOpen = false" class="ml-auto px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">Semua (Reset)</button>
                             </div>
 
                             <!-- Dual-Month Calendars Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Month 1 (Current / Left) -->
                                 <template x-if="datePickerMonth1">
-                                    <div>
+                                    <div class="w-full max-w-[290px] mx-auto min-w-[270px]">
                                         <!-- Header Month 1 -->
                                         <div class="flex items-center justify-between mb-3 px-1">
                                             <button type="button" 
@@ -628,7 +638,7 @@
 
                                 <!-- Month 2 (Next / Right, Desktop only) -->
                                 <template x-if="datePickerMonth2">
-                                    <div class="hidden md:block">
+                                    <div class="hidden md:block w-full max-w-[290px] mx-auto min-w-[270px]">
                                         <!-- Header Month 2 -->
                                         <div class="flex items-center justify-between mb-3 px-1">
                                             <div class="w-7"></div>

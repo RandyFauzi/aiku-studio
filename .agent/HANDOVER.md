@@ -1,3 +1,9 @@
+### [2026-11-08 15:55] — Antigravity
+- Perbaikan layout popover Date Range Picker agar tidak gepeng/menumpuk:
+  - Menambahkan styling eksplisit `.tiket-datepicker-popover` (lebar 640px di desktop dan 320px di mobile) dengan `min-width: 270px` per bulan agar 2 bulan dan angka tanggal tidak menyusut atau bertumpuk.
+  - Memastikan tombol pilihan cepat (presets) memiliki `whitespace-nowrap shrink-0` agar tetap rapi pada satu baris.
+  - Menjalankan `npm run build` untuk kompilasi manifest dan stylesheet Vite. State IDLE.
+
 ### [2026-11-08 15:50] — Antigravity
 - Implementasi Date Range Picker custom ala Tiket.com menggunakan Alpine.js di halaman rekaman (/recordings):
   - Menggantikan dua `<input type="date">` native browser yang kaku dengan 1 tombol dropdown kompak + popover kalender interaktif.
