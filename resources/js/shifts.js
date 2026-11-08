@@ -20,7 +20,11 @@ window.shiftsData=()=>({
     },
     async loadPeriod(id){
         const result=await this.request('/api/shifts/config?periodId='+encodeURIComponent(id));
-        const dates=await this.request('/api/shifts/days?startDate='+result.period.startDate+'&endDate='+result.period.endDate);
+        const startTue=new Date(result.period.startDate+'T12:00:00Z');
+        startTue.setUTCDate(startTue.getUTCDate()-((startTue.getUTCDay()-2+7)%7));
+        const endMon=new Date(result.period.endDate+'T12:00:00Z');
+        endMon.setUTCDate(endMon.getUTCDate()+((1-endMon.getUTCDay()+7)%7));
+        const dates=await this.request('/api/shifts/days?startDate='+startTue.toISOString().slice(0,10)+'&endDate='+endMon.toISOString().slice(0,10));
         this.period=result.period;this.config=prepareConfig(result.config,this.contributors);this.revision=result.revision;this.inherited=result.inherited;
         this.baseline=JSON.stringify(this.config);this.days=dates.days||{};Object.values(this.days).forEach(d=>d.config=prepareConfig(d.config,this.contributors));
         this.chosenShift=1;this.selectDate(this.today>=this.period.startDate&&this.today<=this.period.endDate?this.today:this.period.startDate);
@@ -34,10 +38,21 @@ window.shiftsData=()=>({
     get conflicts(){return problems(this.activeConfig);},get shifts(){return sessionRows(this.activeConfig);},
     get dates(){return this.period?dateRange(this.period.startDate,this.period.endDate):[];},
     get rosterWeeks(){
-        if(!this.dates.length)return [];
-        const chunks=[];
-        for(let i=0;i<this.dates.length;i+=7){chunks.push(this.dates.slice(i,i+7));}
-        return chunks;
+        if(!this.period)return [];
+        const startTue=new Date(this.period.startDate+'T12:00:00Z');
+        startTue.setUTCDate(startTue.getUTCDate()-((startTue.getUTCDay()-2+7)%7));
+        const endLimit=new Date(this.period.endDate+'T12:00:00Z');
+        const weeks=[];
+        const cur=new Date(startTue);
+        while(cur<=endLimit){
+            const week=[];
+            for(let j=0;j<7;j++){
+                week.push(cur.toISOString().slice(0,10));
+                cur.setUTCDate(cur.getUTCDate()+1);
+            }
+            weeks.push(week);
+        }
+        return weeks;
     },
     get activeWeekDates(){
         const w=this.rosterWeeks;
@@ -60,8 +75,7 @@ window.shiftsData=()=>({
     setRosterWeekToToday(){
         const w=this.rosterWeeks;
         if(!w.length)return;
-        const target=(this.today>=this.dates[0]&&this.today<=this.dates[this.dates.length-1])?this.today:this.dates[0];
-        const idx=w.findIndex(chunk=>chunk.includes(target));
+        const idx=w.findIndex(chunk=>chunk.includes(this.today));
         this.rosterWeekIndex=idx>=0?idx:0;
     },
     get rosterEmployees(){

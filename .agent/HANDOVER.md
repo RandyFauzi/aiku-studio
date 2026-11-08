@@ -1,3 +1,9 @@
+### [2026-11-08 17:35] — Antigravity
+- Penyesuaian urutan kalender mingguan roster (/shifts) agar selalu berurutan dari Selasa sampai Senin:
+  - Memperbarui kalkulasi `rosterWeeks` dan query tanggal harian agar siklus mingguan dimulai tepat pada hari Selasa dan berakhir di hari Senin (hari libur rutin studio).
+  - Kolom jadwal di mode perminggu kini konsisten: Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu, hingga Senin (Libur).
+- Validasi: Vite build sukses, manifest asset terbarui. State IDLE.
+
 ### [2026-11-08 16:20] — Antigravity
 - Implementasi Matriks Kalender Shift Roster inovatif di halaman Pengaturan Shift (/shifts) berbasis format spreadsheet pengguna:
   - Menyediakan tampilan Matriks Roster interaktif (Nama Kontributor vs Tanggal) dengan opsi mode Perminggu (7 hari) & Perbulan (siklus 22–21).
