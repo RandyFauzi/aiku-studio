@@ -1,3 +1,7 @@
+### [2026-11-08] — Codex: verifikasi produksi
+- Deploy server ke 6051601; cron per menit terbukti memproses antrean. Sesi Atlas diperbarui privat; sinkronisasi selesai 2.296 Atlas + 605 1618. Verifikasi ulang seluruh 71 akun aktif: 2.296 ID sumber ditemukan di DB, nol selisih jumlah/nol ID hilang. Auto-sync tetap mengikuti pengaturan pengguna (nonaktif).
+- Dua contoh akun pada screenshot (hajimaryam77 dan hajibiru77) ditemukan di Atlas tetapi tidak terdaftar pada StudioAccount maupun DeviceAccount produksi; karena itu belum termasuk cakupan 71 akun. Belum menambah akun atau mengklaim riwayat kedua akun lengkap. Endpoint administrasi sementara menghapus diri.
+
 ### [2026-11-08] — Codex
 - Satukan progres dan jadwal Atlas/1618 melalui RecordingSync + cron; panel menampilkan hasil per sumber, retry, dan error HTTP. Atlas memindai seluruh halaman, melaporkan akun/baris terlewat, dan mempertahankan data manual.
 - Validasi: full suite 164 lulus; 31 tes terarah lulus setelah koreksi terakhir; Vite/Blade/JS syntax/preview kartu mobile lulus; Graphify diperbarui. Belum memverifikasi data atau cron produksi.
