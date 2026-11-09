@@ -15,7 +15,8 @@ class RecordingController extends Controller
     {
         $request->validate(['page' => 'sometimes|integer|min:1', 'limit' => 'sometimes|integer|min:1|max:10000',
             'startDate' => 'nullable|date_format:Y-m-d', 'endDate' => 'nullable|date_format:Y-m-d',
-            'email' => 'nullable|string|max:255', 'worker' => 'nullable|string|max:255', 'status' => 'nullable|string|max:64', 'search' => 'nullable|string|max:255']);
+            'email' => 'nullable|string|max:255', 'worker' => 'nullable|string|max:255', 'status' => 'nullable|string|max:64',
+            'source' => 'nullable|string|max:64', 'search' => 'nullable|string|max:255']);
         $query = StudioRecording::query();
         if ($request->filled('email') && $request->email !== 'all') {
             $query->where('participant_email', strtolower(trim($request->email)));
@@ -27,6 +28,13 @@ class RecordingController extends Controller
         }
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('manual_payment_status', $request->status);
+        }
+        if ($request->filled('source') && $request->source !== 'all') {
+            if ($request->source === 'atlas') {
+                $query->whereNotNull('atlas_synced_at');
+            } elseif ($request->source === '1618' || $request->source === 'robotics') {
+                $query->whereNotNull('robotics_1618_synced_at');
+            }
         }
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {

@@ -46,4 +46,37 @@ class RecordingSourcesTest extends TestCase
         $row = StudioRecording::create(['record_id' => 'legacy', 'participant_email' => 'studio@example.test', 'recorded_at' => '2026-10-24 06:30:00']);
         $this->assertSame([], $row->data_sources);
     }
+
+    public function test_recordings_can_be_filtered_by_source(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        StudioRecording::create([
+            'record_id' => 'rec-atlas',
+            'participant_email' => 'studio@example.test',
+            'recorded_at' => '2026-10-24 06:30:00',
+            'atlas_synced_at' => now(),
+        ]);
+        StudioRecording::create([
+            'record_id' => 'rec-1618',
+            'participant_email' => 'studio@example.test',
+            'recorded_at' => '2026-10-24 07:00:00',
+            'robotics_1618_synced_at' => now(),
+        ]);
+
+        // Filter source: atlas
+        $resAtlas = $this->actingAs($admin)->getJson('/api/studio-recordings?source=atlas');
+        $resAtlas->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('recordings.0.record_id', 'rec-atlas');
+
+        // Filter source: 1618
+        $res1618 = $this->actingAs($admin)->getJson('/api/studio-recordings?source=1618');
+        $res1618->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('recordings.0.record_id', 'rec-1618');
+
+        // Filter source: all
+        $resAll = $this->actingAs($admin)->getJson('/api/studio-recordings?source=all');
+        $resAll->assertOk()->assertJsonPath('total', 2);
+    }
 }

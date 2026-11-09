@@ -765,6 +765,15 @@
                         <option value="pending">Pending</option>
                     </select>
 
+                    <!-- Filter Sumber Data (Atlas / 1618) -->
+                    <select x-model="filters.source" @change="applyFilters(1)"
+                            class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-semibold py-2 px-3 rounded-xl focus:outline-none focus:border-[#00B090] cursor-pointer"
+                            :class="filters.source !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
+                        <option value="all">Semua Sumber</option>
+                        <option value="atlas">Atlas</option>
+                        <option value="1618">1618</option>
+                    </select>
+
                     <!-- View Toggle: List / Grid -->
                     <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shadow-2xs">
                         <button type="button"
@@ -1778,6 +1787,7 @@
                     email: 'all',
                     worker: 'all',
                     status: 'all',
+                    source: 'all',
                     search: '',
                     datePreset: 'all',
                     startDate: '',
@@ -2353,6 +2363,7 @@
                             status: this.filters.status,
                             search: this.filters.search
                         });
+                        if (this.filters.source && this.filters.source !== 'all') params.append('source', this.filters.source);
                         if (this.filters.startDate) params.append('startDate', this.filters.startDate);
                         if (this.filters.endDate) params.append('endDate', this.filters.endDate);
 
@@ -2386,6 +2397,7 @@
                         email: 'all',
                         worker: 'all',
                         status: 'all',
+                        source: 'all',
                         search: '',
                         datePreset: 'all',
                         startDate: '',

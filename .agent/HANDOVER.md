@@ -1,3 +1,9 @@
+### [2026-11-09 19:18] — Antigravity
+- Menambahkan filter dropdown Sumber Data (Atlas & 1618) pada halaman rekaman (/recordings):
+  - Backend `RecordingController::index`: Menambahkan filter query `source` ('atlas' -> whereNotNull('atlas_synced_at'), '1618' -> whereNotNull('robotics_1618_synced_at')). Agregat statistik durasi dan status QC otomatis mengikuti filter.
+  - Frontend `recordings.blade.php`: Menambahkan dropdown Sumber Data (Semua Sumber, Atlas, 1618) pada toolbar rekaman, terikat ke state `filters.source`, `applyFilters(1)`, `resetFilters()`, dan `fetchRecordings()`.
+- Validasi: Test `RecordingSourcesTest` (3 tests, 18 assertions) sukses, `npm run build` sukses, `view:clear` sukses. State IDLE.
+
 ### [2026-11-09] — Codex: label sumber rekaman
 - Tambahkan timestamp provenance terpisah Atlas/1618 dan data_sources pada API; tampilkan badge hijau Dashboard Atlas / biru 1618 Robotics di list dan grid. Rekaman lintas sumber mendukung dua badge; data lama tidak ditebak dan penugasan/catatan/status bayar tetap dipertahankan.
 - Validasi: 169 tes lulus (PHPUnit langsung; wrapper artisan runtime lama tertahan), Vite/Blade/diff, preview empat kondisi badge, Graphify/skema terisolasi diperbarui. Deploy 9f9ffb5 + migrasi sukses; sesi Atlas diperbarui dengan izin sebelumnya; sinkronisasi 87 akun selesai tanpa warning: 2.596 Atlas + 675 1618, unknown=0 dari 3.271 rekaman. Endpoint administrasi sementara menghapus diri.
