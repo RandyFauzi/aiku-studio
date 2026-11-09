@@ -1,3 +1,7 @@
+### [2026-11-09] — Codex: label sumber rekaman
+- Tambahkan timestamp provenance terpisah Atlas/1618 dan data_sources pada API; tampilkan badge hijau Dashboard Atlas / biru 1618 Robotics di list dan grid. Rekaman lintas sumber mendukung dua badge; data lama tidak ditebak dan penugasan/catatan/status bayar tetap dipertahankan.
+- Validasi: 169 tes lulus (PHPUnit langsung; wrapper artisan runtime lama tertahan), Vite/Blade/diff, preview empat kondisi badge, Graphify/skema terisolasi diperbarui. Deploy 9f9ffb5 + migrasi sukses; sesi Atlas diperbarui dengan izin sebelumnya; sinkronisasi 87 akun selesai tanpa warning: 2.596 Atlas + 675 1618, unknown=0 dari 3.271 rekaman. Endpoint administrasi sementara menghapus diri.
+
 ### [2026-11-08 19:35] — Antigravity
 - Sinkronisasi opsi "Sepanjang Periode (Rutin)" ke seluruh hari aktif di periode (/shifts):
   - Memperbarui `SettingController::saveShifts` agar saat menyimpan pola periode dengan `sync_person`, seluruh rekaman harian (`ShiftDay`) dalam periode tersebut otomatis diperbarui untuk pekerja yang dipilih (kecuali hari libur yang tetap Libur).
