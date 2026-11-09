@@ -912,6 +912,14 @@
                                     <td class="py-2.5 px-2.5">
                                         <div class="font-bold text-slate-900 leading-tight" x-text="getAccountName(rec.participant_email)"></div>
                                         <div class="text-[11px] text-slate-500 font-mono truncate max-w-[190px]" :title="rec.participant_email + ' (' + rec.record_id + ')'" x-text="rec.participant_email"></div>
+                                        <div class="flex flex-wrap gap-1 mt-1" aria-label="Sumber rekaman">
+                                            <template x-for="source in (rec.data_sources || [])" :key="source">
+                                                <span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold"
+                                                      :class="source === 'atlas' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200'"
+                                                      x-text="source === 'atlas' ? 'Dashboard Atlas' : '1618 Robotics'"></span>
+                                            </template>
+                                            <span x-show="!(rec.data_sources || []).length" class="text-[10px] text-slate-400">Sumber belum diverifikasi</span>
+                                        </div>
                                     </td>
 
                                     <!-- Nama Tugas -->
@@ -1080,6 +1088,15 @@
                                             :title="rec.task_title"
                                             x-text="rec.task_title || 'Tugas Tanpa Judul'"></h4>
                                     </div>
+
+                                    <div class="flex flex-wrap gap-1 mt-1" aria-label="Sumber rekaman">
+                                            <template x-for="source in (rec.data_sources || [])" :key="source">
+                                                <span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold"
+                                                      :class="source === 'atlas' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200'"
+                                                      x-text="source === 'atlas' ? 'Dashboard Atlas' : '1618 Robotics'"></span>
+                                            </template>
+                                            <span x-show="!(rec.data_sources || []).length" class="text-[10px] text-slate-400">Sumber belum diverifikasi</span>
+                                        </div>
 
                                     <!-- Account & Timestamp Box -->
                                     <div class="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 mb-3 space-y-1.5">

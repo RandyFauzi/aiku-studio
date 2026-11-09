@@ -354,6 +354,7 @@ class Robotics1618Sync
                 'reviewed_utc' => $formattedReviewed,
                 'reconciliation' => $reconciliation ?: null,
                 'last_synced_at' => now(),
+                'robotics_1618_synced_at' => now(),
             ];
 
             // Ingest into StudioRecording preserving manual assignments and notes

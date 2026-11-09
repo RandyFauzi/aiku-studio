@@ -199,7 +199,7 @@ class AtlasSync
             'billable_min' => round($billable * 60, 2), 'rejected_min' => round($rejected * 60, 2),
             'pending_min' => round((float) ($r['tilePendingHours'] ?? 0) * 60, 2), 'deferred_min' => round((float) ($r['tileDeferredHours'] ?? 0) * 60, 2),
             'reviewed_utc' => $reviewed,
-            'reconciliation' => $r['reconciliationStatus'] ?? '', 'last_synced_at' => now()];
+            'reconciliation' => $r['reconciliationStatus'] ?? '', 'atlas_synced_at' => now(), 'last_synced_at' => now()];
         // Only source-controlled fields change. Manual assignments, notes and payment statuses survive every refresh.
         StudioRecording::updateOrCreate(['record_id' => $id], $values);
     }
