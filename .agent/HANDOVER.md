@@ -1,3 +1,9 @@
+### [2026-11-10 21:34] — Antigravity
+- Penyesuaian pilihan task laporan kerja agar menggunakan teks asli bahasa Inggris tanpa auto-translate:
+  - `task-picker.blade.php`: Chip pilihan dan checklist kini menampilkan `task.title` / `title` asli bahasa Inggris. Label peringatan padanan otomatis serta panel ubah bahasa Indonesia dinonaktifkan.
+  - `report-task-picker.js`: `initialLabel` dan `labelFor` langsung mengembalikan teks asli (`title`), menghapus auto-replace regex per kata.
+- Validasi: PHPUnit `ReportTasksTest` (9 tests, 70 assertions) lulus, Vite build sukses (`public/build`), cache view dibersihkan. Tidak memerlukan migrasi database (`php artisan migrate`). State IDLE.
+
 ### [2026-11-10] — Codex: cache dashboard
 - Tambahkan versi filemtime pada URL assets/app.js di dashboard agar browser mengambil getter persentase/rank terbaru, bukan salinan cache lama. Nilai sharePercentage tersedia pada kode sumber.
 - Validasi: Blade cache dan diff check lulus; tidak mengubah perhitungan atau aset JS sehingga tanpa build/full suite.
