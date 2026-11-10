@@ -372,11 +372,11 @@
                 </div>
 
                 <!-- 2-COLUMN ANALYTICS: Visual Chart (7 COLS) vs Leaderboard (5 COLS) -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-2">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start pt-2">
                     
                     <!-- LEFT COLUMN (7 COLS): Visual Horizontal Productivity Bar Chart -->
-                    <div class="lg:col-span-7 bg-slate-50/70 border border-slate-200/70 rounded-2xl p-5 sm:p-6 space-y-5">
-                        <div class="flex items-center justify-between border-b border-slate-200/70 pb-3">
+                    <div class="xl:col-span-7 min-w-0 bg-slate-50/70 border border-slate-200/70 rounded-2xl p-5 sm:p-6 space-y-5">
+                        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/70 pb-3">
                             <div>
                                 <h3 class="text-sm font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
                                     <svg class="w-4 h-4 text-[#009B7E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -401,24 +401,24 @@
                             <template x-for="(worker, idx) in topContributors" :key="idx">
                                 <div class="space-y-1.5">
                                     <!-- Worker Header Row -->
-                                    <div class="flex items-center justify-between text-xs">
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <span class="w-5 text-center font-bold text-[11px] shrink-0"
+                                    <div class="flex flex-col gap-1.5 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                                        <div class="flex flex-1 items-center gap-2 min-w-0">
+                                            <span class="w-7 text-center font-bold text-[11px] shrink-0"
                                                   :class="idx === 0 ? 'text-amber-500 font-black' : (idx === 1 ? 'text-slate-400 font-black' : (idx === 2 ? 'text-amber-700 font-bold' : 'text-slate-400'))"
-                                                  x-text="'#' + worker.rank">
+                                                  x-text="'#' + (idx + 1)">
                                             </span>
-                                            <span class="font-bold text-slate-800 truncate" x-text="worker.name"></span>
+                                            <span class="min-w-0 font-bold text-slate-800 truncate" :title="worker.name" x-text="worker.name"></span>
                                             
                                             <!-- Mini badge status/tasks -->
                                             <template x-if="performanceTab === 'monthly'">
-                                                <span class="hidden sm:inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium"
+                                                <span class="hidden shrink-0 sm:inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium"
                                                       :class="worker.hasSlip ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'"
                                                       x-text="worker.hasSlip ? 'Slip Terbit' : (worker.tasksCount + ' Tugas')">
                                                 </span>
                                             </template>
                                         </div>
 
-                                        <div class="flex items-center gap-2 shrink-0">
+                                        <div class="flex items-center gap-2 shrink-0 pl-9 sm:pl-0">
                                             <span class="font-black text-[#009B7E]" x-text="worker.approvedHours.toFixed(1) + 'h'"></span>
                                             <span class="text-[11px] text-slate-400 font-mono" x-text="'(' + worker.sharePercentage + '%)'"></span>
                                         </div>
@@ -433,7 +433,7 @@
                                     </div>
 
                                     <!-- Bottom Meta Row -->
-                                    <div class="flex items-center justify-between text-[10px] text-slate-400 px-0.5">
+                                    <div class="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400 px-0.5">
                                         <span x-text="performanceTab === 'monthly' ? ('Total Log: ' + worker.loggedHours.toFixed(1) + 'h') : (worker.slipCount + ' slip gaji resmi')"></span>
                                         <span class="font-semibold text-slate-600 font-mono" x-text="formatRupiah(worker.thp)"></span>
                                     </div>
@@ -443,7 +443,7 @@
 
                         <!-- Insight Share & Transparency Box -->
                         <div class="pt-3 border-t border-slate-200/80 space-y-2">
-                            <div class="flex items-center justify-between text-xs text-slate-600">
+                            <div class="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-600">
                                 <span class="font-semibold">Kontribusi Top 3 Tim:</span>
                                 <span class="font-bold text-slate-900" x-text="topContributorsTotalShare + '% dari total jam disetujui'"></span>
                             </div>
@@ -456,9 +456,9 @@
                     </div>
 
                     <!-- RIGHT COLUMN (5 COLS): Leaderboard Card -->
-                    <div class="lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+                    <div class="xl:col-span-5 min-w-0 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
                         <div>
-                            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3 mb-4">
                                 <div>
                                     <h3 class="text-base font-extrabold text-slate-900 tracking-tight">Papan Peringkat Tim</h3>
                                     <p class="text-xs text-slate-400 mt-0.5"
@@ -479,12 +479,12 @@
                                 </template>
 
                                 <template x-for="(worker, idx) in topContributors" :key="idx">
-                                    <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
-                                        <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="grid grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
+                                        <div class="grid grid-cols-[1.75rem_2rem_minmax(0,1fr)] items-center gap-2.5 min-w-0">
                                             <!-- Rank Badge -->
-                                            <span class="w-5 text-center text-xs font-bold shrink-0"
+                                            <span class="w-7 text-center text-xs font-bold shrink-0"
                                                   :class="idx === 0 ? 'text-amber-500 font-black' : (idx === 1 ? 'text-slate-400 font-black' : (idx === 2 ? 'text-amber-700 font-bold' : 'text-slate-300'))"
-                                                  x-text="'#' + worker.rank">
+                                                  x-text="'#' + (idx + 1)">
                                             </span>
 
                                             <!-- Avatar -->
@@ -494,14 +494,14 @@
                                             </div>
 
                                             <div class="min-w-0">
-                                                <div class="text-xs font-bold text-slate-900 truncate" x-text="worker.name"></div>
+                                                <div class="text-xs font-bold text-slate-900 truncate" :title="worker.name" x-text="worker.name"></div>
                                                 <div class="text-[10px] text-slate-400 truncate"
                                                      x-text="performanceTab === 'monthly' ? (worker.tasksCount + ' Tugas • ' + (worker.hasSlip ? 'Slip Terbit' : 'Draft')) : (worker.slipCount + ' slip gaji diterbitkan')">
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div class="text-right shrink-0 pl-2">
+                                        <div class="pl-24 text-left sm:pl-0 sm:text-right">
                                             <div class="text-xs font-black text-[#009B7E]" x-text="worker.approvedHours.toFixed(1) + 'h'"></div>
                                             <div class="text-[11px] font-semibold text-slate-500 font-mono" x-text="formatRupiah(worker.thp)"></div>
                                         </div>

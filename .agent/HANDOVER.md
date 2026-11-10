@@ -1,3 +1,7 @@
+### [2026-11-10] — Codex: rapikan grafik dan papan peringkat dashboard
+- Nomor peringkat memakai urutan loop (#1–#6), tidak bergantung properti rank dari JS cache; perbaiki ruang nomor/avatar/nama/jam, wrapping header/metrik, dan susun dua panel bertumpuk sebelum breakpoint XL.
+- Validasi: Vite build, Blade cache, diff check, dan preview browser desktop + layar sempit dengan nama panjang/nominal besar lulus. Perubahan UI terbatas; tanpa full suite atau rebuild Graphify.
+
 ### [2026-11-09 19:18] — Antigravity
 - Menambahkan filter dropdown Sumber Data (Atlas & 1618) pada halaman rekaman (/recordings):
   - Backend `RecordingController::index`: Menambahkan filter query `source` ('atlas' -> whereNotNull('atlas_synced_at'), '1618' -> whereNotNull('robotics_1618_synced_at')). Agregat statistik durasi dan status QC otomatis mengikuti filter.
