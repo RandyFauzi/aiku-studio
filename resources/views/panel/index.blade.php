@@ -700,6 +700,6 @@
         </div>
     </main>
 
-    <script src="/assets/app.js"></script>
+    <script src="/assets/app.js?v={{ filemtime(public_path('assets/app.js')) }}"></script>
 </body>
 </html>

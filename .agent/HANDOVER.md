@@ -1,3 +1,7 @@
+### [2026-11-10] — Codex: cache dashboard
+- Tambahkan versi filemtime pada URL assets/app.js di dashboard agar browser mengambil getter persentase/rank terbaru, bukan salinan cache lama. Nilai sharePercentage tersedia pada kode sumber.
+- Validasi: Blade cache dan diff check lulus; tidak mengubah perhitungan atau aset JS sehingga tanpa build/full suite.
+
 ### [2026-11-10] — Codex: rapikan grafik dan papan peringkat dashboard
 - Nomor peringkat memakai urutan loop (#1–#6), tidak bergantung properti rank dari JS cache; perbaiki ruang nomor/avatar/nama/jam, wrapping header/metrik, dan susun dua panel bertumpuk sebelum breakpoint XL.
 - Validasi: Vite build, Blade cache, diff check, dan preview browser desktop + layar sempit dengan nama panjang/nominal besar lulus. Perubahan UI terbatas; tanpa full suite atau rebuild Graphify.
