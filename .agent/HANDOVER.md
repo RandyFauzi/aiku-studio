@@ -1,3 +1,9 @@
+### [2026-11-11 12:44] — Antigravity
+- Penyempurnaan tampilan delta QC pada tabel rekaman (/recordings):
+  - Menghilangkan badge blok/background kotak warna pada indikator naik/turun di List View.
+  - Mengganti tampilan menjadi teks bersih berwarna hijau (`text-emerald-600`) untuk delta billable/reject membaik dan merah (`text-rose-600`) untuk reject bertambah, beserta tanda panah `▲` / `▼`.
+- Validasi: PHPUnit `RecordingQcTrackingTest` lulus, Vite build sukses (`public/build`), view cache dibersihkan. State IDLE.
+
 ### [2026-11-11] — Codex: pemulihan sesi Atlas produksi
 - Konfirmasi HTTP 307 pada akun pertama akibat sesi Atlas kedaluwarsa; login ulang memakai otorisasi sebelumnya, simpan sesi privat, lanjut sinkronisasi 92 akun. Selesai membaca seluruh akun: 2.596 Atlas + 697 1618 diperbarui, total DB 3.293 tanpa label sumber kosong; status tetap belum lengkap karena lima akun tanpa ID peserta.
 - Verifikasi independen terhadap 1.978 opsi peserta Atlas: aikupink4, aikubiru5, aikuhijau6, aikuhitam5, pinkst7 (@kamerakitaid.site) tidak ditemukan termasuk variasi kurung. Perlu konfirmasi email/akses Atlas dari pengguna. Belum ada login otomatis saat sesi kedaluwarsa; tidak mengubah kode produksi atau menyimpan password. Endpoint sementara menghapus diri.

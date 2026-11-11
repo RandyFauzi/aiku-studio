@@ -962,8 +962,8 @@
 
                                             <!-- Indikator Naik/Turun Billable -->
                                             <template x-if="rec.qc_delta && rec.qc_delta.billable_diff !== 0">
-                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold cursor-help leading-none shadow-2xs"
-                                                      :class="rec.qc_delta.billable_diff > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'"
+                                                <span class="inline-flex items-center gap-0.5 text-[11px] font-extrabold cursor-help leading-none mt-0.5"
+                                                      :class="rec.qc_delta.billable_diff > 0 ? 'text-emerald-600' : 'text-amber-600'"
                                                       :title="'Review QC berubah ' + (rec.qc_delta.changed_at_formatted ? '(' + rec.qc_delta.changed_at_formatted + ')' : '') + ':\nSebelumnya: ' + rec.qc_delta.prev_billable.toFixed(2) + 'm ➔ Sekarang: ' + rec.qc_delta.current_billable.toFixed(2) + 'm'">
                                                     <span x-text="rec.qc_delta.billable_diff > 0 ? '▲ +' : '▼ '"></span>
                                                     <span x-text="Math.abs(rec.qc_delta.billable_diff).toFixed(2) + 'm'"></span>
@@ -983,8 +983,8 @@
 
                                             <!-- Indikator Naik/Turun Reject -->
                                             <template x-if="rec.qc_delta && rec.qc_delta.rejected_diff !== 0">
-                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold cursor-help leading-none shadow-2xs"
-                                                      :class="rec.qc_delta.rejected_diff > 0 ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'"
+                                                <span class="inline-flex items-center gap-0.5 text-[11px] font-extrabold cursor-help leading-none mt-0.5"
+                                                      :class="rec.qc_delta.rejected_diff > 0 ? 'text-rose-600' : 'text-emerald-600'"
                                                       :title="'Review QC berubah ' + (rec.qc_delta.changed_at_formatted ? '(' + rec.qc_delta.changed_at_formatted + ')' : '') + ':\nSebelumnya: ' + rec.qc_delta.prev_rejected.toFixed(2) + 'm ➔ Sekarang: ' + rec.qc_delta.current_rejected.toFixed(2) + 'm'">
                                                     <span x-text="rec.qc_delta.rejected_diff > 0 ? '▲ +' : '▼ '"></span>
                                                     <span x-text="Math.abs(rec.qc_delta.rejected_diff).toFixed(2) + 'm'"></span>
