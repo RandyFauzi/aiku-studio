@@ -1,3 +1,10 @@
+### [2026-11-11 10:24] — Antigravity
+- Implementasi tracking perubahan QC (Approved & Reject) dengan indikator visual naik/turun per rekaman (/recordings):
+  - Database & Model: Menambahkan kolom `prev_billable_min`, `prev_rejected_min`, `qc_changed_at` dan accessor `qc_delta` di `StudioRecording` serta helper `ingestWithQcTracking` yang membandingkan selisih nilai baru vs lama saat sinkronisasi.
+  - Sinkronisasi: `AtlasSync` dan `Robotics1618Sync` otomatis melacak perubahan status/durasi QC dan waktu perubahannya.
+  - UI List & Grid View: Menampilkan badge delta `▲ +X.Xm` / `▼ -X.Xm` pada Approved dan Reject dengan tooltip detail riwayat perubahan. Menambahkan filter status `✨ Ada Perubahan QC` di toolbar.
+- Validasi: PHPUnit `RecordingQcTrackingTest` (3 tests, 24 assertions) & `RecordingSourcesTest` lulus, Vite build sukses, view cache dibersihkan. Perlu jalankan migrasi di server: `php artisan migrate`. State IDLE.
+
 ### [2026-11-10 21:34] — Antigravity
 - Penyesuaian pilihan task laporan kerja agar menggunakan teks asli bahasa Inggris tanpa auto-translate:
   - `task-picker.blade.php`: Chip pilihan dan checklist kini menampilkan `task.title` / `title` asli bahasa Inggris. Label peringatan padanan otomatis serta panel ubah bahasa Indonesia dinonaktifkan.

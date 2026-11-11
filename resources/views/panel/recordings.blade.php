@@ -763,6 +763,7 @@
                         <option value="approved">Approved (Billable)</option>
                         <option value="rejected">Rejected</option>
                         <option value="pending">Pending</option>
+                        <option value="qc_changed">✨ Ada Perubahan QC</option>
                     </select>
 
                     <!-- Filter Sumber Data (Atlas / 1618) -->
@@ -952,20 +953,44 @@
 
                                     <!-- Durasi Billable (Approved) -->
                                     <td class="py-2.5 px-2 text-right whitespace-nowrap font-mono">
-                                        <span x-show="(rec.billable_min || 0) > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-xs">
-                                            <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                            <span x-text="(rec.billable_min || 0).toFixed(2) + 'm'"></span>
-                                        </span>
-                                        <span x-show="!(rec.billable_min > 0)" class="text-slate-300">-</span>
+                                        <div class="flex flex-col items-end gap-0.5">
+                                            <span x-show="(rec.billable_min || 0) > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-xs">
+                                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                <span x-text="(rec.billable_min || 0).toFixed(2) + 'm'"></span>
+                                            </span>
+                                            <span x-show="!(rec.billable_min > 0)" class="text-slate-300">-</span>
+
+                                            <!-- Indikator Naik/Turun Billable -->
+                                            <template x-if="rec.qc_delta && rec.qc_delta.billable_diff !== 0">
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold cursor-help leading-none shadow-2xs"
+                                                      :class="rec.qc_delta.billable_diff > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'"
+                                                      :title="'Review QC berubah ' + (rec.qc_delta.changed_at_formatted ? '(' + rec.qc_delta.changed_at_formatted + ')' : '') + ':\nSebelumnya: ' + rec.qc_delta.prev_billable.toFixed(2) + 'm ➔ Sekarang: ' + rec.qc_delta.current_billable.toFixed(2) + 'm'">
+                                                    <span x-text="rec.qc_delta.billable_diff > 0 ? '▲ +' : '▼ '"></span>
+                                                    <span x-text="Math.abs(rec.qc_delta.billable_diff).toFixed(2) + 'm'"></span>
+                                                </span>
+                                            </template>
+                                        </div>
                                     </td>
 
                                     <!-- Durasi Reject -->
                                     <td class="py-2.5 px-2 text-right whitespace-nowrap font-mono">
-                                        <span x-show="(rec.rejected_min || 0) > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-bold border border-rose-200 text-xs">
-                                            <svg class="w-3 h-3 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                            <span x-text="(rec.rejected_min || 0).toFixed(2) + 'm'"></span>
-                                        </span>
-                                        <span x-show="!(rec.rejected_min > 0)" class="text-slate-300">-</span>
+                                        <div class="flex flex-col items-end gap-0.5">
+                                            <span x-show="(rec.rejected_min || 0) > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-bold border border-rose-200 text-xs">
+                                                <svg class="w-3 h-3 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                <span x-text="(rec.rejected_min || 0).toFixed(2) + 'm'"></span>
+                                            </span>
+                                            <span x-show="!(rec.rejected_min > 0)" class="text-slate-300">-</span>
+
+                                            <!-- Indikator Naik/Turun Reject -->
+                                            <template x-if="rec.qc_delta && rec.qc_delta.rejected_diff !== 0">
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold cursor-help leading-none shadow-2xs"
+                                                      :class="rec.qc_delta.rejected_diff > 0 ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'"
+                                                      :title="'Review QC berubah ' + (rec.qc_delta.changed_at_formatted ? '(' + rec.qc_delta.changed_at_formatted + ')' : '') + ':\nSebelumnya: ' + rec.qc_delta.prev_rejected.toFixed(2) + 'm ➔ Sekarang: ' + rec.qc_delta.current_rejected.toFixed(2) + 'm'">
+                                                    <span x-text="rec.qc_delta.rejected_diff > 0 ? '▲ +' : '▼ '"></span>
+                                                    <span x-text="Math.abs(rec.qc_delta.rejected_diff).toFixed(2) + 'm'"></span>
+                                                </span>
+                                            </template>
+                                        </div>
                                     </td>
 
                                     <!-- Durasi Pending -->
@@ -1154,12 +1179,24 @@
 
                                         <!-- Mini Metric Chips -->
                                         <div class="grid grid-cols-3 gap-1 text-[10px] font-mono text-center">
-                                            <div class="bg-emerald-50 text-emerald-800 rounded-md py-0.5 px-1 border border-emerald-100" title="Durasi Approved (Billable)">
-                                                <span class="font-bold" x-text="(rec.billable_min || 0).toFixed(1) + 'm'"></span>
+                                            <div class="bg-emerald-50 text-emerald-800 rounded-md py-0.5 px-1 border border-emerald-100 relative"
+                                                 :title="(rec.qc_delta && rec.qc_delta.billable_diff !== 0) ? ('Review QC: ' + (rec.qc_delta.billable_diff > 0 ? '+' : '') + rec.qc_delta.billable_diff.toFixed(2) + 'm dari ' + rec.qc_delta.prev_billable.toFixed(2) + 'm ' + (rec.qc_delta.changed_at_formatted || '')) : 'Durasi Approved (Billable)'">
+                                                <div class="flex items-center justify-center gap-0.5">
+                                                    <span class="font-bold" x-text="(rec.billable_min || 0).toFixed(1) + 'm'"></span>
+                                                    <template x-if="rec.qc_delta && rec.qc_delta.billable_diff !== 0">
+                                                        <span class="text-[9px] font-black" :class="rec.qc_delta.billable_diff > 0 ? 'text-emerald-700' : 'text-amber-700'" x-text="rec.qc_delta.billable_diff > 0 ? '▲' : '▼'"></span>
+                                                    </template>
+                                                </div>
                                                 <span class="text-[9px] block text-emerald-600 font-sans font-semibold">Appr</span>
                                             </div>
-                                            <div class="bg-rose-50 text-rose-800 rounded-md py-0.5 px-1 border border-rose-100" title="Durasi Reject">
-                                                <span class="font-bold" x-text="(rec.rejected_min || 0).toFixed(1) + 'm'"></span>
+                                            <div class="bg-rose-50 text-rose-800 rounded-md py-0.5 px-1 border border-rose-100 relative"
+                                                 :title="(rec.qc_delta && rec.qc_delta.rejected_diff !== 0) ? ('Review QC: ' + (rec.qc_delta.rejected_diff > 0 ? '+' : '') + rec.qc_delta.rejected_diff.toFixed(2) + 'm dari ' + rec.qc_delta.prev_rejected.toFixed(2) + 'm ' + (rec.qc_delta.changed_at_formatted || '')) : 'Durasi Reject'">
+                                                <div class="flex items-center justify-center gap-0.5">
+                                                    <span class="font-bold" x-text="(rec.rejected_min || 0).toFixed(1) + 'm'"></span>
+                                                    <template x-if="rec.qc_delta && rec.qc_delta.rejected_diff !== 0">
+                                                        <span class="text-[9px] font-black" :class="rec.qc_delta.rejected_diff > 0 ? 'text-rose-700' : 'text-emerald-700'" x-text="rec.qc_delta.rejected_diff > 0 ? '▲' : '▼'"></span>
+                                                    </template>
+                                                </div>
                                                 <span class="text-[9px] block text-rose-600 font-sans font-semibold">Rej</span>
                                             </div>
                                             <div class="bg-amber-50 text-amber-800 rounded-md py-0.5 px-1 border border-amber-100" title="Durasi Pending">

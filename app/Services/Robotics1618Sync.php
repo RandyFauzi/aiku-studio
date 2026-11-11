@@ -358,10 +358,7 @@ class Robotics1618Sync
             ];
 
             // Ingest into StudioRecording preserving manual assignments and notes
-            StudioRecording::updateOrCreate(
-                ['record_id' => $recordingId],
-                $recordData
-            );
+            StudioRecording::ingestWithQcTracking($recordingId, $recordData);
 
             $matchedRows++;
         }

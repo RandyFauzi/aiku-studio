@@ -27,7 +27,21 @@ class RecordingController extends Controller
                 : $query->where('assigned_worker_name', trim($request->worker));
         }
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('manual_payment_status', $request->status);
+            if ($request->status === 'approved') {
+                $query->where('billable_min', '>', 0);
+            } elseif ($request->status === 'rejected') {
+                $query->where('rejected_min', '>', 0);
+            } elseif ($request->status === 'pending') {
+                $query->where(function ($q) {
+                    $q->where('pending_min', '>', 0)
+                      ->orWhere('processing_status', 'processing')
+                      ->orWhere(fn ($sub) => $sub->where('billable_min', 0)->where('rejected_min', 0)->where('duration_min', '>', 0));
+                });
+            } elseif ($request->status === 'qc_changed') {
+                $query->whereNotNull('qc_changed_at');
+            } else {
+                $query->where('manual_payment_status', $request->status);
+            }
         }
         if ($request->filled('source') && $request->source !== 'all') {
             if ($request->source === 'atlas') {

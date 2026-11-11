@@ -201,7 +201,7 @@ class AtlasSync
             'reviewed_utc' => $reviewed,
             'reconciliation' => $r['reconciliationStatus'] ?? '', 'atlas_synced_at' => now(), 'last_synced_at' => now()];
         // Only source-controlled fields change. Manual assignments, notes and payment statuses survive every refresh.
-        StudioRecording::updateOrCreate(['record_id' => $id], $values);
+        StudioRecording::ingestWithQcTracking($id, $values);
     }
 
     private function advance(array $state): void
