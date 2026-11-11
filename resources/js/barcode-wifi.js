@@ -264,6 +264,17 @@ window.barcodeWifiModal = () => ({
         }
     },
 
+    addSubnetDynamic() {
+        if (!this.currentIp) return;
+        const parts = this.currentIp.trim().split('.');
+        if (parts.length >= 2) {
+            const subnetWildcard = `${parts[0]}.${parts[1]}.*.*`;
+            if (!this.config.wifi_ips.includes(subnetWildcard)) {
+                this.config.wifi_ips.push(subnetWildcard);
+            }
+        }
+    },
+
     addManualIp() {
         const ip = (this.newIpInput || '').trim();
         if (!ip) return;

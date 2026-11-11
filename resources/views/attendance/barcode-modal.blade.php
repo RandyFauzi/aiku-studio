@@ -168,9 +168,25 @@
                             <p class="font-mono text-sm font-extrabold text-emerald-950" x-text="currentIp || 'Mendeteksi IP…'"></p>
                             <p class="text-[11px] text-emerald-700">Jika Anda membuka halaman ini lewat WiFi kantor, IP di atas adalah IP Public router kantor Anda.</p>
                         </div>
-                        <button type="button" @click="addCurrentIp()" class="shrink-0 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition">
-                            + Tambahkan IP Ini
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" @click="addCurrentIp()" class="shrink-0 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition">
+                                + Tambahkan IP Ini
+                            </button>
+                            <button type="button" @click="addSubnetDynamic()" class="shrink-0 px-3.5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-xs transition" title="Daftarkan seluruh subnet /16 WiFi dinamis IndiHome/Telkom">
+                                + Subnet Dinamis (*.*)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic ISP / WiFi Guidance Note -->
+                    <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 space-y-1">
+                        <p class="font-bold flex items-center gap-1.5 text-amber-950">
+                            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Tips IP Dinamis ISP (IndiHome / FirstMedia):</span>
+                        </p>
+                        <p class="text-amber-800 leading-relaxed">
+                            ISP IndiHome merotasi IP publik secara berkala saat modem restart. Sistem kini mendukung wildcard (contoh: <code class="font-mono font-bold bg-amber-100/70 px-1 py-0.5 rounded text-amber-900">140.213.*.*</code>) dan CIDR (<code class="font-mono font-bold bg-amber-100/70 px-1 py-0.5 rounded text-amber-900">140.213.0.0/16</code>) agar absensi tetap lancar. Anda juga dapat menyetel <strong>Titik Koordinat Studio (GPS)</strong> di bawah sebagai verifikasi cadangan jika koneksi HP beralih ke data seluler.
+                        </p>
                     </div>
 
                     <!-- Whitelisted IPs List -->
@@ -184,7 +200,7 @@
 
                         <!-- Manual Add Form -->
                         <div class="flex items-center gap-2">
-                            <input type="text" x-model="newIpInput" @keydown.enter.prevent="addManualIp()" placeholder="Masukkan IP Public, contoh: 114.122.45.89" class="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-mono focus:border-emerald-500 focus:outline-none">
+                            <input type="text" x-model="newIpInput" @keydown.enter.prevent="addManualIp()" placeholder="Masukkan IP (140.213.10.103), CIDR (140.213.0.0/16), atau Wildcard (140.213.*.*)" class="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-mono focus:border-emerald-500 focus:outline-none">
                             <button type="button" @click="addManualIp()" class="shrink-0 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition">
                                 Tambah IP
                             </button>

@@ -151,37 +151,27 @@ class AttendanceController extends Controller
             $allowedIps = (array) ($config['wifi_ips'] ?? []);
             $isAdmin = $request->user()->role === 'admin';
 
-            if ($wifiCheckEnabled && ! $isAdmin) {
-                if (empty($allowedIps)) {
-                    throw ValidationException::withMessages([
-                        'wifi' => 'Gagal absensi: WiFi Kantor belum didaftarkan oleh Admin. Silakan hubungi Admin untuk mendaftarkan IP WiFi Studio pada menu Absensi.',
-                    ]);
-                }
+            $isLocal = app()->isLocal() && in_array($clientIp, ['127.0.0.1', '::1', 'localhost'], true);
+            $isWifiMatched = ! $wifiCheckEnabled || $isAdmin || $isLocal || $this->isIpMatched($clientIp, $allowedIps);
 
-                $isLocal = app()->isLocal() && in_array($clientIp, ['127.0.0.1', '::1', 'localhost'], true);
-                $isAllowed = $isLocal || $this->isIpMatched($clientIp, $allowedIps);
+            // 3. Geofence evaluation if Studio coordinates are set
+            $hasGps = isset($data['latitude'], $data['longitude']) && $data['latitude'] !== null && $data['longitude'] !== null;
+            $geofenceEnabled = isset($config['studio_lat'], $config['studio_lng']) && $config['studio_lat'] !== null && $config['studio_lng'] !== null;
+            $isGpsInsideStudio = false;
+            $distance = null;
+            $radiusM = (float) ($config['geofence_radius_m'] ?? 150);
 
-                if (! $isAllowed) {
-                    $registeredStr = implode(', ', $allowedIps);
-                    throw ValidationException::withMessages([
-                        'wifi' => "Gagal absensi: Anda terdeteksi menggunakan jaringan pribadi/seluler (IP: {$clientIp}), bukan WiFi Kantor/Studio yang terdaftar ({$registeredStr}). Matikan kuota data seluler dan hubungkan HP Anda ke WiFi Studio sebelum scan barcode.",
-                    ]);
-                }
-            }
-
-            // 3. Optional Geofence validation if Studio coordinates are set
-            $hasGps = isset($data['latitude'], $data['longitude']);
-            $geofenceEnabled = isset($config['studio_lat'], $config['studio_lng']);
-            if ($geofenceEnabled && ! $isAdmin && (! $hasGps || ! isset($data['accuracy_m'], $data['captured_at']))) {
-                throw ValidationException::withMessages(['location' => 'GPS diperlukan untuk memverifikasi lokasi studio.']);
-            }
-            if (isset($data['captured_at']) && abs(CarbonImmutable::parse($data['captured_at'])->diffInMinutes(now())) > 30) {
-                throw ValidationException::withMessages(['captured_at' => 'Data lokasi kedaluwarsa. Silakan coba lagi.']);
-            }
             if ($geofenceEnabled && ! $isAdmin) {
+                if (! $hasGps || ! isset($data['accuracy_m'], $data['captured_at'])) {
+                    throw ValidationException::withMessages(['location' => 'GPS diperlukan untuk memverifikasi lokasi studio.']);
+                }
+
+                if (isset($data['captured_at']) && abs(CarbonImmutable::parse($data['captured_at'])->diffInMinutes(now())) > 30) {
+                    throw ValidationException::withMessages(['captured_at' => 'Data lokasi kedaluwarsa. Silakan coba lagi.']);
+                }
+
                 $studioLat = (float) $config['studio_lat'];
                 $studioLng = (float) $config['studio_lng'];
-                $radiusM = (float) ($config['geofence_radius_m'] ?? 150);
                 $accuracy = isset($data['accuracy_m']) ? (float) $data['accuracy_m'] : 0.0;
                 $distance = $this->calculateDistanceMeters((float) $data['latitude'], (float) $data['longitude'], $studioLat, $studioLng);
                 if ($accuracy > max($radiusM, 100)) {
@@ -195,6 +185,22 @@ class AttendanceController extends Controller
                         'location' => "Gagal absensi: Posisi GPS Anda terdeteksi di luar area Studio AIKu ({$distInt} meter dari titik kantor, batas radius {$radiusM} meter). Harap lakukan scan barcode di dalam studio.",
                     ]);
                 }
+
+                $isGpsInsideStudio = true;
+            }
+
+            // Check if blocked by WiFi (unless geofence verified the physical presence in studio)
+            if ($wifiCheckEnabled && ! $isAdmin && ! $isWifiMatched && ! $isGpsInsideStudio) {
+                if (empty($allowedIps)) {
+                    throw ValidationException::withMessages([
+                        'wifi' => 'Gagal absensi: WiFi Kantor belum didaftarkan oleh Admin. Silakan hubungi Admin untuk mendaftarkan IP WiFi Studio pada menu Absensi.',
+                    ]);
+                }
+
+                $registeredStr = implode(', ', $allowedIps);
+                throw ValidationException::withMessages([
+                    'wifi' => "Gagal absensi: IP jaringan Anda ({$clientIp}) tidak cocok dengan WiFi Studio ({$registeredStr}). Jika Anda sudah terhubung ke WiFi kantor, kemungkinan IP router IndiHome berganti dinamis atau HP memakai data seluler (Wi-Fi Assist). Silakan matikan data seluler HP atau hubungi Admin untuk mendaftarkan IP/subnet ini.",
+                ]);
             }
 
             // 4. Check if already checked in today (AFTER WiFi and location verification to prevent bypassing)
@@ -210,7 +216,7 @@ class AttendanceController extends Controller
             }
 
             // 5. Save attendance record safely with real GPS coordinates and WiFi metadata
-            $row = DB::transaction(function () use ($request, $person, $today, $clientIp, $data, $hasGps, $wifiCheckEnabled) {
+            $row = DB::transaction(function () use ($request, $person, $today, $clientIp, $data, $hasGps, $wifiCheckEnabled, $isWifiMatched) {
                 User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
 
                 $lat = $hasGps ? (float) $data['latitude'] : null;
@@ -235,7 +241,7 @@ class AttendanceController extends Controller
                     $attributes['client_ip'] = $clientIp;
                 }
                 if (Schema::hasColumn('attendances', 'wifi_verified')) {
-                    $attributes['wifi_verified'] = $wifiCheckEnabled;
+                    $attributes['wifi_verified'] = $wifiCheckEnabled ? $isWifiMatched : true;
                 }
 
                 return Attendance::firstOrCreate(
@@ -298,15 +304,127 @@ class AttendanceController extends Controller
                 return true;
             }
 
-            // 2. Wildcard match (e.g. 140.213.216.*)
+            // 2. CIDR subnet match (e.g. 140.213.0.0/16 or 192.168.1.0/24)
+            if (str_contains($allowed, '/') && $this->ipInCidr($clientIp, $allowed)) {
+                return true;
+            }
+
+            // 3. Multi-segment Wildcard match (e.g. 140.213.*.*, 140.213.*, 140.213.216.*)
             if (str_contains($allowed, '*')) {
-                $pattern = '/^'.str_replace('\*', '[0-9]{1,3}', preg_quote($allowed, '/')).'$/D';
-                if (preg_match($pattern, $clientIp)) {
-                    return true;
+                $parts = explode('.', $allowed);
+                $regexParts = [];
+                $valid = true;
+                foreach ($parts as $p) {
+                    if ($p === '*') {
+                        $regexParts[] = '[0-9]{1,3}';
+                    } elseif (is_numeric($p) && (int) $p >= 0 && (int) $p <= 255) {
+                        $regexParts[] = preg_quote($p, '/');
+                    } else {
+                        $valid = false;
+                        break;
+                    }
+                }
+                if ($valid && ! empty($regexParts)) {
+                    while (count($regexParts) < 4) {
+                        $regexParts[] = '[0-9]{1,3}';
+                    }
+                    $pattern = '/^'.implode('\\.', $regexParts).'$/D';
+                    if (preg_match($pattern, $clientIp)) {
+                        return true;
+                    }
                 }
             }
 
-            // Wider network ranges must be configured explicitly by an administrator.
+            // 4. Dynamic ISP Subnet Matching (/16 tolerance for public IPv4)
+            // Broadband ISPs in Indonesia (e.g. Telkom IndiHome 140.213.x.x, 180.252.x.x) assign dynamic WAN IPs.
+            // When an admin registers a dynamic IP, tolerate changes within the same ISP /16 network pool.
+            if (filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && filter_var($allowed, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                $clientOctets = explode('.', $clientIp);
+                $allowedOctets = explode('.', $allowed);
+                if (count($clientOctets) === 4 && count($allowedOctets) === 4) {
+                    if ($clientOctets[0] === $allowedOctets[0] && $clientOctets[1] === $allowedOctets[1]) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function ipInCidr(string $ip, string $cidr): bool
+    {
+        if (! str_contains($cidr, '/')) {
+            return false;
+        }
+
+        [$subnet, $mask] = explode('/', $cidr, 2);
+        if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || ! filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return false;
+        }
+
+        $mask = (int) $mask;
+        if ($mask < 0 || $mask > 32) {
+            return false;
+        }
+
+        if ($mask === 0) {
+            return true;
+        }
+
+        $ipLong = ip2long($ip);
+        $subnetLong = ip2long($subnet);
+        if ($ipLong === false || $subnetLong === false) {
+            return false;
+        }
+
+        $netmask = -1 << (32 - $mask);
+
+        return ($ipLong & $netmask) === ($subnetLong & $netmask);
+    }
+
+    public function isValidIpOrPattern(string $value): bool
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return false;
+        }
+
+        // 1. Valid exact IP (IPv4 or IPv6)
+        if (filter_var($value, FILTER_VALIDATE_IP)) {
+            return true;
+        }
+
+        // 2. CIDR notation (IPv4 with /0 to /32)
+        if (str_contains($value, '/')) {
+            $parts = explode('/', $value, 2);
+            if (count($parts) === 2) {
+                [$subnet, $mask] = $parts;
+                if (filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && is_numeric($mask)) {
+                    $maskInt = (int) $mask;
+                    if ($maskInt >= 0 && $maskInt <= 32) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // 3. Wildcard pattern (e.g. 140.213.*.*, 140.213.*, 140.213.216.*)
+        $octets = explode('.', $value);
+        if (count($octets) >= 2 && count($octets) <= 4) {
+            $hasWildcard = false;
+            foreach ($octets as $octet) {
+                if ($octet === '*') {
+                    $hasWildcard = true;
+                } elseif (is_numeric($octet) && (int) $octet >= 0 && (int) $octet <= 255) {
+                    continue;
+                } else {
+                    return false;
+                }
+            }
+            if ($hasWildcard) {
+                return true;
+            }
         }
 
         return false;
@@ -427,8 +545,8 @@ class AttendanceController extends Controller
         $data = $request->validate([
             'wifi_ips' => 'nullable|array',
             'wifi_ips.*' => ['string', 'max:45', function ($attribute, $value, $fail) {
-                if (! filter_var($value, FILTER_VALIDATE_IP) && ! preg_match('/^(?:[0-9]{1,3}|\*)(?:\.(?:[0-9]{1,3}|\*)){3}$/D', $value)) {
-                    $fail('Gunakan alamat IP atau pola IPv4 wildcard yang valid.');
+                if (! $this->isValidIpOrPattern($value)) {
+                    $fail('Gunakan alamat IP, notasi CIDR (contoh: 140.213.0.0/16), atau wildcard (contoh: 140.213.*.*) yang valid.');
                 }
             }],
             'wifi_check_enabled' => 'required|boolean',

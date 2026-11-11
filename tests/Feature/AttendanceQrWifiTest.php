@@ -433,4 +433,130 @@ class AttendanceQrWifiTest extends TestCase
             'checkin_method' => 'qr_wifi',
         ]);
     }
+
+    public function test_contributor_can_checkin_with_cidr_subnet(): void
+    {
+        $worker = $this->contributorUser('cidr_worker@example.com');
+
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['140.213.0.0/16'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'cidr_token_123',
+            ]]
+        );
+
+        $res = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.10.103'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'cidr_token_123',
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.client_ip', '140.213.10.103')
+            ->assertJsonPath('attendance.wifi_verified', true);
+    }
+
+    public function test_contributor_can_checkin_with_multi_wildcard(): void
+    {
+        $worker = $this->contributorUser('wildcard_worker@example.com');
+
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['140.213.*.*'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'wildcard_token_123',
+            ]]
+        );
+
+        $res = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.10.103'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'wildcard_token_123',
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.client_ip', '140.213.10.103')
+            ->assertJsonPath('attendance.wifi_verified', true);
+    }
+
+    public function test_contributor_can_checkin_with_dynamic_isp_subnet_tolerance(): void
+    {
+        $worker = $this->contributorUser('dynamic_worker@example.com');
+
+        // Admin registered 140.213.216.5, client connects from rotated IP 140.213.10.103 on same ISP
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['140.213.216.5'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'dynamic_token_123',
+            ]]
+        );
+
+        $res = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.10.103'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'dynamic_token_123',
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.client_ip', '140.213.10.103')
+            ->assertJsonPath('attendance.wifi_verified', true);
+    }
+
+    public function test_admin_can_save_cidr_and_wildcard_wifi_ips(): void
+    {
+        $admin = $this->adminUser();
+
+        $res = $this->actingAs($admin)->postJson('/api/attendance/wifi-config', [
+            'wifi_ips' => ['140.213.0.0/16', '140.213.*.*', '180.252.10.5'],
+            'wifi_check_enabled' => true,
+            'studio_name' => 'AIKu Dynamic Studio',
+        ]);
+
+        $res->assertOk()
+            ->assertJsonPath('config.wifi_ips.0', '140.213.0.0/16')
+            ->assertJsonPath('config.wifi_ips.1', '140.213.*.*')
+            ->assertJsonPath('config.wifi_ips.2', '180.252.10.5');
+    }
+
+    public function test_contributor_can_checkin_via_gps_geofence_fallback_when_wifi_ip_differs(): void
+    {
+        $worker = $this->contributorUser('fallback_worker@example.com');
+
+        // Studio is configured at Monas, Jakarta: -6.175392, 106.827153
+        // Whitelisted WiFi is 114.122.99.88, but worker connects on completely different cellular IP 180.244.1.2
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => AttendanceController::SETTING_KEY],
+            ['setting_value' => [
+                'wifi_ips' => ['114.122.99.88'],
+                'wifi_check_enabled' => true,
+                'qr_secret' => 'geofence_fallback_token',
+                'studio_lat' => -6.175392,
+                'studio_lng' => 106.827153,
+                'geofence_radius_m' => 150,
+            ]]
+        );
+
+        $res = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '180.244.1.2'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'geofence_fallback_token',
+                'latitude' => -6.175400,
+                'longitude' => 106.827160, // ~1 meter away inside studio
+                'accuracy_m' => 8.0,
+                'captured_at' => now()->toISOString(),
+            ]);
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.checkin_method', 'qr_wifi')
+            ->assertJsonPath('attendance.client_ip', '180.244.1.2');
+    }
 }

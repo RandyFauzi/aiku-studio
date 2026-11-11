@@ -1,3 +1,9 @@
+### [2026-11-11 14:24] — Antigravity
+- Audit & perbaikan absensi Barcode WiFi kantor dan dukungan dynamic IP IndiHome:
+  - `AttendanceController`: Menambahkan toleransi ISP dynamic pool (/16 matching untuk public IP IndiHome/Telkom 140.213.*.*), CIDR subnet (`ipInCidr`), wildcard multi-oktet, dan fallback GPS Geofence (absensi berhasil jika kontributor terverifikasi berada di dalam radius Studio AIKu).
+  - `barcode-modal.blade.php` & `barcode-wifi.js`: Menambahkan tombol 1-klik "+ Subnet Dinamis (*.*)" pada deteksi IP admin, dukungan input CIDR/wildcard, serta catatan panduan router dinamis IndiHome.
+- Validasi: PHPUnit `AttendanceQrWifiTest` (19 tests, 93 assertions), `AttendanceCalendarTest`, `AttendanceManualAdminTest` lulus 100%, Vite build sukses, view cache dibersihkan. State IDLE.
+
 ### [2026-11-11] — Codex: login otomatis Atlas dan waktu update
 - Jadwal bersama produksi diaktifkan pada interval tersimpan 15 menit (sebelumnya nonaktif); cron Hostinger setiap menit terkonfirmasi. Sesi invalid sudah diuji pulih otomatis, tanpa login manual.
 - AtlasSession mendeteksi redirect login/401/403/form login, mengambil hidden fields dinamis, login dengan cookie jar dan memverifikasi halaman rekaman; retry halaman yang sama sekali, lock + cooldown gagal 60 detik, sesi diganti atomik. Kredensial produksi disimpan terenkripsi APP_KEY di storage privat (tidak di repo/log); parameter cookie disamarkan dari trace. Akun tanpa ID Atlas menjadi catatan sumber, 1618 tetap independen. API lastSyncedAt kini ISO UTC eksplisit agar tampilan WITA tepat.
