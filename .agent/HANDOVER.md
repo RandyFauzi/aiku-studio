@@ -1,3 +1,7 @@
+### [2026-11-11] — Codex: login otomatis Atlas dan waktu update
+- AtlasSession mendeteksi redirect login/401/403/form login, mengambil hidden fields dinamis, login dengan cookie jar dan memverifikasi halaman rekaman; retry halaman yang sama sekali, lock + cooldown gagal 60 detik, sesi diganti atomik. Kredensial produksi disimpan terenkripsi APP_KEY di storage privat (tidak di repo/log); parameter cookie disamarkan dari trace. Akun tanpa ID Atlas menjadi catatan sumber, 1618 tetap independen. API lastSyncedAt kini ISO UTC eksplisit agar tampilan WITA tepat.
+- Validasi: 179 tes / 1.198 assertions lulus, 6 tes auth ulang setelah anotasi redaksi, Graphify/skema terisolasi dan diff lulus. Deploy 57f0784; probe sesi invalid produksi pulih otomatis, lalu sinkronisasi 92 akun selesai sukses: 2.596 Atlas + 717 1618, total DB 3.313 (20 rekaman baru dari 4 akun tambahan; pinkst7 belum mengembalikan rekaman). Timestamp terbaru 2026-11-11T05:00:06+00:00 = 13.00 WITA. Endpoint sementara menghapus diri; tanpa CSV Atlas.
+
 ### [2026-11-11 12:44] — Antigravity
 - Penyempurnaan tampilan delta QC pada tabel rekaman (/recordings):
   - Menghilangkan badge blok/background kotak warna pada indikator naik/turun di List View.
