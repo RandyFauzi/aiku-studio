@@ -1,15 +1,15 @@
-# Graph Report - AIKU STUDIO  (2026-11-09)
+# Graph Report - AIKU STUDIO  (2026-11-11)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1449 nodes · 2806 edges · 139 communities (36 shown, 103 thin omitted)
+- 1491 nodes · 2887 edges · 136 communities (38 shown, 98 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 62 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0be352ee`
+- Built from commit: `d10c4728`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -51,7 +51,7 @@
 - Community 34
 - Community 35
 - Community 36
-- Community 37
+- Community 38
 - Community 39
 - Community 40
 - Community 41
@@ -90,8 +90,8 @@
 - Community 76
 - Community 77
 - Community 78
-- Community 79
 - Community 80
+- Community 81
 - Community 82
 - Community 83
 - Community 84
@@ -116,18 +116,15 @@
 - Community 103
 - Community 104
 - Community 105
-- Community 106
-- Community 107
-- Community 108
 
 ## God Nodes (most connected - your core abstractions)
 1. `SystemAuditRegressionTest` - 28 edges
 2. `DailyWorkReportTest` - 24 edges
-3. `AtlasSync` - 20 edges
+3. `AtlasSync` - 22 edges
 4. `Robotics1618Sync` - 20 edges
 5. `PayslipController` - 19 edges
-6. `AttendanceQrWifiTest` - 19 edges
-7. `PayrollMigrationTest` - 19 edges
+6. `PayrollMigrationTest` - 19 edges
+7. `AttendanceQrWifiTest` - 19 edges
 8. `RecordStreakTest` - 19 edges
 9. `DailyWorkReportController` - 18 edges
 10. `AttendanceController` - 17 edges
@@ -147,39 +144,39 @@
 ## Import Cycles
 - None detected.
 
-## Communities (139 total, 103 thin omitted)
+## Communities (136 total, 98 thin omitted)
 
 ### Community 0 - "Community 0"
+Cohesion: 0.05
+Nodes (13): PayrollController, {closure#2}(), {closure#3}(), PayslipController, ContributorIdentity, {closure#2}(), PayrollCalculator, PayrollFiles (+5 more)
+
+### Community 1 - "Community 1"
 Cohesion: 0.06
 Nodes (63): aggregate(), clone(), dateRange(), members(), patternForDate(), prepareConfig(), problems(), sessionRows() (+55 more)
 
-### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (14): PayrollController, {closure#2}(), {closure#3}(), PayslipController, DeviceAccount, PayrollStatus, ContributorIdentity, {closure#2}() (+6 more)
-
 ### Community 2 - "Community 2"
-Cohesion: 0.05
-Nodes (61): "attendances", attendances_contributor_id_index, attendances_user_id_index, attendances_user_id_work_date_unique, attendances_work_date_index, "cache", cache_expiration_index, "cache_locks" (+53 more)
+Cohesion: 0.06
+Nodes (11): {closure#2}(), {closure#3}(), {closure#4}(), DeviceAccountController, Attendance, PayrollStatus, RecordStreakDay, ShiftDay (+3 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.07
-Nodes (10): {closure#3}(), {closure#5}(), MyRecordingController, RecordingMatchingController, {closure#2}(), RecordingMatching, RecordingOwnerRecommendations, ReportTasks (+2 more)
+Cohesion: 0.05
+Nodes (62): "attendances", attendances_contributor_id_index, attendances_user_id_index, attendances_user_id_work_date_unique, attendances_work_date_index, "cache", cache_expiration_index, "cache_locks" (+54 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.06
-Nodes (35): assignCandidates(), calcCreateTotal(), calcEditTotal(), closeCreateModal(), closeEditModal(), confirmDeleteReport(), copyPhoneTasks(), deleteReport() (+27 more)
+Nodes (11): {closure#3}(), RecordingController, {closure#2}(), {closure#4}(), RecordingMatchingController, {closure#2}(), RecordingMatching, RecordingOwnerRecommendations (+3 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.05
-Nodes (9): AtlasTick, AuditDataIntegrity, CreatePanelAdmin, ImportLegacyPayroll, {closure#1}(), SyncContributorLogins, SyncRobotics1618, VerifyLegacyPayroll (+1 more)
+Cohesion: 0.08
+Nodes (10): AtlasTick, SyncController, {closure#1}(), AtlasSync, {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}() (+2 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.04
-Nodes (47): pestphp/pest-plugin, php-http/discovery, autoload, autoload-dev, psr-4, psr-4, config, allow-plugins (+39 more)
+Cohesion: 0.06
+Nodes (35): assignCandidates(), calcCreateTotal(), calcEditTotal(), closeCreateModal(), closeEditModal(), confirmDeleteReport(), copyPhoneTasks(), deleteReport() (+27 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.10
-Nodes (8): SyncController, AtlasSync, {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}(), RecordingSync, Robotics1618Sync
+Cohesion: 0.04
+Nodes (47): pestphp/pest-plugin, php-http/discovery, autoload, autoload-dev, psr-4, psr-4, config, allow-plugins (+39 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.08
@@ -189,33 +186,37 @@ Nodes (25): checkIn(), checkInWithQr(), closeScanner(), confirmAttendance(), del
 Cohesion: 0.06
 Nodes (26): connectedDays(), init(), openPopup(), refresh(), statusLabel(), weekDays(), credentials, legacyRequire (+18 more)
 
-### Community 14 - "Community 14"
-Cohesion: 0.16
-Nodes (5): {closure#1}(), DailyWorkReportController, {closure#2}(), {closure#4}(), DailyWorkReport
+### Community 10 - "Community 10"
+Cohesion: 0.08
+Nodes (4): StudioAccount, AtlasParser, AtlasSyncTest, PayrollMigrationTest
+
+### Community 11 - "Community 11"
+Cohesion: 0.11
+Nodes (5): AtlasSession, {closure#1}(), AtlasSessionTest, {closure#1}(), {closure#3}()
+
+### Community 12 - "Community 12"
+Cohesion: 0.17
+Nodes (4): AuthController, {closure#1}(), DailyWorkReportController, DailyWorkReport
 
 ### Community 15 - "Community 15"
-Cohesion: 0.16
-Nodes (5): RecordStreakController, {closure#1}(), {closure#1}(), {closure#4}(), RecordStreak
+Cohesion: 0.11
+Nodes (21): devDependencies, autoprefixer@^10.6.2, axios@^1.11.0, concurrently@^9.0.1, laravel-vite-plugin@^2.0.0, postcss@^8.5.32, tailwindcss@^3.4.19, vite@^7.0.7 (+13 more)
 
-### Community 17 - "Community 17"
+### Community 18 - "Community 18"
+Cohesion: 0.14
+Nodes (4): RecordStreakController, {closure#1}(), {closure#4}(), RecordStreak
+
+### Community 19 - "Community 19"
+Cohesion: 0.10
+Nodes (5): DeviceAccount, DeviceAccountTest, ExampleTest, ShiftRosterTest, TestCase
+
+### Community 21 - "Community 21"
 Cohesion: 0.18
 Nodes (6): {closure#3}(), {closure#4}(), {closure#5}(), {closure#6}(), ContributorController, ContributorPerformanceService
 
-### Community 18 - "Community 18"
-Cohesion: 0.13
-Nodes (18): devDependencies, autoprefixer@^10.6.2, axios@^1.11.0, concurrently@^9.0.1, laravel-vite-plugin@^2.0.0, postcss@^8.5.32, tailwindcss@^3.4.19, vite@^7.0.7 (+10 more)
-
-### Community 19 - "Community 19"
-Cohesion: 0.16
-Nodes (15): addTask(), canAdd(), choices(), getOptions(), init(), initialLabel(), isTaskSelected(), labelFor() (+7 more)
-
-### Community 20 - "Community 20"
-Cohesion: 0.12
-Nodes (6): Attendance, Contributor, Payslip, RecordStreakDay, ShiftDay, ShiftSetting
-
 ### Community 23 - "Community 23"
-Cohesion: 0.16
-Nodes (12): {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}(), {closure#5}(), {closure#6}(), {closure#1}(), {closure#2}() (+4 more)
+Cohesion: 0.17
+Nodes (12): addTask(), canAdd(), choices(), getOptions(), init(), isTaskSelected(), labels, lookup() (+4 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.18
@@ -223,27 +224,27 @@ Nodes (3): SettingController, {closure#1}(), ShiftPatterns
 
 ### Community 25 - "Community 25"
 Cohesion: 0.17
+Nodes (3): Payslip, User, PendingCarryOverTest
+
+### Community 26 - "Community 26"
+Cohesion: 0.19
+Nodes (10): {closure#1}(), {closure#2}(), {closure#3}(), {closure#4}(), {closure#5}(), {closure#6}(), {closure#1}(), {closure#2}() (+2 more)
+
+### Community 27 - "Community 27"
+Cohesion: 0.17
 Nodes (7): drawQr(), init(), load(), loadConfig(), openModal(), renderQrCode(), saveSettings()
 
-### Community 28 - "Community 28"
-Cohesion: 0.27
-Nodes (4): {closure#2}(), {closure#3}(), {closure#4}(), DeviceAccountController
-
 ### Community 30 - "Community 30"
-Cohesion: 0.22
-Nodes (3): fingerprints(), main(), run()
+Cohesion: 0.17
+Nodes (4): Controller, {closure#2}(), ShiftDayController, ShiftConfiguration
 
 ### Community 31 - "Community 31"
-Cohesion: 0.15
-Nodes (3): DeviceAccountTest, ExampleTest, TestCase
+Cohesion: 0.22
+Nodes (3): fingerprints(), main(), run()
 
 ### Community 32 - "Community 32"
 Cohesion: 0.18
 Nodes (11): dependencies, alpinejs@^3.17.5, html5-qrcode@^2.3.8, qrcode@^1.5.4, sweetalert2@^11.26.25, alpinejs, html5-qrcode, qrcode (+3 more)
-
-### Community 33 - "Community 33"
-Cohesion: 0.21
-Nodes (3): {closure#2}(), ShiftDayController, ShiftConfiguration
 
 ### Community 34 - "Community 34"
 Cohesion: 0.19
@@ -253,65 +254,69 @@ Nodes (4): confirmOwner(), json(), load(), openFor()
 Cohesion: 0.17
 Nodes (3): {closure#1}(), {closure#1}(), up()
 
+### Community 36 - "Community 36"
+Cohesion: 0.17
+Nodes (4): {closure#1}(), {closure#1}(), {closure#1}(), {closure#2}()
+
 ### Community 39 - "Community 39"
 Cohesion: 0.24
 Nodes (4): dateKey(), groups(), init(), load()
 
-### Community 50 - "Community 50"
+### Community 44 - "Community 44"
+Cohesion: 0.36
+Nodes (4): {closure#1}(), SyncContributorLogins, Contributor, ContributorAccess
+
+### Community 49 - "Community 49"
 Cohesion: 0.29
+Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
+
+### Community 54 - "Community 54"
+Cohesion: 0.33
+Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
+
+### Community 55 - "Community 55"
+Cohesion: 0.33
+Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
+
+### Community 56 - "Community 56"
+Cohesion: 0.33
 Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
 
 ### Community 57 - "Community 57"
 Cohesion: 0.33
 Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
 
-### Community 58 - "Community 58"
-Cohesion: 0.33
-Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
-
-### Community 59 - "Community 59"
-Cohesion: 0.33
-Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
-
-### Community 60 - "Community 60"
-Cohesion: 0.33
-Nodes (3): {closure#1}(), {closure#2}(), {closure#3}()
-
-### Community 77 - "Community 77"
+### Community 74 - "Community 74"
 Cohesion: 0.50
 Nodes (3): layouts.workspace-sidebar, portal.icon, portal.navigation
 
-### Community 79 - "Community 79"
+### Community 76 - "Community 76"
 Cohesion: 0.50
 Nodes (3): portal.streak, portal.icon, portal.layout
 
-### Community 80 - "Community 80"
+### Community 77 - "Community 77"
 Cohesion: 0.50
 Nodes (3): portal.icon, portal.layout, work-reports.form
 
-### Community 84 - "Community 84"
-Cohesion: 0.67
-Nodes (3): scripts, build, dev
-
 ## Knowledge Gaps
-- **45 isolated node(s):** `layouts.sidebar`, `layouts.sidebar`, `layouts.sidebar`, `layouts.sidebar`, `portal.icon` (+40 more)
-  These have ≤1 connection - possible missing edges. (Counts symbols only; 494 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **103 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **45 isolated node(s):** `layouts.sidebar`, `portal.icon`, `portal.layout`, `portal.layout`, `work-reports.task-picker` (+40 more)
+  These have ≤1 connection - possible missing edges. (Counts symbols only; 513 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **98 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PayrollMigrationTest` connect `Community 27` to `Community 10`, `Community 11`, `Community 31`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **What connects `layouts.sidebar`, `layouts.sidebar`, `layouts.sidebar` to the rest of the system?**
+- **Why does `AttendanceQrWifiTest` connect `Community 28` to `Community 16`?**
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **What connects `layouts.sidebar`, `portal.icon`, `portal.layout` to the rest of the system?**
   _45 weakly-connected nodes found - possible missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05524537173082574 - nodes in this community are weakly interconnected._
-- **Why does `AtlasSync` connect `Community 7` to `Community 10`, `Community 11`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+  _Cohesion score 0.050837496326770495 - nodes in this community are weakly interconnected._
+- **Why does `DailyWorkReportTest` connect `Community 20` to `Community 16`, `Community 36`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.05308641975308642 - nodes in this community are weakly interconnected._
-- **Why does `AttendanceQrWifiTest` connect `Community 26` to `Community 10`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+  _Cohesion score 0.05524537173082574 - nodes in this community are weakly interconnected._
+- **Why does `RecordStreakTest` connect `Community 29` to `Community 16`, `Community 25`, `Community 2`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.0523532522474881 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05920745920745921 - nodes in this community are weakly interconnected._

@@ -5,6 +5,8 @@ return [
     'timezone' => 'Asia/Makassar',
     'account_domain' => env('STUDIO_ACCOUNT_DOMAIN', 'kamerakitaid.site'),
     'atlas_url' => env('ATLAS_URL', 'https://atlasdashboard.vtlabs.dev'),
+    'atlas_username' => env('ATLAS_USERNAME', ''),
+    'atlas_password' => env('ATLAS_PASSWORD', ''),
     'atlas_cookie' => env('ATLAS_COOKIE', ''),
     'atlas_timeout' => 12,
     'atlas_max_pages' => 200,

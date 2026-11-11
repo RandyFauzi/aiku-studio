@@ -37,7 +37,7 @@ class SyncController extends Controller
         return response()->json([
             'isRunning' => $state['isRunning'] ?? false,
             'state' => $state,
-            'lastSyncedAt' => StudioRecording::max('last_synced_at'),
+            'lastSyncedAt' => StudioRecording::lastSyncedAtIso(),
         ]);
     }
 
@@ -48,7 +48,7 @@ class SyncController extends Controller
         return response()->json(['isRunning' => $state['isRunning'] ?? false, 'progress' => $state,
             'liveOutput' => implode("\n", $state['recent_logs'] ?? []),
             'lastResult' => empty($state['completedAt']) && empty($state['error']) ? null : ['timestamp' => $state['updatedAt'], 'exitCode' => empty($state['error']) ? 0 : 1, 'output' => $state['message'], 'error' => $state['error'] ?? ''],
-            'lastSyncedAt' => StudioRecording::max('last_synced_at'), 'autoSync' => $atlas->auto()]);
+            'lastSyncedAt' => StudioRecording::lastSyncedAtIso(), 'autoSync' => $atlas->auto()]);
     }
 
     public function toggle(Request $request, AtlasSync $sync)

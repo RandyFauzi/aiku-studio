@@ -80,7 +80,7 @@ class RecordingController extends Controller
         }
         return response()->json(['recordings' => $recordings,
             'total' => (int) $stats['totalRecords'], 'page' => $page, 'limit' => $limit, 'totalPages' => (int) ceil($stats['totalRecords'] / $limit),
-            'lastSyncedAt' => StudioRecording::max('last_synced_at'), 'stats' => $stats]);
+            'lastSyncedAt' => StudioRecording::lastSyncedAtIso(), 'stats' => $stats]);
     }
 
     public function assign(Request $request)

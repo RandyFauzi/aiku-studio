@@ -25,24 +25,7 @@ class AtlasSync
 
     public function cookie(): string
     {
-        if (config('payroll.atlas_cookie')) {
-            return config('payroll.atlas_cookie');
-        }
-        $path = 'payroll/atlas-session.json';
-        if (! Storage::disk('local')->exists($path)) {
-            return '';
-        }
-        $state = json_decode(Storage::disk('local')->get($path), true);
-        $host = parse_url(config('payroll.atlas_url'), PHP_URL_HOST);
-        $cookies = [];
-        foreach ($state['cookies'] ?? [] as $cookie) {
-            $domain = ltrim($cookie['domain'] ?? '', '.');
-            if (($host === $domain || str_ends_with($host, '.'.$domain)) && (($cookie['expires'] ?? -1) < 0 || $cookie['expires'] > time())) {
-                $cookies[] = $cookie['name'].'='.$cookie['value'];
-            }
-        }
-
-        return implode('; ', $cookies);
+        return app(AtlasSession::class)->cookie();
     }
 
     public function request(): array
@@ -52,7 +35,7 @@ class AtlasSync
             if ($state['isRunning'] ?? false) {
                 return ['status' => 'running', 'message' => $state['message']];
             }
-            if ($this->cookie() === '') {
+            if ($this->cookie() === '' && ! app(AtlasSession::class)->canLogin()) {
                 throw new \RuntimeException('Sesi Atlas belum tersedia atau kedaluwarsa. Perbarui ATLAS_COOKIE atau file sesi privat.');
             }
             // Include every registered studio/device email, including historical and inactive accounts.
@@ -91,6 +74,7 @@ class AtlasSync
                 if (! $account->participant_id) {
                     if (! ($state['participantsLoaded'] ?? false)) {
                         $html = $this->fetch('/recordings');
+                        app(AtlasParser::class)->recordings($html);
                         foreach (app(AtlasParser::class)->participants($html) as $email => $id) {
                             StudioAccount::where('email', $email)->update(['participant_id' => $id]);
                         }
@@ -98,8 +82,8 @@ class AtlasSync
                     }
                     $account->refresh();
                     if (! $account->participant_id) {
-                        $state['warnings'][] = 'ID peserta belum ditemukan untuk '.$account->email.'. Periksa akses akun pada Atlas; data akun ini belum ditarik.';
-                        $state['recent_logs'][] = end($state['warnings']);
+                        $state['unavailableAccounts'][] = $account->email;
+                        $state['recent_logs'][] = $account->email.' belum tercantum di Atlas; sumber 1618 diperiksa terpisah.';
                         $this->advance($state);
 
                         return;
@@ -157,15 +141,20 @@ class AtlasSync
 
     private function fetch(string $path): string
     {
-        $cookie = $this->cookie();
-        if (! $cookie) {
-            throw new \RuntimeException('Sesi Atlas kedaluwarsa. Perbarui sesi privat.');
-        }
-        $response = Http::timeout(config('payroll.atlas_timeout'))->connectTimeout(5)
+        $session = app(AtlasSession::class);
+        $cookie = $session->cookie();
+        if ($cookie === '') $cookie = $session->refresh();
+        $send = fn (string $cookie) => Http::timeout(config('payroll.atlas_timeout'))->connectTimeout(5)
             ->retry(3, 250, fn ($e) => $e instanceof \Illuminate\Http\Client\ConnectionException
                 || ($e instanceof \Illuminate\Http\Client\RequestException && ($e->response->serverError() || $e->response->status() === 429)), throw: false)
             ->withHeaders(['Cookie' => $cookie, 'Accept' => 'text/html'])
             ->withOptions(['allow_redirects' => false])->get(rtrim(config('payroll.atlas_url'), '/').$path);
+        $response = $send($cookie);
+        $location = parse_url($response->header('Location') ?? '', PHP_URL_PATH);
+        $loginPage = str_contains($response->body(), '<form') && str_contains($response->body(), 'name="password"');
+        if (in_array($response->status(), [401, 403], true) || ($response->redirect() && $location === '/login') || $loginPage) {
+            $response = $send($session->refresh($cookie));
+        }
         if (! $response->successful()) {
             throw new \RuntimeException('Atlas mengembalikan HTTP '.$response->status().(in_array($response->status(), [301, 302, 303, 307, 308, 401, 403])
                 ? '; sesi tidak berlaku atau akses ditolak. Perbarui sesi Atlas pada server.' : '; periksa koneksi atau coba ulang setelah layanan Atlas pulih.'));
@@ -213,6 +202,9 @@ class AtlasSync
             $state['isRunning'] = false;
             $state['stage'] = empty($state['warnings']) ? 'completed' : 'failed';
             $state['message'] = 'Atlas: '.$state['recordsCount'].' rekaman disimpan.';
+            if (! empty($state['unavailableAccounts'])) {
+                $state['message'] .= ' '.count($state['unavailableAccounts']).' akun belum tersedia di Atlas; sumber 1618 diperiksa terpisah.';
+            }
             if (! empty($state['warnings'])) {
                 $state['error'] = count($state['warnings']).' masalah ditemukan. '.implode(' | ', array_slice($state['warnings'], -10));
                 $state['message'] .= ' Belum lengkap: '.$state['error'];

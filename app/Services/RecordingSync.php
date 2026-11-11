@@ -151,6 +151,9 @@ class RecordingSync
         $state['stage'] = $errors ? 'error' : 'completed';
         $state['error'] = $errors ? implode(' | ', $errors) : null;
         $state['message'] = $errors ? 'Sinkronisasi belum lengkap. '.$state['error'] : 'Atlas dan 1618 selesai disinkronkan.';
+        if (! $errors && ! empty($state['sources']['atlas']['unavailableAccounts'])) {
+            $state['message'] .= ' Catatan: '.count($state['sources']['atlas']['unavailableAccounts']).' akun belum tersedia di Atlas; hasil 1618 tetap diproses.';
+        }
         $state['completedAt'] = now()->toIso8601String();
         $this->scheduleNext();
     }

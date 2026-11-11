@@ -43,7 +43,7 @@ CREATE TABLE "shift_settings" ("id" integer primary key autoincrement not null, 
 
 CREATE TABLE "studio_accounts" ("id" integer primary key autoincrement not null, "email" varchar not null, "name" varchar not null, "active" tinyint(1) not null default '1', "participant_id" varchar, "created_at" datetime, "updated_at" datetime);
 
-CREATE TABLE "studio_recordings" ("record_id" varchar not null, "participant_email" varchar not null, "task_title" varchar, "recorded_utc" varchar, "recorded_at" datetime, "duration_sec" double not null default '0', "duration_min" double not null default '0', "billable_min" double not null default '0', "rejected_min" double not null default '0', "pending_min" double not null default '0', "deferred_min" double not null default '0', "processing_status" varchar, "billable_status" varchar, "reviewed_utc" varchar, "reconciliation" varchar, "assigned_contributor_id" integer, "assigned_worker_name" varchar, "manual_payment_status" varchar not null default 'Belum Rekap', "notes" text, "assigned_at" datetime, "last_synced_at" datetime, "createdAt" datetime, "updatedAt" datetime, "atlas_synced_at" datetime, "robotics_1618_synced_at" datetime, primary key ("record_id"));
+CREATE TABLE "studio_recordings" ("record_id" varchar not null, "participant_email" varchar not null, "task_title" varchar, "recorded_utc" varchar, "recorded_at" datetime, "duration_sec" double not null default '0', "duration_min" double not null default '0', "billable_min" double not null default '0', "rejected_min" double not null default '0', "pending_min" double not null default '0', "deferred_min" double not null default '0', "processing_status" varchar, "billable_status" varchar, "reviewed_utc" varchar, "reconciliation" varchar, "assigned_contributor_id" integer, "assigned_worker_name" varchar, "manual_payment_status" varchar not null default 'Belum Rekap', "notes" text, "assigned_at" datetime, "last_synced_at" datetime, "createdAt" datetime, "updatedAt" datetime, "atlas_synced_at" datetime, "robotics_1618_synced_at" datetime, "prev_billable_min" numeric, "prev_rejected_min" numeric, "qc_changed_at" datetime, primary key ("record_id"));
 
 CREATE TABLE "users" ("id" integer primary key autoincrement not null, "name" varchar not null, "email" varchar not null, "email_verified_at" datetime, "password" varchar not null, "remember_token" varchar, "created_at" datetime, "updated_at" datetime, "role" varchar not null default 'contributor', "contributor_id" integer, "is_active" tinyint(1) not null default '1');
 
@@ -116,6 +116,8 @@ CREATE INDEX "studio_recordings_assigned_worker_name_index" on "studio_recording
 CREATE INDEX "studio_recordings_manual_payment_status_index" on "studio_recordings" ("manual_payment_status");
 
 CREATE INDEX "studio_recordings_participant_email_index" on "studio_recordings" ("participant_email");
+
+CREATE INDEX "studio_recordings_qc_changed_at_index" on "studio_recordings" ("qc_changed_at");
 
 CREATE INDEX "studio_recordings_recorded_at_index" on "studio_recordings" ("recorded_at");
 

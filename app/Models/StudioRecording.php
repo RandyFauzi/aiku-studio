@@ -19,6 +19,13 @@ class StudioRecording extends Model
 
     protected $guarded = [];
 
+    public static function lastSyncedAtIso(): ?string
+    {
+        $value = static::max('last_synced_at');
+
+        return $value ? \Carbon\CarbonImmutable::parse($value, 'UTC')->toIso8601String() : null;
+    }
+
     protected $appends = ['data_sources', 'qc_delta'];
 
     public function getDataSourcesAttribute(): array

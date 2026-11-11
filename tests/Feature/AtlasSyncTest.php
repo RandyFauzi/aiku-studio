@@ -32,15 +32,15 @@ class AtlasSyncTest extends TestCase
         $this->assertSame('completed', $sync->state()['stage']);
     }
 
-    public function test_missing_participant_is_reported_as_incomplete(): void
+    public function test_missing_participant_is_reported_as_unavailable_for_this_source(): void
     {
         config(['payroll.atlas_cookie' => 'test=1']);
         StudioAccount::create(['name' => 'Studio', 'email' => 'missing@example.test', 'active' => true]);
-        Http::fake(['*' => Http::response('<html></html>')]);
+        Http::fake(['*' => Http::response($this->page([], 0))]);
         $sync = app(AtlasSync::class);
         $sync->request(); $sync->tick();
-        $this->assertSame('failed', $sync->state()['stage']);
-        $this->assertStringContainsString('missing@example.test', $sync->state()['error']);
+        $this->assertSame('completed', $sync->state()['stage']);
+        $this->assertSame(['missing@example.test'], $sync->state()['unavailableAccounts']);
     }
 
     public function test_invalid_record_does_not_abort_valid_records(): void
@@ -73,9 +73,9 @@ class AtlasSyncTest extends TestCase
     {
         config(['payroll.atlas_cookie' => 'test=1']);
         foreach (['one', 'two'] as $name) StudioAccount::create(['name' => $name, 'email' => $name.'@example.test', 'active' => true]);
-        Http::fake(['*' => Http::response('<html></html>')]);
+        Http::fake(['*' => Http::response($this->page([], 0))]);
         $sync = app(AtlasSync::class); $sync->request(); $sync->tick(); $sync->tick();
         Http::assertSentCount(1);
-        $this->assertSame('failed', $sync->state()['stage']);
+        $this->assertSame('completed', $sync->state()['stage']);
     }
 }
