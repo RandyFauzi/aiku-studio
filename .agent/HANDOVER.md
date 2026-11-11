@@ -1,3 +1,7 @@
+### [2026-11-11] — Codex: pemulihan sesi Atlas produksi
+- Konfirmasi HTTP 307 pada akun pertama akibat sesi Atlas kedaluwarsa; login ulang memakai otorisasi sebelumnya, simpan sesi privat, lanjut sinkronisasi 92 akun. Selesai membaca seluruh akun: 2.596 Atlas + 697 1618 diperbarui, total DB 3.293 tanpa label sumber kosong; status tetap belum lengkap karena lima akun tanpa ID peserta.
+- Verifikasi independen terhadap 1.978 opsi peserta Atlas: aikupink4, aikubiru5, aikuhijau6, aikuhitam5, pinkst7 (@kamerakitaid.site) tidak ditemukan termasuk variasi kurung. Perlu konfirmasi email/akses Atlas dari pengguna. Belum ada login otomatis saat sesi kedaluwarsa; tidak mengubah kode produksi atau menyimpan password. Endpoint sementara menghapus diri.
+
 ### [2026-11-11 10:24] — Antigravity
 - Implementasi tracking perubahan QC (Approved & Reject) dengan indikator visual naik/turun per rekaman (/recordings):
   - Database & Model: Menambahkan kolom `prev_billable_min`, `prev_rejected_min`, `qc_changed_at` dan accessor `qc_delta` di `StudioRecording` serta helper `ingestWithQcTracking` yang membandingkan selisih nilai baru vs lama saat sinkronisasi.
