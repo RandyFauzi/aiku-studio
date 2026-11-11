@@ -240,26 +240,48 @@
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                                    Titik Koordinat Studio (GPS & Radius Opsional)
+                                    Titik Koordinat Studio (GPS & Geofence Radius)
                                 </label>
                                 <p class="text-[11px] text-slate-500 mt-0.5">
-                                    Setiap kontributor yang scan barcode otomatis dicatat posisi GPS-nya. Jika koordinat studio diisi, sistem juga memvalidasi radius jarak fisik.
+                                    Setiap kontributor yang scan barcode otomatis dicatat posisi GPS-nya. Jika koordinat studio diisi, sistem memvalidasi batas radius fisik.
                                 </p>
                             </div>
-                            <button type="button" @click="captureAdminCoordinates()" class="shrink-0 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span>Ambil GPS Saya</span>
-                            </button>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button type="button" @click="setOfficialStudioLocation()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition">
+                                    Reset ke Studio AIKu
+                                </button>
+                                <button type="button" @click="captureAdminCoordinates()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span>Ambil GPS Saya</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Studio Address & Location Banner -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-bold text-slate-800">Alamat Studio AIKu:</p>
+                                    <p class="text-slate-600 text-[11px] mt-0.5 leading-relaxed" x-text="config.studio_address || 'Jl. Hikmah Banua VI No.144, Pemurus Luar, Kec. Banjarmasin Tim, Kota Banjarmasin, Kalimantan Selatan 70654'"></p>
+                                </div>
+                                <a :href="'https://maps.google.com/?q=' + (config.studio_lat || -3.3445020) + ',' + (config.studio_lng || 114.6325970)" target="_blank" class="shrink-0 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1">
+                                    <span>Buka Maps ↗</span>
+                                </a>
+                            </div>
+                            <div class="flex items-center gap-2 pt-1 border-t border-slate-200/60 text-[11px]">
+                                <span class="text-slate-500">Koordinat Resmi:</span>
+                                <code class="font-mono font-bold text-slate-700">-3.3445020, 114.6325970</code>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Latitude</label>
-                                <input type="number" step="any" x-model="config.studio_lat" placeholder="Contoh: -8.512345" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-500 focus:outline-none">
+                                <input type="number" step="any" x-model="config.studio_lat" placeholder="-3.3445020" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-500 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Longitude</label>
-                                <input type="number" step="any" x-model="config.studio_lng" placeholder="Contoh: 115.123456" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-500 focus:outline-none">
+                                <input type="number" step="any" x-model="config.studio_lng" placeholder="114.6325970" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-500 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Radius Toleransi (Meter)</label>

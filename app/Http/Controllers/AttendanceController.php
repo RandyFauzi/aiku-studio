@@ -21,6 +21,9 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 class AttendanceController extends Controller
 {
     public const SETTING_KEY = 'studio_attendance_qr_wifi';
+    public const STUDIO_DEFAULT_LAT = -3.344502043733414;
+    public const STUDIO_DEFAULT_LNG = 114.63259698900639;
+    public const STUDIO_DEFAULT_ADDRESS = 'Jl. Hikmah Banua VI No.144, Pemurus Luar, Kec. Banjarmasin Tim, Kota Banjarmasin, Kalimantan Selatan 70654';
 
     private function contributor(Request $request): Contributor
     {
@@ -551,6 +554,7 @@ class AttendanceController extends Controller
             }],
             'wifi_check_enabled' => 'required|boolean',
             'studio_name' => 'nullable|string|max:100',
+            'studio_address' => 'nullable|string|max:255',
             'studio_lat' => 'nullable|numeric|between:-90,90',
             'studio_lng' => 'nullable|numeric|between:-180,180',
             'geofence_radius_m' => 'nullable|integer|min:20|max:10000',
@@ -574,13 +578,17 @@ class AttendanceController extends Controller
             $qrSecret = 'aiku_qr_'.Str::random(24);
         }
 
+        $studioAddress = array_key_exists('studio_address', $data)
+            ? ($data['studio_address'] ?: self::STUDIO_DEFAULT_ADDRESS)
+            : ($current['studio_address'] ?? self::STUDIO_DEFAULT_ADDRESS);
+
         $studioLat = array_key_exists('studio_lat', $data)
             ? ($data['studio_lat'] !== null ? (float) $data['studio_lat'] : null)
-            : ($current['studio_lat'] ?? null);
+            : ($current['studio_lat'] ?? self::STUDIO_DEFAULT_LAT);
 
         $studioLng = array_key_exists('studio_lng', $data)
             ? ($data['studio_lng'] !== null ? (float) $data['studio_lng'] : null)
-            : ($current['studio_lng'] ?? null);
+            : ($current['studio_lng'] ?? self::STUDIO_DEFAULT_LNG);
 
         $geofenceRadius = array_key_exists('geofence_radius_m', $data)
             ? ($data['geofence_radius_m'] !== null ? (int) $data['geofence_radius_m'] : 150)
@@ -591,6 +599,7 @@ class AttendanceController extends Controller
             'wifi_check_enabled' => (bool) $data['wifi_check_enabled'],
             'qr_secret' => $qrSecret,
             'studio_name' => ($data['studio_name'] ?? null) ?: 'AIKu Studio',
+            'studio_address' => $studioAddress,
             'studio_lat' => $studioLat,
             'studio_lng' => $studioLng,
             'geofence_radius_m' => $geofenceRadius,
@@ -632,8 +641,9 @@ class AttendanceController extends Controller
                 'wifi_check_enabled' => true,
                 'qr_secret' => 'aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm',
                 'studio_name' => 'AIKu Studio',
-                'studio_lat' => null,
-                'studio_lng' => null,
+                'studio_address' => self::STUDIO_DEFAULT_ADDRESS,
+                'studio_lat' => self::STUDIO_DEFAULT_LAT,
+                'studio_lng' => self::STUDIO_DEFAULT_LNG,
                 'geofence_radius_m' => 150,
                 'updated_at' => now()->toIso8601String(),
             ];
@@ -644,6 +654,10 @@ class AttendanceController extends Controller
             );
 
             return $default;
+        }
+
+        if (empty($val['studio_address'])) {
+            $val['studio_address'] = self::STUDIO_DEFAULT_ADDRESS;
         }
 
         return $val;

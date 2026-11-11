@@ -559,4 +559,32 @@ class AttendanceQrWifiTest extends TestCase
             ->assertJsonPath('attendance.checkin_method', 'qr_wifi')
             ->assertJsonPath('attendance.client_ip', '180.244.1.2');
     }
+
+    public function test_studio_coordinates_default_to_official_banjarmasin_location(): void
+    {
+        $admin = $this->adminUser();
+        $worker = $this->contributorUser('banjarmasin_worker@example.com');
+
+        $res = $this->actingAs($admin)->getJson('/api/attendance/wifi-config');
+        $res->assertOk();
+
+        $this->assertEqualsWithDelta(AttendanceController::STUDIO_DEFAULT_LAT, $res->json('config.studio_lat'), 0.0001);
+        $this->assertEqualsWithDelta(AttendanceController::STUDIO_DEFAULT_LNG, $res->json('config.studio_lng'), 0.0001);
+        $this->assertStringContainsString('Hikmah Banua', $res->json('config.studio_address'));
+
+        // Contributor checking in with Banjarmasin coordinates inside studio radius
+        $checkinRes = $this->actingAs($worker)
+            ->withServerVariables(['REMOTE_ADDR' => '140.213.10.103'])
+            ->postJson('/api/me/attendance/qr', [
+                'qr_token' => 'aiku_qr_oAA9kgzn0xNmnq9W2gBATjCm',
+                'latitude' => -3.344502,
+                'longitude' => 114.632597,
+                'accuracy_m' => 10.0,
+                'captured_at' => now()->toISOString(),
+            ]);
+
+        $checkinRes->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('attendance.checkin_method', 'qr_wifi');
+    }
 }

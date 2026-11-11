@@ -147,6 +147,10 @@ window.barcodeWifiModal = () => ({
         wifi_check_enabled: true,
         qr_secret: '',
         studio_name: 'AIKu Studio',
+        studio_address: 'Jl. Hikmah Banua VI No.144, Pemurus Luar, Kec. Banjarmasin Tim, Kota Banjarmasin, Kalimantan Selatan 70654',
+        studio_lat: -3.3445020,
+        studio_lng: 114.6325970,
+        geofence_radius_m: 150,
     },
     currentIp: '',
     qrUrl: '',
@@ -286,6 +290,22 @@ window.barcodeWifiModal = () => ({
 
     removeIp(index) {
         this.config.wifi_ips.splice(index, 1);
+    },
+
+    setOfficialStudioLocation() {
+        this.config.studio_lat = -3.3445020;
+        this.config.studio_lng = 114.6325970;
+        this.config.geofence_radius_m = 150;
+        this.config.studio_address = 'Jl. Hikmah Banua VI No.144, Pemurus Luar, Kec. Banjarmasin Tim, Kota Banjarmasin, Kalimantan Selatan 70654';
+        if (window.Swal) {
+            window.Swal.fire({
+                icon: 'success',
+                title: 'Koordinat Studio AIKu Disetel',
+                text: 'Koordinat resmi Studio AIKu (-3.3445020, 114.6325970) berhasil dimuat. Klik Simpan Pengaturan WiFi untuk menerapkan.',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        }
     },
 
     async captureAdminCoordinates() {

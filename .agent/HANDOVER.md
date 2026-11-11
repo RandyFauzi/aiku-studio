@@ -1,3 +1,10 @@
+### [2026-11-11 14:34] — Antigravity
+- Penetapan lokasi & koordinat resmi Studio AIKu Banjarmasin:
+  - Alamat: `Jl. Hikmah Banua VI No.144, Pemurus Luar, Kec. Banjarmasin Tim, Kota Banjarmasin, Kalimantan Selatan 70654`.
+  - Koordinat: `-3.344502043733414, 114.63259698900639` dengan batas radius toleransi 150 meter.
+  - Ditambahkan migrasi `2026_11_11_000002_update_studio_official_location_coordinates.php` dan tombol "Reset ke Studio AIKu" di modal pengaturan WiFi admin.
+- Validasi: PHPUnit `AttendanceQrWifiTest` (20 tests, 100 assertions) lulus 100%, Vite build sukses, view cache dibersihkan. State IDLE.
+
 ### [2026-11-11 14:24] — Antigravity
 - Audit & perbaikan absensi Barcode WiFi kantor dan dukungan dynamic IP IndiHome:
   - `AttendanceController`: Menambahkan toleransi ISP dynamic pool (/16 matching untuk public IP IndiHome/Telkom 140.213.*.*), CIDR subnet (`ipInCidr`), wildcard multi-oktet, dan fallback GPS Geofence (absensi berhasil jika kontributor terverifikasi berada di dalam radius Studio AIKu).
