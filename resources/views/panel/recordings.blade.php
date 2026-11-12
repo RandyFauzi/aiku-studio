@@ -786,34 +786,273 @@
                         </div>
                     </div>
 
-                    <!-- Filter Pekerja -->
-                    <select x-model="filters.worker" @change="applyFilters(1)"
-                            class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-semibold py-2 px-3 rounded-xl focus:outline-none focus:border-[#00B090] cursor-pointer">
-                        <option value="all">Semua Pekerja</option>
-                        <option value="unassigned">Belum Ditugaskan</option>
-                        <template x-for="c in contributors" :key="c.contributor_id">
-                            <option :value="c.name" x-text="c.name"></option>
-                        </template>
-                    </select>
+                    <!-- Filter Pekerja (Custom Dropdown Dengan Pencarian) -->
+                    <div class="relative shrink-0" x-data="{ openWorkerDropdown: false, searchWorkerFilter: '' }">
+                        <button type="button" 
+                                @click="openWorkerDropdown = !openWorkerDropdown; if(openWorkerDropdown) $nextTick(() => $refs.workerSearchInput?.focus())"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                :class="filters.worker !== 'all' ? (filters.worker === 'unassigned' ? 'border-amber-300 text-amber-800 bg-amber-50/60' : 'border-[#00B090] text-[#009B7E] bg-emerald-50/50') : ''">
+                            <div class="flex items-center gap-1.5 truncate max-w-[130px]">
+                                <span class="w-2 h-2 rounded-full shrink-0" 
+                                      :class="filters.worker === 'all' ? 'bg-slate-400' : (filters.worker === 'unassigned' ? 'bg-amber-500' : 'bg-[#00B090]')"></span>
+                                <span class="truncate" x-text="filters.worker === 'all' ? 'Semua Pekerja' : (filters.worker === 'unassigned' ? 'Belum Ditandai' : filters.worker)"></span>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openWorkerDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
 
-                    <!-- Filter Status QC -->
-                    <select x-model="filters.status" @change="applyFilters(1)"
-                            class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-semibold py-2 px-3 rounded-xl focus:outline-none focus:border-[#00B090] cursor-pointer">
-                        <option value="all">Semua Status QC</option>
-                        <option value="approved">Approved (Billable)</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="pending">Pending</option>
-                        <option value="qc_changed">✨ Ada Perubahan QC</option>
-                    </select>
+                        <!-- Floating Dropdown Menu Pekerja -->
+                        <div x-show="openWorkerDropdown" 
+                             @click.outside="openWorkerDropdown = false; searchWorkerFilter = ''"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 sm:left-auto sm:right-0 mt-1.5 w-64 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2.5 text-xs text-slate-700"
+                             x-cloak>
+                            
+                            <div class="flex items-center justify-between px-1 mb-2">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Filter Pekerja</span>
+                                <span class="text-[10px] text-[#009B7E] bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-bold" x-text="contributors.length + ' orang'"></span>
+                            </div>
 
-                    <!-- Filter Sumber Data (Verbos / 1618) -->
-                    <select x-model="filters.source" @change="applyFilters(1)"
-                            class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-semibold py-2 px-3 rounded-xl focus:outline-none focus:border-[#00B090] cursor-pointer"
-                            :class="filters.source !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
-                        <option value="all">Semua Sumber</option>
-                        <option value="atlas">Verbos</option>
-                        <option value="1618">1618</option>
-                    </select>
+                            <div class="relative mb-2">
+                                <input type="text"
+                                       x-ref="workerSearchInput"
+                                       x-model="searchWorkerFilter"
+                                       placeholder="Cari nama pekerja..."
+                                       class="w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl pl-8 pr-7 py-1.5 text-xs focus:ring-1 focus:ring-[#00B090] focus:border-[#00B090] outline-none transition">
+                                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <button x-show="searchWorkerFilter" @click="searchWorkerFilter = ''" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">✕</button>
+                            </div>
+
+                            <div class="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
+                                <button type="button"
+                                        @click="filters.worker = 'all'; applyFilters(1); openWorkerDropdown = false; searchWorkerFilter = ''"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition group"
+                                        :class="filters.worker === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full" :class="filters.worker === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                        <span class="text-xs">Semua Pekerja</span>
+                                    </div>
+                                    <span x-show="filters.worker === 'all'" class="text-[#00B090] font-black">✓</span>
+                                </button>
+
+                                <button type="button"
+                                        @click="filters.worker = 'unassigned'; applyFilters(1); openWorkerDropdown = false; searchWorkerFilter = ''"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition group"
+                                        :class="filters.worker === 'unassigned' ? 'bg-amber-50 text-amber-800 font-bold' : 'hover:bg-amber-50/50 text-amber-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-4 h-4 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-[10px]">+</span>
+                                        <span class="text-xs font-semibold">Belum Ditandai</span>
+                                    </div>
+                                    <span x-show="filters.worker === 'unassigned'" class="text-amber-700 font-black">✓</span>
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100"></div>
+
+                                <template x-for="c in contributors.filter(c => !searchWorkerFilter || (c.name || '').toLowerCase().includes(searchWorkerFilter.toLowerCase().trim()))" :key="c.contributor_id || c.name">
+                                    <button type="button"
+                                            @click="filters.worker = c.name; applyFilters(1); openWorkerDropdown = false; searchWorkerFilter = ''"
+                                            class="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-xl transition group"
+                                            :class="filters.worker === c.name ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
+                                                  :class="getWorkerAvatarStyle(c.name)"
+                                                  x-text="getWorkerInitials(c.name)"></span>
+                                            <span class="text-xs truncate font-medium" x-text="c.name"></span>
+                                        </div>
+                                        <span x-show="filters.worker === c.name" class="text-[#00B090] font-black shrink-0 ml-1">✓</span>
+                                    </button>
+                                </template>
+
+                                <div x-show="contributors.filter(c => !searchWorkerFilter || (c.name || '').toLowerCase().includes(searchWorkerFilter.toLowerCase().trim())).length === 0" 
+                                     class="text-center py-4 text-xs text-slate-400">
+                                    Tidak ditemukan pekerja "<span x-text="searchWorkerFilter" class="text-slate-700 font-semibold"></span>"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Status QC (Custom Dropdown) -->
+                    <div class="relative shrink-0" x-data="{ openStatusDropdown: false }">
+                        <button type="button" 
+                                @click="openStatusDropdown = !openStatusDropdown"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                :class="filters.status !== 'all' ? (filters.status === 'unassigned' ? 'border-amber-300 text-amber-800 bg-amber-50/60' : 'border-[#00B090] text-[#009B7E] bg-emerald-50/50') : ''">
+                            <div class="flex items-center gap-1.5 truncate max-w-[140px]">
+                                <span class="w-2 h-2 rounded-full shrink-0" 
+                                      :class="{
+                                          'bg-slate-400': filters.status === 'all',
+                                          'bg-emerald-500': filters.status === 'approved',
+                                          'bg-rose-500': filters.status === 'rejected',
+                                          'bg-amber-500': filters.status === 'pending' || filters.status === 'unassigned',
+                                          'bg-purple-500': filters.status === 'qc_changed',
+                                      }"></span>
+                                <span class="truncate" x-text="getStatusLabel(filters.status)"></span>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openStatusDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <!-- Floating Dropdown Menu Status QC -->
+                        <div x-show="openStatusDropdown" 
+                             @click.outside="openStatusDropdown = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 sm:left-auto sm:right-0 mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2 text-xs text-slate-700"
+                             x-cloak>
+                            
+                            <div class="px-2 py-1 mb-1">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status QC & Penugasan</span>
+                            </div>
+
+                            <div class="space-y-0.5">
+                                <button type="button"
+                                        @click="filters.status = 'all'; applyFilters(1); openStatusDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="filters.status === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full" :class="filters.status === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                        <span class="text-xs">Semua Status QC</span>
+                                    </div>
+                                    <span x-show="filters.status === 'all'" class="text-[#00B090] font-black">✓</span>
+                                </button>
+
+                                <button type="button"
+                                        @click="filters.status = 'approved'; applyFilters(1); openStatusDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="filters.status === 'approved' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span class="text-xs">Approved (Billable)</span>
+                                    </div>
+                                    <span x-show="filters.status === 'approved'" class="text-emerald-700 font-black">✓</span>
+                                </button>
+
+                                <button type="button"
+                                        @click="filters.status = 'rejected'; applyFilters(1); openStatusDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="filters.status === 'rejected' ? 'bg-rose-50 text-rose-800 font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <span class="text-xs">Rejected</span>
+                                    </div>
+                                    <span x-show="filters.status === 'rejected'" class="text-rose-700 font-black">✓</span>
+                                </button>
+
+                                <button type="button"
+                                        @click="filters.status = 'pending'; applyFilters(1); openStatusDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="filters.status === 'pending' ? 'bg-amber-50 text-amber-800 font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        <span class="text-xs">Pending</span>
+                                    </div>
+                                    <span x-show="filters.status === 'pending'" class="text-amber-700 font-black">✓</span>
+                                </button>
+
+                                <button type="button"
+                                        @click="filters.status = 'qc_changed'; applyFilters(1); openStatusDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="filters.status === 'qc_changed' ? 'bg-purple-50 text-purple-800 font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs">✨</span>
+                                        <span class="text-xs">Ada Perubahan QC</span>
+                                    </div>
+                                    <span x-show="filters.status === 'qc_changed'" class="text-purple-700 font-black">✓</span>
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100"></div>
+
+                                <button type="button"
+                                        @click="filters.status = 'unassigned'; applyFilters(1); openStatusDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition group"
+                                        :class="filters.status === 'unassigned' ? 'bg-amber-50 text-amber-800 font-bold' : 'hover:bg-amber-50/50 text-amber-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-4 h-4 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-[10px]">+</span>
+                                        <span class="text-xs font-semibold">Belum Ditandai</span>
+                                    </div>
+                                    <span x-show="filters.status === 'unassigned'" class="text-amber-700 font-black">✓</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Sumber Data (Verbos / 1618 Custom Dropdown) -->
+                    <div class="relative shrink-0" x-data="{ openSourceDropdown: false }">
+                        <button type="button" 
+                                @click="openSourceDropdown = !openSourceDropdown"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                :class="filters.source !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
+                            <div class="flex items-center gap-1.5 truncate">
+                                <span class="w-2 h-2 rounded-full shrink-0" 
+                                      :class="{
+                                          'bg-slate-400': filters.source === 'all',
+                                          'bg-emerald-500': filters.source === 'atlas' || filters.source === 'verbos',
+                                          'bg-sky-500': filters.source === '1618',
+                                      }"></span>
+                                <span class="truncate" x-text="filters.source === 'all' ? 'Semua Sumber' : (filters.source === '1618' ? '1618' : 'Verbos')"></span>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openSourceDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <!-- Floating Dropdown Menu Sumber Data -->
+                        <div x-show="openSourceDropdown" 
+                             @click.outside="openSourceDropdown = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 sm:left-auto sm:right-0 mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2 text-xs text-slate-700"
+                             x-cloak>
+                            
+                            <div class="px-2 py-1 mb-1">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sumber Data</span>
+                            </div>
+
+                            <div class="space-y-0.5">
+                                <button type="button"
+                                        @click="filters.source = 'all'; applyFilters(1); openSourceDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="filters.source === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full" :class="filters.source === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                        <span class="text-xs">Semua Sumber</span>
+                                    </div>
+                                    <span x-show="filters.source === 'all'" class="text-[#00B090] font-black">✓</span>
+                                </button>
+
+                                <button type="button"
+                                        @click="filters.source = 'atlas'; applyFilters(1); openSourceDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="(filters.source === 'atlas' || filters.source === 'verbos') ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span class="text-xs">Verbos</span>
+                                    </div>
+                                    <span x-show="filters.source === 'atlas' || filters.source === 'verbos'" class="text-emerald-700 font-black">✓</span>
+                                </button>
+
+                                <button type="button"
+                                        @click="filters.source = '1618'; applyFilters(1); openSourceDropdown = false"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition"
+                                        :class="filters.source === '1618' ? 'bg-sky-50 text-sky-800 font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                                        <span class="text-xs">1618</span>
+                                    </div>
+                                    <span x-show="filters.source === '1618'" class="text-sky-700 font-black">✓</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- View Toggle: List / Grid -->
                     <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shadow-2xs">
@@ -2293,6 +2532,17 @@
                         return 'Akun #' + prefix;
                     }
                     return prefix;
+                },
+
+                getStatusLabel(status) {
+                    switch (status) {
+                        case 'approved': return 'Approved (Billable)';
+                        case 'rejected': return 'Rejected';
+                        case 'pending': return 'Pending';
+                        case 'qc_changed': return '✨ Ada Perubahan QC';
+                        case 'unassigned': return 'Belum Ditandai';
+                        default: return 'Semua Status QC';
+                    }
                 },
 
                 async fetchStudioAccounts() {

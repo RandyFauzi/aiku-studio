@@ -79,4 +79,31 @@ class RecordingSourcesTest extends TestCase
         $resAll = $this->actingAs($admin)->getJson('/api/studio-recordings?source=all');
         $resAll->assertOk()->assertJsonPath('total', 2);
     }
+
+    public function test_recordings_can_be_filtered_by_unassigned_status(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        StudioRecording::create([
+            'record_id' => 'rec-assigned',
+            'participant_email' => 'studio@example.test',
+            'recorded_at' => '2026-10-24 06:30:00',
+            'assigned_worker_name' => 'Budi',
+        ]);
+        StudioRecording::create([
+            'record_id' => 'rec-unassigned',
+            'participant_email' => 'studio@example.test',
+            'recorded_at' => '2026-10-24 07:00:00',
+            'assigned_worker_name' => null,
+        ]);
+
+        $res = $this->actingAs($admin)->getJson('/api/studio-recordings?status=unassigned');
+        $res->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('recordings.0.record_id', 'rec-unassigned');
+
+        $resWorker = $this->actingAs($admin)->getJson('/api/studio-recordings?worker=unassigned');
+        $resWorker->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('recordings.0.record_id', 'rec-unassigned');
+    }
 }

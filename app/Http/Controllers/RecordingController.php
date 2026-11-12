@@ -39,6 +39,8 @@ class RecordingController extends Controller
                 });
             } elseif ($request->status === 'qc_changed') {
                 $query->whereNotNull('qc_changed_at');
+            } elseif ($request->status === 'unassigned' || $request->status === 'belum_ditandai') {
+                $query->where(fn ($q) => $q->whereNull('assigned_worker_name')->orWhere('assigned_worker_name', ''));
             } else {
                 $query->where('manual_payment_status', $request->status);
             }

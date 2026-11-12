@@ -1,3 +1,10 @@
+### [2026-11-12 14:02 WITA] — Antigravity: samakan desain custom dropdown filter rekaman & tambah opsi Belum Ditandai
+- Halaman rekaman (`recordings.blade.php`): Mengganti dropdown native browser `<select>` (Pekerja, Status QC, Sumber) menjadi custom Alpine floating dropdown (`rounded-2xl`, `shadow-xl`, animated chevron, status dot, checkmark aktif) selaras dengan desain dropdown Akun Studio.
+- Dropdown Pekerja kini dilengkapi kolom pencarian nama (`searchWorkerFilter`) serta opsi cepat "Belum Ditandai" berikon amber.
+- Dropdown Status QC ditambahkan opsi "Belum Ditandai" (`unassigned`) yang menyaring data belum memiliki `assigned_worker_name`.
+- `RecordingController`: Mendukung query parameter `status=unassigned` dan `status=belum_ditandai` untuk pemfilteran rekaman belum ditandai.
+- Validasi: PHPUnit `RecordingSourcesTest` & `RecordingSyncTest` lulus 100%, build Vite sukses, view cache cleared. State IDLE.
+
 ### [2026-11-12 13:42 WITA] — Antigravity: seleksi sumber sync manual & rename UI Atlas ke Verbos
 - Bot AIKu Studio (`recordings`): modal sinkronisasi manual kini menyediakan 3 pilihan aksi instan (`⚡ Semua Sumber`, `🟢 Verbos`, `🔵 1618`).
 - Endpoint `POST /api/studio-recordings/sync-now` menerima opsi `{ source: 'all' | 'verbos' | '1618' }`, mengeksekusi worker yang relevan secara selektif tanpa proses scraping panjang jika hanya memilih 1618.
