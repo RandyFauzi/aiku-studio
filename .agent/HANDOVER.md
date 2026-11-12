@@ -1,3 +1,9 @@
+### [2026-11-12 15:55 WITA] — Antigravity: sanitasi input delegasi admin & penanganan error respons
+- `AdminNoteController`: Menyaring `assigned_to_user_id` kosong/string kosong menjadi `null` pada `store` dan `update` agar tidak memicu kegagalan validasi ketika memilih opsi "Semua Admin".
+- `panel.notes`: Memperbaiki penanganan response error dengan SweetAlert dan memastikan payload `assigned_to_user_id` dikirim sebagai `null` saat tidak memilih admin tertentu.
+- Migrasi database `2026_11_12_000001_create_admin_notes_table.php` sudah dijalankan di server produksi.
+- Validasi: PHPUnit `AdminNoteTest` (7 tests, 40 assertions) lulus 100%, view cache cleared. State IDLE.
+
 ### [2026-11-12 15:46 WITA] — Antigravity: fitur Catatan & To-Do List Admin (Dashboard widget & halaman /notes)
 - Menambahkan model `AdminNote`, tabel `admin_notes`, dan controller `AdminNoteController` untuk catatan internal, to-do checklist, dan delegasi tugas antar admin.
 - Halaman khusus `/notes` (`panel.notes`) di Sidebar Operasional: navigasi tanggal WITA, filter tipe (Catatan, To-Do, Delegasi), filter prioritas (Normal, Penting, Mendesak), delegasi target admin, sub-checklist interaktif, pin, dan toggle status penyelesaian.

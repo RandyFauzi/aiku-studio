@@ -676,6 +676,7 @@
                     try {
                         const payload = {
                             ...this.form,
+                            assigned_to_user_id: this.form.assigned_to_user_id ? this.form.assigned_to_user_id : null,
                             checklist_items: this.form.checklist_items.filter(i => i.text && i.text.trim())
                         };
 
@@ -704,12 +705,28 @@
                                 });
                             }
                         } else {
-                            const err = await res.json();
-                            alert(err.message || 'Gagal menyimpan catatan');
+                            const err = await res.json().catch(() => ({}));
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal Menyimpan',
+                                    text: err.message || 'Terjadi kesalahan pada server saat menyimpan catatan.'
+                                });
+                            } else {
+                                alert(err.message || 'Gagal menyimpan catatan');
+                            }
                         }
                     } catch (e) {
                         console.error('Error saving note:', e);
-                        alert('Terjadi kesalahan koneksi.');
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kesalahan Koneksi',
+                                text: 'Gagal terhubung ke server. Periksa koneksi internet Anda.'
+                            });
+                        } else {
+                            alert('Terjadi kesalahan koneksi.');
+                        }
                     } finally {
                         this.submitting = false;
                     }

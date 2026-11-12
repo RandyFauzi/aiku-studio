@@ -96,6 +96,10 @@ class AdminNoteController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if ($request->input('assigned_to_user_id') === '' || $request->input('assigned_to_user_id') === '0') {
+            $request->merge(['assigned_to_user_id' => null]);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string',
@@ -133,6 +137,10 @@ class AdminNoteController extends Controller
 
     public function update(Request $request, AdminNote $adminNote): JsonResponse
     {
+        if ($request->input('assigned_to_user_id') === '' || $request->input('assigned_to_user_id') === '0') {
+            $request->merge(['assigned_to_user_id' => null]);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string',

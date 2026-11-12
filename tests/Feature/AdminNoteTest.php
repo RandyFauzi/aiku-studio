@@ -66,6 +66,26 @@ class AdminNoteTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_note_with_empty_assigned_to(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->postJson('/api/admin-notes', [
+            'title' => 'Catatan Umum untuk Semua Admin',
+            'type' => 'note',
+            'priority' => 'normal',
+            'assigned_to_user_id' => '',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('assigned_to_user_id', null);
+
+        $this->assertDatabaseHas('admin_notes', [
+            'title' => 'Catatan Umum untuk Semua Admin',
+            'assigned_to_user_id' => null,
+        ]);
+    }
+
     public function test_admin_can_list_notes_with_date_and_stats(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
