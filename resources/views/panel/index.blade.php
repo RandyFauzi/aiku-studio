@@ -197,6 +197,164 @@
 
             </div>
 
+            <!-- ADMIN DAILY NOTES & DELEGATION BOARD WIDGET -->
+            <div class="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4" 
+                 x-data="adminDashboardNotesWidget()" 
+                 x-init="initWidget()">
+                
+                <!-- Widget Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-[#009B7E] flex items-center justify-center font-bold text-lg shrink-0 border border-emerald-100">
+                            📝
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Catatan &amp; Delegasi Hari Ini</h2>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#009B7E] border border-emerald-200" x-text="todayFormatted">Hari Ini</span>
+                            </div>
+                            <p class="text-xs text-slate-500">Informasi kejadian operasional, instruksi shift, dan to-do list sesama admin.</p>
+                        </div>
+                    </div>
+
+                    <!-- Right Controls -->
+                    <div class="flex items-center gap-2 self-start sm:self-center">
+                        <button type="button" 
+                                @click="openQuickCreate()"
+                                class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#009B7E] border border-emerald-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            <span>+ Tambah Catatan / To-Do</span>
+                        </button>
+                        <a href="/notes" 
+                           class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1">
+                            <span>Buka Papan Lengkap</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Widget Body -->
+                <div>
+                    <!-- Loading -->
+                    <div x-show="loading" class="py-8 text-center text-slate-400 text-xs font-semibold flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4 animate-spin text-[#00B090]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span>Memuat catatan hari ini...</span>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div x-show="!loading && notes.length === 0" class="py-6 text-center rounded-2xl bg-slate-50 border border-dashed border-slate-200 p-4 space-y-2">
+                        <p class="text-xs text-slate-500 font-medium">Belum ada catatan atau delegasi tugas untuk hari ini.</p>
+                        <button type="button" @click="openQuickCreate()" class="text-xs font-bold text-[#009B7E] hover:underline cursor-pointer">+ Tulis catatan pertama hari ini</button>
+                    </div>
+
+                    <!-- Notes & To-Do Grid -->
+                    <div x-show="!loading && notes.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <template x-for="note in notes.slice(0, 6)" :key="note.id">
+                            <div class="rounded-2xl border p-3.5 flex flex-col justify-between transition hover:shadow-2xs text-xs"
+                                 :class="{
+                                     'border-amber-300 bg-amber-50/20 ring-1 ring-amber-100': note.is_pinned && !note.is_completed,
+                                     'border-rose-200 bg-rose-50/20': note.priority === 'urgent' && !note.is_completed && !note.is_pinned,
+                                     'border-slate-200/80 bg-white': !note.is_pinned && note.priority !== 'urgent' && !note.is_completed,
+                                     'opacity-50 bg-slate-50 border-slate-200': note.is_completed
+                                 }">
+                                
+                                <div>
+                                    <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                                        <div class="flex items-center gap-1.5">
+                                            <span x-show="note.is_pinned" class="text-amber-500" title="Disematkan">📌</span>
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase"
+                                                  :class="{
+                                                      'bg-blue-50 text-blue-700': note.type === 'note',
+                                                      'bg-emerald-50 text-emerald-800': note.type === 'todo',
+                                                      'bg-indigo-50 text-indigo-700': note.type === 'delegation'
+                                                  }"
+                                                  x-text="note.type === 'todo' ? 'To-Do' : (note.type === 'delegation' ? 'Delegasi' : 'Catatan')"></span>
+                                            
+                                            <span x-show="note.priority !== 'normal'" 
+                                                  class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase"
+                                                  :class="note.priority === 'urgent' ? 'bg-rose-100 text-rose-700 font-extrabold' : 'bg-amber-100 text-amber-700'"
+                                                  x-text="note.priority === 'urgent' ? 'Mendesak' : 'Penting'"></span>
+                                        </div>
+
+                                        <span class="text-[10px] text-slate-400 font-mono" x-text="formatTime(note.created_at)"></span>
+                                    </div>
+
+                                    <div class="flex items-start gap-2 my-1">
+                                        <template x-if="note.type !== 'note'">
+                                            <input type="checkbox" 
+                                                   :checked="note.is_completed" 
+                                                   @change="toggleComplete(note)" 
+                                                   class="mt-0.5 rounded text-[#00B090] focus:ring-[#00B090] accent-[#00B090] cursor-pointer">
+                                        </template>
+                                        <h4 class="font-bold text-slate-900 leading-snug break-words" 
+                                            :class="note.is_completed ? 'line-through text-slate-400' : ''"
+                                            x-text="note.title"></h4>
+                                    </div>
+
+                                    <p x-show="note.content" class="text-[11px] text-slate-600 line-clamp-2 my-1" x-text="note.content"></p>
+                                </div>
+
+                                <div class="pt-2 border-t border-slate-100 mt-2 flex items-center justify-between text-[10px] text-slate-400">
+                                    <span class="truncate">Oleh: <strong class="text-slate-600" x-text="note.user?.name || 'Admin'"></strong></span>
+                                    <span class="truncate font-medium text-indigo-600" x-text="note.assigned_to ? ('Untuk: ' + note.assigned_to.name) : 'Semua Admin'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Show all link if more than 6 -->
+                    <div x-show="notes.length > 6" class="pt-2 text-center">
+                        <a href="/notes" class="text-xs font-bold text-[#009B7E] hover:underline" x-text="'+ Lihat ' + (notes.length - 6) + ' catatan lainnya di Papan Catatan →'"></a>
+                    </div>
+                </div>
+
+                <!-- QUICK CREATE MODAL -->
+                <div x-show="showQuickModal" 
+                     class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
+                     x-cloak>
+                    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-5 space-y-4"
+                         @click.outside="showQuickModal = false">
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                            <h3 class="text-sm font-bold text-slate-900">Tambah Catatan / To-Do Hari Ini</h3>
+                            <button type="button" @click="showQuickModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                        </div>
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Judul <span class="text-rose-500">*</span></label>
+                                <input type="text" x-model="quickForm.title" placeholder="Tuliskan judul tugas atau catatan..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-[#00B090]">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Tipe</label>
+                                    <select x-model="quickForm.type" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700">
+                                        <option value="note">📝 Catatan</option>
+                                        <option value="todo">✅ To-Do</option>
+                                        <option value="delegation">👤 Delegasi</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Prioritas</label>
+                                    <select x-model="quickForm.priority" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700">
+                                        <option value="normal">🟢 Normal</option>
+                                        <option value="high">⚠️ Penting</option>
+                                        <option value="urgent">🔥 Mendesak</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Keterangan / Detail (Opsional)</label>
+                                <textarea x-model="quickForm.content" rows="2" placeholder="Catatan singkat..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-[#00B090]"></textarea>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                            <button type="button" @click="showQuickModal = false" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Batal</button>
+                            <button type="button" @click="saveQuickNote()" :disabled="!quickForm.title.trim() || saving" class="px-4 py-1.5 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white text-xs font-bold disabled:opacity-50">Simpan</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
             <!-- ACTIONABLE ATTENTION & ALERTS CENTER -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
@@ -701,5 +859,122 @@
     </main>
 
     <script src="/assets/app.js?v={{ filemtime(public_path('assets/app.js')) }}"></script>
+    <script>
+        function adminDashboardNotesWidget() {
+            return {
+                loading: false,
+                saving: false,
+                notes: [],
+                today: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Makassar', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
+                todayFormatted: new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date()),
+                showQuickModal: false,
+                quickForm: {
+                    title: '',
+                    content: '',
+                    type: 'note',
+                    priority: 'normal'
+                },
+
+                async initWidget() {
+                    await this.fetchTodayNotes();
+                },
+
+                async fetchTodayNotes() {
+                    this.loading = true;
+                    try {
+                        const res = await fetch('/api/admin-notes?date=' + this.today, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.notes = data.notes || [];
+                        }
+                    } catch (e) {
+                        console.error('Error fetching today admin notes:', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                openQuickCreate() {
+                    this.quickForm = {
+                        title: '',
+                        content: '',
+                        type: 'note',
+                        priority: 'normal'
+                    };
+                    this.showQuickModal = true;
+                },
+
+                async saveQuickNote() {
+                    if (!this.quickForm.title.trim()) return;
+                    this.saving = true;
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                    try {
+                        const res = await fetch('/api/admin-notes', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: JSON.stringify({
+                                ...this.quickForm,
+                                note_date: this.today
+                            })
+                        });
+
+                        if (res.ok) {
+                            this.showQuickModal = false;
+                            await this.fetchTodayNotes();
+                        } else {
+                            const err = await res.json();
+                            alert(err.message || 'Gagal menyimpan catatan');
+                        }
+                    } catch (e) {
+                        console.error('Error saving quick note:', e);
+                    } finally {
+                        this.saving = false;
+                    }
+                },
+
+                async toggleComplete(note) {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    try {
+                        const res = await fetch(`/api/admin-notes/${note.id}/toggle`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            }
+                        });
+                        if (res.ok) {
+                            const updated = await res.json();
+                            const idx = this.notes.findIndex(n => n.id === note.id);
+                            if (idx !== -1) this.notes[idx] = updated;
+                        }
+                    } catch (e) {
+                        console.error('Error toggling complete:', e);
+                    }
+                },
+
+                formatTime(timeStr) {
+                    if (!timeStr) return '';
+                    try {
+                        const d = new Date(timeStr);
+                        return new Intl.DateTimeFormat('id-ID', {
+                            timeZone: 'Asia/Makassar',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        }).format(d) + ' WITA';
+                    } catch (e) {
+                        return '';
+                    }
+                }
+            };
+        }
+    </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminNoteController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContributorController;
@@ -82,11 +83,18 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::post('/api/work-reports/assist-unassign', [DailyWorkReportController::class, 'assistUnassign']);
         Route::view('/devices', 'panel.devices')->name('devices');
         Route::view('/devices.html', 'panel.devices');
-        foreach (['index', 'contributors', 'create', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
+        foreach (['index', 'contributors', 'create', 'notes', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
             $view = 'panel.'.$page;
             Route::view('/'.$page, $view)->name($page);
             Route::view('/'.$page.'.html', $view);
         }
+
+        Route::get('/api/admin-notes', [AdminNoteController::class, 'index']);
+        Route::post('/api/admin-notes', [AdminNoteController::class, 'store']);
+        Route::put('/api/admin-notes/{adminNote}', [AdminNoteController::class, 'update'])->whereNumber('adminNote');
+        Route::patch('/api/admin-notes/{adminNote}/toggle', [AdminNoteController::class, 'toggleComplete'])->whereNumber('adminNote');
+        Route::patch('/api/admin-notes/{adminNote}/pin', [AdminNoteController::class, 'togglePin'])->whereNumber('adminNote');
+        Route::delete('/api/admin-notes/{adminNote}', [AdminNoteController::class, 'destroy'])->whereNumber('adminNote');
 
         // Keep session authentication and CSRF on legacy-compatible JSON endpoints.
         Route::prefix('api')->group(function () {

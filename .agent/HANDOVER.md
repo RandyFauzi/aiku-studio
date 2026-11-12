@@ -1,3 +1,9 @@
+### [2026-11-12 15:46 WITA] — Antigravity: fitur Catatan & To-Do List Admin (Dashboard widget & halaman /notes)
+- Menambahkan model `AdminNote`, tabel `admin_notes`, dan controller `AdminNoteController` untuk catatan internal, to-do checklist, dan delegasi tugas antar admin.
+- Halaman khusus `/notes` (`panel.notes`) di Sidebar Operasional: navigasi tanggal WITA, filter tipe (Catatan, To-Do, Delegasi), filter prioritas (Normal, Penting, Mendesak), delegasi target admin, sub-checklist interaktif, pin, dan toggle status penyelesaian.
+- Dashboard Executive (`panel.index`): Widget "Catatan & Delegasi Hari Ini" dengan quick-add modal, checklist instan tanpa reload, dan link ke papan lengkap.
+- Validasi: PHPUnit `AdminNoteTest` (6 tests, 37 assertions), `RecordingSourcesTest`, `RecordingSyncTest` lulus 100%, build Vite sukses, view cache cleared. State IDLE.
+
 ### [2026-11-12 14:02 WITA] — Antigravity: samakan desain custom dropdown filter rekaman & tambah opsi Belum Ditandai
 - Halaman rekaman (`recordings.blade.php`): Mengganti dropdown native browser `<select>` (Pekerja, Status QC, Sumber) menjadi custom Alpine floating dropdown (`rounded-2xl`, `shadow-xl`, animated chevron, status dot, checkmark aktif) selaras dengan desain dropdown Akun Studio.
 - Dropdown Pekerja kini dilengkapi kolom pencarian nama (`searchWorkerFilter`) serta opsi cepat "Belum Ditandai" berikon amber.
