@@ -1,3 +1,7 @@
+### [2026-11-12 08:49 WITA] — Codex: daftar titik dekat rumah untuk random GPS
+- Siapkan docs/gps-random/README.md, points.json, points.csv: 20 titik (Banjarmasin 8, Banjarbaru 7, Kecamatan Martapura 5) dari koordinat foto rumah contoh SiKumbang, review foto/citra Esri dan batas ADM2 2020; 16 kandidat disisihkan dengan alasan. Valid dekat rumah secara visual, bukan tepat atap/survei terkini; batas poligon kecamatan Martapura belum diperiksa.
+- Validasi JSON/CSV, 20 ID/koordinat unik, jumlah wilayah, rentang, URL bukti, flag verifikasi dan diff lulus. Data/docs saja; tanpa perubahan fitur manual/GPS, build, tes aplikasi, produksi, atau rebuild Graphify.
+
 ### [2026-11-11 14:34] — Antigravity
 - Penetapan lokasi & koordinat resmi Studio AIKu Banjarmasin:
   - Alamat: `Jl. Hikmah Banua VI No.144, Pemurus Luar, Kec. Banjarmasin Tim, Kota Banjarmasin, Kalimantan Selatan 70654`.
