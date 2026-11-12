@@ -62,4 +62,53 @@ class RecordingSyncTest extends TestCase
         $this->assertSame(8, $pages);
         $this->assertSame('completed', app(RecordingSync::class)->state()['stage']);
     }
+
+    public function test_manual_sync_can_target_only_1618(): void
+    {
+        config(['payroll.robotics_1618_username' => 'test', 'payroll.robotics_1618_password' => 'test']);
+        $robot = $this->mock(Robotics1618Sync::class);
+        $robot->shouldReceive('sync')->once()->andReturn(['status' => 'success']);
+        $robot->shouldReceive('state')->andReturn(['isRunning' => false, 'stage' => 'completed', 'percent' => 100, 'message' => '1618 selesai']);
+
+        $atlas = $this->mock(\App\Services\AtlasSync::class);
+        $atlas->shouldReceive('state')->andReturn(['isRunning' => false]);
+        $atlas->shouldReceive('auto')->andReturn(['enabled' => false, 'intervalMinutes' => 30]);
+        $atlas->shouldNotReceive('request');
+        $atlas->shouldNotReceive('tick');
+
+        $sync = app(RecordingSync::class);
+        $sync->request('1618');
+
+        $state = $sync->state();
+        $this->assertTrue($state['isRunning']);
+        $this->assertSame(['robotics'], array_keys($state['sources']));
+
+        $sync->tick();
+        $finalState = $sync->state();
+        $this->assertFalse($finalState['isRunning']);
+        $this->assertSame('completed', $finalState['stage']);
+    }
+
+    public function test_manual_sync_can_target_only_verbos(): void
+    {
+        $this->mock(Robotics1618Sync::class)->shouldNotReceive('sync');
+
+        $atlas = $this->mock(\App\Services\AtlasSync::class);
+        $atlas->shouldReceive('state')->andReturn(['isRunning' => false, 'stage' => 'completed', 'percent' => 100, 'message' => 'Verbos selesai']);
+        $atlas->shouldReceive('auto')->andReturn(['enabled' => false, 'intervalMinutes' => 30]);
+        $atlas->shouldReceive('request')->once();
+        $atlas->shouldReceive('tick')->once();
+
+        $sync = app(RecordingSync::class);
+        $sync->request('verbos');
+
+        $state = $sync->state();
+        $this->assertTrue($state['isRunning']);
+        $this->assertSame(['atlas'], array_keys($state['sources']));
+
+        $sync->tick();
+        $finalState = $sync->state();
+        $this->assertFalse($finalState['isRunning']);
+        $this->assertSame('completed', $finalState['stage']);
+    }
 }

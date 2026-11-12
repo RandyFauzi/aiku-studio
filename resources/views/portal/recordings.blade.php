@@ -40,7 +40,7 @@
         <button type="button" x-show="search" @click="search = ''; load()" class="mt-4 min-h-11 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700">Hapus pencarian</button>
     </div>
     <section x-show="!loading && !error && rows.length" x-cloak aria-label="Daftar rekaman" class="space-y-4">
-        <div class="flex items-center justify-between gap-3"><h2 class="text-base font-bold text-slate-900">Daftar rekaman</h2><span class="text-xs text-slate-500">Waktu Atlas · WITA</span></div>
+        <div class="flex items-center justify-between gap-3"><h2 class="text-base font-bold text-slate-900">Daftar rekaman</h2><span class="text-xs text-slate-500">Waktu Verbos · WITA</span></div>
         <template x-for="group in groups" :key="group.date">
             <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white">
                 <div class="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
@@ -59,7 +59,7 @@
                         <details class="mt-1">
                             <summary class="min-h-11 w-fit cursor-pointer content-center rounded-lg text-xs font-semibold text-slate-600 hover:text-emerald-800">Detail rekaman</summary>
                             <dl class="space-y-3 rounded-xl bg-slate-50 p-3 text-xs leading-relaxed">
-                                <div><dt class="text-slate-500">Judul asli Atlas</dt><dd class="mt-1 break-words text-slate-800" x-text="row.task_title || '—'"></dd></div>
+                                <div><dt class="text-slate-500">Judul asli Verbos</dt><dd class="mt-1 break-words text-slate-800" x-text="row.task_title || '—'"></dd></div>
                                 <div><dt class="text-slate-500">ID rekaman</dt><dd class="mt-1 break-all font-mono text-slate-800" x-text="row.record_id"></dd></div>
                             </dl>
                         </details>

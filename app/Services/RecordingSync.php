@@ -30,7 +30,7 @@ class RecordingSync
         $state['recent_logs'] = [];
         foreach ($sources as $key => $source) {
             foreach ($source['recent_logs'] ?? [$source['message'] ?? ''] as $log) {
-                $state['recent_logs'][] = '['.($key === 'atlas' ? 'Atlas' : '1618').'] '.$log;
+                $state['recent_logs'][] = '['.($key === 'atlas' ? 'Verbos' : '1618').'] '.$log;
             }
         }
         if (($state['isRunning'] ?? false) && $this->stale($state)) {
@@ -42,31 +42,55 @@ class RecordingSync
         return $state;
     }
 
-    public function request(): array
+    public function request(string $target = 'all'): array
     {
-        return Cache::lock('recording-sync', 300)->block(3, function () {
+        $target = strtolower(trim($target));
+        if ($target === 'verbos') {
+            $target = 'atlas';
+        }
+
+        return Cache::lock('recording-sync', 300)->block(3, function () use ($target) {
             $current = $this->state();
             if ($current['isRunning']) {
-                return ['status' => 'running', 'message' => 'Sinkronisasi kedua sumber sedang berjalan.'];
+                return ['status' => 'running', 'message' => 'Sinkronisasi bot sedang berjalan.'];
             }
             $oldAtlas = $this->atlas->state();
             if (($oldAtlas['isRunning'] ?? false) && $this->stale($oldAtlas)) {
-                $this->atlas->fail('Proses Atlas sebelumnya terhenti; memulai ulang.');
+                $this->atlas->fail('Proses Verbos sebelumnya terhenti; memulai ulang.');
             }
             $sources = [];
-            try {
-                $this->atlas->request();
-                $sources['atlas'] = $this->atlas->state();
-                $sources['atlas']['stage'] = 'queued';
-            } catch (\Throwable $e) {
-                report($e);
-                $sources['atlas'] = $this->failure('Atlas: '.$e->getMessage());
+
+            if ($target === 'all' || $target === 'atlas') {
+                try {
+                    $this->atlas->request();
+                    $sources['atlas'] = $this->atlas->state();
+                    $sources['atlas']['stage'] = 'queued';
+                } catch (\Throwable $e) {
+                    report($e);
+                    $sources['atlas'] = $this->failure('Verbos: '.$e->getMessage());
+                }
             }
-            $sources['robotics'] = config('payroll.robotics_1618_username') && config('payroll.robotics_1618_password')
-                ? ['stage' => 'queued', 'percent' => 0, 'message' => 'Menunggu cron server.']
-                : $this->failure('1618: kredensial belum dikonfigurasi. Hubungi admin server.');
-            $state = ['isRunning' => true, 'stage' => 'queued', 'sources' => $sources,
-                'startedAt' => now()->toIso8601String(), 'message' => 'Atlas dan 1618 masuk antrean cron server.'];
+
+            if ($target === 'all' || $target === '1618' || $target === 'robotics') {
+                $sources['robotics'] = config('payroll.robotics_1618_username') && config('payroll.robotics_1618_password')
+                    ? ['stage' => 'queued', 'percent' => 0, 'message' => 'Menunggu cron server.']
+                    : $this->failure('1618: kredensial belum dikonfigurasi. Hubungi admin server.');
+            }
+
+            $label = match ($target) {
+                'atlas' => 'Verbos',
+                '1618', 'robotics' => '1618 Robotics',
+                default => 'Verbos dan 1618',
+            };
+
+            $state = [
+                'isRunning' => true,
+                'stage' => 'queued',
+                'target' => $target,
+                'sources' => $sources,
+                'startedAt' => now()->toIso8601String(),
+                'message' => "{$label} masuk antrean cron server.",
+            ];
             $this->finishIfReady($state);
             $this->save($state);
             $this->scheduleNext();
@@ -97,12 +121,15 @@ class RecordingSync
             }
             // Work on one source per invocation to bound shared-hosting execution time.
             foreach (['robotics', 'atlas'] as $key) {
+                if (! isset($state['sources'][$key])) {
+                    continue;
+                }
                 if (! in_array($state['sources'][$key]['stage'], ['queued', 'running', 'scraping'], true)) {
                     continue;
                 }
                 $state['sources'][$key]['stage'] = 'running';
                 $state['stage'] = 'running';
-                $state['message'] = 'Memproses '.($key === 'atlas' ? 'Atlas' : '1618 Robotics').'...';
+                $state['message'] = 'Memproses '.($key === 'atlas' ? 'Verbos' : '1618 Robotics').'...';
                 $this->save($state);
                 try {
                     if ($key === 'robotics') {
@@ -125,7 +152,7 @@ class RecordingSync
                     $state['sources'][$key] = $source;
                 } catch (\Throwable $e) {
                     report($e);
-                    $state['sources'][$key] = $this->failure(($key === 'atlas' ? 'Atlas: ' : '1618: ').$e->getMessage());
+                    $state['sources'][$key] = $this->failure(($key === 'atlas' ? 'Verbos: ' : '1618: ').$e->getMessage());
                 }
                 break;
             }
@@ -144,15 +171,21 @@ class RecordingSync
         $errors = [];
         foreach ($state['sources'] as $key => $source) {
             if ($source['stage'] !== 'completed') {
-                $errors[] = ($key === 'atlas' ? 'Atlas: ' : '1618: ').($source['error'] ?? $source['message']);
+                $errors[] = ($key === 'atlas' ? 'Verbos: ' : '1618: ').($source['error'] ?? $source['message']);
             }
         }
+        $target = $state['target'] ?? 'all';
+        $targetLabel = match ($target) {
+            'atlas' => 'Verbos',
+            '1618', 'robotics' => '1618 Robotics',
+            default => 'Verbos dan 1618',
+        };
         $state['isRunning'] = false;
         $state['stage'] = $errors ? 'error' : 'completed';
         $state['error'] = $errors ? implode(' | ', $errors) : null;
-        $state['message'] = $errors ? 'Sinkronisasi belum lengkap. '.$state['error'] : 'Atlas dan 1618 selesai disinkronkan.';
+        $state['message'] = $errors ? "Sinkronisasi {$targetLabel} belum lengkap. ".$state['error'] : "{$targetLabel} selesai disinkronkan.";
         if (! $errors && ! empty($state['sources']['atlas']['unavailableAccounts'])) {
-            $state['message'] .= ' Catatan: '.count($state['sources']['atlas']['unavailableAccounts']).' akun belum tersedia di Atlas; hasil 1618 tetap diproses.';
+            $state['message'] .= ' Catatan: '.count($state['sources']['atlas']['unavailableAccounts']).' akun belum tersedia di Verbos; hasil 1618 tetap diproses.';
         }
         $state['completedAt'] = now()->toIso8601String();
         $this->scheduleNext();

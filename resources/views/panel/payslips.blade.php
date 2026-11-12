@@ -59,7 +59,7 @@
                 <div>
                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Payroll / Riwayat Dokumen & Rekap Otomatis</p>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Riwayat Slip Gaji & Rekap Payroll</h2>
-                    <p class="text-xs text-slate-500 mt-1">Perhitungan otomatis dinamis berbasis penandaan worker rekaman Atlas. Cut-off siklus tanggal 22 - 21 setiap bulan.</p>
+                    <p class="text-xs text-slate-500 mt-1">Perhitungan otomatis dinamis berbasis penandaan worker rekaman Verbos. Cut-off siklus tanggal 22 - 21 setiap bulan.</p>
                 </div>
                 
                 <!-- Period Selector Controls -->

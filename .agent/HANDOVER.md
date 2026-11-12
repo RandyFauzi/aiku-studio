@@ -1,3 +1,9 @@
+### [2026-11-12 13:42 WITA] — Antigravity: seleksi sumber sync manual & rename UI Atlas ke Verbos
+- Bot AIKu Studio (`recordings`): modal sinkronisasi manual kini menyediakan 3 pilihan aksi instan (`⚡ Semua Sumber`, `🟢 Verbos`, `🔵 1618`).
+- Endpoint `POST /api/studio-recordings/sync-now` menerima opsi `{ source: 'all' | 'verbos' | '1618' }`, mengeksekusi worker yang relevan secara selektif tanpa proses scraping panjang jika hanya memilih 1618.
+- Seluruh penamaan yang terlihat pengguna diubah dari "Atlas" ke "Verbos" (badge, filter dropdown, teks modal, slip gaji, task picker).
+- Validasi: PHPUnit `RecordingSyncTest` (6 tests), `RecordingSourcesTest` (3 tests), `AtlasSyncTest` (5 tests), `Robotics1618SyncTest` (3 tests) lulus 100%, Vite build sukses, view cache cleared. State IDLE.
+
 ### [2026-11-12 10:27 WITA] — Codex: random titik pada aplikasi GPS lokal
 - Implementasi ada di G:/# Proejcts Randy/GPS IPHONE CHANGE (bukan repo AIKu Studio; folder GPS belum memiliki Git): index.html, static/dashboard.js/css, random-locations.js, residential-points.json, 2 tes Node, docs/RANDOM_LOCATIONS.md. Pilihan Banjarmasin/Banjarbaru/Martapura memakai daftar 20 titik; random satu/semua HP ber-IP tanpa pengulangan, draft per HP, geser/manual, pratinjau dan konfirmasi sebelum POST sesi lama. Draft pending jaringan/gagal tidak dianggap diterapkan; hapus hanya setelah balasan target aktif.
 - Validasi: 13 tes Node, browser Edge desktop 1440/mobile 390 (drag nyata, pindah HP, batal tanpa POST, batch/single koordinat edited, fallback manual saat JSON gagal, tanpa overflow/error), checksum dataset dan penyajian live 8091 lulus. Semua POST uji ke server tiruan; sesi nyata tidak disentuh/restart. Kode GPS masih lokal; commit/push AIKu hanya koordinasi ini.

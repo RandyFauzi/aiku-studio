@@ -54,7 +54,7 @@
                                 class="h-4.5 w-4.5 shrink-0 rounded border-slate-300 text-emerald-700 accent-emerald-700 cursor-pointer">
                         <span class="min-w-0 break-words text-xs sm:text-sm">
                             <span x-text="task.title"></span>
-                            <span x-show="task.source === 'report'" class="block text-[10px] text-slate-500 font-normal">Ditambahkan tim · belum ditemukan di Atlas</span>
+                            <span x-show="task.source === 'report'" class="block text-[10px] text-slate-500 font-normal">Ditambahkan tim · belum ditemukan di Verbos</span>
                         </span>
                     </label>
                 </div>

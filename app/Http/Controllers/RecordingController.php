@@ -44,7 +44,7 @@ class RecordingController extends Controller
             }
         }
         if ($request->filled('source') && $request->source !== 'all') {
-            if ($request->source === 'atlas') {
+            if ($request->source === 'atlas' || $request->source === 'verbos') {
                 $query->whereNotNull('atlas_synced_at');
             } elseif ($request->source === '1618' || $request->source === 'robotics') {
                 $query->whereNotNull('robotics_1618_synced_at');

@@ -137,9 +137,10 @@
 
                 <!-- 1. Tombol Bot AIKu Studio & Auto-Sync Popover -->
                 <div class="relative flex items-center bg-slate-900 rounded-xl p-0.5 shadow-xs border border-slate-800">
-                    <!-- Main Action: Jalankan Bot Sekarang -->
-                    <button @click="triggerSyncAtlas()" :disabled="isSyncing" 
-                            class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 text-xs md:text-sm font-semibold text-white hover:text-emerald-300 transition disabled:opacity-50">
+                    <!-- Main Action: Jalankan Bot Sekarang (Default Semua Sumber) -->
+                    <button @click="triggerSyncAtlas('all')" :disabled="isSyncing" 
+                            class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 text-xs md:text-sm font-semibold text-white hover:text-emerald-300 transition disabled:opacity-50"
+                            title="Jalankan Sinkronisasi Semua Sumber (Verbos & 1618)">
                         <svg :class="isSyncing ? 'animate-spin text-emerald-400' : 'text-emerald-400'" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         <span x-text="isSyncing ? ('Sinkron: ' + (botProgress.percent || 0) + '%') : (window.innerWidth < 640 ? 'Bot' : 'Bot AIKu Studio')"></span>
                     </button>
@@ -147,24 +148,63 @@
                     <!-- Divider -->
                     <div class="h-5 w-[1px] bg-slate-700"></div>
 
-                    <!-- Dropdown Toggle for Auto-Sync -->
+                    <!-- Dropdown Toggle for Auto-Sync & Manual Source Selection -->
                     <button @click="showAutoSyncModal = !showAutoSyncModal" 
                             class="px-2 py-2 text-slate-300 hover:text-white transition flex items-center gap-1.5"
-                            title="Pengaturan Auto-Sync Berkala">
+                            title="Menu Pilihan Sinkronisasi (Verbos & 1618)">
                         <span class="w-2 h-2 rounded-full" :class="autoSync.enabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'"></span>
                         <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showAutoSyncModal ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
 
-                    <!-- Auto-Sync Popover Menu -->
+                    <!-- Auto-Sync & Manual Source Popover Menu -->
                     <div x-show="showAutoSyncModal" @click.outside="showAutoSyncModal = false"
                          x-transition:enter="transition ease-out duration-150"
                          x-transition:enter-start="opacity-0 scale-95 translate-y-1"
                          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                          class="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 text-slate-800 text-xs">
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        
+                        <!-- 1. Pilihan Sumber Sinkron Manual -->
+                        <div class="pb-3 border-b border-slate-100 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="font-bold text-slate-900 text-sm">Sinkronkan Manual</div>
+                                <span class="text-[10px] text-slate-400">Pilih sumber</span>
+                            </div>
+                            <div class="space-y-1.5">
+                                <!-- Opsi A: Semua Sumber -->
+                                <button type="button" @click="showAutoSyncModal = false; triggerSyncAtlas('all')" :disabled="isSyncing"
+                                        class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold transition disabled:opacity-50 text-left shadow-xs">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-amber-400">⚡</span>
+                                        <span>Semua Sumber</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-mono">Verbos + 1618</span>
+                                </button>
+                                
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <!-- Opsi B: Verbos Saja -->
+                                    <button type="button" @click="showAutoSyncModal = false; triggerSyncAtlas('verbos')" :disabled="isSyncing"
+                                            class="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold transition disabled:opacity-50"
+                                            title="Tarik data rekaman khusus Verbos">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span>Verbos</span>
+                                    </button>
+
+                                    <!-- Opsi C: 1618 Saja -->
+                                    <button type="button" @click="showAutoSyncModal = false; triggerSyncAtlas('1618')" :disabled="isSyncing"
+                                            class="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 font-bold transition disabled:opacity-50"
+                                            title="Tarik data rekaman khusus 1618 Robotics">
+                                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                                        <span>1618</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Pengaturan Jadwal Auto-Sync -->
+                        <div class="flex items-center justify-between py-3 border-b border-slate-100">
                             <div>
                                 <div class="font-bold text-slate-900 text-sm">Jadwal Auto-Sync</div>
-                                <div class="text-[11px] text-slate-400">Jadwal bersama Atlas dan 1618</div>
+                                <div class="text-[11px] text-slate-400">Jadwal bersama Verbos dan 1618</div>
                             </div>
                             <!-- Switch -->
                             <button @click="toggleAutoSync()" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none" :class="autoSync.enabled ? 'bg-[#00B090]' : 'bg-slate-200'">
@@ -323,7 +363,7 @@
 
                     <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
                         <span>Akumulasi Total: <strong class="text-slate-700 font-bold" x-text="formatDuration(stats.totalMinutes)"></strong></span>
-                        <span class="text-[11px] text-[#00B090] font-semibold">Atlas Realtime Data</span>
+                        <span class="text-[11px] text-[#00B090] font-semibold">Verbos Realtime Data</span>
                     </div>
                 </div>
 
@@ -338,7 +378,7 @@
                         <div class="text-4xl font-black text-slate-900 tracking-tight" x-text="stats.totalRecords"></div>
                         <div class="flex items-center gap-1 bg-[#EDFAF8] text-[#009B7E] text-xs font-bold px-2 py-1 rounded-lg border border-emerald-100">
                             <svg class="w-3.5 h-3.5 text-[#00B090]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                            <span>100% Atlas</span>
+                            <span>100% Verbos</span>
                         </div>
                     </div>
 
@@ -766,12 +806,12 @@
                         <option value="qc_changed">✨ Ada Perubahan QC</option>
                     </select>
 
-                    <!-- Filter Sumber Data (Atlas / 1618) -->
+                    <!-- Filter Sumber Data (Verbos / 1618) -->
                     <select x-model="filters.source" @change="applyFilters(1)"
                             class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-semibold py-2 px-3 rounded-xl focus:outline-none focus:border-[#00B090] cursor-pointer"
                             :class="filters.source !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
                         <option value="all">Semua Sumber</option>
-                        <option value="atlas">Atlas</option>
+                        <option value="atlas">Verbos</option>
                         <option value="1618">1618</option>
                     </select>
 
@@ -843,7 +883,7 @@
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         </div>
                                         <span class="text-sm font-bold text-slate-700 mb-1">Tidak Ada Rekaman</span>
-                                        <span class="text-xs text-slate-500">Coba ubah filter atau jalankan "Sinkronkan Atlas" untuk menarik data baru.</span>
+                                        <span class="text-xs text-slate-500">Coba ubah filter atau jalankan "Bot AIKu Studio" untuk menarik data baru.</span>
                                     </div>
                                 </td>
                             </tr>
@@ -926,7 +966,7 @@
                                             <template x-for="source in (rec.data_sources || [])" :key="source">
                                                 <span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold"
                                                       :class="source === 'atlas' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200'"
-                                                      x-text="source === 'atlas' ? 'Dashboard Atlas' : '1618 Robotics'"></span>
+                                                      x-text="source === 'atlas' ? 'Dashboard Verbos' : '1618 Robotics'"></span>
                                             </template>
                                             <span x-show="!(rec.data_sources || []).length" class="text-[10px] text-slate-400">Sumber belum diverifikasi</span>
                                         </div>
@@ -1061,7 +1101,7 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             </div>
                             <span class="text-sm font-bold text-slate-700 mb-1">Tidak Ada Rekaman</span>
-                            <span class="text-xs text-slate-500">Coba ubah filter atau jalankan "Sinkronkan Atlas" untuk menarik data baru.</span>
+                            <span class="text-xs text-slate-500">Coba ubah filter atau jalankan "Bot AIKu Studio" untuk menarik data baru.</span>
                         </div>
                     </div>
 
@@ -1127,7 +1167,7 @@
                                             <template x-for="source in (rec.data_sources || [])" :key="source">
                                                 <span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold"
                                                       :class="source === 'atlas' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200'"
-                                                      x-text="source === 'atlas' ? 'Dashboard Atlas' : '1618 Robotics'"></span>
+                                                      x-text="source === 'atlas' ? 'Dashboard Verbos' : '1618 Robotics'"></span>
                                             </template>
                                             <span x-show="!(rec.data_sources || []).length" class="text-[10px] text-slate-400">Sumber belum diverifikasi</span>
                                         </div>
@@ -1462,7 +1502,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900">Kelola Akun AIKu Studio</h3>
-                        <p class="text-xs text-slate-500">Daftar akun yang dipantau bot untuk scraping & sinkronisasi data dari Atlas.</p>
+                        <p class="text-xs text-slate-500">Daftar akun yang dipantau bot untuk scraping & sinkronisasi data dari Verbos.</p>
                     </div>
                 </div>
                 <button @click="showAccountsModal = false" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-100 transition">✕</button>
@@ -1696,14 +1736,14 @@
                             <template x-for="key in ['atlas', 'robotics']" :key="key">
                                 <div class="rounded-xl border border-slate-700 bg-slate-900 p-3 min-w-0">
                                     <div class="flex justify-between text-xs font-bold text-white">
-                                        <span x-text="key === 'atlas' ? 'Atlas' : '1618 Robotics'"></span>
+                                        <span x-text="key === 'atlas' ? 'Verbos' : '1618 Robotics'"></span>
                                         <span x-text="(botProgress.sources?.[key]?.percent || 0) + '%'"></span>
                                     </div>
                                     <p class="text-xs mt-2 break-words" :class="botProgress.sources?.[key]?.stage === 'failed' ? 'text-rose-300' : 'text-slate-300'" x-text="botProgress.sources?.[key]?.message || 'Menunggu proses.'"></p>
                                 </div>
                             </template>
                         </div>
-                        <button x-show="!isSyncing && botProgress.stage === 'error'" @click="triggerSyncAtlas()" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm">Jalankan Ulang Kedua Sumber</button>
+                        <button x-show="!isSyncing && botProgress.stage === 'error'" @click="triggerSyncAtlas('all')" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm">Jalankan Ulang Sinkronisasi</button>
 
                     </div>
 
@@ -2106,7 +2146,7 @@
                             Swal.fire({
                                 icon: this.autoSync.enabled ? 'success' : 'info',
                                 title: this.autoSync.enabled ? 'Auto-Sync Diaktifkan' : 'Auto-Sync Dinonaktifkan',
-                                text: this.autoSync.enabled ? `Atlas dan 1618 disinkronkan setiap ${this.autoSync.intervalMinutes} menit.` : 'Jadwal otomatis Atlas dan 1618 dinonaktifkan.',
+                                text: this.autoSync.enabled ? `Verbos dan 1618 disinkronkan setiap ${this.autoSync.intervalMinutes} menit.` : 'Jadwal otomatis Verbos dan 1618 dinonaktifkan.',
                                 timer: 2000,
                                 showConfirmButton: false
                             });
@@ -2952,8 +2992,9 @@
                     } catch (e) {}
                 },
 
-                async triggerSyncAtlas() {
+                async triggerSyncAtlas(source = 'all') {
                     this.isSyncing = true;
+                    const label = source === '1618' ? '1618 Robotics' : (source === 'verbos' || source === 'atlas' ? 'Dashboard Verbos' : 'Verbos & 1618');
                     this.botProgress = {
                         isRunning: true,
                         stage: 'starting',
@@ -2962,15 +3003,19 @@
                         currentIndex: 0,
                         totalAccounts: this.studioEmails.length,
                         percent: 2,
-                        message: 'Memulai bot AIKu Studio...',
+                        message: 'Memulai bot sinkronisasi ' + label + '...',
                         recordsCount: 0,
-                        recent_logs: ['[00:00:00] Memulai bot AIKu Studio...']
+                        recent_logs: ['[00:00:00] Memulai bot sinkronisasi ' + label + '...']
                     };
                     // Open the progress modal immediately.
                     this.showConsoleModal = true;
 
                     try {
-                        await this.syncRequest('/api/studio-recordings/sync-now', { method: 'POST' });
+                        await this.syncRequest('/api/studio-recordings/sync-now', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ source: source })
+                        });
                         this.startLiveSyncPolling();
                     } catch (err) {
                         this.isSyncing = false;

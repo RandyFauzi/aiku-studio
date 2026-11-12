@@ -10,10 +10,12 @@ use Illuminate\Http\Request;
 
 class SyncController extends Controller
 {
-    public function requestSync(\App\Services\RecordingSync $sync)
+    public function requestSync(Request $request, \App\Services\RecordingSync $sync)
     {
         try {
-            return response()->json($sync->request(), 202);
+            $source = (string) $request->input('source', 'all');
+
+            return response()->json($sync->request($source), 202);
         } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
             return response()->json(['error' => 'Bot sedang memproses permintaan lain. Periksa progres beberapa saat lagi.'], 409);
         } catch (\RuntimeException $e) {

@@ -314,7 +314,7 @@
             <tr>
                 <td style="vertical-align: bottom;">
                     <div style="font-size: 19px; font-weight: 800; color: #111827; letter-spacing: -0.3px;">EVIDENCE &amp; TASK LOGS</div>
-                    <div style="font-size: 10px; color: #6b7280; margin-top: 2px;">Rincian log pengerjaan task harian yang tersinkronisasi dengan status review Atlas.</div>
+                    <div style="font-size: 10px; color: #6b7280; margin-top: 2px;">Rincian log pengerjaan task harian yang tersinkronisasi dengan status review Verbos.</div>
                 </td>
                 <td style="vertical-align: bottom; text-align: right;">
                     <div style="font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">Total Tasks</div>
@@ -376,7 +376,7 @@
         </div>
 
         <div class="pdf-note-box">
-            <strong>Catatan:</strong> Bagian task yang berstatus <em>Pending (Ditinjau)</em> akan otomatis diikutsertakan pada rekonsiliasi periode pembayaran berikutnya setelah hasil QA Atlas diterbitkan.
+            <strong>Catatan:</strong> Bagian task yang berstatus <em>Pending (Ditinjau)</em> akan otomatis diikutsertakan pada rekonsiliasi periode pembayaran berikutnya setelah hasil QA Verbos diterbitkan.
         </div>
 
         @forelse($processedDays as $day)
@@ -597,7 +597,7 @@
         <div class="flex justify-between items-end mb-4">
             <div>
                 <h3 class="text-2xl font-extrabold text-gray-900 tracking-tight">EVIDENCE &amp; TASK LOGS</h3>
-                <p class="text-xs text-gray-500 font-medium">Rincian log pengerjaan task harian yang tersinkronisasi dengan status review Atlas.</p>
+                <p class="text-xs text-gray-500 font-medium">Rincian log pengerjaan task harian yang tersinkronisasi dengan status review Verbos.</p>
             </div>
             <div class="text-right">
                 <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Tasks</span>
@@ -642,7 +642,7 @@
 
         <p class="text-xs text-amber-800 mb-6 bg-amber-50 p-3 rounded-xl border border-amber-200 flex items-center gap-2">
             <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span><strong>Catatan:</strong> Bagian task yang berstatus <em>Pending (Ditinjau)</em> akan otomatis diikutsertakan pada rekonsiliasi periode pembayaran berikutnya setelah hasil QA Atlas diterbitkan.</span>
+            <span><strong>Catatan:</strong> Bagian task yang berstatus <em>Pending (Ditinjau)</em> akan otomatis diikutsertakan pada rekonsiliasi periode pembayaran berikutnya setelah hasil QA Verbos diterbitkan.</span>
         </p>
 
         <div class="space-y-3">
@@ -726,7 +726,7 @@
                     <div id="day-body-{{ $day['index'] }}" class="evidence-body p-4 space-y-3 bg-white {{ $day['index'] === 0 ? '' : 'hidden' }}">
                         <div class="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-wider pb-1 border-b border-gray-100">
                             <span>Rincian Tugas ({{ $day['tasks_count'] }} Task)</span>
-                            <span class="text-[11px] text-gray-400 font-normal">Atlas Video Log Task Breakdown</span>
+                            <span class="text-[11px] text-gray-400 font-normal">Verbos Video Log Task Breakdown</span>
                         </div>
                         <div class="space-y-2.5">
                             @foreach($day['tasks'] as $t)
