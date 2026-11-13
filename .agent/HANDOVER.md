@@ -1,3 +1,8 @@
+### [2026-11-13 12:24 WITA] — Antigravity: revisi halaman jadwal shift sesuai susunan operasional 12/13 sesi
+- `portal.schedule`: Mengrombak halaman jadwal dengan susunan shift operasional presisi sesuai spesifikasi (Selasa–Kamis 12 sesi / Jum'at–Minggu 13 sesi), ringkasan metrik (Format Sesi 90m, Pengaturan 1 Alat 6 HP, Jam Operasional WITA, Target 72/78 Jam Video), dan tabel interaktif "Tabel Jadwal Lengkap" lengkap dengan tombol Tukar Posisi (▲/▼), copy format WhatsApp, dan tab Kalender Bulanan.
+- `shifts.workspace`: Menambahkan tombol pintas navigasi langsung ke Halaman Jadwal Lengkap dari ruang kerja shift admin.
+- Validasi: Blade view cache lulus tanpa error, view cache cleared. State IDLE.
+
 ### [2026-11-13 11:58 WITA] — Antigravity: cascading update nama pekerja ke seluruh relasi data
 - `ContributorController`: Membuka pembatasan edit nama kontributor dan menambahkan `cascadeNameChange` dalam `DB::transaction` atomik yang otomatis menyinkronkan perubahan nama ke `users`, `studio_recordings`, `payslips`, `payroll_statuses`, `daily_work_reports`, `attendances`, `shift_days`, dan `shift_settings`.
 - Validasi unik tetap aktif untuk mencegah tabrakan nama dengan pekerja lain. Penggantian atribut lain seperti `no_rek`, `domisili`, `hp`, dan `no_wa` tetap aman dan independen.

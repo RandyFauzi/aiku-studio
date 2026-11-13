@@ -23,6 +23,9 @@
                 </button>
                 <button type="button" @click="view='board'" :aria-pressed="view==='board'" :class="view==='board'?'bg-slate-900 text-white':'bg-white text-slate-600'" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-sm font-semibold">Papan shift</button>
                 <button type="button" @click="view='summary'" :aria-pressed="view==='summary'" :class="view==='summary'?'bg-slate-900 text-white':'bg-white text-slate-600'" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-sm font-semibold">Analitik & ringkasan</button>
+                <a href="/me/jadwal" target="_blank" class="min-h-[44px] rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 flex items-center gap-2 transition sm:ml-auto">
+                    <span>🎥 Buka Halaman Jadwal Lengkap ↗</span>
+                </a>
             </nav>
             <div x-show="view==='roster'" class="space-y-6">
                 @include('shifts.roster')
