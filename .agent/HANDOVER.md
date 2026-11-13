@@ -1,3 +1,8 @@
+### [2026-11-13 11:58 WITA] — Antigravity: cascading update nama pekerja ke seluruh relasi data
+- `ContributorController`: Membuka pembatasan edit nama kontributor dan menambahkan `cascadeNameChange` dalam `DB::transaction` atomik yang otomatis menyinkronkan perubahan nama ke `users`, `studio_recordings`, `payslips`, `payroll_statuses`, `daily_work_reports`, `attendances`, `shift_days`, dan `shift_settings`.
+- Validasi unik tetap aktif untuk mencegah tabrakan nama dengan pekerja lain. Penggantian atribut lain seperti `no_rek`, `domisili`, `hp`, dan `no_wa` tetap aman dan independen.
+- Validasi: PHPUnit `ContributorRoleManagementTest` (8 tests, 84 assertions) lulus 100%, `PayrollMigrationTest` & `RecordingMatchingTest` (25 tests, 195 assertions) lulus 100%, view cache cleared. State IDLE.
+
 ### [2026-11-12 15:55 WITA] — Antigravity: sanitasi input delegasi admin & penanganan error respons
 - `AdminNoteController`: Menyaring `assigned_to_user_id` kosong/string kosong menjadi `null` pada `store` dan `update` agar tidak memicu kegagalan validasi ketika memilih opsi "Semua Admin".
 - `panel.notes`: Memperbaiki penanganan response error dengan SweetAlert dan memastikan payload `assigned_to_user_id` dikirim sebagai `null` saat tidak memilih admin tertentu.

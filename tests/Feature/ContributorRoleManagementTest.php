@@ -2,7 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Attendance;
 use App\Models\Contributor;
+use App\Models\DailyWorkReport;
+use App\Models\PayrollStatus;
+use App\Models\Payslip;
+use App\Models\ShiftDay;
+use App\Models\ShiftSetting;
+use App\Models\StudioRecording;
 use App\Models\User;
 use App\Services\ContributorAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -193,5 +200,161 @@ class ContributorRoleManagementTest extends TestCase
         $user = User::where('contributor_id', $person->id)->first();
         $this->actingAs($user)->getJson('/api/contributors/'.$person->id.'/performance')->assertForbidden();
         $this->actingAs($user)->getJson('/api/contributors/studio-summary')->assertForbidden();
+    }
+
+    public function test_admin_can_update_contributor_name_and_cascades_to_all_relations(): void
+    {
+        $admin = $this->createAdmin();
+        $contributor = $this->createContributor('Seira', 'seira@example.com', 'contributor');
+        $user = User::where('contributor_id', $contributor->id)->firstOrFail();
+
+        // 1. Studio Recordings (one with assigned_worker_name only, one with assigned_contributor_id)
+        StudioRecording::create([
+            'record_id' => 'rec-test-1',
+            'participant_email' => 'seira@test.com',
+            'assigned_worker_name' => 'Seira',
+            'assigned_contributor_id' => null,
+            'duration_min' => 60,
+        ]);
+        StudioRecording::create([
+            'record_id' => 'rec-test-2',
+            'participant_email' => 'seira@test.com',
+            'assigned_worker_name' => 'Seira',
+            'assigned_contributor_id' => $contributor->id,
+            'duration_min' => 60,
+        ]);
+
+        // 2. Payslip
+        Payslip::create([
+            'employee_name' => 'Seira',
+            'period' => '22 Oktober 2026 - 21 November 2026',
+            'total_thp' => 1500000,
+            'status' => 'belum',
+        ]);
+
+        // 3. Payroll Status
+        PayrollStatus::create([
+            'worker_name' => 'Seira',
+            'period' => '22 Oktober 2026 - 21 November 2026',
+            'status' => 'belum',
+        ]);
+
+        // 4. Daily Work Report
+        DailyWorkReport::create([
+            'user_id' => $user->id,
+            'contributor_id' => $contributor->id,
+            'contributor_name' => 'Seira',
+            'work_date' => '2026-11-10',
+            'total_duration_minutes' => 120,
+            'phones' => [],
+        ]);
+
+        // 5. Attendance
+        Attendance::create([
+            'user_id' => $user->id,
+            'contributor_id' => $contributor->id,
+            'contributor_name' => 'Seira',
+            'work_date' => '2026-11-10',
+            'checked_in_at' => now(),
+            'latitude' => -3.44,
+            'longitude' => 114.85,
+            'accuracy_m' => 10,
+            'gps_captured_at' => now(),
+        ]);
+
+        // 6. Shift Day
+        ShiftDay::create([
+            'work_date' => '2026-11-10',
+            'config' => [
+                'karyawan' => [
+                    ['name' => 'Seira', 'contributor_id' => $contributor->id, 'alat' => 'Alat 1', 'sessions' => [1]],
+                ],
+            ],
+            'revision' => 1,
+        ]);
+
+        // 7. Shift Setting
+        ShiftSetting::create([
+            'setting_key' => 'main_shift_config',
+            'setting_value' => [
+                'karyawan' => [
+                    ['name' => 'Seira', 'contributor_id' => $contributor->id, 'alat' => 'Alat 1', 'sessions' => [1]],
+                ],
+            ],
+        ]);
+        ShiftSetting::create([
+            'setting_key' => 'shift_period_current',
+            'setting_value' => [
+                'config' => [
+                    'karyawan' => [
+                        ['name' => 'Seira', 'contributor_id' => $contributor->id, 'alat' => 'Alat 1', 'sessions' => [1]],
+                    ],
+                ],
+                'revision' => 1,
+            ],
+        ]);
+
+        // Admin updates name from 'Seira' to 'Siera'
+        $response = $this->actingAs($admin)->putJson('/api/contributors/'.$contributor->id, [
+            'nama' => 'Siera',
+            'email' => 'seira@example.com',
+            'role' => 'contributor',
+            'no_rek' => '1234567890',
+        ]);
+
+        $response->assertOk();
+        $this->assertEquals('Siera', $response->json('nama'));
+
+        // Assert Contributor table
+        $this->assertDatabaseHas('contributors', ['id' => $contributor->id, 'nama' => 'Siera', 'no_rek' => '1234567890']);
+        $this->assertDatabaseMissing('contributors', ['nama' => 'Seira']);
+
+        // Assert Users table
+        $this->assertDatabaseHas('users', ['contributor_id' => $contributor->id, 'name' => 'Siera']);
+
+        // Assert Studio Recordings
+        $this->assertEquals(2, StudioRecording::where('assigned_worker_name', 'Siera')->where('assigned_contributor_id', $contributor->id)->count());
+        $this->assertEquals(0, StudioRecording::where('assigned_worker_name', 'Seira')->count());
+
+        // Assert Payslips
+        $this->assertDatabaseHas('payslips', ['employee_name' => 'Siera']);
+        $this->assertDatabaseMissing('payslips', ['employee_name' => 'Seira']);
+
+        // Assert Payroll Status
+        $this->assertDatabaseHas('payroll_statuses', ['worker_name' => 'Siera']);
+        $this->assertDatabaseMissing('payroll_statuses', ['worker_name' => 'Seira']);
+
+        // Assert Daily Work Reports
+        $this->assertDatabaseHas('daily_work_reports', ['contributor_id' => $contributor->id, 'contributor_name' => 'Siera']);
+        $this->assertDatabaseMissing('daily_work_reports', ['contributor_name' => 'Seira']);
+
+        // Assert Attendances
+        $this->assertDatabaseHas('attendances', ['contributor_id' => $contributor->id, 'contributor_name' => 'Siera']);
+        $this->assertDatabaseMissing('attendances', ['contributor_name' => 'Seira']);
+
+        // Assert ShiftDay
+        $shiftDay = ShiftDay::where('work_date', '2026-11-10')->first();
+        $this->assertEquals('Siera', $shiftDay->config['karyawan'][0]['name']);
+
+        // Assert ShiftSetting
+        $mainConfig = ShiftSetting::where('setting_key', 'main_shift_config')->first();
+        $this->assertEquals('Siera', $mainConfig->setting_value['karyawan'][0]['name']);
+
+        $periodConfig = ShiftSetting::where('setting_key', 'shift_period_current')->first();
+        $this->assertEquals('Siera', $periodConfig->setting_value['config']['karyawan'][0]['name']);
+    }
+
+    public function test_admin_cannot_rename_contributor_to_an_existing_contributor_name(): void
+    {
+        $admin = $this->createAdmin();
+        $contributorA = $this->createContributor('Alice', 'alice@example.com', 'contributor');
+        $contributorB = $this->createContributor('Bob', 'bob@example.com', 'contributor');
+
+        $this->actingAs($admin)->putJson('/api/contributors/'.$contributorB->id, [
+            'nama' => 'Alice',
+            'email' => 'bob@example.com',
+            'role' => 'contributor',
+        ])->assertUnprocessable()
+          ->assertJsonValidationErrors(['nama']);
     }
 }

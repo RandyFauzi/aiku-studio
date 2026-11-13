@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\Contributor;
+use App\Models\DailyWorkReport;
 use App\Models\PayrollStatus;
 use App\Models\Payslip;
+use App\Models\ShiftDay;
+use App\Models\ShiftSetting;
 use App\Models\StudioRecording;
 use App\Models\User;
 use App\Services\ContributorAccess;
@@ -43,13 +47,6 @@ class ContributorController extends Controller
             ->when($person, fn ($query) => $query->whereKeyNot($person->id))->exists();
         if ($duplicate) {
             throw ValidationException::withMessages(['nama' => 'Nama sudah digunakan kontributor lain. Gunakan nama yang unik untuk menjaga pemetaan payroll.']);
-        }
-        if ($person && $person->nama !== $request->input('nama') && (
-            Payslip::where('employee_name', $person->nama)->exists()
-            || PayrollStatus::where('worker_name', $person->nama)->exists()
-            || StudioRecording::where('assigned_worker_name', $person->nama)->exists()
-        )) {
-            throw ValidationException::withMessages(['nama' => 'Nama terhubung dengan riwayat payroll/rekaman dan belum dapat diganti. Data lain tetap dapat diperbarui.']);
         }
 
         return $request->validate([
@@ -97,8 +94,15 @@ class ContributorController extends Controller
                 throw ValidationException::withMessages(['email' => 'Email akun Anda sendiri tidak dapat dikosongkan.']);
             }
 
+            $oldName = $contributor->nama;
+            $newName = $fields['nama'];
+
             $contributor->update(array_merge($fields, ['role' => $targetRole]));
             app(ContributorAccess::class)->sync($contributor, $targetRole);
+
+            if ($oldName !== $newName) {
+                $this->cascadeNameChange($contributor, $oldName, $newName);
+            }
 
             $user = User::where('contributor_id', $contributor->id)->first();
             $contributor->setAttribute('login_enabled', (bool) ($user && $user->is_active));
@@ -160,5 +164,118 @@ class ContributorController extends Controller
         $this->ensureAdmin($request);
 
         return response()->json($service->getContributorPerformance($contributor));
+    }
+
+    private function cascadeNameChange(Contributor $contributor, string $oldName, string $newName): void
+    {
+        // 1. User account
+        User::where('contributor_id', $contributor->id)->update(['name' => $newName]);
+
+        // 2. Studio Recordings
+        StudioRecording::where('assigned_contributor_id', $contributor->id)
+            ->orWhere('assigned_worker_name', $oldName)
+            ->update([
+                'assigned_worker_name' => $newName,
+                'assigned_contributor_id' => $contributor->id,
+            ]);
+
+        // 3. Payslips
+        Payslip::where('employee_name', $oldName)->update(['employee_name' => $newName]);
+
+        // 4. Payroll Statuses (avoiding unique conflict on [worker_name, period] if any)
+        $statuses = PayrollStatus::where('worker_name', $oldName)->get();
+        foreach ($statuses as $status) {
+            $conflict = PayrollStatus::where('worker_name', $newName)
+                ->where('period', $status->period)
+                ->where('id', '!=', $status->id)
+                ->first();
+            if ($conflict) {
+                $conflict->delete();
+            }
+            $status->update(['worker_name' => $newName]);
+        }
+
+        // 5. Daily Work Reports
+        DailyWorkReport::where('contributor_id', $contributor->id)
+            ->orWhere('contributor_name', $oldName)
+            ->update([
+                'contributor_name' => $newName,
+                'contributor_id' => $contributor->id,
+            ]);
+
+        // 6. Attendances
+        Attendance::where('contributor_id', $contributor->id)
+            ->orWhere('contributor_name', $oldName)
+            ->update([
+                'contributor_name' => $newName,
+                'contributor_id' => $contributor->id,
+            ]);
+
+        // 7. Shift Days
+        $shiftDays = ShiftDay::all();
+        foreach ($shiftDays as $shiftDay) {
+            $config = $shiftDay->config;
+            if (! is_array($config) || ! isset($config['karyawan']) || ! is_array($config['karyawan'])) {
+                continue;
+            }
+            $changed = false;
+            foreach ($config['karyawan'] as &$w) {
+                $matchesId = ! empty($w['contributor_id']) && (int) $w['contributor_id'] === $contributor->id;
+                $matchesName = isset($w['name']) && (
+                    mb_strtolower(trim($w['name'])) === mb_strtolower(trim($oldName))
+                );
+                if ($matchesId || $matchesName) {
+                    $w['name'] = $newName;
+                    $w['contributor_id'] = $contributor->id;
+                    $changed = true;
+                }
+            }
+            unset($w);
+            if ($changed) {
+                $shiftDay->config = $config;
+                $shiftDay->saveQuietly();
+            }
+        }
+
+        // 8. Shift Settings (main_shift_config & shift_period_*)
+        $shiftSettings = ShiftSetting::where('setting_key', 'main_shift_config')
+            ->orWhere('setting_key', 'like', 'shift_period_%')
+            ->get();
+
+        foreach ($shiftSettings as $setting) {
+            $val = $setting->setting_value;
+            if (! is_array($val)) {
+                continue;
+            }
+            $changed = false;
+            $targets = [];
+            if (isset($val['karyawan']) && is_array($val['karyawan'])) {
+                $targets[] = &$val['karyawan'];
+            }
+            if (isset($val['config']['karyawan']) && is_array($val['config']['karyawan'])) {
+                $targets[] = &$val['config']['karyawan'];
+            }
+
+            foreach ($targets as &$karyawanList) {
+                foreach ($karyawanList as &$w) {
+                    $matchesId = ! empty($w['contributor_id']) && (int) $w['contributor_id'] === $contributor->id;
+                    $matchesName = isset($w['name']) && (
+                        mb_strtolower(trim($w['name'])) === mb_strtolower(trim($oldName))
+                    );
+                    if ($matchesId || $matchesName) {
+                        $w['name'] = $newName;
+                        $w['contributor_id'] = $contributor->id;
+                        $changed = true;
+                    }
+                }
+                unset($w);
+            }
+            unset($karyawanList);
+
+            if ($changed) {
+                $setting->setting_value = $val;
+                $setting->saveQuietly();
+            }
+        }
     }
 }
