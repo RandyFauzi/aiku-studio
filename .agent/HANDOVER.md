@@ -1,3 +1,8 @@
+### [2026-11-13 20:06 WITA] — Antigravity: transisi cut-off payroll 22 Okt–15 Nov dan siklus baru 16–15 bulanan
+- `PayrollPeriod`: Mengimplementasikan cut-off multi-era cerdas: siklus historis (< 22 Okt 2026) tetap 22–21, siklus transisi berjalan (22 Okt–15 Nov 2026), dan siklus baru mulai 16 Nov 2026 konsisten 16–15 tiap bulan. Menambahkan helper `previous()` dan `next()` untuk navigasi periode seamless dua arah.
+- `PayrollController` & `PayrollCalculator`: Menggunakan `previous()` backward chaining sehingga dropdown periode otomatis menampilkan `22 Okt 2026 - 15 Nov 2026 (Periode Berjalan)` dan seluruh riwayat siklus lama tetap terjaga 100%. Deteksi pending carry over juga mengikuti urutan cut-off multi-era.
+- `ShiftPatterns`, views, dan tests: Memperbarui pesan validasi dan teks antarmuka ("cut-off periode studio"), serta menyelaraskan unit tests boundary rollover. State IDLE.
+
 ### [2026-11-13 12:24 WITA] — Antigravity: revisi halaman jadwal shift sesuai susunan operasional 12/13 sesi
 - `portal.schedule`: Mengrombak halaman jadwal dengan susunan shift operasional presisi sesuai spesifikasi (Selasa–Kamis 12 sesi / Jum'at–Minggu 13 sesi), ringkasan metrik (Format Sesi 90m, Pengaturan 1 Alat 6 HP, Jam Operasional WITA, Target 72/78 Jam Video), dan tabel interaktif "Tabel Jadwal Lengkap" lengkap dengan tombol Tukar Posisi (▲/▼), copy format WhatsApp, dan tab Kalender Bulanan.
 - `shifts.workspace`: Menambahkan tombol pintas navigasi langsung ke Halaman Jadwal Lengkap dari ruang kerja shift admin.

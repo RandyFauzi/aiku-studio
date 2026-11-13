@@ -13,7 +13,7 @@
     <template x-if="config&&period">
         <div class="space-y-5" :aria-busy="saving||loading">
             <section class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-                <div><p class="text-xs font-semibold text-slate-500">Periode kerja · tanggal 22–21</p><p class="mt-1 text-sm font-bold text-slate-900 sm:text-base" x-text="period.name"></p><p x-show="inherited" class="mt-1 text-xs text-amber-700">Pola awal dari pengaturan lama. Simpan untuk menetapkan periode ini.</p></div>
+                <div><p class="text-xs font-semibold text-slate-500">Periode kerja cut-off studio</p><p class="mt-1 text-sm font-bold text-slate-900 sm:text-base" x-text="period.name"></p><p x-show="inherited" class="mt-1 text-xs text-amber-700">Pola awal dari pengaturan lama. Simpan untuk menetapkan periode ini.</p></div>
                 <div class="flex gap-2"><button type="button" @click="movePeriod(-1)" :disabled="loading||saving" aria-label="Periode sebelumnya" class="h-11 w-11 rounded-xl border border-slate-200">←</button><button type="button" @click="movePeriod(1)" :disabled="loading||saving" aria-label="Periode berikutnya" class="h-11 w-11 rounded-xl border border-slate-200">→</button></div>
             </section>
             <nav aria-label="Tampilan shift" class="flex flex-wrap gap-2">

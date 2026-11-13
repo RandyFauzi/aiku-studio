@@ -302,7 +302,7 @@
         <div class="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
             <div>
                 <h2 class="text-base sm:text-lg font-bold text-slate-900">Kalender Shift Pribadi & Kehadiran</h2>
-                <p class="text-xs text-slate-400 font-medium mt-0.5">Jadwal periode 22–21, revisi harian, dan izin/sakit dari admin</p>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">Jadwal periode cut-off studio, revisi harian, dan izin/sakit dari admin</p>
             </div>
             <input type="month" aria-label="Bulan jadwal shift" x-model="month" @change="load()" :disabled="loading" class="h-9 rounded-2xl border border-slate-200 px-3 text-xs font-bold text-slate-800 bg-white shadow-2xs">
         </div>

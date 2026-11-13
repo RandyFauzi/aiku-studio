@@ -18,9 +18,10 @@ class PayrollController extends Controller
         $current = $resolver->cutoff();
         $current['isCurrent'] = true;
         $periods = [$current];
-        $anchor = CarbonImmutable::parse($current['startDate'], 'Asia/Makassar');
+        $cursor = $current;
         for ($i = 1; $i <= 5; $i++) {
-            $periods[] = $resolver->cutoff($anchor->subMonthsNoOverflow($i));
+            $cursor = $resolver->previous($cursor);
+            $periods[] = $cursor;
         }
         $periods[] = $resolver->resolve(['periodId' => 'training_2026']);
         $default = $current['id'];

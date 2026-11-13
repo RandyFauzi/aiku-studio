@@ -47,13 +47,18 @@ class PayrollMigrationTest extends TestCase
     public function test_cutoff_handles_wita_midnight_and_year_rollover(): void
     {
         $resolver = app(PayrollPeriod::class);
-        $before = $resolver->cutoff(CarbonImmutable::parse('2026-12-21T15:59:59Z'));
-        $after = $resolver->cutoff(CarbonImmutable::parse('2026-12-21T16:00:00Z'));
-        $this->assertSame('2026-11-22_2026-12-21', $before['id']);
-        $this->assertSame('2026-12-22_2027-01-21', $after['id']);
-        $this->assertSame('2026-12-21 16:00:00', $after['startUtc']);
-        $this->assertSame('2027-01-21 15:59:59', $after['endUtc']);
-        $this->assertSame('2026-12-22_2027-01-21', $resolver->resolve(['period' => '22 Des 2026 - 21 Jan 2027'])['id']);
+        $before = $resolver->cutoff(CarbonImmutable::parse('2026-12-15T15:59:59Z'));
+        $after = $resolver->cutoff(CarbonImmutable::parse('2026-12-15T16:00:00Z'));
+        $this->assertSame('2026-11-16_2026-12-15', $before['id']);
+        $this->assertSame('2026-12-16_2027-01-15', $after['id']);
+        $this->assertSame('2026-12-15 16:00:00', $after['startUtc']);
+        $this->assertSame('2027-01-15 15:59:59', $after['endUtc']);
+        $this->assertSame('2026-12-16_2027-01-15', $resolver->resolve(['period' => '16 Des 2026 - 15 Jan 2027'])['id']);
+
+        // Historical cycle preservation
+        $this->assertSame('2026-09-22_2026-10-21', $resolver->resolve(['period' => '22 Sep 2026 - 21 Okt 2026'])['id']);
+        // Transition cycle preservation
+        $this->assertSame('2026-10-22_2026-11-15', $resolver->resolve(['period' => '22 Okt 2026 - 15 Nov 2026'])['id']);
     }
 
     public function test_payroll_calculation_uses_task_minutes_before_rounding_money(): void

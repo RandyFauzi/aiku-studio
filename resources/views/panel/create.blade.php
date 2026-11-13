@@ -345,7 +345,7 @@
                                     <span>Memuat data cut-off...</span>
                                 </span>
                             </h3>
-                            <p class="text-xs text-gray-400 font-medium">Log tugas terisi otomatis berdasarkan cut-off 22-21 yang dipilih atau input manual.</p>
+                            <p class="text-xs text-gray-400 font-medium">Log tugas terisi otomatis berdasarkan cut-off periode yang dipilih atau input manual.</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="button" 

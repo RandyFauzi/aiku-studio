@@ -31,7 +31,7 @@ class ShiftPlannerTest extends TestCase
         return $config;
     }
 
-    private function savePattern(array $config, string $period = '2026-10-22_2026-11-21', int $revision = 0)
+    private function savePattern(array $config, string $period = '2026-10-22_2026-11-15', int $revision = 0)
     {
         return $this->postJson('/api/shifts/config', ['periodId' => $period, 'expected_revision' => $revision, 'config' => $config]);
     }
@@ -39,16 +39,16 @@ class ShiftPlannerTest extends TestCase
     public function test_period_boundaries_persistence_and_stale_revision(): void
     {
         $resolver = app(PayrollPeriod::class);
-        $this->assertSame('2026-10-22_2026-11-21', $resolver->cutoff(CarbonImmutable::parse('2026-11-21 23:59', 'Asia/Makassar'))['id']);
-        $this->assertSame('2026-11-22_2026-12-21', $resolver->cutoff(CarbonImmutable::parse('2026-11-22 00:00', 'Asia/Makassar'))['id']);
+        $this->assertSame('2026-10-22_2026-11-15', $resolver->cutoff(CarbonImmutable::parse('2026-11-15 23:59', 'Asia/Makassar'))['id']);
+        $this->assertSame('2026-11-16_2026-12-15', $resolver->cutoff(CarbonImmutable::parse('2026-11-16 00:00', 'Asia/Makassar'))['id']);
         $this->actingAs(User::factory()->create());
         $config = $this->configuration();
         $this->savePattern($config)->assertOk()->assertJsonPath('revision', 1)->assertJsonPath('config.karyawan.0.daily_work_hrs', 4.5);
-        $this->getJson('/api/shifts/config?periodId=2026-10-22_2026-11-21')->assertOk()->assertJsonPath('inherited', false)->assertJsonPath('config.session_durations', [90, 180]);
-        $this->getJson('/api/shifts/config?periodId=2026-11-22_2026-12-21')->assertOk()->assertJsonPath('revision', 0)->assertJsonPath('inherited', true);
+        $this->getJson('/api/shifts/config?periodId=2026-10-22_2026-11-15')->assertOk()->assertJsonPath('inherited', false)->assertJsonPath('config.session_durations', [90, 180]);
+        $this->getJson('/api/shifts/config?periodId=2026-11-16_2026-12-15')->assertOk()->assertJsonPath('revision', 0)->assertJsonPath('inherited', true);
         $this->savePattern($config)->assertConflict();
         $this->savePattern($config, '2026-11-01_2026-11-30')->assertUnprocessable();
-        $this->savePattern($config, '2026-11-22_2026-12-21')->assertOk();
+        $this->savePattern($config, '2026-11-16_2026-12-15')->assertOk();
         $this->assertDatabaseMissing('shift_settings', ['setting_key' => 'main_shift_config']);
     }
 
@@ -120,11 +120,11 @@ class ShiftPlannerTest extends TestCase
         $this->savePattern($config, revision: 1)->assertOk();
         $next = $config;
         $next['session_durations'] = [30, 45];
-        $this->savePattern($next, '2026-11-22_2026-12-21')->assertOk();
+        $this->savePattern($next, '2026-11-16_2026-12-15')->assertOk();
         $worker = User::where('contributor_id', $config['karyawan'][0]['contributor_id'])->firstOrFail();
         $response = $this->actingAs($worker)->getJson('/api/me/attendance?month=2026-11')->assertOk()
             ->assertJsonPath('schedule.5.status', 'izin')->assertJsonPath('schedule.5.sessions', [])
-            ->assertJsonPath('schedule.20.work_hours', 3)->assertJsonPath('schedule.21.work_hours', 1.25);
+            ->assertJsonPath('schedule.14.work_hours', 3)->assertJsonPath('schedule.15.work_hours', 1.25);
         $this->assertSame('2026-11-02T00:00:00+08:00', $response->json('schedule.0.sessions.0.end_at'));
         $this->assertSame('2026-11-02T00:30:00+08:00', $response->json('schedule.0.sessions.1.start_at'));
     }

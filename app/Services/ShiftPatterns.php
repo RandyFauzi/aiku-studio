@@ -15,7 +15,7 @@ class ShiftPatterns
         $period = $id === 'current' ? $resolver->cutoff() : $resolver->resolve(['periodId' => $id]);
         $canonical = $resolver->cutoff(CarbonImmutable::parse($period['startDate'], 'Asia/Makassar'));
         if ($canonical['id'] !== $period['id']) {
-            throw ValidationException::withMessages(['periodId' => 'Gunakan periode tanggal 22 sampai 21 bulan berikutnya.']);
+            throw ValidationException::withMessages(['periodId' => 'Gunakan periode cut-off resmi yang valid.']);
         }
 
         return $period;

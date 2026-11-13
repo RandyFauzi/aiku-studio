@@ -198,11 +198,12 @@ class PayrollCalculator
             }
         }
 
-        // Look back over prior cut-off periods (up to 3 months)
-        $anchor = CarbonImmutable::parse($period['startDate'], 'Asia/Makassar');
+        // Look back over prior cut-off periods (up to 3 periods)
+        $cursor = $period;
         $priorPeriods = [];
         for ($i = 1; $i <= 3; $i++) {
-            $priorPeriods[] = $periodResolver->cutoff($anchor->subDays($i * 30));
+            $cursor = $periodResolver->previous($cursor);
+            $priorPeriods[] = $cursor;
         }
 
         $carryOverTasks = [];

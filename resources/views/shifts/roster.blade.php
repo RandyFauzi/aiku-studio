@@ -31,7 +31,7 @@
                         :class="rosterViewMode === 'monthly' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-semibold'" 
                         class="px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition">
                     <svg class="w-3.5 h-3.5 text-[#00B090]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Perbulan (22–21)</span>
+                    <span>Per Siklus Cut-off</span>
                 </button>
             </div>
 

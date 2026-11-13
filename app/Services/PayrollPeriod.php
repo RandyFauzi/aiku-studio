@@ -10,15 +10,61 @@ class PayrollPeriod
 {
     private const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
+    /**
+     * Menghitung periode cut-off resmi untuk tanggal tertentu (WITA).
+     *
+     * Aturan Siklus:
+     * 1. Siklus Historis (< 22 Okt 2026): Tanggal 22 s/d 21 bulan berikutnya.
+     * 2. Siklus Transisi (22 Okt 2026 s/d 15 Nov 2026): 22 Okt 2026 s/d 15 Nov 2026.
+     * 3. Siklus Baru (Mulai 16 Nov 2026 dst): Tanggal 16 s/d 15 bulan berikutnya.
+     */
     public function cutoff(?CarbonImmutable $date = null): array
     {
         $date = ($date ?? CarbonImmutable::now())->setTimezone('Asia/Makassar');
+        $dateStr = $date->toDateString();
+
+        // 1. Periode Transisi: 22 Okt 2026 s/d 15 Nov 2026
+        if ($dateStr >= '2026-10-22' && $dateStr <= '2026-11-15') {
+            return $this->range('2026-10-22', '2026-11-15');
+        }
+
+        // 2. Siklus Baru: Mulai 16 Nov 2026 ke atas (16 s/d 15 bulan berikutnya)
+        if ($dateStr >= '2026-11-16') {
+            $start = $date->startOfMonth()->day(16);
+            if ($date->day < 16) {
+                $start = $start->subMonthNoOverflow();
+            }
+
+            return $this->range($start->toDateString(), $start->addMonthNoOverflow()->day(15)->toDateString());
+        }
+
+        // 3. Siklus Historis: Sebelum 22 Okt 2026 (22 s/d 21 bulan berikutnya)
         $start = $date->startOfMonth()->day(22);
         if ($date->day < 22) {
             $start = $start->subMonthNoOverflow();
         }
 
         return $this->range($start->toDateString(), $start->addMonthNoOverflow()->day(21)->toDateString());
+    }
+
+    /**
+     * Mendapatkan periode persis sebelum periode yang diberikan (seamless backward navigation).
+     */
+    public function previous(array $period): array
+    {
+        $start = CarbonImmutable::parse($period['startDate'], 'Asia/Makassar');
+
+        return $this->cutoff($start->subDay());
+    }
+
+    /**
+     * Mendapatkan periode persis setelah periode yang diberikan (seamless forward navigation).
+     */
+    public function next(array $period): array
+    {
+        $end = CarbonImmutable::parse($period['endDate'], 'Asia/Makassar');
+
+        return $this->cutoff($end->addDay());
     }
 
     public function range(string $start, string $end): array
@@ -79,6 +125,6 @@ class PayrollPeriod
             throw ValidationException::withMessages(['period' => 'Periode tidak dikenali.']);
         }
 
-        return $this->cutoff(CarbonImmutable::now('Asia/Makassar')->subMonthNoOverflow());
+        return $this->previous($this->cutoff());
     }
 }

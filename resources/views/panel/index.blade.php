@@ -448,7 +448,7 @@
                                     :class="performanceTab === 'monthly' ? 'bg-white text-emerald-800 shadow-xs font-extrabold' : 'text-slate-500 hover:text-slate-800'">
                                 <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                 <span>Kinerja Bulan Ini</span>
-                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100/80 text-emerald-800 font-bold">22-21</span>
+                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100/80 text-emerald-800 font-bold">Cut-off</span>
                             </button>
                             <button type="button" 
                                     @click="performanceTab = 'all_time'" 
