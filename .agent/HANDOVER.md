@@ -1,3 +1,8 @@
+### [2026-11-14 20:00 WITA] — Antigravity: implementasi matriks jadwal shift baru (10 sesi + midnight + jadwal libur) admin & user
+- Admin (`shifts.workspace`, `weekly-matrix.blade.php`, `shifts.js`, `SettingController`): Menyediakan tab baru "Matriks Jadwal Studio (Baru)" dengan tampilan matriks 10 sesi harian (08:00 – 23:00) + 2 sesi Midnight (23:00 – Subuh), jadwal libur rutin, 4 aturan SOP, dropdown penugasan per sel, salin format WA, reset default, dan penyimpanan ke server (`/api/shifts/weekly-schedule`).
+- Portal Kontributor (`portal.schedule`, `portal.home`, `attendance.js`, `portal.shell`): Menghubungkan jadwal mingguan ke halaman `/me/jadwal` (tab Matriks Mingguan dengan sorotan jadwal pribadi, Jadwal Harian per hari, Libur & SOP, dan Kalender) serta menampilkan status shift aktif/hari libur harian di kartu "Jadwal hari ini" dashboard user (`/me`).
+- Validasi: PHP syntax check clean, Vite build sukses, PHPUnit `DailyWorkReportTest` lulus 100% (19 tests, 190 assertions), state IDLE.
+
 ### [2026-11-14 18:57 WITA] — Antigravity: floating custom calendar popover & modern search bar di laporan kerja admin
 - `work-reports.admin` & `work-reports.js`: Mengganti `<input type="date">` native browser dengan **Custom Floating Calendar Popover** bergaya AIKu Studio (dilengkapi tombol pintas Hari Ini, Kemarin, H-2, tombol cepat < / > ganti hari, nama hari bahasa Indonesia Min–Sab, serta highlight emerald untuk tanggal aktif).
 - Memodernisasi bilah pencarian nama kontributor dengan rounded-2xl, icon Search, dan tombol Clear instant.

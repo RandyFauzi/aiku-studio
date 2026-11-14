@@ -17,6 +17,10 @@
                 <div class="flex gap-2"><button type="button" @click="movePeriod(-1)" :disabled="loading||saving" aria-label="Periode sebelumnya" class="h-11 w-11 rounded-xl border border-slate-200">←</button><button type="button" @click="movePeriod(1)" :disabled="loading||saving" aria-label="Periode berikutnya" class="h-11 w-11 rounded-xl border border-slate-200">→</button></div>
             </section>
             <nav aria-label="Tampilan shift" class="flex flex-wrap gap-2">
+                <button type="button" @click="view='weekly_matrix'" :aria-pressed="view==='weekly_matrix'" :class="view==='weekly_matrix'?'bg-emerald-700 text-white shadow-xs':'bg-white text-slate-600 hover:text-slate-900'" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-sm font-semibold flex items-center gap-2">
+                    <span class="text-base">📅</span>
+                    <span>Matriks Jadwal Studio (Baru)</span>
+                </button>
                 <button type="button" @click="view='roster'" :aria-pressed="view==='roster'" :class="view==='roster'?'bg-slate-900 text-white shadow-xs':'bg-white text-slate-600 hover:text-slate-900'" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-sm font-semibold flex items-center gap-2">
                     <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     <span>Matriks Kalender Roster</span>
@@ -27,6 +31,9 @@
                     <span>🎥 Buka Halaman Jadwal Lengkap ↗</span>
                 </a>
             </nav>
+            <div x-show="view==='weekly_matrix'" class="space-y-6">
+                @include('shifts.weekly-matrix')
+            </div>
             <div x-show="view==='roster'" class="space-y-6">
                 @include('shifts.roster')
             </div>

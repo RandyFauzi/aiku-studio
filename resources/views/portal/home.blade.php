@@ -59,10 +59,42 @@
                 <a href="/me/jadwal">Lihat semua ↗</a>
             </div>
             <div class="portal-status-pills">
-                <span class="portal-status-pill highlight"><b x-text="todaySchedule.sessions.length"></b> Sesi</span>
+                <span class="portal-status-pill highlight"><b x-text="(todayWeeklyStatus && todayWeeklyStatus.shift ? 1 : 0) + (todaySchedule.sessions ? todaySchedule.sessions.length : 0)"></b> Sesi</span>
                 <span class="portal-status-pill"><b x-text="totalMonthAttendances"></b> Hari hadir</span>
                 <a href="/me/rekaman" class="portal-status-pill">Riwayat rekaman ↗</a>
             </div>
+
+            <!-- Kartu Shift Mingguan Studio Baru -->
+            <template x-if="todayWeeklyStatus && !todayWeeklyStatus.isOff && todayWeeklyStatus.shift">
+                <a href="/me/jadwal" class="portal-session-card" style="border-left: 4px solid #00875A;">
+                    <div class="portal-session-meta">
+                        <span class="portal-tag" style="background:#EBF7F2;color:#00875A;font-weight:700;">Terjadwal Aktif</span>
+                        <span class="portal-round-button" aria-hidden="true">@include('portal.icon', ['name' => 'arrow'])</span>
+                    </div>
+                    <h3 x-text="todayWeeklyStatus.shift + ' · Rekaman Studio'"></h3>
+                    <div class="portal-session-meta">
+                        <time>@include('portal.icon', ['name' => 'clock'])<span x-text="todayWeeklyStatus.time + ' WITA'"></span></time>
+                        <span x-text="todayWeeklyStatus.alat"></span>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 11px; color: #00875A; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span>🎯 <span x-text="todayWeeklyStatus.target"></span></span>
+                        <span>•</span>
+                        <span x-text="todayWeeklyStatus.detail"></span>
+                    </div>
+                </a>
+            </template>
+
+            <!-- Kartu Libur (Senin Studio atau Libur Mingguan Rutin) -->
+            <template x-if="todayWeeklyStatus && todayWeeklyStatus.isOff">
+                <div style="border-radius: 16px; border: 1px solid #fde68a; background: #fffbeb; padding: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; color: #78350f; font-weight: 800; font-size: 14px;">
+                        <span style="font-size: 18px;">☕</span>
+                        <span x-text="todayWeeklyStatus.reason"></span>
+                    </div>
+                    <p style="font-size: 12px; color: #92400e; font-weight: 500; margin-top: 4px; line-height: 1.5;" x-text="todayWeeklyStatus.description"></p>
+                </div>
+            </template>
+
             <template x-for="session in todaySchedule.sessions" :key="session.id">
                 <a href="/me/jadwal" class="portal-session-card">
                     <div class="portal-session-meta"><span class="portal-tag">Terjadwal</span><span class="portal-round-button" aria-hidden="true">@include('portal.icon', ['name' => 'arrow'])</span></div>
@@ -73,7 +105,7 @@
                     </div>
                 </a>
             </template>
-            <div class="portal-empty" x-show="!loading && !todaySchedule.sessions.length">
+            <div class="portal-empty" x-show="!loading && !todaySchedule.sessions.length && (!todayWeeklyStatus || (!todayWeeklyStatus.shift && !todayWeeklyStatus.isOff))">
                 Belum ada sesi hari ini.<br>Jadwal berikutnya bisa kamu lihat di kalender.
             </div>
             <div class="portal-empty" x-show="loading" role="status">Memuat jadwalmu…</div>

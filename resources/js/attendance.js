@@ -314,6 +314,91 @@ window.attendancePortalData = () => ({
         return this.activeSchedule || this.schedule.find(day => day.date === this.today) || { sessions: [] };
     },
 
+    weeklyScheduleData: null,
+    async loadWeeklySchedule() {
+        try {
+            const res = await fetch('/api/shifts/weekly-schedule', {
+                headers: { Accept: 'application/json' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                this.weeklyScheduleData = data.schedule || null;
+            }
+        } catch (e) {
+            console.warn('Gagal memuat jadwal mingguan:', e);
+        }
+    },
+
+    get todayWeeklyStatus() {
+        if (!this.weeklyScheduleData) return null;
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const witaDate = new Date(utc + (3600000 * 8));
+        const dayOfWeek = witaDate.getDay();
+        const dayKeys = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+        const dayLabels = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const dayKey = dayKeys[dayOfWeek];
+        const dayLabel = dayLabels[dayOfWeek];
+
+        if (dayOfWeek === 1) {
+            return {
+                isOff: true,
+                reason: 'Libur Studio (Off)',
+                description: 'Hari Senin studio libur operasional mingguan. Semua anggota libur.',
+                dayLabel
+            };
+        }
+
+        const userName = (this.name || window.AIKU_USER?.name || '').toLowerCase().trim();
+        const matchName = (assigned) => {
+            if (!assigned || !userName) return false;
+            const a = assigned.toLowerCase().trim();
+            return a === userName || a.includes(userName) || userName.includes(a);
+        };
+
+        const daysOff = this.weeklyScheduleData.days_off?.[dayKey] || [];
+        if (daysOff.some(matchName)) {
+            return {
+                isOff: true,
+                reason: 'Jadwal Libur Rutin (' + dayLabel + ')',
+                description: 'Hari ini adalah giliran libur mingguan Anda sesuai matriks operasional studio.',
+                dayLabel
+            };
+        }
+
+        const sessions = this.weeklyScheduleData.sessions || [];
+        for (const s of sessions) {
+            if (matchName(s.days?.[dayKey])) {
+                return {
+                    isOff: false,
+                    shift: s.shift,
+                    time: s.time,
+                    alat: '1 Alat · 6 HP',
+                    target: '6 Jam Video',
+                    detail: '1 Jam Rekaman + 30m Prep/Cas',
+                    dayLabel
+                };
+            }
+        }
+
+        const midnight = this.weeklyScheduleData.midnight || [];
+        for (const m of midnight) {
+            if (matchName(m.days?.[dayKey])) {
+                return {
+                    isOff: false,
+                    shift: m.role,
+                    time: m.time,
+                    alat: '1 Alat · 6 HP',
+                    target: '6 Jam Video',
+                    detail: 'Sesi Midnight (23:00 – Subuh)',
+                    dayLabel
+                };
+            }
+        }
+
+        return { isOff: false, shift: null, dayLabel };
+    },
+
     get weekDays() {
         const todayObj = new Date(this.today + 'T12:00:00');
         const dayOfWeek = (todayObj.getDay() + 6) % 7; // 0 = Mon, 6 = Sun
@@ -393,7 +478,7 @@ window.attendancePortalData = () => ({
             }
         });
 
-        await Promise.all([this.load(), this.loadReportStatus()]);
+        await Promise.all([this.load(), this.loadReportStatus(), this.loadWeeklySchedule()]);
 
         // Auto-checkin if URL has ?qr_token=... (e.g. from native phone camera scanning poster)
         const urlParams = new URLSearchParams(window.location.search);

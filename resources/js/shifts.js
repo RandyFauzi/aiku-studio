@@ -2,7 +2,7 @@ import {clone,statusLabels,prepareConfig,sessionRows,workHours,members,problems,
 
 window.shiftsData=()=>({
     sidebarOpen:window.innerWidth>=768&&localStorage.getItem('aiku_sidebar_open')!=='false',
-    loading:true,saving:false,error:'',saved:'',mode:'period',view:'roster',search:'',
+    loading:true,saving:false,error:'',saved:'',mode:'period',view:'weekly_matrix',search:'',
     rosterViewMode:'weekly',rosterWeekIndex:0,rosterSearch:'',rosterEditCell:null,
     config:null,baseline:'',revision:0,inherited:false,period:null,contributors:[],
     days:{},selectedDate:'',dayDraft:null,dayBaseline:'',dayRevision:0,drag:null,dropTarget:null,chosenPerson:'',chosenShift:1,

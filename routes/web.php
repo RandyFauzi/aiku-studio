@@ -50,6 +50,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::get('/api/me/recordings', [MyRecordingController::class, 'index']);
     Route::get('/api/me/payslips', [PayslipController::class, 'mine']);
     Route::put('/api/me/password', [AuthController::class, 'updatePassword'])->middleware('throttle:10,1');
+    Route::get('/api/shifts/weekly-schedule', [SettingController::class, 'weeklySchedule']);
 
     // Workers may only open their final archived slips; live calculations are admin-only.
     Route::get('/slip/live/{worker}', [PayslipController::class, 'live'])->middleware(EnsureAdministrator::class);
@@ -128,6 +129,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::put('/studio-accounts/{email}/toggle', [SettingController::class, 'toggleAccount']);
             Route::get('/shifts/config', [SettingController::class, 'shifts']);
             Route::post('/shifts/config', [SettingController::class, 'saveShifts']);
+            Route::post('/api/shifts/weekly-schedule', [SettingController::class, 'saveWeeklySchedule']);
             Route::get('/shifts/days', [ShiftDayController::class, 'index']);
             Route::put('/shifts/days/{date}', [ShiftDayController::class, 'save']);
             Route::delete('/shifts/days/{date}', [ShiftDayController::class, 'destroy']);

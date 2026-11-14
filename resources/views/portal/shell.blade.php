@@ -16,6 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="AIKu Studio">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="preload" href="/fonts/manrope-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <script>window.AIKU_USER = { name: @json(auth()->user()->name ?? '') };</script>
     @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 <body class="portal" x-data="attendancePortalData()">

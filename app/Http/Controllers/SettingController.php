@@ -249,4 +249,37 @@ class SettingController extends Controller
 
         return response()->json(['success' => true, 'active' => $account->active, 'email' => $account->email]);
     }
+
+    public function weeklySchedule(Request $request)
+    {
+        $defaultPath = resource_path('data/studio-weekly-schedule.json');
+        $default = file_exists($defaultPath) ? json_decode(file_get_contents($defaultPath), true) : [];
+        $setting = null;
+        try {
+            $setting = ShiftSetting::where('setting_key', 'studio_weekly_schedule')->value('setting_value');
+        } catch (\Throwable $e) {
+            // Fallback gracefully
+        }
+
+        return response()->json([
+            'success' => true,
+            'schedule' => $setting ?: $default,
+        ]);
+    }
+
+    public function saveWeeklySchedule(Request $request)
+    {
+        $data = $request->validate([
+            'schedule' => 'required|array',
+        ]);
+        ShiftSetting::updateOrCreate(
+            ['setting_key' => 'studio_weekly_schedule'],
+            ['setting_value' => $data['schedule']]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Jadwal shift operasional mingguan berhasil disimpan.',
+        ]);
+    }
 }
