@@ -55,36 +55,89 @@
         <div class="w-full max-w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
             <!-- Breadcrumb & Header Controls -->
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
                 <div>
                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Finance & Analytics / Studio Revenue & Margin</p>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Studio Profit & Margin</h2>
                     <p class="text-xs text-slate-500 mt-1">Kalkulasi keuntungan bersih studio berdasarkan jam rekaman disetujui (Approved), tarif klien, dan beban payroll kontributor.</p>
                 </div>
                 
-                <!-- Period Selector Controls -->
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-xs">
-                        <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 shrink-0">
-                            <svg class="w-4 h-4 text-[#00B090]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span>Siklus Cut-Off:</span>
+                <!-- Period Selector & View Mode Controls (Sejajar Horizontal di Kanan) -->
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
+                    <!-- Custom Floating Dropdown Siklus Cut-Off -->
+                    <div class="relative shrink-0" x-data="{ openPeriodDropdown: false }">
+                        <button type="button" 
+                                @click="openPeriodDropdown = !openPeriodDropdown"
+                                class="bg-white hover:bg-slate-50/90 border border-slate-200/90 text-slate-800 py-2 px-3.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2.5 transition cursor-pointer shadow-2xs group">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#00B090] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <span class="text-xs text-slate-400 font-medium">Siklus:</span>
+                                <span class="font-bold text-slate-900" x-text="selectedPeriodObj ? selectedPeriodObj.name : 'Pilih Siklus'"></span>
+                                <template x-if="selectedPeriodObj">
+                                    <span class="text-[10px] px-2 py-0.5 rounded-md font-bold shrink-0"
+                                          :class="selectedPeriodObj.isCurrent ? 'bg-emerald-100 text-emerald-800' : (selectedPeriodObj.isTraining ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-600')"
+                                          x-text="selectedPeriodObj.isCurrent ? 'Berjalan' : (selectedPeriodObj.isTraining ? 'Arsip DB' : 'Selesai')">
+                                    </span>
+                                </template>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ml-1 group-hover:text-slate-600" 
+                                 :class="openPeriodDropdown ? 'rotate-180' : ''" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Floating Dropdown Menu Siklus Cut-Off -->
+                        <div x-show="openPeriodDropdown" 
+                             @click.outside="openPeriodDropdown = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 sm:left-auto sm:right-0 mt-1.5 w-80 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2 text-xs text-slate-700"
+                             x-cloak>
+                            
+                            <div class="flex items-center justify-between px-2.5 py-1.5 mb-1 border-b border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Siklus Cut-Off</span>
+                                <span class="text-[10px] text-slate-500 font-semibold" x-text="periods.length + ' periode'"></span>
+                            </div>
+
+                            <div class="max-h-72 overflow-y-auto space-y-1 custom-scrollbar pr-0.5">
+                                <template x-for="p in periods" :key="p.id">
+                                    <button type="button"
+                                            @click="selectPeriod(p.id); openPeriodDropdown = false"
+                                            class="w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl transition cursor-pointer"
+                                            :class="selectedPeriodId === p.id ? 'bg-[#EDFAF8] text-emerald-950 font-bold border border-emerald-200/80 shadow-2xs' : 'hover:bg-slate-50 text-slate-700 border border-transparent'">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="w-2.5 h-2.5 rounded-full shrink-0" 
+                                                  :class="p.isCurrent ? 'bg-emerald-500 ring-2 ring-emerald-200' : (p.isTraining ? 'bg-purple-500' : 'bg-slate-300')"></span>
+                                            <div>
+                                                <div class="text-xs" :class="selectedPeriodId === p.id ? 'font-extrabold text-slate-900' : 'font-semibold text-slate-700'" x-text="p.name"></div>
+                                                <div class="text-[10px] mt-0.5 flex items-center gap-1.5">
+                                                    <span class="px-1.5 py-0.2 rounded font-bold"
+                                                          :class="p.isCurrent ? 'bg-emerald-100 text-emerald-800' : (p.isTraining ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-500')"
+                                                          x-text="p.isCurrent ? 'Periode Berjalan' : (p.isTraining ? 'Arsip DB' : 'Siklus Selesai')"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span x-show="selectedPeriodId === p.id" class="text-[#00B090] font-black text-sm shrink-0 ml-2">✓</span>
+                                    </button>
+                                </template>
+                            </div>
                         </div>
-                        <select x-model="selectedPeriodId" @change="onPeriodChange()" class="bg-transparent border-none font-bold text-slate-800 cursor-pointer focus:ring-0 text-xs sm:text-sm outline-none py-0 pr-6">
-                            <template x-for="p in periods" :key="p.id">
-                                <option :value="p.id" x-text="p.name + (p.isCurrent ? ' (Periode Berjalan)' : (p.isTraining ? ' (Arsip DB)' : ' (Siklus Selesai)'))"></option>
-                            </template>
-                        </select>
                     </div>
 
                     <!-- View Mode Pill Tabs -->
-                    <div class="inline-flex p-1 bg-slate-200/70 rounded-xl text-xs font-semibold">
+                    <div class="inline-flex p-1 bg-slate-200/70 rounded-xl text-xs font-semibold shrink-0">
                         <button @click="if (isTrainingView) { const nonTraining = periods.find(p => !p.isTraining); if (nonTraining) selectPeriod(nonTraining.id); }"
-                                class="px-3 py-1.5 rounded-lg transition-all"
+                                class="px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                                 :class="!isTrainingView ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'">
                             ⚡ Rekap Siklus Live
                         </button>
                         <button @click="selectPeriod('training_2026')"
-                                class="px-3 py-1.5 rounded-lg transition-all"
+                                class="px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                                 :class="isTrainingView ? 'bg-white text-purple-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'">
                             🎓 Arsip Training (DB)
                         </button>

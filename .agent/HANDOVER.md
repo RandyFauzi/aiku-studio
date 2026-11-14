@@ -1,3 +1,8 @@
+### [2026-11-14 10:25 WITA] — Antigravity: modernisasi dropdown siklus cut-off & layout header horizontal
+- `panel.payslips` & `panel.profit`: Menata header kontrol menjadi sejajar horizontal di kanan (`flex-nowrap items-center gap-3`) sehingga tab mode `⚡ Rekap Otomatis (Live)` dan `📄 Slip Tersimpan (DB)` berada rapi di samping kanan dropdown tanpa patah ke bawah.
+- Mengganti `<select>` native dengan **Custom Floating Dropdown Alpine.js** yang selaras dengan komponen filter modern sistem (dilengkapi badge status warna, dot indikator, checkmark pilihan aktif `✓`, dan animasi transition).
+- Validasi: layout Blade clean, state IDLE.
+
 ### [2026-11-14 10:04 WITA] — Antigravity: pemisahan tab Rekap Otomatis (Live) vs Slip Tersimpan (DB) & filter periode
 - `panel.payslips` & `app.js`: Memisahkan view mode secara tegas antara `⚡ Rekap Otomatis (Live)` (perhitungan real-time rekaman Verbos) dan `📄 Slip Tersimpan (DB)` (dokumen slip resmi di database). Memperjelas bahwa slip baru cut-off 22 Okt–15 Nov bukanlah "Arsip Training", melainkan slip resmi yang tersimpan di database.
 - Menambahkan filter lingkup periode pada slip database: `🎯 Siklus Cut-Off Ini` (default, menampilkan slip sesuai siklus cut-off terpilih) dan `🌐 Semua Periode` (seluruh riwayat slip DB). Jika memilih `training_2026`, tab dan header otomatis menampilkan mode `🎓 Arsip Training (DB)` khusus 9 slip training historis.
