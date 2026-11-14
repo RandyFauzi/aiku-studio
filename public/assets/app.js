@@ -394,7 +394,11 @@ document.addEventListener('alpine:init', () => {
         statusFilter: 'all', // 'all', 'sudah', 'belum'
         updatingStatusWorker: null,
 
-        // Dynamic Live Payroll Data (Cut-off 22 - 21)
+        // View Mode: 'live' (rekap otomatis dinamis) vs 'saved' (slip tersimpan di database)
+        viewMode: 'live',
+        savedPeriodScope: 'current', // 'current' (sesuai cut-off terpilih) | 'all' (semua slip di DB)
+
+        // Dynamic Live Payroll Data (Cut-off 22 - 21 / 22 Okt - 15 Nov)
         liveStats: {
             totalWorkers: 0,
             totalSudah: 0,
@@ -410,7 +414,7 @@ document.addEventListener('alpine:init', () => {
         showDailyModal: false,
         selectedWorkerDaily: null,
 
-        // Legacy / Training Database Slips (Untouched id 1-9)
+        // Saved Database Payslips (Both historical training & newly generated official slips)
         trainingSlips: [],
 
         formatRupiah,
@@ -418,14 +422,60 @@ document.addEventListener('alpine:init', () => {
         formatTime,
         formatPeriod,
 
+        matchesPeriod(slipPeriod, periodObj) {
+            if (!slipPeriod || !periodObj) return false;
+            const s = String(slipPeriod).toLowerCase().trim();
+            const pName = String(periodObj.name || '').toLowerCase().trim();
+            if (s === pName) return true;
+            if (periodObj.isTraining || periodObj.id === 'training_2026') {
+                return s.includes('training') || s.includes('18 sep') || s.includes('sep 2026');
+            }
+            const cleanName = pName.replace(/\s*\(.*?\)/g, '').trim();
+            if (s === cleanName) return true;
+            const parts = cleanName.split('-').map(x => x.trim());
+            if (parts.length === 2) {
+                if (s.includes(parts[0]) && s.includes(parts[1])) return true;
+                const p0NoYear = parts[0].replace(/\b\d{4}\b/, '').trim();
+                const p1NoYear = parts[1].replace(/\b\d{4}\b/, '').trim();
+                if (p0NoYear && p1NoYear && s.includes(p0NoYear) && s.includes(p1NoYear)) return true;
+            }
+            return false;
+        },
+
         async init() {
             // Watch sidebarOpen in dashboardData
             this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });
             await this.fetchPeriods();
+            // Prefetch slips to show count badges on tabs
+            try {
+                const res = await fetch('/api/slips');
+                const data = await res.json();
+                if (Array.isArray(data)) this.trainingSlips = data;
+            } catch(e) {}
         },
 
         get isTrainingView() {
+            return this.viewMode === 'saved' || this.selectedPeriodId === 'training_2026';
+        },
+
+        get isHistoricalTrainingSelected() {
             return this.selectedPeriodId === 'training_2026';
+        },
+
+        get scopedTrainingSlips() {
+            if (!Array.isArray(this.trainingSlips)) return [];
+            if (this.isHistoricalTrainingSelected) {
+                return this.trainingSlips.filter(s => this.matchesPeriod(s.period, this.selectedPeriodObj || { id: 'training_2026', isTraining: true }));
+            }
+            if (this.savedPeriodScope === 'all') {
+                return this.trainingSlips;
+            }
+            return this.trainingSlips.filter(s => this.matchesPeriod(s.period, this.selectedPeriodObj));
+        },
+
+        get countSlipsCurrentPeriod() {
+            if (!Array.isArray(this.trainingSlips)) return 0;
+            return this.trainingSlips.filter(s => this.matchesPeriod(s.period, this.selectedPeriodObj)).length;
         },
 
         get filteredLiveWorkers() {
@@ -441,7 +491,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         get filteredTrainingSlips() {
-            let list = this.trainingSlips;
+            let list = this.scopedTrainingSlips;
             if (this.statusFilter === 'sudah') {
                 list = list.filter(s => s.status === 'sudah');
             } else if (this.statusFilter === 'belum') {
@@ -454,14 +504,14 @@ document.addEventListener('alpine:init', () => {
 
         get countSudah() {
             if (this.isTrainingView) {
-                return this.trainingSlips.filter(s => s.status === 'sudah').length;
+                return this.scopedTrainingSlips.filter(s => s.status === 'sudah').length;
             }
             return this.liveWorkers.filter(w => w.status === 'sudah').length;
         },
 
         get countBelum() {
             if (this.isTrainingView) {
-                return this.trainingSlips.filter(s => s.status !== 'sudah').length;
+                return this.scopedTrainingSlips.filter(s => s.status !== 'sudah').length;
             }
             return this.liveWorkers.filter(w => w.status !== 'sudah').length;
         },
@@ -474,7 +524,7 @@ document.addEventListener('alpine:init', () => {
                 let totalRej = 0;
                 let totalPend = 0;
 
-                this.trainingSlips.forEach(slip => {
+                this.scopedTrainingSlips.forEach(slip => {
                     totalThp += (slip.total_thp || 0);
                     totalAppr += (parseFloat(slip.total_approved_hours) || 0);
                     
@@ -505,7 +555,7 @@ document.addEventListener('alpine:init', () => {
                     approved: totalAppr.toFixed(2),
                     rejected: totalRej.toFixed(2),
                     pending: totalPend.toFixed(2),
-                    count: this.trainingSlips.length
+                    count: this.scopedTrainingSlips.length
                 };
             }
 
@@ -517,6 +567,17 @@ document.addEventListener('alpine:init', () => {
                 pending: '0.00',
                 count: this.liveStats.totalWorkers || 0
             };
+        },
+
+        async switchViewMode(mode) {
+            this.viewMode = mode;
+            if (mode === 'live' && this.selectedPeriodId === 'training_2026') {
+                const currentOrRecent = this.periods.find(p => p.isCurrent) || this.periods.find(p => !p.isTraining);
+                if (currentOrRecent) {
+                    this.selectedPeriodId = currentOrRecent.id;
+                }
+            }
+            await this.loadSelectedPeriodData();
         },
 
         async fetchPeriods() {
@@ -534,11 +595,17 @@ document.addEventListener('alpine:init', () => {
         },
 
         async onPeriodChange() {
+            if (this.selectedPeriodId === 'training_2026') {
+                this.viewMode = 'saved';
+            }
             await this.loadSelectedPeriodData();
         },
 
         async selectPeriod(periodId) {
             this.selectedPeriodId = periodId;
+            if (this.selectedPeriodId === 'training_2026') {
+                this.viewMode = 'saved';
+            }
             await this.loadSelectedPeriodData();
         },
 

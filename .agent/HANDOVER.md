@@ -1,3 +1,8 @@
+### [2026-11-14 10:04 WITA] — Antigravity: pemisahan tab Rekap Otomatis (Live) vs Slip Tersimpan (DB) & filter periode
+- `panel.payslips` & `app.js`: Memisahkan view mode secara tegas antara `⚡ Rekap Otomatis (Live)` (perhitungan real-time rekaman Verbos) dan `📄 Slip Tersimpan (DB)` (dokumen slip resmi di database). Memperjelas bahwa slip baru cut-off 22 Okt–15 Nov bukanlah "Arsip Training", melainkan slip resmi yang tersimpan di database.
+- Menambahkan filter lingkup periode pada slip database: `🎯 Siklus Cut-Off Ini` (default, menampilkan slip sesuai siklus cut-off terpilih) dan `🌐 Semua Periode` (seluruh riwayat slip DB). Jika memilih `training_2026`, tab dan header otomatis menampilkan mode `🎓 Arsip Training (DB)` khusus 9 slip training historis.
+- Menyelaraskan kartu statistik highlight, counter badge, dan label tab pada `panel.profit`. State IDLE.
+
 ### [2026-11-13 20:06 WITA] — Antigravity: transisi cut-off payroll 22 Okt–15 Nov dan siklus baru 16–15 bulanan
 - `PayrollPeriod`: Mengimplementasikan cut-off multi-era cerdas: siklus historis (< 22 Okt 2026) tetap 22–21, siklus transisi berjalan (22 Okt–15 Nov 2026), dan siklus baru mulai 16 Nov 2026 konsisten 16–15 tiap bulan. Menambahkan helper `previous()` dan `next()` untuk navigasi periode seamless dua arah.
 - `PayrollController` & `PayrollCalculator`: Menggunakan `previous()` backward chaining sehingga dropdown periode otomatis menampilkan `22 Okt 2026 - 15 Nov 2026 (Periode Berjalan)` dan seluruh riwayat siklus lama tetap terjaga 100%. Deteksi pending carry over juga mengikuti urutan cut-off multi-era.

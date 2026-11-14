@@ -86,7 +86,7 @@
                         <button @click="selectPeriod('training_2026')"
                                 class="px-3 py-1.5 rounded-lg transition-all"
                                 :class="isTrainingView ? 'bg-white text-purple-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'">
-                            🎓 Arsip Training
+                            🎓 Arsip Training (DB)
                         </button>
                     </div>
                 </div>

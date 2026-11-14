@@ -78,15 +78,17 @@
 
                     <!-- View Mode Pill Tabs -->
                     <div class="inline-flex p-1 bg-slate-200/70 rounded-xl text-xs font-semibold">
-                        <button @click="if (isTrainingView) { const nonTraining = periods.find(p => !p.isTraining); if (nonTraining) selectPeriod(nonTraining.id); }"
-                                class="px-3 py-1.5 rounded-lg transition-all"
-                                :class="!isTrainingView ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'">
-                            ⚡ Rekap Otomatis
+                        <button @click="switchViewMode('live')"
+                                class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                                :class="!isTrainingView ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'">
+                            <span>⚡ Rekap Otomatis (Live)</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-extrabold" x-show="liveWorkers.length > 0" x-text="liveWorkers.length"></span>
                         </button>
-                        <button @click="selectPeriod('training_2026')"
-                                class="px-3 py-1.5 rounded-lg transition-all"
-                                :class="isTrainingView ? 'bg-white text-purple-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'">
-                            🎓 Arsip Training
+                        <button @click="switchViewMode('saved')"
+                                class="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                                :class="isTrainingView ? 'bg-white text-purple-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'">
+                            <span x-text="isHistoricalTrainingSelected ? '🎓 Arsip Training (DB)' : '📄 Slip Tersimpan (DB)'"></span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-100 text-purple-800 font-extrabold" x-show="trainingSlips.length > 0" x-text="trainingSlips.length"></span>
                         </button>
                     </div>
                 </div>
@@ -129,7 +131,7 @@
                 <!-- Total Worker / Dokumen -->
                 <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden group">
                     <div class="absolute -right-3 -bottom-3 bg-slate-100 h-20 w-20 rounded-full opacity-60 group-hover:scale-110 transition-transform"></div>
-                    <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 relative z-10" x-text="isTrainingView ? 'Total Slip DB' : 'Worker Aktif'"></h4>
+                    <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 relative z-10" x-text="isTrainingView ? (isHistoricalTrainingSelected ? 'Total Slip Training' : 'Total Slip DB') : 'Worker Aktif'"></h4>
                     <div class="text-xl sm:text-2xl font-black text-slate-800 relative z-10"><span x-text="currentStats.count"></span><span class="text-xs font-semibold text-slate-400 ml-1" x-text="isTrainingView ? 'Slip' : 'Orang'"></span></div>
                     <div class="text-[10px] font-semibold text-slate-500 mt-1 relative z-10 flex items-center gap-1.5">
                         <span class="inline-flex items-center gap-0.5 text-emerald-600 font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span x-text="countSudah + ' Sudah'"></span></span>
@@ -182,7 +184,7 @@
 
                 <div class="flex items-center gap-2 text-xs font-medium text-slate-500 self-end md:self-center">
                     <span x-show="!isTrainingView">Menampilkan <strong class="text-slate-800" x-text="filteredLiveWorkers.length"></strong> dari <strong class="text-slate-800" x-text="liveWorkers.length"></strong> worker</span>
-                    <span x-show="isTrainingView">Menampilkan <strong class="text-slate-800" x-text="filteredTrainingSlips.length"></strong> dari <strong class="text-slate-800" x-text="trainingSlips.length"></strong> slip</span>
+                    <span x-show="isTrainingView">Menampilkan <strong class="text-slate-800" x-text="filteredTrainingSlips.length"></strong> dari <strong class="text-slate-800" x-text="scopedTrainingSlips.length"></strong> slip</span>
                     <button @click="loadSelectedPeriodData()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" title="Refresh Data">
                         <svg class="w-4 h-4" :class="isLoading ? 'animate-spin text-[#00B090]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </button>
@@ -390,8 +392,35 @@
                 </div>
             </div>
 
-            <!-- VIEW 2: TRAINING ARSIP TABLE (Preserved Database Slips 1-9) -->
+            <!-- VIEW 2: DATABASE SAVED SLIPS TABLE (Resmi & Training Archive) -->
             <div x-show="isTrainingView" class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+                <!-- Header Banner VIEW 2 -->
+                <div class="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="h-2.5 w-2.5 rounded-full" :class="isHistoricalTrainingSelected ? 'bg-purple-500' : 'bg-emerald-500'"></span>
+                            <h3 class="text-sm font-bold text-slate-900" x-text="isHistoricalTrainingSelected ? '🎓 Arsip Slip Training Historis (18–20 Sep 2026)' : '📄 Dokumen Slip Gaji Resmi Tersimpan di Database'"></h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5" x-text="isHistoricalTrainingSelected ? 'Data arsip payroll masa training awal sebelum sistem live cut-off berjalan.' : 'Slip gaji resmi yang telah diterbitkan dan tersimpan permanen di database.'"></p>
+                    </div>
+                    
+                    <!-- Scope Toggle: Siklus Terpilih vs Semua Periode -->
+                    <div class="inline-flex items-center p-1 bg-white border border-slate-200/90 rounded-xl text-xs font-semibold shrink-0 shadow-2xs" x-show="!isHistoricalTrainingSelected">
+                        <button @click="savedPeriodScope = 'current'"
+                                type="button"
+                                class="px-3 py-1.5 rounded-lg transition-all"
+                                :class="savedPeriodScope === 'current' ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/70 shadow-2xs' : 'text-slate-500 hover:text-slate-800'">
+                            🎯 Siklus Cut-Off Ini (<span x-text="countSlipsCurrentPeriod"></span>)
+                        </button>
+                        <button @click="savedPeriodScope = 'all'"
+                                type="button"
+                                class="px-3 py-1.5 rounded-lg transition-all"
+                                :class="savedPeriodScope === 'all' ? 'bg-purple-50 text-purple-800 font-bold border border-purple-200/70 shadow-2xs' : 'text-slate-500 hover:text-slate-800'">
+                            🌐 Semua Periode (<span x-text="trainingSlips.length"></span>)
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
