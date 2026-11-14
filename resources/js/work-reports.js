@@ -357,6 +357,10 @@ window.adminWorkReportsData = () => ({
         return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(date).replace(/(\d{2})\.(\d{2})$/, '$1:$2') + ' WITA';
     },
     date: today(),
+    calendarOpen: false,
+    calendarViewDate: null,
+    calendarMonth: null,
+    today,
     rows: [],
     search: '',
     loading: true,
@@ -804,7 +808,146 @@ window.adminWorkReportsData = () => ({
     phoneDurationsText,
     dateLabel,
 
+    initCalendar() {
+        const base = this.date ? new Date(this.date + 'T12:00:00') : new Date();
+        this.calendarViewDate = isNaN(base.getTime()) ? new Date() : base;
+        this.updateCalendarMonth();
+    },
+
+    updateCalendarMonth() {
+        if (!this.calendarViewDate) {
+            this.calendarViewDate = new Date();
+        }
+        const d = this.calendarViewDate;
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Minggu
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        const days = [];
+        // Hari dari bulan sebelumnya
+        const prevMonthDays = new Date(year, month, 0).getDate();
+        for (let i = firstDayIndex - 1; i >= 0; i--) {
+            const prevM = month === 0 ? 11 : month - 1;
+            const prevY = month === 0 ? year - 1 : year;
+            const dayNum = prevMonthDays - i;
+            days.push({
+                day: dayNum,
+                dateStr: `${prevY}-${String(prevM + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`,
+                isCurrentMonth: false,
+                dayOfWeek: (firstDayIndex - 1 - i + 7) % 7
+            });
+        }
+
+        // Hari bulan ini
+        for (let i = 1; i <= totalDays; i++) {
+            const dayOfWeek = (firstDayIndex + i - 1) % 7;
+            days.push({
+                day: i,
+                dateStr: `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+                isCurrentMonth: true,
+                dayOfWeek: dayOfWeek
+            });
+        }
+
+        // Hari bulan berikutnya
+        const remaining = (7 - (days.length % 7)) % 7;
+        for (let i = 1; i <= remaining; i++) {
+            const nextM = month === 11 ? 0 : month + 1;
+            const nextY = month === 11 ? year + 1 : year;
+            days.push({
+                day: i,
+                dateStr: `${nextY}-${String(nextM + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+                isCurrentMonth: false,
+                dayOfWeek: (days.length) % 7
+            });
+        }
+
+        this.calendarMonth = {
+            year,
+            month,
+            title: `${monthNames[month]} ${year}`,
+            days
+        };
+    },
+
+    calendarPrevMonth() {
+        if (!this.calendarViewDate) this.calendarViewDate = new Date();
+        this.calendarViewDate = new Date(this.calendarViewDate.getFullYear(), this.calendarViewDate.getMonth() - 1, 1);
+        this.updateCalendarMonth();
+    },
+
+    calendarNextMonth() {
+        if (!this.calendarViewDate) this.calendarViewDate = new Date();
+        this.calendarViewDate = new Date(this.calendarViewDate.getFullYear(), this.calendarViewDate.getMonth() + 1, 1);
+        this.updateCalendarMonth();
+    },
+
+    selectDate(dateStr) {
+        if (!dateStr) return;
+        this.date = dateStr;
+        const d = new Date(dateStr + 'T12:00:00');
+        if (!isNaN(d.getTime())) {
+            this.calendarViewDate = d;
+            this.updateCalendarMonth();
+        }
+        this.calendarOpen = false;
+        this.load();
+    },
+
+    changeDateOffset(offset) {
+        const cur = this.date ? new Date(this.date + 'T12:00:00') : new Date();
+        if (isNaN(cur.getTime())) return;
+        cur.setDate(cur.getDate() + offset);
+        const y = cur.getFullYear();
+        const m = String(cur.getMonth() + 1).padStart(2, '0');
+        const d = String(cur.getDate()).padStart(2, '0');
+        this.date = `${y}-${m}-${d}`;
+        this.calendarViewDate = cur;
+        this.updateCalendarMonth();
+        this.calendarOpen = false;
+        this.load();
+    },
+
+    setDateToToday() {
+        const t = today();
+        this.date = t;
+        const d = new Date(t + 'T12:00:00');
+        if (!isNaN(d.getTime())) {
+            this.calendarViewDate = d;
+            this.updateCalendarMonth();
+        }
+        this.calendarOpen = false;
+        this.load();
+    },
+
+    setDateToYesterday() {
+        this.changeDateOffset(-1);
+    },
+
+    isTodaySelected() {
+        return this.date === today();
+    },
+
+    formatSelectedDate() {
+        if (!this.date) return 'Pilih Tanggal';
+        try {
+            const d = new Date(this.date + 'T12:00:00');
+            return new Intl.DateTimeFormat('id-ID', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }).format(d);
+        } catch (e) {
+            return this.date;
+        }
+    },
+
     async init() {
+        this.initCalendar();
         await this.load();
     },
 

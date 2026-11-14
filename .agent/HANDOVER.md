@@ -1,3 +1,8 @@
+### [2026-11-14 18:57 WITA] — Antigravity: floating custom calendar popover & modern search bar di laporan kerja admin
+- `work-reports.admin` & `work-reports.js`: Mengganti `<input type="date">` native browser dengan **Custom Floating Calendar Popover** bergaya AIKu Studio (dilengkapi tombol pintas Hari Ini, Kemarin, H-2, tombol cepat < / > ganti hari, nama hari bahasa Indonesia Min–Sab, serta highlight emerald untuk tanggal aktif).
+- Memodernisasi bilah pencarian nama kontributor dengan rounded-2xl, icon Search, dan tombol Clear instant.
+- Validasi: PHPUnit `DailyWorkReportTest` (19 tests, 190 assertions) lulus 100%, build Vite sukses (`app-C_qMOnZ6.js`), state IDLE.
+
 ### [2026-11-14 18:45 WITA] — Antigravity: format jam dan menit pada total durasi riwayat rekaman
 - `portal.recordings` & `my-recordings.js`: Menambahkan helper `hoursAndMinutes` yang menghitung dan menampilkan total durasi dalam format jam dan menit (contoh: "76 jam 40 menit" / "10 jam 30 menit") pada kartu "Total durasi" halaman riwayat rekaman (`/me/rekaman`), dengan tetap mempertahankan angka menit asli di bawahnya (contoh: "(4.600,25 menit)").
 - Validasi: PHPUnit `MyRecordingsTest` (4 tests, 59 assertions) lulus 100%, build Vite sukses (`app-SrTzLV3W.js`), state IDLE.

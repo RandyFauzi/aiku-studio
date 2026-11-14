@@ -37,16 +37,177 @@
 
     <p x-show="error" x-text="error" role="alert" class="rounded-xl bg-red-50 p-4 text-sm text-red-700"></p>
 
-    <!-- Filter Bar -->
-    <div class="flex flex-col sm:flex-row gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs">
-        <label class="w-full sm:w-auto text-xs font-bold text-slate-700">
-            Pilih Tanggal (WITA)
-            <input type="date" x-model="date" @change="load()" class="mt-2 block h-11 w-full sm:w-auto rounded-xl border border-slate-200 px-3.5 text-sm font-semibold focus:border-emerald-500 focus:outline-none">
-        </label>
-        <label class="w-full sm:flex-1 text-xs font-bold text-slate-700">
-            Cari Nama Kontributor
-            <input type="search" x-model="search" placeholder="Ketik nama kontributor…" class="mt-2 block h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm font-normal focus:border-emerald-500 focus:outline-none">
-        </label>
+    <!-- Filter Bar Modern AIKu Style -->
+    <div class="flex flex-col lg:flex-row lg:items-end gap-3.5 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xs">
+        
+        <!-- 1. KONTROL TANGGAL (WITA) DENGAN FLOATING CALENDAR POPOVER -->
+        <div class="w-full lg:w-auto space-y-1.5" @click.outside="calendarOpen = false">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <span>📅</span>
+                    <span>Pilih Tanggal (WITA)</span>
+                </span>
+                <span x-show="isTodaySelected()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/70">
+                    Hari Ini
+                </span>
+            </div>
+
+            <!-- Button Group Navigator Tanggal -->
+            <div class="relative flex items-center gap-1.5 bg-slate-50 p-1 rounded-2xl border border-slate-200/80">
+                <!-- Tombol Hari Sebelumnya -->
+                <button type="button" 
+                        @click="changeDateOffset(-1)" 
+                        class="p-2 hover:bg-white rounded-xl text-slate-500 hover:text-slate-800 hover:shadow-2xs transition cursor-pointer" 
+                        title="Hari Sebelumnya">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+
+                <!-- Tombol Pintas Hari Ini -->
+                <button type="button" 
+                        @click="setDateToToday()" 
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap"
+                        :class="isTodaySelected() ? 'bg-emerald-600 text-white shadow-2xs font-bold' : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/60'">
+                    Hari Ini
+                </button>
+
+                <!-- Tombol Trigger Utama Tanggal (Membuka Floating Calendar Popover) -->
+                <button type="button" 
+                        @click="calendarOpen = !calendarOpen" 
+                        class="flex-1 sm:flex-none flex items-center justify-between gap-2.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-emerald-50/50 border text-slate-800 text-xs sm:text-sm font-bold shadow-2xs transition cursor-pointer"
+                        :class="calendarOpen ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-slate-200/90'">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="whitespace-nowrap" x-text="formatSelectedDate()"></span>
+                    </div>
+                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                         :class="calendarOpen ? 'rotate-180 text-emerald-600' : ''" 
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <!-- Tombol Hari Berikutnya -->
+                <button type="button" 
+                        @click="changeDateOffset(1)" 
+                        class="p-2 hover:bg-white rounded-xl text-slate-500 hover:text-slate-800 hover:shadow-2xs transition cursor-pointer" 
+                        title="Hari Berikutnya">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+
+                <!-- ======================================================== -->
+                <!-- FLOATING CALENDAR POPOVER (ALA AIKU STUDIO / TIKET.COM)  -->
+                <!-- ======================================================== -->
+                <div x-show="calendarOpen" 
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                     class="absolute top-full left-0 mt-2 z-50 bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-4 sm:p-5 w-[310px] select-none"
+                     x-cloak>
+                    
+                    <!-- Header Popover: Title & Close Button -->
+                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </span>
+                            <span class="text-xs font-extrabold text-slate-800 tracking-tight">Pilih Tanggal Laporan</span>
+                        </div>
+                        <button type="button" @click="calendarOpen = false" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" title="Tutup">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Presets Cepat Bar -->
+                    <div class="flex items-center gap-1.5 pb-3 mb-3 border-b border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-0.5">Pintas:</span>
+                        <button type="button" @click="setDateToToday()" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer" :class="isTodaySelected() ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'">Hari Ini</button>
+                        <button type="button" @click="setDateToYesterday()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer">Kemarin</button>
+                        <button type="button" @click="changeDateOffset(-2)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer">H-2</button>
+                    </div>
+
+                    <!-- Month Switcher Header -->
+                    <template x-if="calendarMonth">
+                        <div>
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <button type="button" 
+                                        @click="calendarPrevMonth()" 
+                                        class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition cursor-pointer" 
+                                        title="Bulan Sebelumnya">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                </button>
+                                <span class="text-xs sm:text-sm font-extrabold text-slate-800" x-text="calendarMonth.title"></span>
+                                <button type="button" 
+                                        @click="calendarNextMonth()" 
+                                        class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition cursor-pointer" 
+                                        title="Bulan Berikutnya">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- Indonesian Days of Week -->
+                            <div class="grid grid-cols-7 mb-1.5 text-center">
+                                <span class="text-[11px] font-bold text-rose-500">Min</span>
+                                <span class="text-[11px] font-semibold text-slate-400">Sen</span>
+                                <span class="text-[11px] font-semibold text-slate-400">Sel</span>
+                                <span class="text-[11px] font-semibold text-slate-400">Rab</span>
+                                <span class="text-[11px] font-semibold text-slate-400">Kam</span>
+                                <span class="text-[11px] font-semibold text-slate-400">Jum</span>
+                                <span class="text-[11px] font-semibold text-slate-400">Sab</span>
+                            </div>
+
+                            <!-- Calendar Days Grid -->
+                            <div class="grid grid-cols-7 gap-y-1">
+                                <template x-for="item in calendarMonth.days" :key="item.dateStr">
+                                    <div class="flex items-center justify-center p-0.5">
+                                        <button type="button"
+                                                @click="selectDate(item.dateStr)"
+                                                class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-semibold transition-all cursor-pointer"
+                                                :class="{
+                                                    'bg-emerald-600 text-white font-bold shadow-xs scale-105 ring-2 ring-emerald-300': item.dateStr === date,
+                                                    'border border-emerald-500 text-emerald-700 font-bold bg-emerald-50/50': item.dateStr === today() && item.dateStr !== date,
+                                                    'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800': item.isCurrentMonth && item.dateStr !== date && item.dateStr !== today(),
+                                                    'text-slate-300 hover:bg-slate-50': !item.isCurrentMonth && item.dateStr !== date
+                                                }"
+                                                x-text="item.day">
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CARI NAMA KONTRIBUTOR -->
+        <div class="w-full lg:flex-1 space-y-1.5">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span>🔍</span>
+                <span>Cari Nama Kontributor</span>
+            </span>
+            <div class="relative">
+                <input type="search" 
+                       x-model="search" 
+                       placeholder="Ketik nama kontributor…" 
+                       class="h-11 w-full rounded-2xl border border-slate-200/90 bg-slate-50/60 pl-10 pr-9 text-xs sm:text-sm font-medium focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 transition">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <button type="button" 
+                        x-show="search" 
+                        @click="search = ''" 
+                        class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition cursor-pointer"
+                        title="Hapus pencarian">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <!-- Summary Metrics Cards -->
