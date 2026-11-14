@@ -25,6 +25,46 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 });
 
+Route::get('/diag/rio-check-pending', function() {
+    $workerName = 'Muhammad Rio Hadi';
+    $slips = \App\Models\Payslip::where('employee_name', 'LIKE', '%Rio%')->get();
+    
+    $periodService = app(\App\Services\PayrollPeriod::class);
+    $calc = app(\App\Services\PayrollCalculator::class);
+    
+    $periods = $periodService->listPeriods();
+    $recordingsByPeriod = [];
+    foreach ($periods as $p) {
+        if (!empty($p['isTraining'])) continue;
+        $rec = \App\Models\StudioRecording::where('assigned_worker_name', 'LIKE', '%Rio%')
+            ->whereBetween('recorded_at', [$p['startUtc'], $p['endUtc']])
+            ->selectRaw('COUNT(*) as total_tasks, SUM(duration_min) as duration, SUM(billable_min) as billable, SUM(rejected_min) as rejected, SUM(pending_min) as pending')
+            ->first();
+        $recordingsByPeriod[$p['name']] = [
+            'tasks' => (int)($rec->total_tasks ?? 0),
+            'duration_hours' => round(($rec->duration ?? 0)/60, 2),
+            'billable_hours' => round(($rec->billable ?? 0)/60, 2),
+            'rejected_hours' => round(($rec->rejected ?? 0)/60, 2),
+            'pending_hours' => round(($rec->pending ?? 0)/60, 2),
+        ];
+    }
+    
+    $currentPeriod = $periodService->resolve(['period' => '2026-10-22_2026-11-15']);
+    $carryOver = $calc->detectPendingCarryOver($workerName, $currentPeriod);
+    
+    // Also check summary of current period for Rio
+    $summary = $calc->summary($currentPeriod);
+    $rioLive = collect($summary['workers'])->firstWhere('worker_name', $workerName);
+    
+    return response()->json([
+        'worker' => $workerName,
+        'slips' => $slips,
+        'recordings_by_period' => $recordingsByPeriod,
+        'detected_pending_carry_over' => $carryOver,
+        'rio_live_in_summary' => $rioLive,
+    ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+});
+
 Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/', fn () => auth()->user()->role === 'contributor' ? redirect('/me') : view('panel.index'));
