@@ -1,3 +1,8 @@
+### [2026-11-14 18:38 WITA] — Antigravity: widget fokus jadwal shift worker hari ini dan besok di dashboard jadwal
+- `portal.schedule`: Menambahkan widget kartu highlight "Fokus Jadwal Shift Saya" di posisi paling atas halaman jadwal kontributor (`/me/jadwal`).
+- Menampilkan jadwal Hari Ini dan Besok (waktu zona WITA), otomatis mendeteksi akun login pengguna atau dapat beralih via selector anggota, menampilkan jam sesi lengkap, rincian kerja (1 Alat · 6 HP, Target 6 Jam Video, 1j Rekam + 30m Prep), status Libur Studio (Senin), dan reaktif terhadap pertukaran posisi shift (▲/▼).
+- Validasi: syntax check PHP lulus, view cache cleared, state IDLE.
+
 ### [2026-11-14 10:25 WITA] — Antigravity: modernisasi dropdown siklus cut-off & layout header horizontal
 - `panel.payslips` & `panel.profit`: Menata header kontrol menjadi sejajar horizontal di kanan (`flex-nowrap items-center gap-3`) sehingga tab mode `⚡ Rekap Otomatis (Live)` dan `📄 Slip Tersimpan (DB)` berada rapi di samping kanan dropdown tanpa patah ke bawah.
 - Mengganti `<select>` native dengan **Custom Floating Dropdown Alpine.js** yang selaras dengan komponen filter modern sistem (dilengkapi badge status warna, dot indikator, checkmark pilihan aktif `✓`, dan animasi transition).

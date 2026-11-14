@@ -54,6 +54,204 @@
         <button type="button" @click="copied=false" class="text-emerald-700 hover:text-emerald-900 font-bold ml-2">✕</button>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- WIDGET FOKUS JADWAL WORKER HARI INI & BESOK (PALING ATAS)                 -->
+    <!-- ========================================================================= -->
+    <div class="rounded-3xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-emerald-50/30 p-4 sm:p-6 shadow-xs space-y-4">
+        <!-- Header Widget: Judul & Anggota Selector -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+            <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-100 text-[#00875A] font-bold text-sm shadow-2xs">
+                    🎯
+                </span>
+                <div>
+                    <h2 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Fokus Jadwal Shift Saya</h2>
+                    <p class="text-[11px] text-slate-500 font-medium">Jadwal tugas rekaman studio Anda untuk hari ini dan besok (WITA).</p>
+                </div>
+            </div>
+
+            <!-- Selector Anggota (Default otomatis akun login) -->
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                <span class="text-[11px] text-slate-400 font-semibold shrink-0">Anggota:</span>
+                <div class="relative">
+                    <select x-model="selectedWorker" 
+                            @change="onWorkerChange()"
+                            class="bg-white border border-slate-200/90 text-slate-800 text-xs font-bold rounded-xl px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs cursor-pointer appearance-none">
+                        <template x-for="name in allWorkerNames" :key="name">
+                            <option :value="name" x-text="name + (currentUser && name.toLowerCase().includes(currentUser.toLowerCase()) ? ' (Saya)' : '')"></option>
+                        </template>
+                    </select>
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2 Highlight Cards Grid: Hari Ini & Besok -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            
+            <!-- 1. KARTU HARI INI -->
+            <div class="rounded-2xl border p-4 sm:p-5 transition-all shadow-2xs relative overflow-hidden"
+                 :class="todaySchedule.isOff 
+                    ? 'border-amber-200 bg-amber-50/70' 
+                    : (todaySchedule.shift 
+                        ? 'border-emerald-300/80 bg-gradient-to-br from-white to-emerald-50/70 ring-1 ring-emerald-200/50' 
+                        : 'border-slate-200 bg-white')">
+                
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider"
+                         :class="todaySchedule.isOff ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'">
+                        <span class="w-2 h-2 rounded-full" :class="todaySchedule.isOff ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'"></span>
+                        <span>HARI INI</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-600" x-text="todayDateLabel"></span>
+                </div>
+
+                <!-- Jika BERTUGAS HARI INI -->
+                <template x-if="!todaySchedule.isOff && todaySchedule.shift">
+                    <div class="space-y-3">
+                        <div class="flex items-baseline justify-between gap-2">
+                            <div>
+                                <div class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider" x-text="todaySchedule.shift.shift"></div>
+                                <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-mono mt-0.5" x-text="todaySchedule.shift.time"></div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-[#EBF7F2] text-[#00875A] border border-[#B3E8D5] shrink-0">
+                                WITA
+                            </span>
+                        </div>
+
+                        <!-- Badges Rincian -->
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100/90 text-slate-700 font-semibold border border-slate-200/60 text-[11px]">
+                                📱 1 Alat · 6 HP
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/70 text-[11px]">
+                                🎯 Target 6 Jam Video
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 text-blue-800 font-medium border border-blue-200/60 text-[11px]">
+                                ⏱️ 1j Rekam + 30m Prep
+                            </span>
+                        </div>
+
+                        <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="text-[11px] text-slate-400 font-medium" x-text="'Pola: ' + todaySchedule.pattern"></span>
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                                ✓ Siap Bertugas
+                            </span>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Jika LIBUR (Senin) -->
+                <template x-if="todaySchedule.isOff">
+                    <div class="py-2.5 space-y-1.5">
+                        <div class="flex items-center gap-2 text-amber-900 font-extrabold text-base">
+                            <span class="text-xl">☕</span>
+                            <span>Libur Studio (Off)</span>
+                        </div>
+                        <p class="text-xs text-amber-800 font-medium leading-relaxed">
+                            Hari ini studio libur operasional mingguan. Tidak ada sesi perekaman video. Selamat beristirahat!
+                        </p>
+                    </div>
+                </template>
+
+                <!-- Jika TIDAK ADA SHIFT TERJADWAL -->
+                <template x-if="!todaySchedule.isOff && !todaySchedule.shift">
+                    <div class="py-2.5 space-y-1.5">
+                        <div class="flex items-center gap-2 text-slate-700 font-bold text-base">
+                            <span class="text-xl">🏖️</span>
+                            <span>Tidak Ada Shift Hari Ini</span>
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium">
+                            Nama Anda tidak terdaftar pada giliran shift operasional hari ini (<span x-text="todaySchedule.pattern"></span>).
+                        </p>
+                    </div>
+                </template>
+            </div>
+
+            <!-- 2. KARTU BESOK -->
+            <div class="rounded-2xl border p-4 sm:p-5 transition-all shadow-2xs relative overflow-hidden"
+                 :class="tomorrowSchedule.isOff 
+                    ? 'border-amber-200 bg-amber-50/70' 
+                    : (tomorrowSchedule.shift 
+                        ? 'border-blue-200/90 bg-gradient-to-br from-white to-blue-50/50 ring-1 ring-blue-100' 
+                        : 'border-slate-200 bg-white')">
+                
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider"
+                         :class="tomorrowSchedule.isOff ? 'bg-amber-100 text-amber-900' : 'bg-blue-100 text-blue-900'">
+                        <span class="w-2 h-2 rounded-full" :class="tomorrowSchedule.isOff ? 'bg-amber-500' : 'bg-blue-500'"></span>
+                        <span>BESOK</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-600" x-text="tomorrowDateLabel"></span>
+                </div>
+
+                <!-- Jika BERTUGAS BESOK -->
+                <template x-if="!tomorrowSchedule.isOff && tomorrowSchedule.shift">
+                    <div class="space-y-3">
+                        <div class="flex items-baseline justify-between gap-2">
+                            <div>
+                                <div class="text-[11px] font-bold text-blue-700 uppercase tracking-wider" x-text="tomorrowSchedule.shift.shift"></div>
+                                <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-mono mt-0.5" x-text="tomorrowSchedule.shift.time"></div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] shrink-0">
+                                WITA
+                            </span>
+                        </div>
+
+                        <!-- Badges Rincian -->
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100/90 text-slate-700 font-semibold border border-slate-200/60 text-[11px]">
+                                📱 1 Alat · 6 HP
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 text-blue-800 font-bold border border-blue-200/70 text-[11px]">
+                                🎯 Target 6 Jam Video
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 text-slate-600 font-medium border border-slate-200/60 text-[11px]">
+                                ⏱️ 1j Rekam + 30m Prep
+                            </span>
+                        </div>
+
+                        <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="text-[11px] text-slate-400 font-medium" x-text="'Pola: ' + tomorrowSchedule.pattern"></span>
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                                📅 Terjadwal Besok
+                            </span>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Jika BESOK LIBUR (Senin) -->
+                <template x-if="tomorrowSchedule.isOff">
+                    <div class="py-2.5 space-y-1.5">
+                        <div class="flex items-center gap-2 text-amber-900 font-extrabold text-base">
+                            <span class="text-xl">☕</span>
+                            <span>Besok: Libur Studio (Off)</span>
+                        </div>
+                        <p class="text-xs text-amber-800 font-medium leading-relaxed">
+                            Besok hari Senin, studio libur operasional mingguan. Tidak ada jadwal shift kerja.
+                        </p>
+                    </div>
+                </template>
+
+                <!-- Jika TIDAK ADA SHIFT BESOK -->
+                <template x-if="!tomorrowSchedule.isOff && !tomorrowSchedule.shift">
+                    <div class="py-2.5 space-y-1.5">
+                        <div class="flex items-center gap-2 text-slate-700 font-bold text-base">
+                            <span class="text-xl">🏖️</span>
+                            <span>Tidak Ada Shift Besok</span>
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium">
+                            Nama Anda tidak terdaftar pada giliran shift operasional besok (<span x-text="tomorrowSchedule.pattern"></span>).
+                        </p>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+    </div>
+
     <!-- SCHEDULE TABS SWITCHER -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div class="flex items-center gap-1.5 flex-wrap">
@@ -466,6 +664,17 @@ function scheduleManager() {
 
         rowsSelasaKamis: [],
         rowsJumatMinggu: [],
+        selectedWorker: '',
+
+        get allWorkerNames() {
+            const names = [];
+            const addName = (n) => {
+                if (n && !names.includes(n)) names.push(n);
+            };
+            this.defaultSelasaKamis.forEach(r => addName(r.name));
+            this.defaultJumatMinggu.forEach(r => addName(r.name));
+            return names;
+        },
 
         initSchedule() {
             // Auto detect active day in WITA
@@ -491,6 +700,106 @@ function scheduleManager() {
                 this.rowsSelasaKamis = JSON.parse(JSON.stringify(this.defaultSelasaKamis));
                 this.rowsJumatMinggu = JSON.parse(JSON.stringify(this.defaultJumatMinggu));
             }
+
+            // Inisialisasi selected worker (prioritas: simpanan lokal -> nama akun login -> pekerja pertama)
+            try {
+                const savedWorker = localStorage.getItem('aiku_schedule_selected_worker');
+                if (savedWorker && this.allWorkerNames.includes(savedWorker)) {
+                    this.selectedWorker = savedWorker;
+                } else if (this.currentUser) {
+                    const cur = this.currentUser.toLowerCase().trim();
+                    const matched = this.allWorkerNames.find(n => 
+                        n.toLowerCase().trim() === cur || 
+                        n.toLowerCase().includes(cur) || 
+                        cur.includes(n.toLowerCase())
+                    );
+                    this.selectedWorker = matched || (this.allWorkerNames[0] || '');
+                } else {
+                    this.selectedWorker = this.allWorkerNames[0] || '';
+                }
+            } catch (e) {
+                this.selectedWorker = this.allWorkerNames[0] || '';
+            }
+        },
+
+        onWorkerChange() {
+            try {
+                if (this.selectedWorker) {
+                    localStorage.setItem('aiku_schedule_selected_worker', this.selectedWorker);
+                }
+            } catch (e) {}
+        },
+
+        getWitaDate(offsetDays = 0) {
+            const now = new Date();
+            // Kalkulasi waktu zona WITA (UTC+8)
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const witaDate = new Date(utc + (3600000 * 8));
+            if (offsetDays !== 0) {
+                witaDate.setDate(witaDate.getDate() + offsetDays);
+            }
+            return witaDate;
+        },
+
+        formatDateLabel(dateObj) {
+            try {
+                return new Intl.DateTimeFormat('id-ID', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }).format(dateObj);
+            } catch (e) {
+                return dateObj.toLocaleDateString();
+            }
+        },
+
+        get todayDateLabel() {
+            return this.formatDateLabel(this.getWitaDate(0));
+        },
+
+        get tomorrowDateLabel() {
+            return this.formatDateLabel(this.getWitaDate(1));
+        },
+
+        getScheduleForDate(offsetDays = 0) {
+            const dateObj = this.getWitaDate(offsetDays);
+            const dayOfWeek = dateObj.getDay(); // 0 = Minggu, 1 = Senin, 2 = Selasa, ..., 6 = Sabtu
+            
+            // Senin: Libur Studio (Off)
+            if (dayOfWeek === 1) {
+                return {
+                    isOff: true,
+                    shift: null,
+                    pattern: 'Senin (Libur Studio)'
+                };
+            }
+
+            // Selasa - Kamis (2, 3, 4)
+            const isSelasaKamis = (dayOfWeek >= 2 && dayOfWeek <= 4);
+            const targetList = isSelasaKamis ? this.rowsSelasaKamis : this.rowsJumatMinggu;
+            const patternName = isSelasaKamis ? 'Selasa – Kamis (12 Shift)' : "Jum'at – Minggu (13 Shift)";
+
+            if (!this.selectedWorker || !targetList || targetList.length === 0) {
+                return { isOff: false, shift: null, pattern: patternName };
+            }
+
+            const cleanSelected = this.selectedWorker.toLowerCase().trim();
+            const matchedShift = targetList.find(r => r.name && r.name.toLowerCase().trim() === cleanSelected);
+
+            return {
+                isOff: false,
+                shift: matchedShift || null,
+                pattern: patternName
+            };
+        },
+
+        get todaySchedule() {
+            return this.getScheduleForDate(0);
+        },
+
+        get tomorrowSchedule() {
+            return this.getScheduleForDate(1);
         },
 
         swap(index1, index2) {
