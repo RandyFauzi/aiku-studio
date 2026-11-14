@@ -29,6 +29,19 @@ Alpine.data('myRecordings', () => ({
         finally { if (id === this.requestId) this.loading = false; }
     },
     minutes(value) { return Number(value || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' menit'; },
+    hoursAndMinutes(value) {
+        const total = Number(value || 0);
+        if (total <= 0) return '0 menit';
+        let h = Math.floor(total / 60);
+        let m = Math.round(total % 60);
+        if (m >= 60) {
+            h += 1;
+            m = 0;
+        }
+        if (h === 0) return `${m} menit`;
+        if (m === 0) return `${h} jam`;
+        return `${h} jam ${m} menit`;
+    },
     day(value) { return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value + 'T12:00:00+08:00')); },
     at(value) { return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)).replace('.', ':') + ' WITA'; },
     status(value) { return ({ ready_for_review: 'Menunggu pemeriksaan', pending: 'Menunggu pemeriksaan', processing: 'Sedang diproses', processed: 'Selesai diproses', completed: 'Selesai diproses', failed: 'Perlu diperiksa' })[value] || 'Dalam proses'; },

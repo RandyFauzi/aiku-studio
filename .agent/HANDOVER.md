@@ -1,3 +1,7 @@
+### [2026-11-14 18:45 WITA] — Antigravity: format jam dan menit pada total durasi riwayat rekaman
+- `portal.recordings` & `my-recordings.js`: Menambahkan helper `hoursAndMinutes` yang menghitung dan menampilkan total durasi dalam format jam dan menit (contoh: "76 jam 40 menit" / "10 jam 30 menit") pada kartu "Total durasi" halaman riwayat rekaman (`/me/rekaman`), dengan tetap mempertahankan angka menit asli di bawahnya (contoh: "(4.600,25 menit)").
+- Validasi: PHPUnit `MyRecordingsTest` (4 tests, 59 assertions) lulus 100%, build Vite sukses (`app-SrTzLV3W.js`), state IDLE.
+
 ### [2026-11-14 18:38 WITA] — Antigravity: widget fokus jadwal shift worker hari ini dan besok di dashboard jadwal
 - `portal.schedule`: Menambahkan widget kartu highlight "Fokus Jadwal Shift Saya" di posisi paling atas halaman jadwal kontributor (`/me/jadwal`).
 - Menampilkan jadwal Hari Ini dan Besok (waktu zona WITA), otomatis mendeteksi akun login pengguna atau dapat beralih via selector anggota, menampilkan jam sesi lengkap, rincian kerja (1 Alat · 6 HP, Target 6 Jam Video, 1j Rekam + 30m Prep), status Libur Studio (Senin), dan reaktif terhadap pertukaran posisi shift (▲/▼).

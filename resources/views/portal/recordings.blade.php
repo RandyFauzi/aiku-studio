@@ -23,8 +23,15 @@
             <button type="button" @click="load(false)" :disabled="loading" class="min-h-11 min-[360px]:col-start-2 min-[360px]:row-start-1 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 sm:col-start-auto sm:row-start-auto" x-text="loading ? 'Memuat…' : 'Muat ulang'"></button>
         </div>
         <div class="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4" :aria-busy="loading">
-            <div class="rounded-2xl bg-slate-50 p-3 sm:p-4"><p class="text-xs font-medium text-slate-600">Rekaman ditemukan</p><p class="mt-2 text-2xl font-bold tabular-nums text-slate-900" x-text="loading ? '—' : summary.total_recordings"></p></div>
-            <div class="rounded-2xl bg-emerald-50 p-3 sm:p-4"><p class="text-xs font-medium text-emerald-800">Total durasi</p><p class="mt-2 text-lg font-bold tabular-nums text-emerald-900 sm:text-xl" x-text="loading ? '—' : minutes(summary.total_minutes)"></p></div>
+            <div class="rounded-2xl bg-slate-50 p-3 sm:p-4">
+                <p class="text-xs font-medium text-slate-600">Rekaman ditemukan</p>
+                <p class="mt-2 text-2xl font-bold tabular-nums text-slate-900" x-text="loading ? '—' : summary.total_recordings"></p>
+            </div>
+            <div class="rounded-2xl bg-emerald-50 p-3 sm:p-4">
+                <p class="text-xs font-medium text-emerald-800">Total durasi</p>
+                <p class="mt-2 text-base font-bold tabular-nums text-emerald-950 sm:text-xl leading-tight" x-text="loading ? '—' : (typeof hoursAndMinutes === 'function' ? hoursAndMinutes(summary.total_minutes) : minutes(summary.total_minutes))"></p>
+                <p class="mt-1 text-xs font-semibold text-emerald-700/80 tabular-nums" x-show="!loading && summary.total_minutes" x-text="'(' + minutes(summary.total_minutes) + ')'"></p>
+            </div>
         </div>
     </section>
 
