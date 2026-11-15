@@ -227,4 +227,18 @@ class PayslipIntegrityTest extends TestCase
         $this->assertStringNotContainsString('1.00', $rejected[0]);
         $this->assertSame(51000, $slip->fresh()->total_thp);
     }
+
+    public function test_pdf_carry_minutes_use_claim_precision_instead_of_rounded_hours(): void
+    {
+        $slip = $this->slip(['pending_carry_over_hours' => 0.17, 'pending_carry_over_amount' => 8683,
+            'total_thp' => 59683, 'pending_carry_over_data' => [
+                ['source_period' => 'First source', 'delta_min' => 10.14],
+                ['source_period' => 'Second source', 'delta_min' => 0.28],
+            ]]);
+        $html = view('slips.content', $slip->toArray() + ['forPdf' => true])->render();
+        preg_match('/Pencairan Sisa Pending Periode Lalu.*?<\/tr>/s', $html, $carry);
+        $this->assertStringContainsString('10.4 mins', strip_tags($carry[0]));
+        $this->assertStringNotContainsString('10.2 mins', strip_tags($carry[0]));
+        $this->assertSame(59683, $slip->fresh()->total_thp);
+    }
 }

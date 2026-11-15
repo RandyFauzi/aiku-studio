@@ -153,7 +153,9 @@
     $approvedMinsTotal = $formatMins($approvedHoursVal * 60);
     $rejectedMinsTotal = $formatMins($rejectedHoursVal * 60);
     $pendingMinsFormatted = $formatMins($totalPendingMins);
-    $carryOverMinsFormatted = $formatMins($carryOverHoursVal * 60);
+    $carryOverMinsFormatted = $formatMins(!empty($pending_carry_over_data)
+        ? array_sum(array_column($pending_carry_over_data, 'delta_min'))
+        : $carryOverHoursVal * 60);
 
     $overallApprPct = $loggedHoursVal > 0 ? number_format(min(100, max(0, ($approvedHoursVal / $loggedHoursVal) * 100)), 1, '.', '') : '0.0';
     $overallPendPct = $loggedHoursVal > 0 ? number_format(min(100, max(0, ($totalPendingMins / ($loggedHoursVal * 60)) * 100)), 1, '.', '') : '0.0';
