@@ -1,3 +1,7 @@
+### [2026-11-15 17:22] — Codex: deploy dan rekonsiliasi snapshot payroll
+- Deploy 76c1356 terverifikasi di server; backup privat sebelum perubahan, versi draft duplikat/overlap diarsipkan tanpa menghapus dokumen atau mengubah field finansial. Rincian payroll hanya di storage privat, tidak di repo/graph.
+- Perbaikan ringkasan rejected/pending dan saldo belum dialokasikan; 22 tes terarah/114 assertions lulus, full suite 214 lulus + 3 kegagalan lama non-Slip, Graphify current; browser produksi/login/API/slip historis lulus tanpa page error.
+
 ### [2026-11-15 15:59] — Codex: perbaikan integritas Slip dan saldo pending
 - POST idempoten + worker lock/unique key; snapshot/carry-over konsisten, finalisasi terkunci, klaim server-side, rekonsiliasi duplikat tanpa hapus riwayat; migrasi lokal menjaga hash data slip lama.
 - Validasi: payroll 36 tes/226 assertions lulus; full suite 212 lulus + 3 kegagalan non-payroll terkonfirmasi pada source HEAD; Vite, UI desktop/mobile dan Graphify lulus. Belum deploy/pulihkan #21/#22 server; rincian di docs/audit-slip-2026-11-15.md.
