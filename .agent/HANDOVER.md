@@ -1,3 +1,7 @@
+### [2026-11-15 15:35 WITA] — Antigravity: hapus tab usang Matriks Kalender Roster & Papan Shift
+- `shifts.workspace`, `roster.blade.php`, `calendar.blade.php`: Menghapus tab navigasi dan tampilan usang "Matriks Kalender Roster" dan "Papan shift" dari ruang kerja Atur Shift agar antarmuka fokus pada "Matriks Jadwal Studio" (10 sesi + midnight) dan "Analitik & ringkasan".
+- Validasi: PHPUnit `ShiftRosterTest` & `AttendanceCalendarTest` lulus 100% (9 tests, 73 assertions), view cache cleared. State IDLE.
+
 ### [2026-11-15 12:46 WITA] — Antigravity: perbaiki sinkronisasi data live pada riwayat & rekap slip gaji
 - `PayrollCalculator` & `PayrollController`: Memperbaiki logika deteksi `isLocked` agar slip gaji yang masih berstatus `belum` (unpaid) dan `is_locked = false` tidak membekukan perhitungan Take Home Pay (THP) ke angka lama. Nilai THP pada rekap live kini konsisten 100% mengikuti total jam approved rekaman live (misal Muhammad Rio Hadi yang sebelumnya membeku di Rp 4.368.508 kini otomatis sinkron ke Rp 5.759.575 / 115.19 jam).
 - `PayslipController` & `app.js` & `create.blade.php`: Memperbarui sinkronisasi draft slip otomatis pada indeks slip, menambahkan dukungan force refresh pada tombol "Sinkronkan Database", dan menyediakan artisan command `payroll:sync-drafts` untuk memperbarui seluruh slip draft yang tersimpan di DB.
