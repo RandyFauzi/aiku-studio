@@ -1,3 +1,7 @@
+### [2026-11-15 15:32 WITA] — Codex: audit halaman Slip dan backend payroll
+- Laporan docs/audit-slip-2026-11-15.md: bagan alur, duplikasi POST, carry-over/display, lock API, dan sinkronisasi saat GET; tanpa perubahan aplikasi/produksi.
+- Validasi: 4 probe SQLite :memory: lulus (15 assertions); probe dihapus. Risiko konkurensi dan duplikasi aktual produksi belum diverifikasi.
+
 ### [2026-11-15 15:35 WITA] — Antigravity: hapus tab usang Matriks Kalender Roster & Papan Shift
 - `shifts.workspace`, `roster.blade.php`, `calendar.blade.php`: Menghapus tab navigasi dan tampilan usang "Matriks Kalender Roster" dan "Papan shift" dari ruang kerja Atur Shift agar antarmuka fokus pada "Matriks Jadwal Studio" (10 sesi + midnight) dan "Analitik & ringkasan".
 - Validasi: PHPUnit `ShiftRosterTest` & `AttendanceCalendarTest` lulus 100% (9 tests, 73 assertions), view cache cleared. State IDLE.
