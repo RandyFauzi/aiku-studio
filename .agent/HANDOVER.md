@@ -1,3 +1,7 @@
+### [2026-11-15 17:34] — Codex: alokasi kredit tersisa dan PDF slip terbaru
+- Alokasi produksi idempoten dengan backup dan revisi arsip lengkap; saldo tersisa nol, dua sumber klaim unik, ekspor ulang tidak mengalokasikan lagi. Seluruh dokumen/PDF lama tetap ada; rincian finansial hanya di storage privat.
+- Deploy 7569e6b: menit carry-over PDF memakai presisi klaim; 2 tes/6 assertions, render tiga halaman dan browser produksi lulus tanpa page error. Perubahan tampilan saja, tanpa build aset/rebuild graph.
+
 ### [2026-11-15 17:22] — Codex: deploy dan rekonsiliasi snapshot payroll
 - Deploy 76c1356 terverifikasi di server; backup privat sebelum perubahan, versi draft duplikat/overlap diarsipkan tanpa menghapus dokumen atau mengubah field finansial. Rincian payroll hanya di storage privat, tidak di repo/graph.
 - Perbaikan ringkasan rejected/pending dan saldo belum dialokasikan; 22 tes terarah/114 assertions lulus, full suite 214 lulus + 3 kegagalan lama non-Slip, Graphify current; browser produksi/login/API/slip historis lulus tanpa page error.
