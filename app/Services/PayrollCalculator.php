@@ -126,7 +126,8 @@ class PayrollCalculator
             $carryOver = (int) ($slip?->pending_carry_over_amount ?? 0);
             $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah'));
 
-            $pendingBank = $this->detectPendingCarryOver($name, $period, $slip?->id);
+            // The overview shows only unallocated credit; the form may exclude its own reservation when editing.
+            $pendingBank = $this->detectPendingCarryOver($name, $period);
             $availablePendingBalance = $pendingBank['available'] ? $pendingBank['total_amount'] : 0;
             $availablePendingHours = $pendingBank['available'] ? $pendingBank['total_hours'] : 0;
 
@@ -150,6 +151,7 @@ class PayrollCalculator
                 'base_thp' => $base, 'bonus' => $bonus, 'pending_carry_over_amount' => $carryOver,
                 'available_pending_balance' => $availablePendingBalance,
                 'available_pending_hours' => $availablePendingHours,
+                'available_pending_mins' => $pendingBank['total_mins'],
                 'duplicate_count' => $versions->count(), 'pending_balance_warnings' => $pendingBank['warnings'],
                 'reserved_pending_balance' => $pendingBank['reserved_amount'],
                 'slip_id' => $slip?->id, 'has_slip' => (bool) $slip, 'is_locked' => $isLocked,
@@ -221,6 +223,7 @@ class PayrollCalculator
                 'source_period' => $label, 'source_slip_id' => $source->id,
                 'record_id' => $this->recordings($previous, $worker)->where('billable_min', '>', 0)->orderBy('record_id')->value('record_id') ?? $previous['id'],
                 'locked_hours' => round($lockedMins / 60, 2), 'actual_hours' => round($actual / 60, 2),
+                'locked_mins' => round($lockedMins, 2), 'actual_mins' => round($actual, 2),
                 'delta_min' => $delta, 'delta_hours' => round($delta / 60, 2),
                 'amount' => (int) round($delta / 60 * config('payroll.hourly_rate')),
                 'task_name' => 'Sisa Pending '.$label,

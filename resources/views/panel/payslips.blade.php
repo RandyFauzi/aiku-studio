@@ -374,9 +374,9 @@
                                             </div>
                                         </template>
                                         <template x-if="worker.available_pending_balance > 0">
-                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Tersedia saldo pending ' + worker.available_pending_hours + ' jam dari periode lalu'">
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Belum dialokasikan: ' + worker.available_pending_mins + ' menit dari periode final; di luar carry-over yang sudah masuk slip'">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                                <span>Tersedia untuk slip ini: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
+                                                <span>Saldo tambahan: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
                                             </div>
                                         </template>
                                     </td>

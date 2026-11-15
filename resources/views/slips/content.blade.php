@@ -37,6 +37,7 @@
     $files = app(\App\Services\PayrollFiles::class);
 
     $totalPendingMins = 0.0;
+    $totalRejectedMins = 0.0;
     $grandTotalTasks = 0;
     $processedDays = [];
 
@@ -92,6 +93,7 @@
         }
 
         $totalPendingMins += $dayPendingMins;
+        $totalRejectedMins += $dayRejectedMins;
 
         $statusType = 'full';
         $statusLabel = 'Disetujui penuh';
@@ -141,7 +143,8 @@
         ];
     }
 
-    $rejectedHoursVal = max(0, $loggedHoursVal - $approvedHoursVal);
+    // Pending is a separate QA state, never part of rejected work.
+    $rejectedHoursVal = count($evidence) > 0 ? $totalRejectedMins / 60 : max(0, $loggedHoursVal - $approvedHoursVal - $totalPendingMins / 60);
     $displayTotalHours = number_format($loggedHoursVal, 2, '.', '');
     $displayApprovedHours = number_format($approvedHoursVal, 2, '.', '');
     $displayRejectedHours = number_format($rejectedHoursVal, 2, '.', '');

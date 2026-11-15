@@ -284,7 +284,7 @@
                                             <div class="flex items-start justify-between gap-2">
                                                 <div>
                                                     <span class="font-bold text-gray-800" x-text="task.source_period"></span>
-                                                    <div class="text-[10px] text-gray-500" x-text="'Slip Lock: ' + (task.locked_hours || 0) + ' Jam | Aktual: ' + (task.actual_hours || 0) + ' Jam'"></div>
+                                                    <div class="text-[10px] text-gray-500" x-text="task.locked_mins != null ? ('Sudah dibayar: ' + task.locked_mins + ' menit | Aktual: ' + task.actual_mins + ' menit') : ('Slip Lock: ' + (task.locked_hours || 0) + ' Jam | Aktual: ' + (task.actual_hours || 0) + ' Jam')"></div>
                                                 </div>
                                                 <span class="font-extrabold text-emerald-700 whitespace-nowrap" x-text="'+' + (task.delta_hours || 0) + ' Jam'"></span>
                                             </div>

@@ -199,4 +199,32 @@ class PayslipIntegrityTest extends TestCase
         $this->postJson('/api/payslips/'.$first->id.'/resolve-duplicates')->assertConflict();
         $this->assertSame(0, Payslip::whereNotNull('superseded_by_id')->count());
     }
+
+    public function test_overview_shows_only_remaining_credit_not_the_carry_already_in_its_slip(): void
+    {
+        $this->slip(['period' => '22 Sep 2026 - 21 Okt 2026', 'status' => 'sudah', 'total_approved_hours' => 1]);
+        $this->recording('2026-10-01 04:00:00');
+        $this->slip(['period' => 'Training (18 Sep 2026 - 20 Sep 2026)', 'status' => 'sudah', 'total_approved_hours' => 0.69]);
+        StudioRecording::create(['record_id' => 'training-rounding', 'participant_email' => 'worker@example.test',
+            'assigned_worker_name' => 'Worker', 'recorded_at' => '2026-09-19 04:00:00', 'billable_min' => 41.68, 'duration_min' => 41.68]);
+        $this->slip(['pending_carry_over_amount' => 50000,
+            'pending_carry_over_data' => [['source_period' => '22 Sep 2026 - 21 Okt 2026', 'delta_min' => 60]]]);
+        $this->recording();
+        $this->getJson('/api/payroll/live-summary?periodId=2026-10-22_2026-11-15')->assertOk()
+            ->assertJsonPath('workers.0.pending_carry_over_amount', 50000)
+            ->assertJsonPath('workers.0.available_pending_balance', 233)
+            ->assertJsonPath('workers.0.available_pending_mins', 0.28);
+    }
+
+    public function test_pdf_summary_does_not_count_pending_as_rejected(): void
+    {
+        $slip = $this->slip(['total_logged_hours' => 2, 'evidence_data' => [
+            ['date' => '2026-11-01', 'approved_mins' => 60, 'rejected_mins' => 30, 'pending_mins' => 30, 'total_video_mins' => 120],
+        ]]);
+        $html = view('slips.content', $slip->toArray() + ['forPdf' => true])->render();
+        preg_match('/Rejected Work Hours.*?<\/tr>/s', $html, $rejected);
+        $this->assertStringContainsString('0.50', $rejected[0]);
+        $this->assertStringNotContainsString('1.00', $rejected[0]);
+        $this->assertSame(51000, $slip->fresh()->total_thp);
+    }
 }
