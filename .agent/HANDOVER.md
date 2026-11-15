@@ -1,3 +1,7 @@
+### [2026-11-15 18:30 WITA] — Antigravity: penyeragaman badge saldo tambahan & sembunyikan carry-over 0 jam
+- `panel.payslips` & `panel.create`: Menyeragamkan badge carry-over di rekap payroll agar slip yang sudah mengklaim saldo tambahan tampil dengan badge hijau `Saldo tambahan: +Rp ...` yang konsisten (tidak lagi beda sendiri dengan teks ungu). Menyembunyikan item rincian bank pending jika bernilai `+0 Jam` (misal pembulatan training) dan menyembunyikan label bonus/carry-over di daftar slip jika bernilai Rp0.
+- Validasi: PHPUnit `PayslipIntegrityTest`, `PayslipSyncTest`, `PendingCarryOverTest` lulus 100% (23 tests, 117 assertions), view cache cleared. State IDLE.
+
 ### [2026-11-15 17:34] — Codex: alokasi kredit tersisa dan PDF slip terbaru
 - Alokasi produksi idempoten dengan backup dan revisi arsip lengkap; saldo tersisa nol, dua sumber klaim unik, ekspor ulang tidak mengalokasikan lagi. Seluruh dokumen/PDF lama tetap ada; rincian finansial hanya di storage privat.
 - Deploy 7569e6b: menit carry-over PDF memakai presisi klaim; 2 tes/6 assertions, render tiga halaman dan browser produksi lulus tanpa page error. Perubahan tampilan saja, tanpa build aset/rebuild graph.

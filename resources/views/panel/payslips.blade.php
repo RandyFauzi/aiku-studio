@@ -368,12 +368,12 @@
                                             </div>
                                         </template>
                                         <template x-if="worker.pending_carry_over_amount > 0">
-                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 mt-0.5">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                                                <span>+<span x-text="formatRupiah(worker.pending_carry_over_amount)"></span> (Sisa Pending)</span>
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Termasuk dalam slip: ' + formatRupiah(worker.pending_carry_over_amount) + ' saldo tambahan dari periode sebelumnya'">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                <span>Saldo tambahan: +<span x-text="formatRupiah(worker.pending_carry_over_amount)"></span></span>
                                             </div>
                                         </template>
-                                        <template x-if="worker.available_pending_balance > 0">
+                                        <template x-if="!worker.pending_carry_over_amount && worker.available_pending_balance > 0">
                                             <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Belum dialokasikan: ' + worker.available_pending_mins + ' menit dari periode final; di luar carry-over yang sudah masuk slip'">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                                                 <span>Saldo tambahan: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
@@ -528,8 +528,11 @@
                                     <!-- Take Home Pay -->
                                     <td class="px-3 py-3.5 whitespace-nowrap">
                                         <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="formatRupiah(item.total_thp || 0)"></div>
-                                        <div class="text-xs text-slate-600" x-text="'Bonus: ' + formatRupiah(item.bonus || 0)"></div>
-                                        <div class="text-xs text-indigo-700" x-text="'Carry-over: ' + formatRupiah(item.pending_carry_over_amount || 0)"></div>
+                                        <div x-show="(item.bonus || 0) > 0" class="text-xs text-slate-600" x-text="'Bonus: ' + formatRupiah(item.bonus || 0)"></div>
+                                        <div x-show="(item.pending_carry_over_amount || 0) > 0" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Termasuk dalam slip: ' + formatRupiah(item.pending_carry_over_amount || 0) + ' saldo tambahan dari periode sebelumnya'">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            <span>Saldo tambahan: +<span x-text="formatRupiah(item.pending_carry_over_amount || 0)"></span></span>
+                                        </div>
                                         <div x-show="item.duplicate_count > 1" class="text-xs font-semibold text-amber-800 whitespace-normal max-w-xs">Slip ganda: bandingkan nominal sebelum memilih</div>
                                             <button x-show="item.duplicate_count > 1 && !item.is_locked && item.status !== 'sudah'" @click="resolveDuplicates(item)" class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Jadikan slip utama</button>
 

@@ -279,8 +279,8 @@
                                     </div>
 
                                     <!-- Breakdown -->
-                                    <div class="text-[11px] text-gray-600 bg-black/5 rounded-xl p-2.5 space-y-1">
-                                        <template x-for="(task, idx) in (pendingCarryOver.tasks || [])" :key="idx">
+                                    <div x-show="(pendingCarryOver.tasks || []).some(t => (parseFloat(t.delta_hours) || 0) > 0)" class="text-[11px] text-gray-600 bg-black/5 rounded-xl p-2.5 space-y-1">
+                                        <template x-for="(task, idx) in (pendingCarryOver.tasks || []).filter(t => (parseFloat(t.delta_hours) || 0) > 0)" :key="idx">
                                             <div class="flex items-start justify-between gap-2">
                                                 <div>
                                                     <span class="font-bold text-gray-800" x-text="task.source_period"></span>
@@ -305,7 +305,7 @@
                                             <span class="text-xs font-extrabold block" 
                                                   x-text="formData.include_pending_carry_over ? 'Cairkan Saldo ke Slip Ini' : 'Centang untuk Cairkan Saldo'"></span>
                                             <span class="text-[10px] block opacity-85"
-                                                  x-text="'Tambahkan ' + (pendingCarryOver.total_hours || 0) + ' jam ke Take Home Pay'"></span>
+                                                  x-text="(parseFloat(pendingCarryOver.total_hours) || 0) > 0 ? ('Tambahkan ' + pendingCarryOver.total_hours + ' jam ke Take Home Pay') : ('Cairkan sisa saldo +' + formatRupiah(pendingCarryOver.total_amount || 0) + ' ke Take Home Pay')"></span>
                                         </div>
                                         <span class="text-xs font-black whitespace-nowrap" 
                                               :class="formData.include_pending_carry_over ? 'text-white' : 'text-emerald-700'"
