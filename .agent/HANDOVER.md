@@ -1,3 +1,7 @@
+### [2026-11-15 15:59] — Codex: perbaikan integritas Slip dan saldo pending
+- POST idempoten + worker lock/unique key; snapshot/carry-over konsisten, finalisasi terkunci, klaim server-side, rekonsiliasi duplikat tanpa hapus riwayat; migrasi lokal menjaga hash data slip lama.
+- Validasi: payroll 36 tes/226 assertions lulus; full suite 212 lulus + 3 kegagalan non-payroll terkonfirmasi pada source HEAD; Vite, UI desktop/mobile dan Graphify lulus. Belum deploy/pulihkan #21/#22 server; rincian di docs/audit-slip-2026-11-15.md.
+
 ### [2026-11-15 15:32 WITA] — Codex: audit halaman Slip dan backend payroll
 - Laporan docs/audit-slip-2026-11-15.md: bagan alur, duplikasi POST, carry-over/display, lock API, dan sinkronisasi saat GET; tanpa perubahan aplikasi/produksi.
 - Validasi: 4 probe SQLite :memory: lulus (15 assertions); probe dihapus. Risiko konkurensi dan duplikasi aktual produksi belum diverifikasi.

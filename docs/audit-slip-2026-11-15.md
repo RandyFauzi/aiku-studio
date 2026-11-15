@@ -150,3 +150,76 @@ Tidak ada build/full suite/rebuild graph karena hasil task hanya dokumentasi.
 Perbaikan payroll selanjutnya memerlukan regression tests dan full suite sesuai
 AGENTS.md. Prioritas: konsistensi display/PDF, proteksi finalisasi/carry-over,
 aturan slip aktif/revisi, lalu sinkronisasi dan normalisasi identitas.
+
+
+## Perbaikan implementasi — 15 November 2026
+
+- POST simpan menjadi idempoten per nama pekerja/periode kanonis. Serialisasi
+  seluruh mutasi per pekerja memakai payroll_write_locks dalam transaksi;
+  active_key memiliki unique constraint untuk slip baru/utama. Baris lama tidak
+  dihapus atau dipaksa unique sebelum rekonsiliasi.
+- Dokumen dengan ID tertentu selalu memakai snapshot sendiri, termasuk bonus,
+  carry-over, dan evidence. Rekap/live menghitung estimasi baru tanpa menulis
+  ulang dokumen. GET daftar, rekap, detail, dan ekspor tidak menghitung ulang
+  snapshot tersimpan. Ekspor masih memperbarui referensi file PDF.
+- Slip final/locked dan arsip duplikat menolak PUT/DELETE. Pembayaran mengunci
+  snapshot; perubahan status kembali ke belum tidak membuka lock. Pembayaran
+  dari rekap live membekukan estimasi live beserta bonus/carry-over; dari daftar
+  tersimpan membekukan snapshot yang terlihat. Finalisasi live menolak expected_thp
+  yang sudah tertinggal agar admin memeriksa ulang perubahan rekaman.
+- Saldo pending ditelusuri dari seluruh periode sumber yang mempunyai snapshot
+  final, tanpa batas tiga periode. Klaim baru diperiksa ulang server di dalam
+  worker lock, memakai sumber dan menit terverifikasi. Klaim lama yang tetap sama
+  dipertahankan. Draft sumber, duplikasi, serta data klaim tanpa rincian diberi
+  peringatan; tidak dinyatakan otomatis sebagai saldo Rp0 yang sudah dibayar.
+- Slip ganda lama memblokir pemilihan versi otomatis. Admin membandingkan nominal,
+  bonus, carry-over lalu memilih satu slip utama. Versi lain tetap tersimpan dengan
+  superseded_by_id, waktu, dan ID admin; tidak dijumlahkan atau dihapus. Konflik
+  yang melibatkan slip final ditolak untuk rekonsiliasi keuangan lebih lanjut.
+- Command sync-drafts menjadi mutasi eksplisit melalui service bersama, memeriksa
+  ulang finalisasi di dalam transaksi, dan keluar FAILURE bila ada kegagalan.
+
+### Interpretasi screenshot dan batas pemulihan
+
+Screenshot memperlihatkan #21 dan #22 dengan jam sama, tetapi THP berbeda
+Rp373.850 (Rp5.861.358 dikurangi Rp5.487.508). Angka ini belum membuktikan komponen
+mana yang benar. Source lama dapat memilih versi terakhir tanpa carry-over,
+menyembunyikan bonus/carry-over versi lain, serta menimpa draft ketika halaman
+hanya dibuka. Karena itu riwayat tidak direkonsiliasi otomatis berdasarkan nominal.
+
+Pemeriksaan read-only database lokal menemukan slip Rio #5 dan #14, bukan #21/#22
+pada screenshot. Tidak ada klaim bahwa saldo produksi telah dipulihkan. Kode ini
+menyediakan alat rekonsiliasi yang mempertahankan dokumen sumber; penentuan slip
+utama produksi memerlukan pemeriksaan komponen #21/#22 pada database server.
+
+### Operasional
+
+Migrasi 2026_11_15_000001_add_payslip_integrity_guards menambahkan tabel penguncian,
+active_key, serta metadata arsip. Migrasi harus dijalankan sebelum rilis kode yang
+mengakses kolom baru. Tidak menulis ulang nominal/jam/evidence lama. Jangan
+menjalankan sync-drafts sebagai langkah deploy/pemulihan saldo.
+
+Referensi transaksi/pessimistic locking:
+https://laravel.com/framework/docs/13.x/queries#pessimistic-locking
+
+### Verifikasi lanjutan
+
+- Regression payroll: 36 tes, 226 assertions lulus (termasuk pembayaran dengan
+  estimasi yang berubah, saldo lama, klaim ganda, ID dokumen, dan lock).
+- Full suite dijalankan; tiga kegagalan non-payroll juga direproduksi memakai
+  source App dan test dari HEAD sebelum perubahan: pencocokan IP Wi-Fi,
+  verifikasi Wi-Fi nonaktif, dan aturan perubahan nama kontributor.
+- Fixture UI menggunakan data QA, bukan data produksi, untuk meninjau layar Slip
+  dan form terkunci pada desktop/mobile. Hasil akhir dicatat pada handover.
+
+
+Hasil akhir: full suite 212 lulus, 3 kegagalan lama (1.384 assertions);
+regression payroll 36 lulus (226 assertions). Build Vite berhasil. Pemeriksaan
+browser pada fixture terisolasi desktop 1440px dan mobile 390px menghasilkan
+lima screenshot, tanpa page error; dialog pemilihan slip dan tombol simpan yang
+terkunci diverifikasi. Screenshot menggunakan nilai QA untuk mengilustrasikan
+konflik, bukan hasil verifikasi saldo server.
+
+Migrasi telah diterapkan hanya pada database pengembangan lokal setelah memeriksa
+host localhost/non-production. Hash seluruh field slip lama sebelum/sesudah sama.
+Tidak ada deploy atau rekonsiliasi data produksi pada task ini.

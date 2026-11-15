@@ -67,14 +67,17 @@
                         </button>
                     </template>
                     <div>
-                        <p class="text-xs text-gray-500 font-medium mb-1">Live Estimated THP</p>
+                        <p class="text-xs text-gray-500 font-medium mb-1" x-text="isLocked ? 'THP snapshot tersimpan' : 'Estimasi THP form'"></p>
                         <h3 class="text-xl sm:text-2xl font-bold text-brand" x-text="formatRupiah(calculateTHP())"></h3>
                     </div>
                 </div>
             </div>
 
+            <div x-show="isLocked" role="status" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Slip final/terkunci atau arsip duplikat: nominal, carry-over, dan rincian tidak dapat diubah.</div>
+            <div x-show="loadError" role="alert" class="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" x-text="message"></div>
             <!-- Form Split Layout -->
             <form @submit.prevent="submitForm" class="flex flex-col lg:flex-row gap-12">
+                <fieldset :disabled="isLocked || loadError" class="contents">
                 
                 <!-- Left Column: General Settings -->
                 <div class="w-full lg:w-1/3 space-y-6">
@@ -310,10 +313,14 @@
                                     </label>
                                 </div>
 
+                                <p x-show="pendingCarryOver.reserved_amount > 0" class="text-xs text-indigo-700" x-text="'Sudah dialokasikan pada slip lain: ' + formatRupiah(pendingCarryOver.reserved_amount || 0)"></p>
+                                <p x-show="formData.pending_carry_over_amount > 0" class="text-xs text-indigo-700" x-text="'Termasuk pada slip ini: ' + formatRupiah(formData.pending_carry_over_amount || 0)"></p>
                                 <!-- Empty / Not Available State -->
                                 <div x-show="!isLoadingCarryOver && (!pendingCarryOver || !pendingCarryOver.available)" 
                                      class="py-2.5 px-3 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-500 text-center">
-                                    Bank Saldo Pending: <span class="font-bold text-gray-700">Rp 0</span> (Semua selisih periode lalu sudah tercairkan atau tidak ada pending).
+                                    <span x-show="!pendingError && !(pendingCarryOver.warnings || []).length">Belum ada saldo tambahan yang siap dicairkan dari periode final. Saldo yang sudah dimasukkan ke slip lain tidak dihitung ulang.</span>
+                                    <span x-show="pendingError" role="alert" x-text="pendingError"></span>
+                                    <template x-for="warning in (pendingCarryOver.warnings || [])" :key="warning"><p class="text-amber-800" x-text="warning"></p></template>
                                 </div>
                             </div>
                         </div>
@@ -321,7 +328,7 @@
 
                     <!-- Submit Actions -->
                     <div class="flex items-center gap-3 pt-4">
-                        <button type="submit" :disabled="isSubmitting" class="flex-1 bg-gray-900 hover:bg-black text-white py-3 rounded-full text-sm font-bold shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+                        <button type="submit" :disabled="isSubmitting || isSuccess || isLoadingEvidence || isLoadingCarryOver" class="flex-1 bg-gray-900 hover:bg-black text-white py-3 rounded-full text-sm font-bold shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed">
                             <span x-show="!isSubmitting">Save & Generate PDF</span>
                             <span x-show="isSubmitting" class="flex items-center justify-center gap-2">
                                 <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -330,7 +337,7 @@
                         </button>
                     </div>
                     
-                    <div x-show="message" x-transition class="p-4 rounded-xl text-sm font-medium border" :class="isSuccess ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'" x-text="message"></div>
+                    <div x-show="message" x-ref="payrollMessage" tabindex="-1" role="alert" x-transition class="p-4 rounded-xl text-sm font-medium border" :class="isSuccess ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'" x-text="message"></div>
                 </div>
 
                 <!-- Right Column: Evidence Days & Tasks Table -->
@@ -352,9 +359,9 @@
                                     @click="loadWorkerEvidence(null, null, null, true)" 
                                     :disabled="isLoadingEvidence || !formData.employee_name" 
                                     class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center gap-1.5 disabled:opacity-40" 
-                                    title="Tarik data rekaman terbaru dari database sesuai cut-off terpilih">
+                                    title="Ganti rincian form dengan rekaman terbaru; perubahan baru tersimpan setelah Simpan">
                                 <svg class="w-3.5 h-3.5" :class="isLoadingEvidence ? 'animate-spin text-[#00B090]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                <span>Sinkronkan Database</span>
+                                <span>Tarik Rekaman Terbaru</span>
                             </button>
                             <button type="button" @click="addEvidence" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-brand font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -513,6 +520,7 @@
                         </button>
                     </div>
                 </div>
+                </fieldset>
             </form>
         
         </div>

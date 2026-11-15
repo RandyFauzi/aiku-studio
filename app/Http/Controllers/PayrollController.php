@@ -7,6 +7,8 @@ use App\Models\Payslip;
 use App\Models\StudioRecording;
 use App\Services\PayrollCalculator;
 use App\Services\PayrollPeriod;
+use App\Services\PayslipWriter;
+use App\Services\PayrollPaymentStatus;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -44,15 +46,16 @@ class PayrollController extends Controller
     {
         $request->validate(['worker' => 'required|string|max:255']);
         $period = $resolver->resolve($request->query());
-        $slip = Payslip::where('employee_name', $request->worker)->where('period', $period['name'])->latest('id')->first();
+        $slip = app(PayslipWriter::class)->unique($request->worker, $period['name']);
         $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah'));
         $forceRefresh = $request->boolean('refresh');
-        $useLive = $forceRefresh || ! $isLocked || empty($slip?->evidence_data);
+        $useLive = ! $isLocked && ($forceRefresh || ! $slip); // Existing documents stay snapshots until explicit refresh.
 
         return response()->json([
             'existingSlipId' => $slip?->id,
             'employee_name' => $request->worker,
             'period' => $period['name'],
+            'total_thp' => $slip?->total_thp,
             'bonus' => $slip?->bonus ?? 0,
             'pending_carry_over_amount' => $slip?->pending_carry_over_amount ?? 0,
             'pending_carry_over_hours' => $slip?->pending_carry_over_hours ?? 0,
@@ -80,12 +83,11 @@ class PayrollController extends Controller
     public function status(Request $request)
     {
         $fields = $request->validate(['worker_name' => 'required|string|max:255', 'period' => 'required|string|max:255',
-            'status' => 'required|in:belum,sudah', 'notes' => 'nullable|string|max:10000']);
+            'status' => 'required|in:belum,sudah', 'notes' => 'nullable|string|max:10000',
+            'expected_thp' => 'required_if:status,sudah|nullable|integer|min:0']);
         DB::transaction(function () use ($fields) {
-            PayrollStatus::updateOrCreate(['worker_name' => $fields['worker_name'], 'period' => $fields['period']],
-                array_filter(['status' => $fields['status'], 'notes' => $fields['notes'] ?? null], fn ($v) => $v !== null));
-            Payslip::where('employee_name', $fields['worker_name'])->where('period', $fields['period'])->update(['status' => $fields['status']]);
-        });
+            app(PayrollPaymentStatus::class)->set($fields['worker_name'], $fields['period'], $fields['status'], $fields['notes'] ?? null, true, $fields['expected_thp'] ?? null);
+        }, 3);
 
         return response()->json(['success' => true] + $fields);
     }

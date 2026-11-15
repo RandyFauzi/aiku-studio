@@ -112,7 +112,8 @@ class PayrollMigrationTest extends TestCase
         $this->assertDatabaseHas('payroll_statuses', ['worker_name' => 'Worker', 'period' => $payload['period'], 'status' => 'sudah']);
         $this->postJson('/api/payroll/status', ['worker_name' => 'Worker', 'period' => $payload['period'], 'status' => 'belum'])->assertOk();
         $this->assertDatabaseHas('payslips', ['id' => $id, 'status' => 'belum', 'total_thp' => 52000]);
-        $this->deleteJson('/api/payslips/'.$id)->assertOk();
+        $this->deleteJson('/api/payslips/'.$id)->assertConflict();
+        $this->assertDatabaseHas('payslips', ['id' => $id, 'is_locked' => true]);
     }
 
     public function test_recording_filter_stats_and_assignments(): void

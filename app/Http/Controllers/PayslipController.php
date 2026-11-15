@@ -9,6 +9,7 @@ use App\Services\PayrollFiles;
 use App\Services\PayrollPaymentStatus;
 use App\Services\PayrollPeriod;
 use App\Services\PayslipPdf;
+use App\Services\PayslipWriter;
 use App\Services\WorkerSlipArchive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,26 +37,11 @@ class PayslipController extends Controller
             ->header('Cache-Control', 'private, no-store');
     }
 
-    public function index(PayrollCalculator $calculator, PayrollPeriod $resolver)
+    public function index(PayslipWriter $writer)
     {
-        $draftSlips = Payslip::where('status', 'belum')->where('is_locked', false)->get();
-        foreach ($draftSlips as $slip) {
-            if (str_contains(strtolower($slip->period), 'training')) {
-                continue;
-            }
-            try {
-                $period = $resolver->resolve(['period' => $slip->period]);
-                if ($calculator->recordings($period, $slip->employee_name)->exists()) {
-                    $evidence = $calculator->evidence($period, $slip->employee_name);
-                    $calculated = $calculator->calculate($evidence, (int) $slip->bonus, (int) $slip->pending_carry_over_amount, $slip->pending_carry_over_data);
-                    $slip->update($calculated);
-                }
-            } catch (\Throwable) {
-                // Ignore custom or unresolvable period labels
-            }
-        }
-
-        return Payslip::orderByDesc('created_at')->get();
+        $slips = Payslip::orderByDesc('id')->get();
+        $counts = $slips->whereNull('superseded_by_id')->groupBy(fn ($slip) => $writer->key($slip->employee_name, $slip->period))->map->count();
+        return $slips->each(fn ($slip) => $slip->setAttribute('duplicate_count', $slip->superseded_by_id ? 0 : $counts[$writer->key($slip->employee_name, $slip->period)]));
     }
 
     public function show(Payslip $payslip)
@@ -75,6 +61,9 @@ class PayslipController extends Controller
             'pending_carry_over_hours' => 'sometimes|nullable|numeric|min:0',
             'pending_carry_over_data' => 'sometimes|nullable|array',
             'evidence' => 'present|array|max:366',
+            'evidence.*.notes' => 'nullable|string|max:10000',
+            'evidence.*.tasks.*.notes' => 'nullable|string|max:10000',
+            'evidence.*.tasks.*.time_str' => 'nullable|string|max:64',
             'evidence.*.date' => 'required|date_format:Y-m-d',
             'evidence.*.approved_mins' => 'nullable|numeric|min:0',
             'evidence.*.rejected_mins' => 'nullable|numeric|min:0',
@@ -91,74 +80,79 @@ class PayslipController extends Controller
         ]);
     }
 
-    public function store(Request $request, PayrollCalculator $calculator)
+    public function store(Request $request, PayrollCalculator $calculator, PayslipWriter $writer)
     {
         $fields = $this->fields($request);
-        $slip = DB::transaction(function () use ($fields, $request, $calculator) {
+        $fields['employee_name'] = trim($fields['employee_name']);
+        $fields['period'] = $writer->period($fields['period']);
+        $slip = DB::transaction(function () use ($fields, $calculator, $writer) {
+            $writer->lock($fields['employee_name']);
+            // A repeated POST never overwrites an existing snapshot or creates another version.
+            if ($existing = $writer->unique($fields['employee_name'], $fields['period'])) return $existing;
             $status = $fields['status'] ?? PayrollStatus::where('worker_name', $fields['employee_name'])->where('period', $fields['period'])->value('status') ?? 'belum';
-            $carryAmount = (int) ($fields['pending_carry_over_amount'] ?? 0);
-            $carryData = $fields['pending_carry_over_data'] ?? null;
-            $bonus = (int) ($fields['bonus'] ?? 0);
-            $isLocked = $fields['is_locked'] ?? ($status === 'sudah');
-
-            $calculated = $calculator->calculate($request->input('evidence', []), $bonus, $carryAmount, $carryData);
-
+            [$carryAmount, $carryData] = $writer->carry($fields);
             $slip = Payslip::create(array_merge([
-                'employee_name' => $fields['employee_name'],
-                'period' => $fields['period'],
-                'status' => $status,
-                'is_locked' => $isLocked,
-            ], $calculated));
-
+                'employee_name' => $fields['employee_name'], 'period' => $fields['period'],
+                'active_key' => $writer->key($fields['employee_name'], $fields['period']),
+                'status' => $status, 'is_locked' => $status === 'sudah' || ($fields['is_locked'] ?? false),
+            ], $calculator->calculate($fields['evidence'], (int) ($fields['bonus'] ?? 0), $carryAmount, $carryData)));
             app(PayrollPaymentStatus::class)->set($slip->employee_name, $slip->period, $status);
-
             return $slip;
-        });
-
-        return response()->json(['success' => true, 'message' => 'Slip saved successfully', 'data' => ['id' => $slip->id]]);
+        }, 3);
+        return response()->json(['success' => true, 'message' => 'Slip tersimpan', 'data' => ['id' => $slip->id]]);
     }
 
-    public function update(Request $request, Payslip $payslip, PayrollCalculator $calculator)
+    public function update(Request $request, Payslip $payslip, PayrollCalculator $calculator, PayslipWriter $writer)
     {
         $fields = $this->fields($request);
-        DB::transaction(function () use ($fields, $request, $payslip, $calculator) {
-            $carryAmount = isset($fields['pending_carry_over_amount']) ? (int) $fields['pending_carry_over_amount'] : (int) $payslip->pending_carry_over_amount;
-            $carryData = array_key_exists('pending_carry_over_data', $fields) ? $fields['pending_carry_over_data'] : $payslip->pending_carry_over_data;
-            $bonus = (int) ($fields['bonus'] ?? $payslip->bonus);
+        DB::transaction(function () use ($fields, $payslip, $calculator, $writer) {
+            $writer->lock($payslip->employee_name);
+            $payslip->refresh();
+            $writer->editable($payslip);
+            abort_unless($writer->key($fields['employee_name'], $fields['period']) === $writer->key($payslip->employee_name, $payslip->period), 422, 'Pekerja/periode slip tidak dapat dipindahkan. Buat slip untuk periode tujuan.');
+            $writer->unique($payslip->employee_name, $payslip->period);
+            [$carryAmount, $carryData] = $writer->carry($fields, $payslip);
             $status = $fields['status'] ?? $payslip->status;
-            $isLocked = $fields['is_locked'] ?? ($status === 'sudah' || $payslip->is_locked);
-
-            $calculated = $calculator->calculate($request->input('evidence', []), $bonus, $carryAmount, $carryData);
-
             $payslip->update(array_merge([
-                'employee_name' => $fields['employee_name'],
-                'period' => $fields['period'],
                 'status' => $status,
-                'is_locked' => $isLocked,
+                'is_locked' => $status === 'sudah' || ($fields['is_locked'] ?? false),
+                'active_key' => $writer->key($payslip->employee_name, $payslip->period),
                 'file_path' => null,
-            ], $calculated));
-
+            ], $calculator->calculate($fields['evidence'], (int) ($fields['bonus'] ?? $payslip->bonus), $carryAmount, $carryData)));
             app(PayrollPaymentStatus::class)->set($payslip->employee_name, $payslip->period, $payslip->status);
-        });
-
-        // Images may be shared by historical slips. Retain files rather than delete references from another slip.
+        }, 3);
         return response()->json(['success' => true, 'id' => $payslip->id]);
     }
 
-    public function destroy(Payslip $payslip)
+    public function destroy(Payslip $payslip, PayslipWriter $writer)
     {
-        $payslip->delete();
-
+        DB::transaction(function () use ($payslip, $writer) {
+            $writer->lock($payslip->employee_name);
+            $payslip->refresh();
+            $writer->editable($payslip);
+            abort_if(Payslip::where('superseded_by_id', $payslip->id)->exists(), 409, 'Slip utama memiliki arsip duplikat; tidak dapat dihapus.');
+            $payslip->delete();
+        }, 3);
         return response()->json(['success' => true]);
+    }
+
+    public function resolveDuplicates(Request $request, Payslip $payslip, PayslipWriter $writer)
+    {
+        $writer->resolveDuplicates($payslip, $request->user()->id);
+        return response()->json(['success' => true, 'id' => $payslip->id]);
     }
 
     public function status(Request $request, Payslip $payslip)
     {
+        abort_if($payslip->superseded_by_id !== null, 409, 'Arsip duplikat tidak dapat diubah.');
         $data = $request->validate(['status' => 'required|in:belum,sudah']);
         DB::transaction(function () use ($data, $payslip) {
+            app(PayslipWriter::class)->lock($payslip->employee_name);
+            $payslip->refresh();
+            abort_if($payslip->superseded_by_id !== null, 409, 'Arsip duplikat tidak dapat diubah.');
             app(PayrollPaymentStatus::class)->set($payslip->employee_name, $payslip->period, $data['status']);
             $payslip->refresh();
-        });
+        }, 3);
 
         return response()->json(['success' => true, 'id' => $payslip->id, 'status' => $payslip->status]);
     }

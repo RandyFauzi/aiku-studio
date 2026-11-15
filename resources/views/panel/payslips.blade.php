@@ -54,12 +54,13 @@
 
         <div class="w-full max-w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
+            <div x-show="hasSlipConflicts" role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Ada slip ganda yang perlu ditinjau. Total THP belum dapat dipastikan sampai konflik selesai. Buka Slip Tersimpan, bandingkan bonus/carry-over, lalu pilih slip utama.</div>
             <!-- Breadcrumb & Header -->
             <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
                 <div>
                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Payroll / Riwayat Dokumen & Rekap Otomatis</p>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Riwayat Slip Gaji & Rekap Payroll</h2>
-                    <p class="text-xs text-slate-500 mt-1">Perhitungan otomatis dinamis berbasis penandaan worker rekaman Verbos. Cut-off siklus tanggal 22 - 21 setiap bulan.</p>
+                    <p class="text-xs text-slate-500 mt-1">Rekap live adalah estimasi rekaman terbaru. Slip tersimpan mempertahankan snapshot, bonus, dan carry-over. Cut-off mengikuti siklus terpilih.</p>
                 </div>
                 
                 <!-- Period Selector & View Mode Controls (Sejajar Horizontal di Kanan) -->
@@ -153,7 +154,7 @@
                 <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden group col-span-2 sm:col-span-1">
                     <div class="absolute -right-3 -bottom-3 bg-emerald-50 h-20 w-20 rounded-full opacity-60 group-hover:scale-110 transition-transform"></div>
                     <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 relative z-10">Total Take Home Pay</h4>
-                    <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight relative z-10" x-text="formatRupiah(currentStats.thp)"></div>
+                    <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight relative z-10" x-text="hasSlipConflicts ? 'Perlu ditinjau' : formatRupiah(currentStats.thp)"></div>
                     <div class="text-[10px] font-medium text-emerald-600 mt-1 relative z-10">@ Rp 50.000 / Jam Appr</div>
                 </div>
 
@@ -161,7 +162,7 @@
                 <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden group">
                     <div class="absolute -right-3 -bottom-3 bg-blue-50 h-20 w-20 rounded-full opacity-60 group-hover:scale-110 transition-transform"></div>
                     <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 relative z-10">Total Logged</h4>
-                    <div class="text-xl sm:text-2xl font-black text-blue-600 relative z-10"><span x-text="currentStats.logged"></span><span class="text-sm font-semibold text-blue-400 ml-1">h</span></div>
+                    <div class="text-xl sm:text-2xl font-black text-blue-600 relative z-10"><span x-text="hasSlipConflicts && isTrainingView ? '-' : currentStats.logged"></span><span class="text-sm font-semibold text-blue-400 ml-1">h</span></div>
                     <div class="text-[10px] text-slate-400 mt-1 relative z-10">Total Durasi Masuk</div>
                 </div>
                 
@@ -169,7 +170,7 @@
                 <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden group">
                     <div class="absolute -right-3 -bottom-3 bg-emerald-50 h-20 w-20 rounded-full opacity-60 group-hover:scale-110 transition-transform"></div>
                     <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 relative z-10">Total Approved</h4>
-                    <div class="text-xl sm:text-2xl font-black text-[#009B7E] relative z-10"><span x-text="currentStats.approved"></span><span class="text-sm font-semibold text-emerald-400 ml-1">h</span></div>
+                    <div class="text-xl sm:text-2xl font-black text-[#009B7E] relative z-10"><span x-text="hasSlipConflicts && isTrainingView ? '-' : currentStats.approved"></span><span class="text-sm font-semibold text-emerald-400 ml-1">h</span></div>
                     <div class="text-[10px] text-emerald-600 font-medium mt-1 relative z-10">Jam yang Dibayar</div>
                 </div>
                 
@@ -177,7 +178,7 @@
                 <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden group">
                     <div class="absolute -right-3 -bottom-3 bg-rose-50 h-20 w-20 rounded-full opacity-60 group-hover:scale-110 transition-transform"></div>
                     <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 relative z-10">Total Rejected</h4>
-                    <div class="text-xl sm:text-2xl font-black text-rose-500 relative z-10"><span x-text="currentStats.rejected"></span><span class="text-sm font-semibold text-rose-300 ml-1">h</span></div>
+                    <div class="text-xl sm:text-2xl font-black text-rose-500 relative z-10"><span x-text="hasSlipConflicts && isTrainingView ? '-' : currentStats.rejected"></span><span class="text-sm font-semibold text-rose-300 ml-1">h</span></div>
                     <div class="text-[10px] text-rose-400 mt-1 relative z-10">Tidak Dibayar</div>
                 </div>
                 
@@ -359,7 +360,7 @@
 
                                     <!-- Take Home Pay (THP) -->
                                     <td class="px-3 py-3.5 whitespace-nowrap">
-                                        <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="formatRupiah(worker.thp)"></div>
+                                        <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="worker.duplicate_count > 1 ? 'Perlu ditinjau' : formatRupiah(worker.thp)"></div>
                                         <template x-if="worker.bonus > 0">
                                             <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-0.5">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -372,10 +373,10 @@
                                                 <span>+<span x-text="formatRupiah(worker.pending_carry_over_amount)"></span> (Sisa Pending)</span>
                                             </div>
                                         </template>
-                                        <template x-if="!worker.pending_carry_over_amount && worker.available_pending_balance > 0">
+                                        <template x-if="worker.available_pending_balance > 0">
                                             <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Tersedia saldo pending ' + worker.available_pending_hours + ' jam dari periode lalu'">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                                <span>Bank: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
+                                                <span>Tersedia untuk slip ini: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
                                             </div>
                                         </template>
                                     </td>
@@ -384,7 +385,7 @@
                                     <td class="px-3 py-3.5 whitespace-nowrap text-center">
                                         <div class="inline-flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200/90 text-xs shadow-2xs">
                                             <!-- Opsi Belum -->
-                                            <button @click="setWorkerStatus(worker, 'belum')" 
+                                            <button :disabled="worker.duplicate_count > 1 || updatingStatusWorker === worker.worker_name" @click="setWorkerStatus(worker, 'belum')"
                                                     type="button"
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
                                                     :class="worker.status !== 'sudah' 
@@ -396,7 +397,7 @@
                                             </button>
 
                                             <!-- Opsi Sudah -->
-                                            <button @click="setWorkerStatus(worker, 'sudah')" 
+                                            <button :disabled="worker.duplicate_count > 1 || updatingStatusWorker === worker.worker_name" @click="setWorkerStatus(worker, 'sudah')"
                                                     type="button"
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
                                                     :class="worker.status === 'sudah' 
@@ -421,8 +422,9 @@
                                                 <span>Rincian</span>
                                             </button>
 
+                                            <span x-show="worker.duplicate_count > 1" class="text-xs font-semibold text-amber-800">Rekonsiliasi di Slip Tersimpan</span>
                                             <!-- Edit Slip Button -->
-                                            <a :href="worker.slip_id ? ('/create?id=' + worker.slip_id) : ('/create?worker=' + encodeURIComponent(worker.worker_name) + '&periodId=' + encodeURIComponent(selectedPeriodId))"
+                                            <a x-show="worker.duplicate_count <= 1 && !worker.is_locked" :href="worker.slip_id ? ('/create?id=' + worker.slip_id) : ('/create?worker=' + encodeURIComponent(worker.worker_name) + '&periodId=' + encodeURIComponent(selectedPeriodId))"
                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold transition shadow-2xs"
                                                title="Edit / Buat Slip Gaji Worker Ini">
                                                 <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -430,7 +432,7 @@
                                             </a>
 
                                             <!-- Lihat Web Slip Button -->
-                                            <button @click="openLiveSlip(worker.worker_name)" 
+                                            <button :disabled="worker.duplicate_count > 1" @click="openLiveSlip(worker.worker_name)"
                                                     class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white font-semibold text-xs transition shadow-xs"
                                                     title="Buka Slip Web & Cetak PDF">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
@@ -526,12 +528,17 @@
                                     <!-- Take Home Pay -->
                                     <td class="px-3 py-3.5 whitespace-nowrap">
                                         <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="formatRupiah(item.total_thp || 0)"></div>
+                                        <div class="text-xs text-slate-600" x-text="'Bonus: ' + formatRupiah(item.bonus || 0)"></div>
+                                        <div class="text-xs text-indigo-700" x-text="'Carry-over: ' + formatRupiah(item.pending_carry_over_amount || 0)"></div>
+                                        <div x-show="item.duplicate_count > 1" class="text-xs font-semibold text-amber-800 whitespace-normal max-w-xs">Slip ganda: bandingkan nominal sebelum memilih</div>
+                                            <button x-show="item.duplicate_count > 1 && !item.is_locked && item.status !== 'sudah'" @click="resolveDuplicates(item)" class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Jadikan slip utama</button>
+
                                     </td>
 
                                     <!-- Status Slip Button (Pilihan: Belum | Sudah) -->
                                     <td class="px-3 py-3.5 whitespace-nowrap text-center">
                                         <div class="inline-flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200/90 text-xs shadow-2xs">
-                                            <button @click="setSlipStatus(item, 'belum')" 
+                                            <button :disabled="item.duplicate_count > 1" @click="setSlipStatus(item, 'belum')"
                                                     type="button"
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
                                                     :class="item.status !== 'sudah' 
@@ -541,7 +548,7 @@
                                                 <span class="w-1.5 h-1.5 rounded-full" :class="item.status !== 'sudah' ? 'bg-white' : 'bg-slate-300'"></span>
                                                 <span>Belum</span>
                                             </button>
-                                            <button @click="setSlipStatus(item, 'sudah')" 
+                                            <button :disabled="item.duplicate_count > 1" @click="setSlipStatus(item, 'sudah')"
                                                     type="button"
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
                                                     :class="item.status === 'sudah' 
@@ -581,14 +588,14 @@
                                             </button>
 
                                             <!-- Edit Button -->
-                                            <a :href="'/create?id=' + item.id" 
+                                            <a x-show="!item.is_locked && item.status !== 'sudah' && item.duplicate_count <= 1" :href="'/create?id=' + item.id"
                                                class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" 
                                                title="Edit Slip">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                             </a>
 
                                             <!-- Delete Button -->
-                                            <button @click="deleteSlip(item.id)" 
+                                            <button x-show="!item.is_locked && item.status !== 'sudah'" @click="deleteSlip(item.id)"
                                                     class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" 
                                                     title="Hapus Slip">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -779,6 +786,6 @@
         </div>
     </div>
 
-    <script src="/assets/app.js"></script>
+    <script src="/assets/app.js?v={{ filemtime(public_path('assets/app.js')) }}"></script>
 </body>
 </html>

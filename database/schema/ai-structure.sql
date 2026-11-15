@@ -1,6 +1,8 @@
 -- Generated from Laravel migrations in SQLite :memory:. Structure only; no rows.
 -- SQLite representation, not a MySQL restore script. Logical joins: docs/AI_CONTEXT.md.
 
+CREATE TABLE "admin_notes" ("id" integer primary key autoincrement not null, "user_id" integer not null, "assigned_to_user_id" integer, "title" varchar not null, "content" text, "type" varchar not null default 'note', "priority" varchar not null default 'normal', "note_date" date not null, "is_pinned" tinyint(1) not null default '0', "is_completed" tinyint(1) not null default '0', "completed_at" datetime, "completed_by_user_id" integer, "checklist_items" text, "created_at" datetime, "updated_at" datetime, foreign key("user_id") references "users"("id") on delete cascade, foreign key("assigned_to_user_id") references "users"("id") on delete set null, foreign key("completed_by_user_id") references "users"("id") on delete set null);
+
 CREATE TABLE "attendances" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "checked_in_at" datetime not null, "latitude" numeric, "longitude" numeric, "accuracy_m" double, "gps_captured_at" datetime, "created_at" datetime, "updated_at" datetime, "checkin_method" varchar not null default ('gps'), "client_ip" varchar, "wifi_verified" tinyint(1) not null default ('0'));
 
 CREATE TABLE "cache" ("key" varchar not null, "value" text not null, "expiration" integer not null, primary key ("key"));
@@ -25,7 +27,9 @@ CREATE TABLE "password_reset_tokens" ("email" varchar not null, "token" varchar 
 
 CREATE TABLE "payroll_statuses" ("id" integer primary key autoincrement not null, "worker_name" varchar not null, "period" varchar not null, "status" varchar check ("status" in ('belum', 'sudah')) not null default 'belum', "notes" text, "created_at" datetime, "updated_at" datetime);
 
-CREATE TABLE "payslips" ("id" integer primary key autoincrement not null, "employee_name" varchar not null, "period" varchar not null, "total_logged_hours" double not null default '0', "total_approved_hours" double not null default '0', "total_thp" integer not null default '0', "bonus" integer not null default '0', "status" varchar check ("status" in ('belum', 'sudah')) not null default 'belum', "file_path" varchar, "evidence_data" text, "created_at" datetime, "pending_carry_over_amount" integer not null default '0', "pending_carry_over_hours" double not null default '0', "pending_carry_over_data" text, "is_locked" tinyint(1) not null default '0');
+CREATE TABLE "payroll_write_locks" ("worker_key" varchar not null, primary key ("worker_key"));
+
+CREATE TABLE "payslips" ("id" integer primary key autoincrement not null, "employee_name" varchar not null, "period" varchar not null, "total_logged_hours" double not null default ('0'), "total_approved_hours" double not null default ('0'), "total_thp" integer not null default ('0'), "bonus" integer not null default ('0'), "status" varchar not null default ('belum'), "file_path" varchar, "evidence_data" text, "created_at" datetime, "pending_carry_over_amount" integer not null default ('0'), "pending_carry_over_hours" double not null default ('0'), "pending_carry_over_data" text, "is_locked" tinyint(1) not null default ('0'), "active_key" varchar, "superseded_by_id" integer, "superseded_at" datetime, "superseded_by_user_id" integer, foreign key("superseded_by_id") references "payslips"("id") on delete restrict);
 
 CREATE TABLE "record_streak_days" ("id" integer primary key autoincrement not null, "contributor_id" integer not null, "work_date" date not null, "schedule_snapshot" text not null, "deadline_at" datetime not null, "target_minutes" integer not null, "rule_version" integer not null default '1', "status" varchar not null default 'open', "reason" varchar, "attendance_id" integer, "verified_minutes" numeric not null default '0', "evidence_ids" text, "manual_report_id" integer, "manual_report_revision" integer, "verified_by" integer, "verified_at" datetime, "celebrated_at" datetime, "created_at" datetime, "updated_at" datetime);
 
@@ -46,6 +50,16 @@ CREATE TABLE "studio_accounts" ("id" integer primary key autoincrement not null,
 CREATE TABLE "studio_recordings" ("record_id" varchar not null, "participant_email" varchar not null, "task_title" varchar, "recorded_utc" varchar, "recorded_at" datetime, "duration_sec" double not null default '0', "duration_min" double not null default '0', "billable_min" double not null default '0', "rejected_min" double not null default '0', "pending_min" double not null default '0', "deferred_min" double not null default '0', "processing_status" varchar, "billable_status" varchar, "reviewed_utc" varchar, "reconciliation" varchar, "assigned_contributor_id" integer, "assigned_worker_name" varchar, "manual_payment_status" varchar not null default 'Belum Rekap', "notes" text, "assigned_at" datetime, "last_synced_at" datetime, "createdAt" datetime, "updatedAt" datetime, "atlas_synced_at" datetime, "robotics_1618_synced_at" datetime, "prev_billable_min" numeric, "prev_rejected_min" numeric, "qc_changed_at" datetime, primary key ("record_id"));
 
 CREATE TABLE "users" ("id" integer primary key autoincrement not null, "name" varchar not null, "email" varchar not null, "email_verified_at" datetime, "password" varchar not null, "remember_token" varchar, "created_at" datetime, "updated_at" datetime, "role" varchar not null default 'contributor', "contributor_id" integer, "is_active" tinyint(1) not null default '1');
+
+CREATE INDEX "admin_notes_is_completed_index" on "admin_notes" ("is_completed");
+
+CREATE INDEX "admin_notes_is_pinned_created_at_index" on "admin_notes" ("is_pinned", "created_at");
+
+CREATE INDEX "admin_notes_is_pinned_index" on "admin_notes" ("is_pinned");
+
+CREATE INDEX "admin_notes_note_date_index" on "admin_notes" ("note_date");
+
+CREATE INDEX "admin_notes_note_date_is_completed_index" on "admin_notes" ("note_date", "is_completed");
 
 CREATE INDEX "attendances_contributor_id_index" on "attendances" ("contributor_id");
 
@@ -84,6 +98,8 @@ CREATE UNIQUE INDEX "failed_jobs_uuid_unique" on "failed_jobs" ("uuid");
 CREATE INDEX "jobs_queue_index" on "jobs" ("queue");
 
 CREATE UNIQUE INDEX "payroll_statuses_worker_name_period_unique" on "payroll_statuses" ("worker_name", "period");
+
+CREATE UNIQUE INDEX "payslips_active_key_unique" on "payslips" ("active_key");
 
 CREATE INDEX "payslips_employee_name_period_index" on "payslips" ("employee_name", "period");
 

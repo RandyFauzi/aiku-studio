@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Payslip;
 use App\Services\PayrollCalculator;
 use App\Services\PayrollPeriod;
+use App\Services\PayslipDraftSync;
 use Illuminate\Console\Command;
 
 class SyncDraftPayslips extends Command
@@ -15,28 +16,24 @@ class SyncDraftPayslips extends Command
 
     public function handle(PayrollCalculator $calculator, PayrollPeriod $resolver): int
     {
-        $draftSlips = Payslip::where('status', 'belum')->where('is_locked', false)->get();
+        $draftSlips = Payslip::whereNull('superseded_by_id')->where('status', 'belum')->where('is_locked', false)->get();
         $updated = 0;
+        $failed = 0;
 
         foreach ($draftSlips as $slip) {
             if (str_contains(strtolower($slip->period), 'training')) {
                 continue;
             }
             try {
-                $period = $resolver->resolve(['period' => $slip->period]);
-                if ($calculator->recordings($period, $slip->employee_name)->exists()) {
-                    $evidence = $calculator->evidence($period, $slip->employee_name);
-                    $calculated = $calculator->calculate($evidence, (int) $slip->bonus, (int) $slip->pending_carry_over_amount, $slip->pending_carry_over_data);
-                    $slip->update($calculated);
-                    $updated++;
-                }
+                if (app(PayslipDraftSync::class)->sync($slip)) $updated++;
             } catch (\Throwable $e) {
+                $failed++;
                 $this->warn("Skipping slip #{$slip->id} ({$slip->employee_name}): ".$e->getMessage());
             }
         }
 
         $this->info("Successfully synchronized {$updated} draft payslips with live recordings.");
 
-        return self::SUCCESS;
+        return $failed ? self::FAILURE : self::SUCCESS;
     }
 }

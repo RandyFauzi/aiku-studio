@@ -79,11 +79,10 @@ class PayrollCalculator
 
     public function liveSlip(array $period, string $worker): array
     {
-        // Never borrow a bonus or payment status from another period.
-        $slip = Payslip::where('employee_name', $worker)->where('period', $period['name'])->latest('id')->first();
-        $evidence = $this->evidence($period, $worker);
-
-        return array_merge($this->calculate($evidence, $slip?->bonus ?? 0), [
+        $slip = app(PayslipWriter::class)->unique($worker, $period['name']);
+        if ($slip && ($slip->is_locked || $slip->status === 'sudah')) return $this->displaySlip($slip);
+        return array_merge($this->calculate($this->evidence($period, $worker), $slip?->bonus ?? 0,
+            $slip?->pending_carry_over_amount ?? 0, $slip?->pending_carry_over_data), [
             'id' => $slip?->id ?? 'LIVE-'.preg_replace('/[^a-zA-Z0-9]/', '', $worker),
             'employee_name' => $worker, 'period' => $period['name'],
             'status' => PayrollStatus::where('worker_name', $worker)->where('period', $period['name'])->value('status') ?? $slip?->status ?? 'belum',
@@ -93,26 +92,8 @@ class PayrollCalculator
 
     public function displaySlip(Payslip $slip): array
     {
-        $data = $slip->toArray();
-        $data['editUrl'] = '/create.html?id='.$slip->id;
-
-        // If the slip is marked locked or already paid, retain frozen historical snapshot!
-        if ($slip->is_locked || $slip->status === 'sudah') {
-            return $data;
-        }
-
-        if (! str_contains(strtolower($slip->period), 'training')) {
-            try {
-                $period = app(PayrollPeriod::class)->resolve(['period' => $slip->period]);
-                if ($this->recordings($period, $slip->employee_name)->exists()) {
-                    return array_merge($data, $this->liveSlip($period, $slip->employee_name));
-                }
-            } catch (ValidationException) {
-                // Historical custom labels retain their saved evidence.
-            }
-        }
-
-        return $data;
+        // A document ID always identifies its saved snapshot, including draft carry-over.
+        return array_merge($slip->toArray(), ['editUrl' => '/create.html?id='.$slip->id]);
     }
 
     public function summary(array $period): array
@@ -121,7 +102,8 @@ class PayrollCalculator
             ->whereNotIn('assigned_worker_name', ['???', '?', '-', 'Unknown', 'null', 'undefined'])
             ->selectRaw('assigned_worker_name, COUNT(*) as total_tasks, SUM(duration_min) as duration, SUM(billable_min) as approved, SUM(rejected_min) as rejected, SUM(pending_min) as pending')
             ->groupBy('assigned_worker_name')->orderByDesc('approved')->get();
-        $slips = Payslip::where('period', $period['name'])->orderBy('id')->get()->keyBy('employee_name');
+        $writer = app(PayslipWriter::class);
+        $slips = Payslip::whereNull('superseded_by_id')->get()->filter(fn ($slip) => $writer->period($slip->period) === $period['name'])->groupBy(fn ($slip) => $writer->workerKey($slip->employee_name));
         $statuses = PayrollStatus::where('period', $period['name'])->pluck('status', 'worker_name');
         $workers = [];
         foreach ($groups as $group) {
@@ -138,7 +120,9 @@ class PayrollCalculator
                     'total_min' => $day['total_video_mins'], 'total_hours' => round($day['total_video_mins'] / 60, 2),
                     'status' => $a > 0 && $r > 0 ? 'Disetujui sebagian' : ($a == 0 && $r > 0 ? 'Ditolak' : ($a == 0 && $p > 0 ? 'Sedang Ditinjau' : 'Disetujui penuh'))];
             }
-            $slip = $slips->get($name);
+            $versions = $slips->get($writer->workerKey($name), collect());
+            $conflict = $versions->count() > 1;
+            $slip = $versions->count() === 1 ? $versions->first() : null;
             $carryOver = (int) ($slip?->pending_carry_over_amount ?? 0);
             $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah'));
 
@@ -155,13 +139,7 @@ class PayrollCalculator
                 $bonus = (int) ($slip?->bonus ?? 0);
                 $thp = $base + $bonus + $carryOver;
 
-                // Sync the unpaid draft slip in database so it matches live calculations
-                if ($slip && ! str_contains(strtolower($slip->period), 'training')) {
-                    $calculated = $this->calculate($evidence, $bonus, $carryOver, $slip->pending_carry_over_data);
-                    $slip->update(array_merge($calculated, [
-                        'status' => $statuses->get($name) ?? $slip->status ?? 'belum',
-                    ]));
-                }
+
             }
 
             $workers[] = ['worker_name' => $name, 'total_tasks' => (int) $group->total_tasks,
@@ -172,15 +150,17 @@ class PayrollCalculator
                 'base_thp' => $base, 'bonus' => $bonus, 'pending_carry_over_amount' => $carryOver,
                 'available_pending_balance' => $availablePendingBalance,
                 'available_pending_hours' => $availablePendingHours,
+                'duplicate_count' => $versions->count(), 'pending_balance_warnings' => $pendingBank['warnings'],
+                'reserved_pending_balance' => $pendingBank['reserved_amount'],
                 'slip_id' => $slip?->id, 'has_slip' => (bool) $slip, 'is_locked' => $isLocked,
-                'status' => $statuses->get($name) ?? $slip?->status ?? 'belum', 'thp' => $thp,
+                'status' => $statuses->get($name) ?? $slip?->status ?? 'belum', 'thp' => $conflict ? null : $thp,
                 'work_days_count' => count($daily), 'daily_breakdown' => $daily];
         }
         $c = collect($workers);
 
         return ['period' => ['id' => $period['id'], 'name' => $period['name'], 'startUtc' => $period['startUtc'], 'endUtc' => $period['endUtc']],
             'stats' => ['totalWorkers' => $c->count(), 'totalSudah' => $c->where('status', 'sudah')->count(), 'totalBelum' => $c->where('status', 'belum')->count(),
-                'totalThp' => $c->sum('thp'), 'totalApprovedHours' => round($c->sum('approved_hours'), 2),
+                'totalThp' => $c->sum('thp'), 'conflictWorkers' => $c->where('duplicate_count', '>', 1)->count(), 'totalApprovedHours' => round($c->sum('approved_hours'), 2),
                 'totalRejectedHours' => round($c->sum('rejected_hours'), 2), 'totalLoggedHours' => round($c->sum('logged_hours'), 2)], 'workers' => $workers];
     }
 
@@ -189,89 +169,70 @@ class PayrollCalculator
         $periodResolver = app(PayrollPeriod::class);
         $period = is_array($targetPeriod) ? $targetPeriod : $periodResolver->resolve(['period' => $targetPeriod]);
 
-        // Gather all claimed carry-over minutes from other saved slips
-        $claimedAmountsByPeriod = [];
-        $existingSlips = Payslip::where('employee_name', $worker)
-            ->when($excludeSlipId, fn ($q) => $q->where('id', '!=', $excludeSlipId))
-            ->where('pending_carry_over_amount', '>', 0)
-            ->get();
-
-        foreach ($existingSlips as $es) {
-            if (! empty($es->pending_carry_over_data) && is_array($es->pending_carry_over_data)) {
-                foreach ($es->pending_carry_over_data as $co) {
-                    $src = $co['source_period'] ?? null;
-                    if ($src) {
-                        $claimedAmountsByPeriod[$src] = ($claimedAmountsByPeriod[$src] ?? 0) + (float) ($co['delta_min'] ?? 0);
-                    }
+        $writer = app(PayslipWriter::class);
+        $all = $writer->forWorker($worker);
+        if ($excludeSlipId !== null) {
+            $excluded = $all->firstWhere('id', $excludeSlipId);
+            abort_unless($excluded && $writer->period($excluded->period) === $period['name'], 422, 'Slip yang dikecualikan harus milik pekerja dan periode tujuan.');
+        }
+        $groups = $all->groupBy(fn ($slip) => $writer->period($slip->period));
+        $claimed = [];
+        $ambiguous = [];
+        $warnings = [];
+        foreach ($groups as $label => $versions) {
+            foreach ($versions as $saved) {
+                if ($saved->id === $excludeSlipId) continue;
+                foreach ($saved->pending_carry_over_data ?? [] as $claim) {
+                    $source = $writer->period($claim['source_period'] ?? '');
+                    if ($versions->count() > 1) $ambiguous[$source] = true;
+                    $claimed[$source] = ($claimed[$source] ?? 0) + max(0, (float) ($claim['delta_min'] ?? 0));
+                }
+                if ($saved->pending_carry_over_amount > 0 && empty($saved->pending_carry_over_data)) {
+                    $warnings[] = 'Slip #'.$saved->id.' memiliki carry-over lama tanpa rincian sumber; perlu rekonsiliasi sebelum klaim baru.';
+                    $ambiguous['*'] = true;
                 }
             }
         }
-
-        // Look back over prior cut-off periods (up to 3 periods)
-        $cursor = $period;
-        $priorPeriods = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $cursor = $periodResolver->previous($cursor);
-            $priorPeriods[] = $cursor;
-        }
-
-        $carryOverTasks = [];
-        $totalDeltaMins = 0;
-        $rate = config('payroll.hourly_rate');
-
-        foreach ($priorPeriods as $prevP) {
-            $prevSlip = Payslip::where('employee_name', $worker)
-                ->where('period', $prevP['name'])
-                ->latest('id')
-                ->first();
-
-            if (! $prevSlip) {
+        $tasks = [];
+        $reservedMins = 0;
+        foreach ($groups as $label => $versions) {
+            try {
+                $previous = $periodResolver->resolve(['period' => $label]);
+            } catch (ValidationException) {
                 continue;
             }
-
-            // Data 1: Locked Approved Minutes in Previous Slip
-            $lockedMins = (float) $prevSlip->total_approved_hours * 60;
-
-            // Data 2: Actual Total Billable Minutes from Database Recordings for that range
-            $actualBillableMins = (float) StudioRecording::where('assigned_worker_name', $worker)
-                ->whereBetween('recorded_at', [$prevP['startUtc'], $prevP['endUtc']])
-                ->sum('billable_min');
-
-            $alreadyClaimedMins = $claimedAmountsByPeriod[$prevP['name']] ?? 0;
-            $deltaMins = round($actualBillableMins - $lockedMins - $alreadyClaimedMins, 2);
-
-            if ($deltaMins > 0) {
-                $taskAmount = (int) round($deltaMins / 60 * $rate);
-                $firstRec = StudioRecording::where('assigned_worker_name', $worker)
-                    ->whereBetween('recorded_at', [$prevP['startUtc'], $prevP['endUtc']])
-                    ->where('billable_min', '>', 0)
-                    ->first();
-
-                $carryOverTasks[] = [
-                    'source_period' => $prevP['name'],
-                    'record_id' => $firstRec?->record_id ?? $prevP['id'],
-                    'locked_hours' => round($lockedMins / 60, 2),
-                    'actual_hours' => round($actualBillableMins / 60, 2),
-                    'delta_min' => $deltaMins,
-                    'delta_hours' => round($deltaMins / 60, 2),
-                    'amount' => $taskAmount,
-                    'task_name' => 'Sisa Pending ' . $prevP['name'],
-                ];
-                $totalDeltaMins += $deltaMins;
+            if ($previous['endDate'] >= $period['startDate']) continue;
+            if ($versions->count() > 1 || isset($ambiguous[$label]) || isset($ambiguous['*'])) {
+                $warnings[] = 'Saldo dari '.$label.' perlu rekonsiliasi slip ganda/rincian klaim.';
+                continue;
             }
+            $source = $versions->first();
+            if (! $source->is_locked && $source->status !== 'sudah') {
+                $warnings[] = 'Periode '.$label.' belum final; saldo tambahannya belum dapat dicairkan.';
+                continue;
+            }
+            $lockedMins = (float) $source->total_approved_hours * 60;
+            $actual = (float) $this->recordings($previous, $worker)->sum('billable_min');
+            $used = $claimed[$label] ?? 0;
+            $reservedMins += $used;
+            $delta = round($actual - $lockedMins - $used, 2);
+            if ($delta <= 0) continue;
+            $tasks[] = [
+                'source_period' => $label, 'source_slip_id' => $source->id,
+                'record_id' => $this->recordings($previous, $worker)->where('billable_min', '>', 0)->orderBy('record_id')->value('record_id') ?? $previous['id'],
+                'locked_hours' => round($lockedMins / 60, 2), 'actual_hours' => round($actual / 60, 2),
+                'delta_min' => $delta, 'delta_hours' => round($delta / 60, 2),
+                'amount' => (int) round($delta / 60 * config('payroll.hourly_rate')),
+                'task_name' => 'Sisa Pending '.$label,
+            ];
         }
-
-        $totalAmount = (int) round($totalDeltaMins / 60 * $rate);
-
+        $minutes = array_sum(array_column($tasks, 'delta_min'));
+        $amount = (int) round($minutes / 60 * config('payroll.hourly_rate'));
         return [
-            'available' => count($carryOverTasks) > 0 && $totalAmount > 0,
-            'worker_name' => $worker,
-            'target_period' => $period['name'],
-            'total_mins' => round($totalDeltaMins, 2),
-            'total_hours' => round($totalDeltaMins / 60, 2),
-            'total_amount' => $totalAmount,
-            'tasks_count' => count($carryOverTasks),
-            'tasks' => $carryOverTasks,
+            'available' => $amount > 0, 'worker_name' => $worker, 'target_period' => $period['name'],
+            'total_mins' => round($minutes, 2), 'total_hours' => round($minutes / 60, 2), 'total_amount' => $amount,
+            'reserved_amount' => (int) round($reservedMins / 60 * config('payroll.hourly_rate')),
+            'warnings' => array_values(array_unique($warnings)), 'tasks_count' => count($tasks), 'tasks' => $tasks,
         ];
     }
 }

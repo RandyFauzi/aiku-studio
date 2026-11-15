@@ -120,6 +120,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::put('/payslips/{payslip}', [PayslipController::class, 'update']);
             Route::delete('/payslips/{payslip}', [PayslipController::class, 'destroy']);
             Route::patch('/payslips/{payslip}/status', [PayslipController::class, 'status']);
+            Route::post('/payslips/{payslip}/resolve-duplicates', [PayslipController::class, 'resolveDuplicates']);
             Route::post('/payslips/{payslip}/email', [PayslipController::class, 'email'])->middleware('throttle:10,1');
             Route::get('/studio-recordings', [RecordingController::class, 'index']);
             Route::put('/studio-recordings/batch-assign', [RecordingController::class, 'assign']);

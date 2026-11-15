@@ -25,6 +25,8 @@ const formatPeriod = (period) => {
     return p;
 };
 
+const payrollError = (data) => Object.values(data.errors || {}).flat().join(' ') || data.message || data.error || 'Permintaan gagal.';
+
 // Shared Sidebar Persistence Helper
 const getInitialSidebarOpen = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -465,17 +467,17 @@ document.addEventListener('alpine:init', () => {
         get scopedTrainingSlips() {
             if (!Array.isArray(this.trainingSlips)) return [];
             if (this.isHistoricalTrainingSelected) {
-                return this.trainingSlips.filter(s => this.matchesPeriod(s.period, this.selectedPeriodObj || { id: 'training_2026', isTraining: true }));
+                return this.trainingSlips.filter(s => !s.superseded_by_id && this.matchesPeriod(s.period, this.selectedPeriodObj || { id: 'training_2026', isTraining: true }));
             }
             if (this.savedPeriodScope === 'all') {
-                return this.trainingSlips;
+                return this.trainingSlips.filter(s => !s.superseded_by_id);
             }
-            return this.trainingSlips.filter(s => this.matchesPeriod(s.period, this.selectedPeriodObj));
+            return this.trainingSlips.filter(s => !s.superseded_by_id && this.matchesPeriod(s.period, this.selectedPeriodObj));
         },
 
         get countSlipsCurrentPeriod() {
             if (!Array.isArray(this.trainingSlips)) return 0;
-            return this.trainingSlips.filter(s => this.matchesPeriod(s.period, this.selectedPeriodObj)).length;
+            return this.trainingSlips.filter(s => !s.superseded_by_id && this.matchesPeriod(s.period, this.selectedPeriodObj)).length;
         },
 
         get filteredLiveWorkers() {
@@ -516,6 +518,10 @@ document.addEventListener('alpine:init', () => {
             return this.liveWorkers.filter(w => w.status !== 'sudah').length;
         },
 
+        get hasSlipConflicts() {
+            return this.isTrainingView ? this.scopedTrainingSlips.some(s => s.duplicate_count > 1) : (this.liveStats.conflictWorkers || 0) > 0;
+        },
+
         get currentStats() {
             if (this.isTrainingView) {
                 let totalThp = 0;
@@ -524,7 +530,7 @@ document.addEventListener('alpine:init', () => {
                 let totalRej = 0;
                 let totalPend = 0;
 
-                this.scopedTrainingSlips.forEach(slip => {
+                this.scopedTrainingSlips.filter(s => s.duplicate_count <= 1).forEach(slip => {
                     totalThp += (slip.total_thp || 0);
                     totalAppr += (parseFloat(slip.total_approved_hours) || 0);
                     
@@ -647,6 +653,10 @@ document.addEventListener('alpine:init', () => {
 
         async setWorkerStatus(worker, newStatus) {
             if (worker.status === newStatus) return;
+            if (newStatus === 'sudah') {
+                const confirmation = await Swal.fire({ title: 'Finalisasi pembayaran?', text: 'Estimasi live ' + formatRupiah(worker.thp) + ' termasuk bonus dan carry-over akan disimpan sebagai snapshot terkunci. Periksa angka sebelum melanjutkan.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Finalisasi pembayaran', cancelButtonText: 'Batal' });
+                if (!confirmation.isConfirmed) return;
+            }
             const prevStatus = worker.status;
             worker.status = newStatus;
             this.updatingStatusWorker = worker.worker_name;
@@ -662,14 +672,16 @@ document.addEventListener('alpine:init', () => {
                     body: JSON.stringify({
                         worker_name: worker.worker_name,
                         period: periodName,
-                        status: newStatus
+                        status: newStatus,
+                        expected_thp: newStatus === 'sudah' ? worker.thp : null
                     })
                 });
                 const data = await res.json();
                 if (!data.success) {
                     worker.status = prevStatus;
-                    alert('Gagal update status: ' + (data.error || 'Terjadi kesalahan'));
+                    alert(payrollError(data));
                 } else {
+                    await this.loadSelectedPeriodData();
                     if (typeof Swal !== 'undefined') {
                         const Toast = Swal.mixin({
                             toast: true,
@@ -707,8 +719,9 @@ document.addEventListener('alpine:init', () => {
                 const data = await res.json();
                 if (!data.success) {
                     slip.status = prevStatus;
-                    alert('Gagal update status slip: ' + (data.error || 'Terjadi kesalahan'));
+                    alert(payrollError(data));
                 } else {
+                    await this.loadSelectedPeriodData();
                     if (typeof Swal !== 'undefined') {
                         const Toast = Swal.mixin({
                             toast: true,
@@ -807,10 +820,27 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        async resolveDuplicates(item) {
+            const result = await Swal.fire({
+                title: 'Gunakan slip #' + item.id + ' sebagai slip utama?',
+                text: 'THP ' + formatRupiah(item.total_thp) + ', bonus ' + formatRupiah(item.bonus || 0) + ', carry-over ' + formatRupiah(item.pending_carry_over_amount || 0) + '. Versi lain diarsipkan tanpa menggabungkan nominal atau menghapus dokumen.',
+                icon: 'warning', showCancelButton: true, confirmButtonText: 'Pilih slip ini', cancelButtonText: 'Batal'
+            });
+            if (!result.isConfirmed) return;
+            try {
+                const res = await fetch(`/api/payslips/${item.id}/resolve-duplicates`, { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(payrollError(data));
+                await this.loadSelectedPeriodData();
+            } catch (error) {
+                await Swal.fire({ icon: 'error', title: 'Belum dapat direkonsiliasi', text: error.message });
+            }
+        },
+
         async deleteSlip(id) {
             const result = await Swal.fire({
                 title: 'Hapus Payslip?',
-                text: "Payslip dan seluruh log gambar di dalamnya akan dihapus permanen!",
+                text: "Hapus slip draft ini? Slip final dan arsip rekonsiliasi dilindungi.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -822,7 +852,12 @@ document.addEventListener('alpine:init', () => {
             if (!result.isConfirmed) return;
 
             try {
-                await fetch(`/api/payslips/${id}`, { method: 'DELETE' });
+                const response = await fetch(`/api/payslips/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (!response.ok) {
+                    await Swal.fire({ icon: 'error', title: 'Slip tidak dihapus', text: payrollError(data) });
+                    return;
+                }
                 
                 Swal.fire({
                     title: 'Terhapus!',
@@ -1394,6 +1429,11 @@ document.addEventListener('alpine:init', () => {
         payrollPeriods: [],
         defaultPeriod: null,
         isLoadingEvidence: false,
+        isLocked: false,
+        savedTotalThp: null,
+        loadError: false,
+        evidenceRequest: 0,
+        pendingError: '',
         isLoadingCarryOver: false,
         pendingCarryOver: { available: false, total_amount: 0, total_hours: 0, total_mins: 0, tasks: [] },
         formData: {
@@ -1488,8 +1528,11 @@ document.addEventListener('alpine:init', () => {
         async loadSavedSlip(slipId) {
             try {
                 const res = await fetch(`/api/payslips/${slipId}`);
+                if (!res.ok) throw new Error(payrollError(await res.json()));
                 if (res.ok) {
                     const data = await res.json();
+                    this.isLocked = !!(data.is_locked || data.status === 'sudah' || data.superseded_by_id);
+                    this.savedTotalThp = data.total_thp;
                     this.formData.employee_name = data.employee_name;
                     this.formData.period = data.period;
                     this.formData.bonus = data.bonus !== undefined ? data.bonus : 0;
@@ -1528,6 +1571,8 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             } catch (error) {
+                this.loadError = true;
+                this.message = error.message;
                 console.error("Error fetching slip data:", error);
             }
         },
@@ -1537,7 +1582,10 @@ document.addEventListener('alpine:init', () => {
             const period = periodName || this.formData.period;
             if (!worker) return;
 
+            if (this.isLocked && forceRefresh) return;
+            const requestId = ++this.evidenceRequest;
             this.isLoadingEvidence = true;
+            this.loadError = false;
             try {
                 let url = `/api/payroll/worker-evidence?worker=${encodeURIComponent(worker)}`;
                 if (periodId) url += `&periodId=${encodeURIComponent(periodId)}`;
@@ -1545,8 +1593,16 @@ document.addEventListener('alpine:init', () => {
                 if (forceRefresh) url += `&refresh=1`;
 
                 const res = await fetch(url);
+                if (!res.ok) throw new Error(payrollError(await res.json()));
                 if (res.ok) {
                     const data = await res.json();
+                    if (requestId !== this.evidenceRequest) return;
+                    this.isLocked = !!data.is_locked;
+                    this.savedTotalThp = data.total_thp ?? null;
+                    this.formData.pending_carry_over_amount = 0;
+                    this.formData.pending_carry_over_hours = 0;
+                    this.formData.pending_carry_over_data = null;
+                    this.formData.include_pending_carry_over = false;
                     this.slipId = data.existingSlipId || null;
                     if (data.period) this.formData.period = data.period;
                     if (data.bonus !== undefined) this.formData.bonus = data.bonus;
@@ -1564,6 +1620,7 @@ document.addEventListener('alpine:init', () => {
                     } else {
                         await this.checkPendingCarryOver();
                     }
+                    if (requestId !== this.evidenceRequest) return;
                     if (data.evidence && data.evidence.length > 0) {
                         this.formData.evidence = data.evidence.map((ev, i) => {
                             ev.is_open = (i === 0);
@@ -1578,9 +1635,12 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             } catch (error) {
+                if (requestId !== this.evidenceRequest) return;
+                this.loadError = true;
+                this.message = error.message;
                 console.error("Error fetching live worker evidence:", error);
             } finally {
-                this.isLoadingEvidence = false;
+                if (requestId === this.evidenceRequest) this.isLoadingEvidence = false;
             }
         },
 
@@ -1741,17 +1801,22 @@ document.addEventListener('alpine:init', () => {
         async checkPendingCarryOver() {
             if (!this.formData.employee_name || !this.formData.period) return;
             this.isLoadingCarryOver = true;
+            this.pendingError = '';
+            const context = [this.formData.employee_name, this.formData.period, this.slipId].join('|');
             try {
                 let url = `/api/payroll/pending-carry-over?worker=${encodeURIComponent(this.formData.employee_name)}&period=${encodeURIComponent(this.formData.period)}`;
                 if (this.slipId && !String(this.slipId).startsWith('LIVE-')) {
                     url += `&exclude_slip_id=${encodeURIComponent(this.slipId)}`;
                 }
                 const res = await fetch(url);
+                if (!res.ok) throw new Error(payrollError(await res.json()));
                 if (res.ok) {
                     const data = await res.json();
+                    if (context !== [this.formData.employee_name, this.formData.period, this.slipId].join('|')) return;
                     this.pendingCarryOver = data;
                 }
             } catch (err) {
+                this.pendingError = 'Saldo pending gagal dimuat. Coba muat ulang; nilai Rp0 belum dapat dipastikan.';
                 console.error("Error checking pending carry over:", err);
             } finally {
                 this.isLoadingCarryOver = false;
@@ -1777,6 +1842,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         calculateTHP() {
+            if (this.isLocked && this.savedTotalThp !== null) return this.savedTotalThp;
             // THP is base rate * approved exact minutes / 60 + manual bonus
             let totalMins = 0;
             this.formData.evidence.forEach(ev => {
@@ -1794,6 +1860,7 @@ document.addEventListener('alpine:init', () => {
         formatRupiah,
 
         async submitForm() {
+            if (this.isSubmitting || this.isLocked || this.loadError || this.isLoadingEvidence || this.isSuccess) return;
             this.isSubmitting = true;
             this.message = '';
             
@@ -1816,17 +1883,21 @@ document.addEventListener('alpine:init', () => {
                 if (response.ok) {
                     const slipId = result.id || (result.data && result.data.id);
                     this.isSuccess = true;
-                    this.message = this.slipId ? 'Slip updated successfully! Redirecting...' : 'Slip saved successfully! Redirecting...';
+                    const wasExisting = !!this.slipId;
+                    this.slipId = slipId;
+                    this.message = wasExisting ? 'Slip updated successfully! Redirecting...' : 'Slip saved successfully! Redirecting...';
                     setTimeout(() => {
                         window.location.href = '/slip/' + slipId;
                     }, 1000);
                 } else {
                     this.isSuccess = false;
-                    this.message = result.error || 'Failed to save slip.';
+                    this.message = payrollError(result);
+                    this.$nextTick(() => this.$refs.payrollMessage?.focus());
                 }
             } catch (error) {
                 this.isSuccess = false;
-                this.message = 'Network error occurred.';
+                this.message = error.message || 'Gagal menyimpan slip.';
+                this.$nextTick(() => this.$refs.payrollMessage?.focus());
                 console.error(error);
             } finally {
                 this.isSubmitting = false;

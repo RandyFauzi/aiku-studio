@@ -20,7 +20,7 @@ class PayslipSyncTest extends TestCase
         return User::factory()->create(['role' => 'admin', 'is_active' => true]);
     }
 
-    public function test_unpaid_draft_slip_with_stale_hours_is_automatically_recalculated_and_synced_in_live_summary(): void
+    public function test_live_summary_calculates_current_estimate_without_overwriting_saved_draft(): void
     {
         $admin = $this->adminUser();
         $worker = 'Muhammad Rio Hadi';
@@ -95,10 +95,10 @@ class PayslipSyncTest extends TestCase
         $this->assertEquals(100000, $workerData['thp']);
         $this->assertFalse($workerData['is_locked']);
 
-        // 4. Verify that the draft slip in DB was automatically updated
+        // 4. Reading a live estimate must not overwrite the saved document
         $freshSlip = $slip->fresh();
-        $this->assertEquals(2.0, $freshSlip->total_approved_hours);
-        $this->assertEquals(100000, $freshSlip->total_thp);
+        $this->assertEquals(1.0, $freshSlip->total_approved_hours);
+        $this->assertEquals(50000, $freshSlip->total_thp);
     }
 
     public function test_paid_or_locked_slip_remains_immutable_in_live_summary(): void
@@ -205,12 +205,12 @@ class PayslipSyncTest extends TestCase
             ],
         ]);
 
-        // Fetching worker-evidence for unpaid draft slip must return fresh live recording
+        // A saved draft is preserved unless refresh is explicitly requested
         $res = $this->actingAs($admin)->getJson('/api/payroll/worker-evidence?worker='.urlencode($worker).'&periodId='.$period['id']);
         $res->assertOk();
         $evidence = $res->json('evidence');
         $this->assertNotEmpty($evidence);
-        $this->assertEquals('REC_EVID_01', $evidence[0]['tasks'][0]['notes']);
+        $this->assertEquals('STALE_REC', $evidence[0]['tasks'][0]['notes']);
 
         // Explicit refresh=1 forces fresh live evidence
         $resRefresh = $this->actingAs($admin)->getJson('/api/payroll/worker-evidence?worker='.urlencode($worker).'&periodId='.$period['id'].'&refresh=1');

@@ -206,17 +206,16 @@ class SystemAuditRegressionTest extends TestCase
         }
     }
 
-    public function test_slip_status_mutations_keep_all_versions_and_payroll_status_in_sync(): void
+    public function test_slip_status_requires_duplicate_resolution_and_preserves_final_snapshots(): void
     {
         $first = $this->slip('Worker');
         $second = $this->slip('Worker');
-        $this->actingAs(User::factory()->create())->patchJson('/api/payslips/'.$first->id.'/status', ['status' => 'sudah'])->assertOk();
-        $this->assertEquals('sudah', $second->fresh()->status);
-        $this->putJson('/api/payslips/'.$first->id, ['employee_name' => 'Worker', 'period' => $first->period, 'evidence' => [], 'status' => 'belum'])->assertOk();
-        $this->assertEquals('belum', $second->fresh()->status);
-        $this->assertDatabaseHas('payroll_statuses', ['worker_name' => 'Worker', 'period' => $first->period, 'status' => 'belum']);
-        $this->postJson('/api/payslips', ['employee_name' => 'Worker', 'period' => $first->period, 'evidence' => [], 'status' => 'sudah'])->assertOk();
-        $this->assertEquals('sudah', $first->fresh()->status);
+        $this->actingAs(User::factory()->create())->patchJson('/api/payslips/'.$first->id.'/status', ['status' => 'sudah'])->assertConflict();
+        $this->postJson('/api/payslips/'.$first->id.'/resolve-duplicates')->assertOk();
+        $this->patchJson('/api/payslips/'.$first->id.'/status', ['status' => 'sudah'])->assertOk();
+        $this->assertEquals($first->id, $second->fresh()->superseded_by_id);
+        $this->assertTrue($first->fresh()->is_locked);
+        $this->putJson('/api/payslips/'.$first->id, ['employee_name' => 'Worker', 'period' => $first->period, 'evidence' => [], 'status' => 'belum'])->assertConflict();
         $this->assertDatabaseHas('payroll_statuses', ['worker_name' => 'Worker', 'period' => $first->period, 'status' => 'sudah']);
     }
 

@@ -12,7 +12,7 @@ class WorkerSlipArchive
 
     public function isPastFinal(Payslip $slip): bool
     {
-        if ($slip->status !== 'sudah') return false;
+        if ($slip->superseded_by_id !== null || $slip->status !== 'sudah') return false;
         try {
             $period = $this->periods->resolve(['period' => $slip->period]);
             return $period['endDate'] < $this->periods->cutoff()['startDate'];
@@ -25,7 +25,7 @@ class WorkerSlipArchive
     public function forUser(User $user)
     {
         $name = $this->identity->payrollName($user);
-        return Payslip::where('employee_name', $name)->where('status', 'sudah')->orderByDesc('id')->get()
+        return Payslip::whereNull('superseded_by_id')->where('employee_name', $name)->where('status', 'sudah')->orderByDesc('id')->get()
             ->filter(fn ($slip) => $this->isPastFinal($slip))->values();
     }
 
