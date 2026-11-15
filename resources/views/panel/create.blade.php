@@ -349,7 +349,7 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="button" 
-                                    @click="loadWorkerEvidence()" 
+                                    @click="loadWorkerEvidence(null, null, null, true)" 
                                     :disabled="isLoadingEvidence || !formData.employee_name" 
                                     class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center gap-1.5 disabled:opacity-40" 
                                     title="Tarik data rekaman terbaru dari database sesuai cut-off terpilih">

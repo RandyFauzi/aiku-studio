@@ -1532,7 +1532,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async loadWorkerEvidence(workerName = null, periodName = null, periodId = null) {
+        async loadWorkerEvidence(workerName = null, periodName = null, periodId = null, forceRefresh = false) {
             const worker = workerName || this.formData.employee_name;
             const period = periodName || this.formData.period;
             if (!worker) return;
@@ -1542,6 +1542,7 @@ document.addEventListener('alpine:init', () => {
                 let url = `/api/payroll/worker-evidence?worker=${encodeURIComponent(worker)}`;
                 if (periodId) url += `&periodId=${encodeURIComponent(periodId)}`;
                 if (period) url += `&period=${encodeURIComponent(period)}`;
+                if (forceRefresh) url += `&refresh=1`;
 
                 const res = await fetch(url);
                 if (res.ok) {

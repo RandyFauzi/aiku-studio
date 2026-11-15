@@ -36,8 +36,25 @@ class PayslipController extends Controller
             ->header('Cache-Control', 'private, no-store');
     }
 
-    public function index()
+    public function index(PayrollCalculator $calculator, PayrollPeriod $resolver)
     {
+        $draftSlips = Payslip::where('status', 'belum')->where('is_locked', false)->get();
+        foreach ($draftSlips as $slip) {
+            if (str_contains(strtolower($slip->period), 'training')) {
+                continue;
+            }
+            try {
+                $period = $resolver->resolve(['period' => $slip->period]);
+                if ($calculator->recordings($period, $slip->employee_name)->exists()) {
+                    $evidence = $calculator->evidence($period, $slip->employee_name);
+                    $calculated = $calculator->calculate($evidence, (int) $slip->bonus, (int) $slip->pending_carry_over_amount, $slip->pending_carry_over_data);
+                    $slip->update($calculated);
+                }
+            } catch (\Throwable) {
+                // Ignore custom or unresolvable period labels
+            }
+        }
+
         return Payslip::orderByDesc('created_at')->get();
     }
 

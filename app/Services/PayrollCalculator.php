@@ -96,8 +96,8 @@ class PayrollCalculator
         $data = $slip->toArray();
         $data['editUrl'] = '/create.html?id='.$slip->id;
 
-        // If the slip is saved in database with evidence or locked/sudah, retain frozen historical snapshot!
-        if (! empty($slip->evidence_data) || $slip->is_locked || $slip->status === 'sudah') {
+        // If the slip is marked locked or already paid, retain frozen historical snapshot!
+        if ($slip->is_locked || $slip->status === 'sudah') {
             return $data;
         }
 
@@ -126,8 +126,9 @@ class PayrollCalculator
         $workers = [];
         foreach ($groups as $group) {
             $name = $group->assigned_worker_name;
+            $evidence = $this->evidence($period, $name);
             $daily = [];
-            foreach ($this->evidence($period, $name) as $day) {
+            foreach ($evidence as $day) {
                 $a = $day['approved_mins'];
                 $r = $day['rejected_mins'];
                 $p = $day['pending_mins'];
@@ -139,7 +140,7 @@ class PayrollCalculator
             }
             $slip = $slips->get($name);
             $carryOver = (int) ($slip?->pending_carry_over_amount ?? 0);
-            $isLocked = $slip && (! empty($slip->evidence_data) || $slip->is_locked || $slip->status === 'sudah');
+            $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah'));
 
             $pendingBank = $this->detectPendingCarryOver($name, $period, $slip?->id);
             $availablePendingBalance = $pendingBank['available'] ? $pendingBank['total_amount'] : 0;
@@ -153,6 +154,14 @@ class PayrollCalculator
                 $base = (int) round((float) $group->approved / 60 * config('payroll.hourly_rate'));
                 $bonus = (int) ($slip?->bonus ?? 0);
                 $thp = $base + $bonus + $carryOver;
+
+                // Sync the unpaid draft slip in database so it matches live calculations
+                if ($slip && ! str_contains(strtolower($slip->period), 'training')) {
+                    $calculated = $this->calculate($evidence, $bonus, $carryOver, $slip->pending_carry_over_data);
+                    $slip->update(array_merge($calculated, [
+                        'status' => $statuses->get($name) ?? $slip->status ?? 'belum',
+                    ]));
+                }
             }
 
             $workers[] = ['worker_name' => $name, 'total_tasks' => (int) $group->total_tasks,

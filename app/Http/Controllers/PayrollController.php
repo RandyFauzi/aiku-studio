@@ -45,14 +45,21 @@ class PayrollController extends Controller
         $request->validate(['worker' => 'required|string|max:255']);
         $period = $resolver->resolve($request->query());
         $slip = Payslip::where('employee_name', $request->worker)->where('period', $period['name'])->latest('id')->first();
+        $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah'));
+        $forceRefresh = $request->boolean('refresh');
+        $useLive = $forceRefresh || ! $isLocked || empty($slip?->evidence_data);
 
-        return response()->json(['existingSlipId' => $slip?->id, 'employee_name' => $request->worker,
-            'period' => $period['name'], 'bonus' => $slip?->bonus ?? 0,
+        return response()->json([
+            'existingSlipId' => $slip?->id,
+            'employee_name' => $request->worker,
+            'period' => $period['name'],
+            'bonus' => $slip?->bonus ?? 0,
             'pending_carry_over_amount' => $slip?->pending_carry_over_amount ?? 0,
             'pending_carry_over_hours' => $slip?->pending_carry_over_hours ?? 0,
             'pending_carry_over_data' => $slip?->pending_carry_over_data,
-            'is_locked' => (bool) ($slip?->is_locked || $slip?->status === 'sudah'),
-            'evidence' => ! empty($slip?->evidence_data) ? $slip->evidence_data : $calculator->evidence($period, $request->worker)]);
+            'is_locked' => $isLocked,
+            'evidence' => $useLive ? $calculator->evidence($period, $request->worker) : $slip->evidence_data,
+        ]);
     }
 
     public function pendingCarryOver(Request $request, PayrollCalculator $calculator)
