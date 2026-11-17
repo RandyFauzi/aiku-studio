@@ -1,3 +1,7 @@
+### [2026-11-17 08:22] — Codex: tambah HP dinamis pada halaman HP & Akun
+- Deploy c1b86ef: tombol/form Tambah HP dengan nama tunggal, anti-duplikat, pemilihan otomatis; registry studio_devices memakai key stabil dan terhubung ke akun, laporan kerja, matching, dan audit. Migrasi menyimpan enam HP lama tanpa mengubah akun/laporan/payroll.
+- Validasi: tes perangkat/laporan/matching lulus, full suite 217 lulus + 3 kegagalan lama non-task; build dan Graphify current. Browser fixture menguji tambah/refresh/duplikat/batal di desktop/mobile; browser server HTTP200 tanpa page error dan tanpa menambah perangkat contoh produksi.
+
 ### [2026-11-15 18:30 WITA] — Antigravity: penyeragaman badge saldo tambahan & sembunyikan carry-over 0 jam
 - `panel.payslips` & `panel.create`: Menyeragamkan badge carry-over di rekap payroll agar slip yang sudah mengklaim saldo tambahan tampil dengan badge hijau `Saldo tambahan: +Rp ...` yang konsisten (tidak lagi beda sendiri dengan teks ungu). Menyembunyikan item rincian bank pending jika bernilai `+0 Jam` (misal pembulatan training) dan menyembunyikan label bonus/carry-over di daftar slip jika bernilai Rp0.
 - Validasi: PHPUnit `PayslipIntegrityTest`, `PayslipSyncTest`, `PendingCarryOverTest` lulus 100% (23 tests, 117 assertions), view cache cleared. State IDLE.
