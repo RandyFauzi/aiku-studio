@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\DailyWorkReport;
 use App\Models\DeviceAccount;
 use App\Models\StudioAccount;
+use App\Models\StudioDevice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class DeviceAccountController extends Controller
 {
@@ -25,11 +28,30 @@ class DeviceAccountController extends Controller
         abort_unless($request->user()?->role === 'admin', 403, 'Akses terbatas untuk Administrator.');
     }
 
+    public function storePhone(Request $request): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        $data = $request->validate(['label' => 'required|string|max:60']);
+        $label = preg_replace('/\s+/u', ' ', trim($data['label']));
+        $label = preg_replace('/^HP\s+/iu', '', $label);
+        $key = Str::slug($label, '_');
+        if ($key === '' || $key === 'sendiri' || strlen($key) > 64) {
+            throw ValidationException::withMessages(['label' => 'Gunakan nama HP yang jelas, misalnya Merah atau Samsung A15. Nama Sendiri khusus HP pribadi.']);
+        }
+        $device = $this->mutate(function () use ($key, $label) {
+            if (StudioDevice::where('key', $key)->exists()) {
+                throw ValidationException::withMessages(['label' => 'Nama HP sudah terdaftar. Pilih perangkat tersebut dari daftar.']);
+            }
+            return StudioDevice::create(['key' => $key, 'label' => $label]);
+        });
+        return response()->json(['success' => true, 'phone' => $device->only(['key', 'label'])], 201);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->ensureAdmin($request);
 
-        $phonesConfig = DailyWorkReport::PHONES;
+        $phonesConfig = DailyWorkReport::phoneOptions();
         $accounts = DeviceAccount::orderByDesc('is_active')
             ->orderByDesc('activated_at')
             ->orderByDesc('id')
@@ -60,7 +82,7 @@ class DeviceAccountController extends Controller
     {
         $this->ensureAdmin($request);
 
-        $allowedPhones = array_keys(DailyWorkReport::PHONES);
+        $allowedPhones = array_keys(DailyWorkReport::phoneOptions());
         $data = $request->validate([
             'phone_key' => ['required', 'string', Rule::in($allowedPhones)],
             'email' => ['required', 'string', 'email', 'max:128'],
@@ -87,7 +109,7 @@ class DeviceAccountController extends Controller
             );
 
             // Register / update in studio accounts with Catatan Akun or HP Label
-            $phoneLabel = DailyWorkReport::PHONES[$phoneKey] ?? ucfirst($phoneKey);
+            $phoneLabel = DailyWorkReport::phoneOptions()[$phoneKey] ?? ucfirst($phoneKey);
             StudioAccount::updateOrCreate(
                 ['email' => $email],
                 ['name' => $name ?: ('HP ' . $phoneLabel), 'active' => true]
@@ -119,7 +141,7 @@ class DeviceAccountController extends Controller
                 'activated_at' => now(),
             ]);
 
-            $phoneLabel = DailyWorkReport::PHONES[$deviceAccount->phone_key] ?? ucfirst($deviceAccount->phone_key);
+            $phoneLabel = DailyWorkReport::phoneOptions()[$deviceAccount->phone_key] ?? ucfirst($deviceAccount->phone_key);
             StudioAccount::updateOrCreate(['email' => $deviceAccount->email], [
                 'active' => true,
                 'name' => $deviceAccount->account_name ?: ('HP ' . $phoneLabel),
@@ -141,7 +163,7 @@ class DeviceAccountController extends Controller
             'phone_key' => $request->input('phone_key') ?? $deviceAccount->phone_key,
         ]);
 
-        $allowedPhones = array_keys(DailyWorkReport::PHONES);
+        $allowedPhones = array_keys(DailyWorkReport::phoneOptions());
         $data = $request->validate([
             'phone_key' => ['nullable', 'string', Rule::in($allowedPhones)],
             'email' => [
@@ -173,7 +195,7 @@ class DeviceAccountController extends Controller
 
             // Studio accounts are shared references. Never rename an old email
             // or carry its external participant_id over to a different account.
-            $phoneLabel = DailyWorkReport::PHONES[$phoneKey] ?? ucfirst($phoneKey);
+            $phoneLabel = DailyWorkReport::phoneOptions()[$phoneKey] ?? ucfirst($phoneKey);
             StudioAccount::updateOrCreate(['email' => $newEmail], [
                 'name' => $name ?: ('HP ' . $phoneLabel),
                 'active' => true,

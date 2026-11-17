@@ -35,6 +35,6 @@ class DeviceAccount extends Model
 
     public function getPhoneLabelAttribute(): string
     {
-        return DailyWorkReport::PHONES[$this->phone_key] ?? ucfirst($this->phone_key);
+        return DailyWorkReport::phoneOptions()[$this->phone_key] ?? ucfirst($this->phone_key);
     }
 }

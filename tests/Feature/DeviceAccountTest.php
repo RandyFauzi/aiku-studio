@@ -14,6 +14,36 @@ class DeviceAccountTest extends TestCase
     private User $admin;
     private User $worker;
 
+    public function test_admin_can_add_phone_then_register_account_and_see_it_in_report_options(): void
+    {
+        $this->actingAs($this->admin)->postJson('/api/devices/phones', ['label' => 'HP Merah'])->assertCreated()
+            ->assertJsonPath('phone.key', 'merah')->assertJsonPath('phone.label', 'Merah');
+        $this->postJson('/api/devices/accounts', ['phone_key' => 'merah', 'email' => 'red@example.test'])->assertCreated();
+        $response = $this->getJson('/api/devices')->assertOk();
+        $this->assertCount(7, $response->json('phones'));
+        $this->assertSame('Merah', \App\Models\DailyWorkReport::reportPhoneOptions()['merah']);
+        $this->assertSame('Merah', DeviceAccount::where('phone_key', 'merah')->first()->phone_label);
+        $this->assertSame('Sendiri', \App\Models\DailyWorkReport::reportPhoneOptions()['sendiri']);
+        $person = \App\Models\Contributor::create(['nama' => 'Device Worker', 'email' => 'device-worker@example.test', 'role' => 'contributor']);
+        $durations = array_fill_keys(array_keys(\App\Models\DailyWorkReport::reportPhoneOptions()), 15);
+        $this->postJson('/api/work-reports', ['contributor_id' => $person->id, 'work_date' => now('Asia/Makassar')->toDateString(),
+            'phone_durations' => $durations, 'phone_tasks' => array_fill_keys(array_keys($durations), ['Clean table'])])->assertOk()
+            ->assertJsonPath('report.phone_durations.merah', 15)->assertJsonPath('report.phone_emails.merah', 'red@example.test');
+        $this->getJson('/api/work-reports?date='.now('Asia/Makassar')->toDateString())->assertOk()->assertJsonPath('phone_options.merah', 'Merah');
+    }
+
+    public function test_phone_name_validation_and_permissions(): void
+    {
+        $this->actingAs($this->worker)->postJson('/api/devices/phones', ['label' => 'Merah'])->assertForbidden();
+        $this->actingAs($this->admin);
+        foreach (['', 'HP Putih', ' putih ', 'Sendiri', 'HP Sendiri', str_repeat('a', 61)] as $label) {
+            $this->postJson('/api/devices/phones', ['label' => $label])->assertUnprocessable();
+        }
+        $this->postJson('/api/devices/phones', ['label' => 'HP Merah'])->assertCreated();
+        $this->postJson('/api/devices/phones', ['label' => 'MERAH'])->assertUnprocessable();
+        $this->assertDatabaseCount('studio_devices', 7);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

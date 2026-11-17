@@ -42,7 +42,7 @@
     <script src="/assets/session.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="portal admin-theme bg-[#F4F6F8] text-[#1E293B] min-h-screen font-sans flex antialiased" x-data="devicesManagerData()" x-init="init()" x-cloak>
+<body class="portal admin-theme bg-[#F4F6F8] text-[#1E293B] min-h-screen font-sans flex antialiased" x-data="devicesManagerData()" x-cloak>
 
     <!-- LEFT SIDEBAR -->
     @include('layouts.sidebar')
@@ -94,6 +94,21 @@
                         <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Daftar HP Studio</h2>
                         <span class="text-xs font-semibold text-slate-500" x-text="phones.length + ' Perangkat'"></span>
                     </div>
+
+                    <button x-show="!showAddPhone" x-ref="addPhoneButton" type="button" @click="showAddPhone = true; phoneError = ''; $nextTick(() => $refs.phoneName.focus())" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-50 transition">
+                        <span aria-hidden="true">+</span> Tambah HP
+                    </button>
+                    <form x-show="showAddPhone" @submit.prevent="addPhone()" class="rounded-2xl border border-emerald-200 bg-white p-4 space-y-3">
+                        <label for="new-phone-name" class="block text-sm font-bold text-slate-800">Nama HP</label>
+                        <input id="new-phone-name" x-ref="phoneName" x-model="phoneName" :disabled="isAddingPhone" type="text" required maxlength="60" placeholder="Contoh: Merah atau Samsung A15" aria-describedby="phone-name-help phone-name-error" :aria-invalid="!!phoneError" class="w-full rounded-xl border border-slate-300 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none">
+                        <p id="phone-name-help" class="text-xs text-slate-500">Setelah disimpan, tambahkan akun email untuk HP ini.</p>
+                        <p id="phone-name-error" x-show="phoneError" x-text="phoneError" role="alert" class="text-sm text-rose-700"></p>
+                        <div class="flex gap-2">
+                            <button type="submit" :disabled="isAddingPhone || !phoneName.trim()" class="rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50" x-text="isAddingPhone ? 'Menyimpan...' : 'Simpan HP'"></button>
+                            <button type="button" :disabled="isAddingPhone" @click="showAddPhone = false; phoneName = ''; phoneError = ''; $nextTick(() => $refs.addPhoneButton.focus())" class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600">Batal</button>
+                        </div>
+                    </form>
+                    <p x-show="phoneSuccess" x-text="phoneSuccess" role="status" class="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"></p>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
                         <template x-for="p in phones" :key="p.key">
@@ -420,6 +435,11 @@
             return {
                 sidebarOpen: window.innerWidth >= 768 && (localStorage.getItem('aiku_sidebar_open') !== 'false'),
                 phones: [],
+                showAddPhone: false,
+                phoneName: '',
+                phoneError: '',
+                phoneSuccess: '',
+                isAddingPhone: false,
                 accounts: [],
                 selectedPhoneKey: 'putih',
                 formEmail: '',
@@ -456,6 +476,34 @@
                     this.selectedPhoneKey = key;
                     this.formEmail = '';
                     this.formName = '';
+                },
+
+                async addPhone() {
+                    if (this.isAddingPhone || !this.phoneName.trim()) return;
+                    this.phoneError = '';
+                    this.phoneSuccess = '';
+                    const label = this.phoneName.trim().replace(/\s+/g, ' ').replace(/^HP\s+/i, '');
+                    if (this.phones.some(p => p.label.toLocaleLowerCase() === label.toLocaleLowerCase())) {
+                        this.phoneError = 'Nama HP sudah terdaftar. Pilih perangkat tersebut dari daftar.';
+                        this.$refs.phoneName.focus();
+                        return;
+                    }
+                    this.isAddingPhone = true;
+                    try {
+                        const res = await fetch('/api/devices/phones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label }) });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(Object.values(data.errors || {}).flat().join(' ') || data.message || 'HP belum tersimpan.');
+                        this.phones.push({ ...data.phone, active_email: null, total_accounts: 0 });
+                        this.selectPhone(data.phone.key);
+                        this.showAddPhone = false;
+                        this.phoneName = '';
+                        this.phoneSuccess = 'HP ' + data.phone.label + ' ditambahkan. Silakan daftarkan akun emailnya.';
+                    } catch (error) {
+                        this.phoneError = error.message || 'Gagal terhubung. Coba kembali.';
+                        this.$nextTick(() => this.$refs.phoneName.focus());
+                    } finally {
+                        this.isAddingPhone = false;
+                    }
                 },
 
                 async fetchDevices() {

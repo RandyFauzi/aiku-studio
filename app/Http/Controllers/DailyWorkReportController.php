@@ -61,7 +61,7 @@ class DailyWorkReportController extends Controller
 
         return response()->json([
             'today' => $today,
-            'phone_options' => DailyWorkReport::REPORT_PHONES,
+            'phone_options' => DailyWorkReport::reportPhoneOptions(),
             'today_report' => $todayReports->last(),
             'today_reports' => $todayReports,
             'today_total_minutes' => $todayReports->sum('total_duration_minutes'),
@@ -72,7 +72,7 @@ class DailyWorkReportController extends Controller
     public function save(Request $request)
     {
         $person = $this->contributor($request);
-        $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
+        $allowedKeys = array_keys(DailyWorkReport::reportPhoneOptions());
 
         $fields = $request->validate([
             'report_id' => 'nullable|integer|exists:daily_work_reports,id',
@@ -82,11 +82,11 @@ class DailyWorkReportController extends Controller
             'work_date' => 'required|date_format:Y-m-d',
             'expected_revision' => 'required|integer|min:0',
             'total_duration_minutes' => 'nullable|integer|min:1|max:10080',
-            'phones' => 'nullable|array|max:7',
+            'phones' => 'nullable|array|max:'.count($allowedKeys),
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
-            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:'.count($allowedKeys)],
             'phone_durations.*' => 'integer|min:1|max:1440',
-            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:'.count($allowedKeys)],
             'phone_emails.*' => 'nullable|string|max:100',
             'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
             'phone_tasks' => ['sometimes', 'array:'.implode(',', $allowedKeys)],
@@ -213,8 +213,8 @@ class DailyWorkReportController extends Controller
         $data = $request->validate(['date' => 'required|date_format:Y-m-d']);
         $rows = DailyWorkReport::where('work_date', $data['date'])->orderBy('contributor_name')->get();
 
-        $phonesConfig = DailyWorkReport::REPORT_PHONES;
-        $deviceAccounts = DeviceAccount::whereIn('phone_key', array_keys(DailyWorkReport::PHONES))->get();
+        $phonesConfig = DailyWorkReport::reportPhoneOptions();
+        $deviceAccounts = DeviceAccount::whereIn('phone_key', array_keys(DailyWorkReport::phoneOptions()))->get();
         $phonesWithActive = [];
         foreach ($phonesConfig as $key => $label) {
             $phoneAccounts = $deviceAccounts->where('phone_key', $key);
@@ -236,7 +236,7 @@ class DailyWorkReportController extends Controller
 
         return response()->json([
             'reports' => $rows,
-            'phone_options' => DailyWorkReport::REPORT_PHONES,
+            'phone_options' => DailyWorkReport::reportPhoneOptions(),
             'phones_info' => $phonesWithActive,
             'total_duration_minutes' => $rows->sum('total_duration_minutes'),
             'contributors' => Contributor::orderBy('nama')->get(['id', 'nama', 'email', 'role']),
@@ -252,7 +252,7 @@ class DailyWorkReportController extends Controller
         $witaEnd = CarbonImmutable::parse($workDate, 'Asia/Makassar')->endOfDay()->utc();
 
         $reports = DailyWorkReport::where('work_date', $workDate)->orderBy('contributor_name')->get();
-        $deviceAccounts = DeviceAccount::whereIn('phone_key', array_keys(DailyWorkReport::PHONES))->get();
+        $deviceAccounts = DeviceAccount::whereIn('phone_key', array_keys(DailyWorkReport::phoneOptions()))->get();
 
         $assistData = [];
 
@@ -272,7 +272,7 @@ class DailyWorkReportController extends Controller
             }
 
             foreach ($durations as $phoneKey => $reportedMinutes) {
-                $phoneLabel = DailyWorkReport::REPORT_PHONES[$phoneKey] ?? ucfirst($phoneKey);
+                $phoneLabel = DailyWorkReport::reportPhoneOptions()[$phoneKey] ?? ucfirst($phoneKey);
 
                 $phoneAccounts = $deviceAccounts->where('phone_key', $phoneKey);
                 $activeAccount = $phoneAccounts->firstWhere('is_active', true);
@@ -452,7 +452,7 @@ class DailyWorkReportController extends Controller
 
     private function reportPhoneEmails(array $fields, array $phones, array $stored = []): ?array
     {
-        $active = DeviceAccount::active()->whereIn('phone_key', array_intersect($phones, array_keys(DailyWorkReport::PHONES)))
+        $active = DeviceAccount::active()->whereIn('phone_key', array_intersect($phones, array_keys(DailyWorkReport::phoneOptions())))
             ->orderByDesc('activated_at')->orderByDesc('id')->get()->unique('phone_key')->pluck('email', 'phone_key');
         $emails = [];
         foreach ($phones as $phone) {
@@ -483,7 +483,7 @@ class DailyWorkReportController extends Controller
 
     public function adminStore(Request $request)
     {
-        $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
+        $allowedKeys = array_keys(DailyWorkReport::reportPhoneOptions());
 
         $fields = $request->validate([
             'contributor_id' => 'required|integer|exists:contributors,id',
@@ -492,11 +492,11 @@ class DailyWorkReportController extends Controller
             'allow_multiple' => 'nullable|boolean',
             'shift_label' => 'nullable|string|max:50',
             'notes' => 'nullable|string|max:255',
-            'phones' => 'nullable|array|max:7',
+            'phones' => 'nullable|array|max:'.count($allowedKeys),
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
-            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:'.count($allowedKeys)],
             'phone_durations.*' => 'integer|min:1|max:1440',
-            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:'.count($allowedKeys)],
             'phone_emails.*' => 'nullable|string|max:100',
             'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
             'phone_tasks' => ['sometimes', 'array:'.implode(',', $allowedKeys)],
@@ -616,16 +616,16 @@ class DailyWorkReportController extends Controller
 
     public function adminUpdate(Request $request, DailyWorkReport $report)
     {
-        $allowedKeys = array_keys(DailyWorkReport::REPORT_PHONES);
+        $allowedKeys = array_keys(DailyWorkReport::reportPhoneOptions());
 
         $fields = $request->validate([
             'shift_label' => 'nullable|string|max:50',
             'notes' => 'nullable|string|max:255',
-            'phones' => 'nullable|array|max:7',
+            'phones' => 'nullable|array|max:'.count($allowedKeys),
             'phones.*' => ['string', 'distinct', Rule::in($allowedKeys)],
-            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
+            'phone_durations' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:'.count($allowedKeys)],
             'phone_durations.*' => 'integer|min:1|max:1440',
-            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:7'],
+            'phone_emails' => ['nullable', 'array:'.implode(',', $allowedKeys), 'max:'.count($allowedKeys)],
             'phone_emails.*' => 'nullable|string|max:100',
             'phone_emails.sendiri' => 'nullable|email:rfc|max:100',
             'phone_tasks' => ['sometimes', 'array:'.implode(',', $allowedKeys)],

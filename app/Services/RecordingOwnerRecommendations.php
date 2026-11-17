@@ -54,7 +54,7 @@ class RecordingOwnerRecommendations
                 if ($minutes !== null && $recording->duration_min > $minutes) $warnings[] = 'Durasi recording melebihi durasi HP dalam laporan.';
                 $candidate = ['contributor_id' => $person->id, 'name' => $person->nama, 'report_id' => $report->id,
                     'report_revision' => $report->revision, 'work_date' => $report->work_date, 'reported_at' => $report->created_at?->toIso8601String(),
-                    'phone_key' => $phone, 'phone_label' => 'HP '.(DailyWorkReport::REPORT_PHONES[$phone] ?? $phone),
+                    'phone_key' => $phone, 'phone_label' => 'HP '.(DailyWorkReport::reportPhoneOptions()[$phone] ?? $phone),
                     'reported_minutes' => $minutes, 'total_reported_minutes' => $report->total_duration_minutes,
                     'reported_tasks' => $tasks, 'score' => $score, 'signal_count' => (int) $emailMatch + (int) $taskMatch + (int) $shift,
                     'signals' => ['email' => ['matched' => $emailMatch, 'source' => $emailSource, 'label' => $emailMatch ? ($emailSource === 'report' ? 'Email laporan sesuai' : 'Email referensi HP sesuai') : 'Email belum tersedia'],

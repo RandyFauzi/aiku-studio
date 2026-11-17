@@ -100,6 +100,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         // Keep session authentication and CSRF on legacy-compatible JSON endpoints.
         Route::prefix('api')->group(function () {
             Route::prefix('devices')->group(function () {
+                Route::post('/phones', [DeviceAccountController::class, 'storePhone']);
                 Route::get('/', [DeviceAccountController::class, 'index']);
                 Route::post('/accounts', [DeviceAccountController::class, 'store']);
                 Route::match(['put', 'patch'], '/accounts/{deviceAccount}', [DeviceAccountController::class, 'update']);

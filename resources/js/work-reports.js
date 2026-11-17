@@ -222,6 +222,7 @@ window.dailyWorkReportData = () => ({
             this.todayReports = data.today_reports || (data.today_report ? [data.today_report] : []);
             this.todayTotalMinutes = data.today_total_minutes ?? this.todayReports.reduce((s, r) => s + (r.total_duration_minutes || 0), 0);
             this.options = data.phone_options || labels;
+            Object.assign(labels, this.options);
             this.date = data.today;
 
             if (reset) {
@@ -966,6 +967,7 @@ window.adminWorkReportsData = () => ({
             this.total = repData.total_duration_minutes || 0;
             if (repData.phone_options) {
                 this.phoneOptions = repData.phone_options;
+                Object.assign(labels, this.phoneOptions);
             }
             if (repData.phones_info) {
                 this.phonesInfo = repData.phones_info;

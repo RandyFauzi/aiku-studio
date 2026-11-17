@@ -10,6 +10,16 @@ class DailyWorkReport extends Model
 
     public const REPORT_PHONES = self::PHONES + ['sendiri' => 'Sendiri'];
 
+    public static function phoneOptions(): array
+    {
+        return StudioDevice::orderBy('id')->pluck('label', 'key')->all();
+    }
+
+    public static function reportPhoneOptions(): array
+    {
+        return self::phoneOptions() + ['sendiri' => 'Sendiri'];
+    }
+
     protected $guarded = ['id'];
 
     protected static function booted(): void

@@ -47,6 +47,8 @@ CREATE TABLE "shift_settings" ("id" integer primary key autoincrement not null, 
 
 CREATE TABLE "studio_accounts" ("id" integer primary key autoincrement not null, "email" varchar not null, "name" varchar not null, "active" tinyint(1) not null default '1', "participant_id" varchar, "created_at" datetime, "updated_at" datetime);
 
+CREATE TABLE "studio_devices" ("id" integer primary key autoincrement not null, "key" varchar not null, "label" varchar not null, "created_at" datetime, "updated_at" datetime);
+
 CREATE TABLE "studio_recordings" ("record_id" varchar not null, "participant_email" varchar not null, "task_title" varchar, "recorded_utc" varchar, "recorded_at" datetime, "duration_sec" double not null default '0', "duration_min" double not null default '0', "billable_min" double not null default '0', "rejected_min" double not null default '0', "pending_min" double not null default '0', "deferred_min" double not null default '0', "processing_status" varchar, "billable_status" varchar, "reviewed_utc" varchar, "reconciliation" varchar, "assigned_contributor_id" integer, "assigned_worker_name" varchar, "manual_payment_status" varchar not null default 'Belum Rekap', "notes" text, "assigned_at" datetime, "last_synced_at" datetime, "createdAt" datetime, "updatedAt" datetime, "atlas_synced_at" datetime, "robotics_1618_synced_at" datetime, "prev_billable_min" numeric, "prev_rejected_min" numeric, "qc_changed_at" datetime, primary key ("record_id"));
 
 CREATE TABLE "users" ("id" integer primary key autoincrement not null, "name" varchar not null, "email" varchar not null, "email_verified_at" datetime, "password" varchar not null, "remember_token" varchar, "created_at" datetime, "updated_at" datetime, "role" varchar not null default 'contributor', "contributor_id" integer, "is_active" tinyint(1) not null default '1');
@@ -124,6 +126,8 @@ CREATE UNIQUE INDEX "shift_days_work_date_unique" on "shift_days" ("work_date");
 CREATE UNIQUE INDEX "shift_settings_setting_key_unique" on "shift_settings" ("setting_key");
 
 CREATE UNIQUE INDEX "studio_accounts_email_unique" on "studio_accounts" ("email");
+
+CREATE UNIQUE INDEX "studio_devices_key_unique" on "studio_devices" ("key");
 
 CREATE INDEX "studio_recordings_assigned_contributor_id_index" on "studio_recordings" ("assigned_contributor_id");
 
