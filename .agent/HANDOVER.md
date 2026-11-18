@@ -1,3 +1,7 @@
+### [2026-11-18 11:58 WITA] — Antigravity: penyesuaian susunan THP (uang tanpa saldo tambahan, saldo tambahan, & total)
+- `panel.payslips`: Menyesuaikan susunan tampilan kolom Take Home Pay agar baris atas menampilkan total uang murni periode berjalan (tanpa saldo tambahan), baris tengah menampilkan badge saldo tambahan (+Rp ...), dan baris bawah menampilkan Total akhir jika terdapat saldo tambahan. Baris tanpa saldo tambahan tetap bersih dengan 1 nominal saja.
+- Validasi: PHPUnit 39 tests/235 assertions lulus 100%, view cache cleared. State IDLE.
+
 ### [2026-11-18 11:50 WITA] — Antigravity: auto-heal dan unlock slip status Belum agar bisa revisi & centang saldo pending
 - `PayslipController` & `app.js`: Auto-heal flag `is_locked` menjadi false saat slip berstatus `belum` dibuka di halaman edit atau diambil via API. Form edit slip dan checkbox pencairan saldo pending (carry-over) otomatis terbuka kembali tanpa terkunci saat status slip dikembalikan dari "Sudah" ke "Belum".
 - Validasi: PHPUnit `PayslipIntegrityTest`, `PayslipSyncTest`, `PendingCarryOverTest`, `PayrollMigrationTest` lulus 100% (39 tests, 235 assertions), view cache cleared. State IDLE.

@@ -360,7 +360,7 @@
 
                                     <!-- Take Home Pay (THP) -->
                                     <td class="px-4 py-3.5 whitespace-nowrap min-w-[200px]">
-                                        <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="worker.duplicate_count > 1 ? 'Perlu ditinjau' : formatRupiah(worker.thp)"></div>
+                                        <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="worker.duplicate_count > 1 ? 'Perlu ditinjau' : formatRupiah(worker.pending_carry_over_amount > 0 ? ((worker.thp || 0) - worker.pending_carry_over_amount) : (worker.thp || 0))"></div>
                                         <template x-if="worker.bonus > 0">
                                             <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-0.5">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -374,9 +374,8 @@
                                                     <span>Saldo tambahan: +<span x-text="formatRupiah(worker.pending_carry_over_amount)"></span></span>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 pt-0.5 text-[11px] font-extrabold text-emerald-700">
-                                                    <span class="text-[10px] font-semibold text-slate-400">Total:</span>
+                                                    <span class="text-[10px] font-semibold text-slate-500">Total:</span>
                                                     <span x-text="formatRupiah(worker.thp)"></span>
-                                                    <span class="text-[9px] font-medium text-slate-400">(Sudah termasuk)</span>
                                                 </div>
                                             </div>
                                         </template>
@@ -387,7 +386,7 @@
                                                     <span>Saldo tambahan: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 pt-0.5 text-[11px] font-extrabold text-emerald-700">
-                                                    <span class="text-[10px] font-semibold text-slate-400">Total:</span>
+                                                    <span class="text-[10px] font-semibold text-slate-500">Total:</span>
                                                     <span x-text="formatRupiah((worker.thp || 0) + worker.available_pending_balance)"></span>
                                                 </div>
                                             </div>
@@ -540,7 +539,7 @@
 
                                     <!-- Take Home Pay -->
                                     <td class="px-4 py-3.5 whitespace-nowrap min-w-[200px]">
-                                        <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="formatRupiah(item.total_thp || 0)"></div>
+                                        <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="formatRupiah((item.pending_carry_over_amount || 0) > 0 ? ((item.total_thp || 0) - item.pending_carry_over_amount) : (item.total_thp || 0))"></div>
                                         <div x-show="(item.bonus || 0) > 0" class="text-xs text-slate-600" x-text="'Bonus: ' + formatRupiah(item.bonus || 0)"></div>
                                         <div x-show="(item.pending_carry_over_amount || 0) > 0" class="space-y-1 mt-1">
                                             <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 cursor-help" :title="'Termasuk dalam slip: ' + formatRupiah(item.pending_carry_over_amount || 0) + ' saldo tambahan dari periode sebelumnya'">
@@ -548,9 +547,8 @@
                                                 <span>Saldo tambahan: +<span x-text="formatRupiah(item.pending_carry_over_amount || 0)"></span></span>
                                             </div>
                                             <div class="flex items-center gap-1.5 pt-0.5 text-[11px] font-extrabold text-emerald-700">
-                                                <span class="text-[10px] font-semibold text-slate-400">Total:</span>
+                                                <span class="text-[10px] font-semibold text-slate-500">Total:</span>
                                                 <span x-text="formatRupiah(item.total_thp || 0)"></span>
-                                                <span class="text-[9px] font-medium text-slate-400">(Sudah termasuk)</span>
                                             </div>
                                         </div>
                                         <div x-show="item.duplicate_count > 1" class="text-xs font-semibold text-amber-800 whitespace-normal max-w-xs">Slip ganda: bandingkan nominal sebelum memilih</div>
