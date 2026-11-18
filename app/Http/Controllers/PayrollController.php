@@ -47,7 +47,9 @@ class PayrollController extends Controller
         $request->validate(['worker' => 'required|string|max:255']);
         $period = $resolver->resolve($request->query());
         $slip = app(PayslipWriter::class)->unique($request->worker, $period['name']);
-        $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah'));
+        $statusRecord = \App\Models\PayrollStatus::where('worker_name', trim($request->worker))->where('period', $period['name'])->first();
+        $effectiveStatus = $statusRecord?->status ?? $slip?->status ?? 'belum';
+        $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah') && $effectiveStatus === 'sudah');
         $forceRefresh = $request->boolean('refresh');
         $useLive = ! $isLocked && ($forceRefresh || ! $slip); // Existing documents stay snapshots until explicit refresh.
 

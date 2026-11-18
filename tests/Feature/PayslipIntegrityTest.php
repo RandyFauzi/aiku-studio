@@ -120,13 +120,14 @@ class PayslipIntegrityTest extends TestCase
         }
     }
 
-    public function test_returning_payment_to_unpaid_does_not_unlock_snapshot(): void
+    public function test_returning_payment_to_unpaid_unlocks_slip_for_editing(): void
     {
         $slip = $this->slip();
         $this->patchJson('/api/payslips/'.$slip->id.'/status', ['status' => 'sudah'])->assertOk();
-        $this->postJson('/api/payroll/status', ['worker_name' => 'Worker', 'period' => $slip->period, 'status' => 'belum'])->assertOk();
         $this->assertTrue($slip->fresh()->is_locked);
-        $this->putJson('/api/payslips/'.$slip->id, $this->payload())->assertConflict();
+        $this->postJson('/api/payroll/status', ['worker_name' => 'Worker', 'period' => $slip->period, 'status' => 'belum'])->assertOk();
+        $this->assertFalse($slip->fresh()->is_locked);
+        $this->putJson('/api/payslips/'.$slip->id, $this->payload())->assertOk();
     }
 
     public function test_paid_live_worker_gets_frozen_document_and_refresh_cannot_replace_it(): void

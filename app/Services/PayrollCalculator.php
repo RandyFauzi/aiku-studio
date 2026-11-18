@@ -124,7 +124,8 @@ class PayrollCalculator
             $conflict = $versions->count() > 1;
             $slip = $versions->count() === 1 ? $versions->first() : null;
             $carryOver = (int) ($slip?->pending_carry_over_amount ?? 0);
-            $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah'));
+            $effectiveStatus = $statuses->get($name) ?? $slip?->status ?? 'belum';
+            $isLocked = (bool) ($slip && ($slip->is_locked || $slip->status === 'sudah') && $effectiveStatus === 'sudah');
 
             // The overview shows only unallocated credit; the form may exclude its own reservation when editing.
             $pendingBank = $this->detectPendingCarryOver($name, $period);

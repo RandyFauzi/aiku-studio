@@ -33,7 +33,7 @@ class PayrollPaymentStatus
             409, 'Nilai THP berubah sejak rekap dimuat. Muat ulang dan periksa nominal sebelum finalisasi.');
         PayrollStatus::updateOrCreate(['worker_name' => trim($worker), 'period' => $period],
             array_filter(['status' => $status, 'notes' => $notes], fn ($value) => $value !== null));
-        // Returning payment state to "belum" never unlocks the paid snapshot.
-        if ($slip) $slip->update(['status' => $status, 'is_locked' => $slip->is_locked || $slip->status === 'sudah' || $status === 'sudah']);
+        // Returning payment state to "belum" unlocks the slip so admin can revise it.
+        if ($slip) $slip->update(['status' => $status, 'is_locked' => ($status === 'sudah')]);
     }
 }

@@ -1,3 +1,7 @@
+### [2026-11-18 11:28 WITA] — Antigravity: buka kunci slip (unlock) & aktifkan tombol Edit Slip saat status dikembalikan ke Belum
+- `PayrollPaymentStatus`, `PayrollCalculator`, `PayrollController`: Mengizinkan pembukaan kunci slip (`is_locked = false`) saat status pembayaran dikembalikan ke `belum`, sehingga admin dapat kembali mengedit slip (misal untuk mencentang pencairan saldo carry-over) tanpa terhalang status lock permanen. Tombol "Edit Slip" di rekap live dan menu edit formulir otomatis aktif kembali saat status belum dibayar.
+- Validasi: PHPUnit `PayslipIntegrityTest`, `PayslipSyncTest`, `PendingCarryOverTest`, `PayrollMigrationTest` lulus 100% (38 tests, 231 assertions), view cache cleared. State IDLE.
+
 ### [2026-11-17 08:22] — Codex: tambah HP dinamis pada halaman HP & Akun
 - Deploy c1b86ef: tombol/form Tambah HP dengan nama tunggal, anti-duplikat, pemilihan otomatis; registry studio_devices memakai key stabil dan terhubung ke akun, laporan kerja, matching, dan audit. Migrasi menyimpan enam HP lama tanpa mengubah akun/laporan/payroll.
 - Validasi: tes perangkat/laporan/matching lulus, full suite 217 lulus + 3 kegagalan lama non-task; build dan Graphify current. Browser fixture menguji tambah/refresh/duplikat/batal di desktop/mobile; browser server HTTP200 tanpa page error dan tanpa menambah perangkat contoh produksi.
