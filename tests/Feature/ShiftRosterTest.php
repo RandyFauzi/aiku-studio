@@ -48,4 +48,25 @@ class ShiftRosterTest extends TestCase
         $this->postJson('/api/shifts/config', $config)->assertOk();
         $this->getJson('/api/shifts/config')->assertJsonPath('config.karyawan', []);
     }
+
+    public function test_weekly_schedule_can_be_retrieved_and_saved_via_post(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $this->getJson('/api/shifts/weekly-schedule')->assertOk()->assertJsonStructure(['success', 'schedule']);
+
+        $payload = [
+            'schedule' => [
+                'operational_info' => ['session_duration' => '90 Menit'],
+                'days' => ['senin' => []],
+            ],
+        ];
+
+        $this->postJson('/api/shifts/weekly-schedule', $payload)
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->getJson('/api/shifts/weekly-schedule')
+            ->assertOk()
+            ->assertJsonPath('schedule.operational_info.session_duration', '90 Menit');
+    }
 }

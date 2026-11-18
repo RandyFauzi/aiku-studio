@@ -131,7 +131,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::put('/studio-accounts/{email}/toggle', [SettingController::class, 'toggleAccount']);
             Route::get('/shifts/config', [SettingController::class, 'shifts']);
             Route::post('/shifts/config', [SettingController::class, 'saveShifts']);
-            Route::post('/api/shifts/weekly-schedule', [SettingController::class, 'saveWeeklySchedule']);
+            Route::post('/shifts/weekly-schedule', [SettingController::class, 'saveWeeklySchedule']);
             Route::get('/shifts/days', [ShiftDayController::class, 'index']);
             Route::put('/shifts/days/{date}', [ShiftDayController::class, 'save']);
             Route::delete('/shifts/days/{date}', [ShiftDayController::class, 'destroy']);

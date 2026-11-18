@@ -1,3 +1,7 @@
+### [2026-11-18 12:17 WITA] — Antigravity: perbaiki rute POST api/shifts/weekly-schedule
+- `routes/web.php` & `ShiftRosterTest`: Memperbaiki rute simpan jadwal operasional mingguan (`SettingController::saveWeeklySchedule`) yang sebelumnya salah terdaftar di dalam prefix `api` dengan string `/api/shifts/weekly-schedule` (sehingga terprefix dobel menjadi `api/api/...` dan memicu error `The POST method is not supported`). Rute kini benar menjadi `POST /api/shifts/weekly-schedule`.
+- Validasi: `ShiftRosterTest` lulus 100% (4 tests, 24 assertions), route cache cleared. State IDLE.
+
 ### [2026-11-18 11:58 WITA] — Antigravity: penyesuaian susunan THP (uang tanpa saldo tambahan, saldo tambahan, & total)
 - `panel.payslips`: Menyesuaikan susunan tampilan kolom Take Home Pay agar baris atas menampilkan total uang murni periode berjalan (tanpa saldo tambahan), baris tengah menampilkan badge saldo tambahan (+Rp ...), dan baris bawah menampilkan Total akhir jika terdapat saldo tambahan. Baris tanpa saldo tambahan tetap bersih dengan 1 nominal saja.
 - Validasi: PHPUnit 39 tests/235 assertions lulus 100%, view cache cleared. State IDLE.
