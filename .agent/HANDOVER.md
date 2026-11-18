@@ -1,3 +1,7 @@
+### [2026-11-18 11:39 WITA] — Antigravity: lebarkan kolom Take Home Pay & tampilkan baris Total THP + Saldo Pending
+- `panel.payslips`: Melebarkan kolom Take Home Pay (`min-w-[200px] px-4`) dan menambahkan baris Total (THP reguler + saldo pending sebelumnya) pada rekap live maupun tabel slip database, sehingga total nominal yang akan diterima pekerja terlihat jelas tanpa perlu hitung manual.
+- Validasi: PHPUnit 38 tests/231 assertions lulus 100%, view cache cleared. State IDLE.
+
 ### [2026-11-18 11:28 WITA] — Antigravity: buka kunci slip (unlock) & aktifkan tombol Edit Slip saat status dikembalikan ke Belum
 - `PayrollPaymentStatus`, `PayrollCalculator`, `PayrollController`: Mengizinkan pembukaan kunci slip (`is_locked = false`) saat status pembayaran dikembalikan ke `belum`, sehingga admin dapat kembali mengedit slip (misal untuk mencentang pencairan saldo carry-over) tanpa terhalang status lock permanen. Tombol "Edit Slip" di rekap live dan menu edit formulir otomatis aktif kembali saat status belum dibayar.
 - Validasi: PHPUnit `PayslipIntegrityTest`, `PayslipSyncTest`, `PendingCarryOverTest`, `PayrollMigrationTest` lulus 100% (38 tests, 231 assertions), view cache cleared. State IDLE.

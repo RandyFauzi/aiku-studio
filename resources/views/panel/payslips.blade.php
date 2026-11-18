@@ -257,7 +257,7 @@
                                 <th scope="col" class="px-3 py-3.5">Approved (Dibayar)</th>
                                 <th scope="col" class="px-3 py-3.5">Rejected</th>
                                 <th scope="col" class="px-3 py-3.5">Total Logged</th>
-                                <th scope="col" class="px-3 py-3.5">Take Home Pay</th>
+                                <th scope="col" class="px-4 py-3.5 min-w-[200px]">Take Home Pay</th>
                                 <th scope="col" class="px-3 py-3.5 text-center">Status</th>
                                 <th scope="col" class="py-3.5 pl-3 pr-5 text-right min-w-[280px]">Aksi Payroll</th>
                             </tr>
@@ -359,7 +359,7 @@
                                     </td>
 
                                     <!-- Take Home Pay (THP) -->
-                                    <td class="px-3 py-3.5 whitespace-nowrap">
+                                    <td class="px-4 py-3.5 whitespace-nowrap min-w-[200px]">
                                         <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="worker.duplicate_count > 1 ? 'Perlu ditinjau' : formatRupiah(worker.thp)"></div>
                                         <template x-if="worker.bonus > 0">
                                             <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-0.5">
@@ -368,15 +368,28 @@
                                             </div>
                                         </template>
                                         <template x-if="worker.pending_carry_over_amount > 0">
-                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Termasuk dalam slip: ' + formatRupiah(worker.pending_carry_over_amount) + ' saldo tambahan dari periode sebelumnya'">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                                <span>Saldo tambahan: +<span x-text="formatRupiah(worker.pending_carry_over_amount)"></span></span>
+                                            <div class="space-y-1 mt-1">
+                                                <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 cursor-help" :title="'Termasuk dalam slip: ' + formatRupiah(worker.pending_carry_over_amount) + ' saldo tambahan dari periode sebelumnya'">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                    <span>Saldo tambahan: +<span x-text="formatRupiah(worker.pending_carry_over_amount)"></span></span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 pt-0.5 text-[11px] font-extrabold text-emerald-700">
+                                                    <span class="text-[10px] font-semibold text-slate-400">Total:</span>
+                                                    <span x-text="formatRupiah(worker.thp)"></span>
+                                                    <span class="text-[9px] font-medium text-slate-400">(Sudah termasuk)</span>
+                                                </div>
                                             </div>
                                         </template>
                                         <template x-if="!worker.pending_carry_over_amount && worker.available_pending_balance > 0">
-                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Belum dialokasikan: ' + worker.available_pending_mins + ' menit dari periode final; di luar carry-over yang sudah masuk slip'">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                                <span>Saldo tambahan: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
+                                            <div class="space-y-1 mt-1">
+                                                <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 cursor-help" :title="'Belum dialokasikan: ' + worker.available_pending_mins + ' menit dari periode final; di luar carry-over yang sudah masuk slip'">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                    <span>Saldo tambahan: +<span x-text="formatRupiah(worker.available_pending_balance)"></span></span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 pt-0.5 text-[11px] font-extrabold text-emerald-700">
+                                                    <span class="text-[10px] font-semibold text-slate-400">Total:</span>
+                                                    <span x-text="formatRupiah((worker.thp || 0) + worker.available_pending_balance)"></span>
+                                                </div>
                                             </div>
                                         </template>
                                     </td>
@@ -483,7 +496,7 @@
                                 <th scope="col" class="py-3.5 pl-5 pr-3">Employee</th>
                                 <th scope="col" class="px-3 py-3.5">Period</th>
                                 <th scope="col" class="px-3 py-3.5">Hours (Appr / Log)</th>
-                                <th scope="col" class="px-3 py-3.5">Take Home Pay</th>
+                                <th scope="col" class="px-4 py-3.5 min-w-[200px]">Take Home Pay</th>
                                 <th scope="col" class="px-3 py-3.5 text-center">Status</th>
                                 <th scope="col" class="px-3 py-3.5">Dibuat Pada</th>
                                 <th scope="col" class="py-3.5 pl-3 pr-5 text-right">Actions</th>
@@ -526,12 +539,19 @@
                                     </td>
 
                                     <!-- Take Home Pay -->
-                                    <td class="px-3 py-3.5 whitespace-nowrap">
+                                    <td class="px-4 py-3.5 whitespace-nowrap min-w-[200px]">
                                         <div class="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight" x-text="formatRupiah(item.total_thp || 0)"></div>
                                         <div x-show="(item.bonus || 0) > 0" class="text-xs text-slate-600" x-text="'Bonus: ' + formatRupiah(item.bonus || 0)"></div>
-                                        <div x-show="(item.pending_carry_over_amount || 0) > 0" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 mt-1 cursor-help" :title="'Termasuk dalam slip: ' + formatRupiah(item.pending_carry_over_amount || 0) + ' saldo tambahan dari periode sebelumnya'">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                            <span>Saldo tambahan: +<span x-text="formatRupiah(item.pending_carry_over_amount || 0)"></span></span>
+                                        <div x-show="(item.pending_carry_over_amount || 0) > 0" class="space-y-1 mt-1">
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300 cursor-help" :title="'Termasuk dalam slip: ' + formatRupiah(item.pending_carry_over_amount || 0) + ' saldo tambahan dari periode sebelumnya'">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                <span>Saldo tambahan: +<span x-text="formatRupiah(item.pending_carry_over_amount || 0)"></span></span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 pt-0.5 text-[11px] font-extrabold text-emerald-700">
+                                                <span class="text-[10px] font-semibold text-slate-400">Total:</span>
+                                                <span x-text="formatRupiah(item.total_thp || 0)"></span>
+                                                <span class="text-[9px] font-medium text-slate-400">(Sudah termasuk)</span>
+                                            </div>
                                         </div>
                                         <div x-show="item.duplicate_count > 1" class="text-xs font-semibold text-amber-800 whitespace-normal max-w-xs">Slip ganda: bandingkan nominal sebelum memilih</div>
                                             <button x-show="item.duplicate_count > 1 && !item.is_locked && item.status !== 'sudah'" @click="resolveDuplicates(item)" class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Jadikan slip utama</button>
