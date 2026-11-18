@@ -130,6 +130,14 @@ class PayslipIntegrityTest extends TestCase
         $this->putJson('/api/payslips/'.$slip->id, $this->payload())->assertOk();
     }
 
+    public function test_unpaid_slip_with_stale_lock_is_auto_healed_on_show(): void
+    {
+        $slip = $this->slip(['status' => 'belum', 'is_locked' => true]);
+        $this->getJson('/api/payslips/'.$slip->id)->assertOk()->assertJsonPath('is_locked', false);
+        $this->assertFalse($slip->fresh()->is_locked);
+        $this->putJson('/api/payslips/'.$slip->id, $this->payload())->assertOk();
+    }
+
     public function test_paid_live_worker_gets_frozen_document_and_refresh_cannot_replace_it(): void
     {
         $this->recording();

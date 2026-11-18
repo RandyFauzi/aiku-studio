@@ -46,6 +46,11 @@ class PayslipController extends Controller
 
     public function show(Payslip $payslip)
     {
+        if ($payslip->status === 'belum' && $payslip->is_locked) {
+            $payslip->update(['is_locked' => false]);
+            $payslip->refresh();
+        }
+
         return $payslip;
     }
 
@@ -115,7 +120,7 @@ class PayslipController extends Controller
             $status = $fields['status'] ?? $payslip->status;
             $payslip->update(array_merge([
                 'status' => $status,
-                'is_locked' => $status === 'sudah' || ($fields['is_locked'] ?? false),
+                'is_locked' => $status === 'sudah',
                 'active_key' => $writer->key($payslip->employee_name, $payslip->period),
                 'file_path' => null,
             ], $calculator->calculate($fields['evidence'], (int) ($fields['bonus'] ?? $payslip->bonus), $carryAmount, $carryData)));

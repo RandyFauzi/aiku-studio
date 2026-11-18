@@ -1,3 +1,7 @@
+### [2026-11-18 11:50 WITA] — Antigravity: auto-heal dan unlock slip status Belum agar bisa revisi & centang saldo pending
+- `PayslipController` & `app.js`: Auto-heal flag `is_locked` menjadi false saat slip berstatus `belum` dibuka di halaman edit atau diambil via API. Form edit slip dan checkbox pencairan saldo pending (carry-over) otomatis terbuka kembali tanpa terkunci saat status slip dikembalikan dari "Sudah" ke "Belum".
+- Validasi: PHPUnit `PayslipIntegrityTest`, `PayslipSyncTest`, `PendingCarryOverTest`, `PayrollMigrationTest` lulus 100% (39 tests, 235 assertions), view cache cleared. State IDLE.
+
 ### [2026-11-18 11:39 WITA] — Antigravity: lebarkan kolom Take Home Pay & tampilkan baris Total THP + Saldo Pending
 - `panel.payslips`: Melebarkan kolom Take Home Pay (`min-w-[200px] px-4`) dan menambahkan baris Total (THP reguler + saldo pending sebelumnya) pada rekap live maupun tabel slip database, sehingga total nominal yang akan diterima pekerja terlihat jelas tanpa perlu hitung manual.
 - Validasi: PHPUnit 38 tests/231 assertions lulus 100%, view cache cleared. State IDLE.

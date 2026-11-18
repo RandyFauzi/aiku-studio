@@ -1531,7 +1531,7 @@ document.addEventListener('alpine:init', () => {
                 if (!res.ok) throw new Error(payrollError(await res.json()));
                 if (res.ok) {
                     const data = await res.json();
-                    this.isLocked = !!(data.is_locked || data.status === 'sudah' || data.superseded_by_id);
+                    this.isLocked = !!(data.status === 'sudah' || (data.is_locked && data.status !== 'belum') || data.superseded_by_id);
                     this.savedTotalThp = data.total_thp;
                     this.formData.employee_name = data.employee_name;
                     this.formData.period = data.period;
