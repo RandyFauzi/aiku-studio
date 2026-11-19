@@ -73,6 +73,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::view('/work-reports.html', 'panel.work-reports');
         Route::get('/api/work-reports', [DailyWorkReportController::class, 'index']);
         Route::post('/api/work-reports', [DailyWorkReportController::class, 'adminStore']);
+        Route::post('/api/work-reports/{report}/toggle-validate', [DailyWorkReportController::class, 'toggleValidate'])->whereNumber('report');
         Route::post('/api/work-reports/{report}/streak-verify', [RecordStreakController::class, 'verify'])->whereNumber('report');
         Route::put('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminUpdate']);
         Route::delete('/api/work-reports/{report}', [DailyWorkReportController::class, 'adminDestroy']);

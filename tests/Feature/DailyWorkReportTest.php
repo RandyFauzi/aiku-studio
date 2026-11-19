@@ -610,4 +610,43 @@ class DailyWorkReportTest extends TestCase
         $index->assertJsonCount(2, 'reports')
             ->assertJsonPath('total_duration_minutes', 300);
     }
+
+    public function test_admin_can_toggle_work_report_validation(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $employee = $this->employee();
+        $today = now('Asia/Makassar')->toDateString();
+
+        $report = DailyWorkReport::create([
+            'user_id' => $employee->id,
+            'contributor_id' => $employee->contributor_id,
+            'contributor_name' => $employee->name,
+            'work_date' => $today,
+            'total_duration_minutes' => 120,
+            'phones' => ['putih'],
+            'is_validated' => false,
+        ]);
+
+        $this->assertFalse($report->fresh()->is_validated);
+
+        // First toggle -> true
+        $res1 = $this->actingAs($admin)->postJson("/api/work-reports/{$report->id}/toggle-validate");
+        $res1->assertOk()->assertJson([
+            'success' => true,
+            'is_validated' => true,
+        ]);
+        $this->assertTrue($report->fresh()->is_validated);
+
+        // Second toggle -> false
+        $res2 = $this->actingAs($admin)->postJson("/api/work-reports/{$report->id}/toggle-validate");
+        $res2->assertOk()->assertJson([
+            'success' => true,
+            'is_validated' => false,
+        ]);
+        $this->assertFalse($report->fresh()->is_validated);
+
+        // Non-admin receives 403
+        $this->actingAs($employee)->postJson("/api/work-reports/{$report->id}/toggle-validate")
+            ->assertStatus(403);
+    }
 }

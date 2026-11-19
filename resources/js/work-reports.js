@@ -429,6 +429,40 @@ window.adminWorkReportsData = () => ({
         return Boolean(report?.phone_emails && report.phone_emails[pkey]);
     },
 
+    async toggleValidateReport(report) {
+        if (!report || report._validating) return;
+        report._validating = true;
+        const prev = Boolean(report.is_validated);
+        report.is_validated = !prev;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const res = await fetch(`/api/work-reports/${report.id}/toggle-validate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Gagal mengubah status validasi');
+            report.is_validated = Boolean(data.is_validated);
+        } catch (e) {
+            report.is_validated = prev;
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: e.message || 'Gagal mengubah status validasi',
+                });
+            } else {
+                alert(e.message);
+            }
+        } finally {
+            report._validating = false;
+        }
+    },
+
     openDetailModal(report) {
         this.streakReviewMessage = '';
         this.streakReviewError = '';

@@ -458,6 +458,12 @@
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <p class="font-bold text-slate-900" x-text="report.contributor_name"></p>
                                     <span x-show="report.shift_label" class="px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300" x-text="report.shift_label"></span>
+                                    <template x-if="report.is_validated">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs" title="Laporan sudah divalidasi">
+                                            <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            <span>Valid</span>
+                                        </span>
+                                    </template>
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500" :title="reportTimestamp(report.created_at)" x-text="'Dikirim ' + (reportTimestamp(report.created_at).match(/\d{2}:\d{2} WITA$/)?.[0] || '—') + (report.revision > 1 ? ' · Direvisi' : '')"></p>
 
@@ -500,8 +506,25 @@
                             </td>
                             <td class="col-span-2 block px-4 pt-2 pb-4 text-right align-middle md:table-cell md:py-4">
                                 <div class="flex items-center justify-end gap-2 whitespace-nowrap">
-                                    <button type="button" @click="openDetailModal(report)" class="min-h-11 rounded-lg border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50">Detail</button>
-                                    <button type="button" @click="toggleExpandReport(report.id)" class="min-h-11 rounded-lg border border-emerald-200 bg-emerald-50 px-4 text-xs font-semibold text-emerald-900" :aria-expanded="expandedReportId === report.id" x-text="expandedReportId === report.id ? 'Tutup Assist' : 'Assist'"></button>
+                                    <!-- Tombol Centang Validasi -->
+                                    <button type="button" 
+                                            @click="toggleValidateReport(report)" 
+                                            :disabled="report._validating"
+                                            :title="report.is_validated ? 'Sudah divalidasi (Klik untuk batal)' : 'Tandai sudah divalidasi'"
+                                            class="min-h-11 px-3 rounded-lg border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none disabled:opacity-50"
+                                            :class="report.is_validated 
+                                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600' 
+                                                : 'bg-white hover:bg-slate-50 text-slate-600 hover:text-emerald-700 border-slate-200 hover:border-emerald-300'">
+                                        <svg class="w-4 h-4 shrink-0 transition" 
+                                             :class="report.is_validated ? 'text-white' : 'text-slate-400'" 
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        <span x-text="report.is_validated ? 'Valid' : 'Validasi'"></span>
+                                    </button>
+
+                                    <button type="button" @click="openDetailModal(report)" class="min-h-11 rounded-lg border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Detail</button>
+                                    <button type="button" @click="toggleExpandReport(report.id)" class="min-h-11 rounded-lg border border-emerald-200 bg-emerald-50 px-4 text-xs font-semibold text-emerald-900 cursor-pointer" :aria-expanded="expandedReportId === report.id" x-text="expandedReportId === report.id ? 'Tutup Assist' : 'Assist'"></button>
                                 </div>
                             </td>
                         </tr>
@@ -775,7 +798,15 @@
             <header class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
                 <div class="min-w-0">
                     <h3 id="report-detail-title" class="text-lg font-bold text-slate-900">Detail laporan kerja</h3>
-                    <p class="mt-1 break-words text-sm font-semibold text-slate-700" x-text="selectedReport?.contributor_name"></p>
+                    <div class="mt-1 flex items-center gap-2 flex-wrap">
+                        <p class="break-words text-sm font-semibold text-slate-700" x-text="selectedReport?.contributor_name"></p>
+                        <template x-if="selectedReport?.is_validated">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs" title="Laporan sudah divalidasi">
+                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                <span>Valid</span>
+                            </span>
+                        </template>
+                    </div>
                     <p class="mt-1 text-xs text-slate-500" x-text="selectedReport ? dateLabel(selectedReport.work_date) : ''"></p>
                 </div>
                 <button type="button" @click="closeDetailModal()" class="min-h-11 shrink-0 rounded-lg px-3 text-sm text-slate-600" aria-label="Tutup detail laporan">Tutup</button>
@@ -808,8 +839,25 @@
                 </div>
             </div>
             <footer class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
-                <button type="button" @click="const r = selectedReport; confirmDeleteReport(r).then(() => { if (!rows.some(row => row.id === r.id)) closeDetailModal(); })" :disabled="deletingId === selectedReport?.id" class="min-h-11 rounded-lg px-3 text-xs font-semibold text-red-700 disabled:opacity-40">Hapus laporan</button>
-                <button type="button" @click="const r = selectedReport; closeDetailModal(); openEditModal(r);" class="min-h-11 rounded-lg bg-emerald-700 px-4 text-xs font-bold text-white">Edit Laporan Ini</button>
+                <button type="button" @click="const r = selectedReport; confirmDeleteReport(r).then(() => { if (!rows.some(row => row.id === r.id)) closeDetailModal(); })" :disabled="deletingId === selectedReport?.id" class="min-h-11 rounded-lg px-3 text-xs font-semibold text-red-700 disabled:opacity-40 cursor-pointer">Hapus laporan</button>
+                <div class="flex items-center gap-2">
+                    <button type="button" 
+                            @click="toggleValidateReport(selectedReport)" 
+                            :disabled="selectedReport?._validating"
+                            :title="selectedReport?.is_validated ? 'Sudah divalidasi (Klik untuk batal)' : 'Tandai sudah divalidasi'"
+                            class="min-h-11 px-3.5 rounded-lg border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs select-none disabled:opacity-50"
+                            :class="selectedReport?.is_validated 
+                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600' 
+                                : 'bg-white hover:bg-slate-50 text-slate-600 hover:text-emerald-700 border-slate-200 hover:border-emerald-300'">
+                        <svg class="w-4 h-4 shrink-0 transition" 
+                             :class="selectedReport?.is_validated ? 'text-white' : 'text-slate-400'" 
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span x-text="selectedReport?.is_validated ? 'Valid' : 'Validasi'"></span>
+                    </button>
+                    <button type="button" @click="const r = selectedReport; closeDetailModal(); openEditModal(r);" class="min-h-11 rounded-lg bg-emerald-700 px-4 text-xs font-bold text-white cursor-pointer">Edit Laporan Ini</button>
+                </div>
             </footer>
         </section>
     </div>

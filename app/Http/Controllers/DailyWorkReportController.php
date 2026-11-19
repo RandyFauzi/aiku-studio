@@ -683,6 +683,20 @@ class DailyWorkReportController extends Controller
         ]);
     }
 
+    public function toggleValidate(Request $request, DailyWorkReport $report)
+    {
+        abort_unless($request->user()->role === 'admin', 403);
+
+        $report->is_validated = ! (bool) $report->is_validated;
+        $report->save();
+
+        return response()->json([
+            'success' => true,
+            'is_validated' => (bool) $report->is_validated,
+            'message' => $report->is_validated ? 'Laporan kerja ditandai sudah divalidasi.' : 'Tanda validasi laporan dicabut.',
+        ]);
+    }
+
     public function adminDestroy(DailyWorkReport $report)
     {
         $report->delete();

@@ -40,6 +40,7 @@ class DailyWorkReport extends Model
             'phone_tasks' => 'array',
             'total_duration_minutes' => 'integer',
             'revision' => 'integer',
+            'is_validated' => 'boolean',
         ];
     }
 }

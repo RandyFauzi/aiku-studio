@@ -1,3 +1,7 @@
+### [2026-11-19 20:38 WITA] — Antigravity: tombol centang penanda validasi (is_validated) laporan kerja admin
+- `DailyWorkReport`, `DailyWorkReportController`, `routes/web.php`, `resources/views/work-reports/admin.blade.php`, `work-reports.js`: Menambahkan penanda boolean mandiri `is_validated` (default false) dengan tombol centang interaktif `Validasi / Valid` di kolom Aksi tabel laporan kerja dan detail modal admin, disertai badge hijau `✓ Valid` pada nama kontributor saat tervalidasi.
+- Validasi: Migrasi DDL `add_is_validated_to_daily_work_reports_table`, PHPUnit `DailyWorkReportTest` lulus 100% (20 tests, 198 assertions), `npm run build` sukses, view cache cleared. State IDLE.
+
 ### [2026-11-19 20:26 WITA] — Antigravity: tambah 2 filter (Task & HP) di laporan kerja admin
 - `work-reports.admin` & `work-reports.js`: Menambahkan 2 filter khusus (Filter List Tugas yang dapat dicari lengkap dengan badge jumlah laporan, dan Filter HP digunakan) dengan icon semantik dan tombol reset cepat (`✕`). Menampilkan tag badge tugas yang dikerjakan langsung pada tabel daftar kontributor serta mendukung pencarian multi-bidang (nama kontributor, judul task, nama HP).
 - Validasi: `npm run build` sukses, PHPUnit `RecordingMatchingTest` & `PayrollMigrationTest` lulus 100% (26 tests, 204 assertions), view cache cleared. State IDLE.
