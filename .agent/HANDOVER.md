@@ -1,3 +1,7 @@
+### [2026-11-19 20:00 WITA] — Antigravity: rapikan layout filter rekaman & tambah filter pencarian list tugas
+- `panel.recordings`, `RecordingController`, `web.php`: Merapikan tata letak bilah filter menjadi satu alur rapi dan responsif (Search ID/Task/Worker -> Tanggal -> Pekerja -> List Tugas -> Akun Studio -> QC -> Sumber -> Toggle List/Grid & Reset). Menambahkan endpoint `GET /api/studio-recordings/tasks` dan komponen dropdown pencarian `Semua Tugas` yang konsisten dengan filter akun/pekerja.
+- Validasi: PHPUnit `RecordingMatchingTest` & `PayrollMigrationTest` lulus 100% (26 tests, 204 assertions), view cache cleared. State IDLE.
+
 ### [2026-11-18 12:17 WITA] — Antigravity: perbaiki rute POST api/shifts/weekly-schedule
 - `routes/web.php` & `ShiftRosterTest`: Memperbaiki rute simpan jadwal operasional mingguan (`SettingController::saveWeeklySchedule`) yang sebelumnya salah terdaftar di dalam prefix `api` dengan string `/api/shifts/weekly-schedule` (sehingga terprefix dobel menjadi `api/api/...` dan memicu error `The POST method is not supported`). Rute kini benar menjadi `POST /api/shifts/weekly-schedule`.
 - Validasi: `ShiftRosterTest` lulus 100% (4 tests, 24 assertions), route cache cleared. State IDLE.

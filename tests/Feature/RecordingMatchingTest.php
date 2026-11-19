@@ -195,4 +195,40 @@ class RecordingMatchingTest extends TestCase
         config(['recording_upload.shift_1_end' => '14:00']);
         $this->assertSame('2026-11-06:shift-1', $service->groupFor('2026-11-06 05:30:00')['key']);
     }
+
+    public function test_tasks_endpoint_and_task_filtering(): void
+    {
+        $user = User::factory()->create();
+        StudioRecording::create([
+            'record_id' => 'rec-task-1',
+            'task_title' => 'Koleksi Video Wajah A',
+            'participant_email' => 'worker1@example.test',
+            'recorded_at' => '2026-11-06 02:00:00',
+            'duration_min' => 30,
+        ]);
+        StudioRecording::create([
+            'record_id' => 'rec-task-2',
+            'task_title' => 'Koleksi Video Wajah B',
+            'participant_email' => 'worker2@example.test',
+            'recorded_at' => '2026-11-06 03:00:00',
+            'duration_min' => 45,
+        ]);
+
+        // Test GET /api/studio-recordings/tasks
+        $tasksResponse = $this->actingAs($user)->getJson('/api/studio-recordings/tasks');
+        $tasksResponse->assertOk()
+            ->assertJson([
+                'success' => true,
+                'tasks' => [
+                    'Koleksi Video Wajah A',
+                    'Koleksi Video Wajah B',
+                ],
+            ]);
+
+        // Test GET /api/studio-recordings?task=...
+        $filterResponse = $this->actingAs($user)->getJson('/api/studio-recordings?task=' . urlencode('Koleksi Video Wajah A'));
+        $filterResponse->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('recordings.0.record_id', 'rec-task-1');
+    }
 }

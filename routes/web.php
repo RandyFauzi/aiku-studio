@@ -124,6 +124,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::post('/payslips/{payslip}/resolve-duplicates', [PayslipController::class, 'resolveDuplicates']);
             Route::post('/payslips/{payslip}/email', [PayslipController::class, 'email'])->middleware('throttle:10,1');
             Route::get('/studio-recordings', [RecordingController::class, 'index']);
+            Route::get('/studio-recordings/tasks', [RecordingController::class, 'tasks']);
             Route::put('/studio-recordings/batch-assign', [RecordingController::class, 'assign']);
             Route::get('/studio-accounts', [SettingController::class, 'accounts']);
             Route::post('/studio-accounts', [SettingController::class, 'addAccounts']);

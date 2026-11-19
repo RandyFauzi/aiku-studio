@@ -422,12 +422,12 @@
             </div>
 
             <!-- FILTER & SEARCH CONTROLS ROW -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2.5">
                 
-                <!-- Left: Search Box + Akun Studio Searchable Dropdown -->
-                <div class="flex items-center gap-2.5 flex-1 min-w-[280px] max-w-xl">
+                <!-- Left: Search Box & Filter Controls Group -->
+                <div class="flex items-center gap-2 flex-wrap flex-1 min-w-0">
                     <!-- Search Input -->
-                    <div class="relative flex-1">
+                    <div class="relative w-60 sm:w-68 shrink-0">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
@@ -435,103 +435,10 @@
                                x-model="filters.search" 
                                @keyup.enter="applyFilters(1)"
                                placeholder="Cari ID, task, pekerja..." 
-                               class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200/90 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#00B090] transition">
+                               class="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-200/90 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#00B090] transition">
+                        <button x-show="filters.search" @click="filters.search = ''; applyFilters(1)" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">✕</button>
                     </div>
 
-                    <!-- Dropdown Filter Akun Studio (Dengan Pencarian) -->
-                    <div class="relative shrink-0" x-data="{ openAccountDropdown: false, searchAccount: '' }">
-                        <button @click="openAccountDropdown = !openAccountDropdown; if(openAccountDropdown) $nextTick(() => $refs.accountSearchInput.focus())"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
-                                :class="filters.email !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
-                            <div class="flex items-center gap-1.5 truncate max-w-[140px]">
-                                <span class="w-2 h-2 rounded-full shrink-0" :class="filters.email !== 'all' ? 'bg-[#00B090]' : 'bg-slate-400'"></span>
-                                <span class="truncate" x-text="filters.email === 'all' ? 'Semua Akun' : getAccountName(filters.email)"></span>
-                            </div>
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openAccountDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-
-                        <!-- Floating Searchable Dropdown Menu -->
-                        <div x-show="openAccountDropdown" 
-                             @click.outside="openAccountDropdown = false; searchAccount = ''"
-                             x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
-                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                             x-transition:leave="transition ease-in duration-100"
-                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-                             class="absolute left-0 mt-1.5 w-72 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2.5 text-xs text-slate-700"
-                             x-cloak>
-                            
-                            <!-- Header inside Dropdown -->
-                            <div class="flex items-center justify-between px-1 mb-2">
-                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pilih Akun Studio</span>
-                                <span class="text-[10px] text-[#009B7E] bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-bold" x-text="studioEmails.length + ' akun'"></span>
-                            </div>
-
-                            <!-- Search Input inside Dropdown -->
-                            <div class="relative mb-2">
-                                <input type="text"
-                                       x-ref="accountSearchInput"
-                                       x-model="searchAccount"
-                                       placeholder="Cari nama akun studio..."
-                                       class="w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl pl-8 pr-7 py-1.5 text-xs focus:ring-1 focus:ring-[#00B090] focus:border-[#00B090] outline-none transition">
-                                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                <button x-show="searchAccount" @click="searchAccount = ''" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">✕</button>
-                            </div>
-
-                            <!-- Account List (Scrollable) -->
-                            <div class="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
-                                <!-- Option: Semua Akun -->
-                                <button @click="filters.email = 'all'; applyFilters(1); openAccountDropdown = false; searchAccount = ''"
-                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition group"
-                                        :class="filters.email === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full" :class="filters.email === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
-                                        <span class="text-xs">Semua Akun (All)</span>
-                                    </div>
-                                    <span x-show="filters.email === 'all'" class="text-[#00B090] font-black">✓</span>
-                                </button>
-
-                                <div class="my-1 border-t border-slate-100"></div>
-
-                                <!-- Filtered Accounts Loop -->
-                                <template x-for="email in filteredStudioEmails(searchAccount)" :key="email">
-                                    <button @click="filters.email = email; applyFilters(1); openAccountDropdown = false; searchAccount = ''"
-                                            class="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-xl transition group"
-                                            :class="filters.email === email ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
-                                        <div class="flex items-center gap-2 truncate">
-                                            <span class="w-2 h-2 rounded-full shrink-0" :class="filters.email === email ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
-                                            <div class="truncate">
-                                                <div class="text-xs font-semibold leading-tight" x-text="getAccountName(email)"></div>
-                                                <div class="text-[10px] text-slate-400 truncate leading-tight" x-text="email"></div>
-                                            </div>
-                                        </div>
-                                        <span x-show="filters.email === email" class="text-[#00B090] font-black shrink-0 ml-1">✓</span>
-                                    </button>
-                                </template>
-
-                                <!-- Empty State -->
-                                <div x-show="filteredStudioEmails(searchAccount).length === 0" 
-                                     class="text-center py-4 text-xs text-slate-400">
-                                    Tidak ditemukan akun "<span x-text="searchAccount" class="text-slate-700 font-semibold"></span>"
-                                </div>
-                            </div>
-
-                            <!-- Footer Button: Tambah / Kelola Akun -->
-                            <div class="pt-2 border-t border-slate-100 mt-1">
-                                <button @click="openAccountsModal(); openAccountDropdown = false" 
-                                        class="w-full text-center py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 text-[#009B7E] font-bold text-xs transition flex items-center justify-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                    <span>+ Tambah / Kelola Akun Studio</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Center & Right: Presets Tanggal WITA & Dropdowns -->
-                <div class="flex items-center gap-2.5 flex-wrap">
-                    
                     <!-- Atur Range Tanggal (Ala Tiket.com) -->
                     <div class="relative shrink-0" @click.outside="datePickerOpen = false">
                         <button type="button" 
@@ -875,6 +782,176 @@
                         </div>
                     </div>
 
+                    <!-- Filter List Tugas (Custom Dropdown Dengan Pencarian) -->
+                    <div class="relative shrink-0" x-data="{ openTaskDropdown: false, searchTaskFilter: '' }">
+                        <button type="button" 
+                                @click="openTaskDropdown = !openTaskDropdown; if(openTaskDropdown) $nextTick(() => $refs.taskSearchInput?.focus())"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                :class="filters.task !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
+                            <div class="flex items-center gap-1.5 truncate max-w-[140px]">
+                                <span class="w-2 h-2 rounded-full shrink-0" :class="filters.task !== 'all' ? 'bg-[#00B090]' : 'bg-slate-400'"></span>
+                                <span class="truncate" x-text="filters.task === 'all' ? 'Semua Tugas' : filters.task" :title="filters.task !== 'all' ? filters.task : 'Semua Tugas'"></span>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openTaskDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <!-- Floating Dropdown Menu Tugas -->
+                        <div x-show="openTaskDropdown" 
+                             @click.outside="openTaskDropdown = false; searchTaskFilter = ''"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 mt-1.5 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2.5 text-xs text-slate-700"
+                             x-cloak>
+                            
+                            <div class="flex items-center justify-between px-1 mb-2">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pilih List Tugas</span>
+                                <span class="text-[10px] text-[#009B7E] bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-bold" x-text="(availableTasks || []).length + ' tugas'"></span>
+                            </div>
+
+                            <div class="relative mb-2">
+                                <input type="text"
+                                       x-ref="taskSearchInput"
+                                       x-model="searchTaskFilter"
+                                       placeholder="Cari nama tugas..."
+                                       class="w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl pl-8 pr-7 py-1.5 text-xs focus:ring-1 focus:ring-[#00B090] focus:border-[#00B090] outline-none transition">
+                                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <button x-show="searchTaskFilter" @click="searchTaskFilter = ''" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">✕</button>
+                            </div>
+
+                            <div class="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
+                                <button type="button"
+                                        @click="filters.task = 'all'; applyFilters(1); openTaskDropdown = false; searchTaskFilter = ''"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition group"
+                                        :class="filters.task === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full" :class="filters.task === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                        <span class="text-xs">Semua Tugas (All)</span>
+                                    </div>
+                                    <span x-show="filters.task === 'all'" class="text-[#00B090] font-black">✓</span>
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100"></div>
+
+                                <template x-for="tName in filteredTasks(searchTaskFilter)" :key="tName">
+                                    <button type="button"
+                                            @click="filters.task = tName; applyFilters(1); openTaskDropdown = false; searchTaskFilter = ''"
+                                            class="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-xl transition group"
+                                            :class="filters.task === tName ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'"
+                                            :title="tName">
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span class="w-2 h-2 rounded-full shrink-0" :class="filters.task === tName ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                            <span class="text-xs truncate font-medium" x-text="tName"></span>
+                                        </div>
+                                        <span x-show="filters.task === tName" class="text-[#00B090] font-black shrink-0 ml-1">✓</span>
+                                    </button>
+                                </template>
+
+                                <div x-show="filteredTasks(searchTaskFilter).length === 0" 
+                                     class="text-center py-4 text-xs text-slate-400">
+                                    Tidak ditemukan tugas "<span x-text="searchTaskFilter" class="text-slate-700 font-semibold"></span>"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Filter Akun Studio (Dengan Pencarian) -->
+                    <div class="relative shrink-0" x-data="{ openAccountDropdown: false, searchAccount: '' }">
+                        <button type="button"
+                                @click="openAccountDropdown = !openAccountDropdown; if(openAccountDropdown) $nextTick(() => $refs.accountSearchInput.focus())"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                :class="filters.email !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
+                            <div class="flex items-center gap-1.5 truncate max-w-[140px]">
+                                <span class="w-2 h-2 rounded-full shrink-0" :class="filters.email !== 'all' ? 'bg-[#00B090]' : 'bg-slate-400'"></span>
+                                <span class="truncate" x-text="filters.email === 'all' ? 'Semua Akun' : getAccountName(filters.email)"></span>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openAccountDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <!-- Floating Searchable Dropdown Menu -->
+                        <div x-show="openAccountDropdown" 
+                             @click.outside="openAccountDropdown = false; searchAccount = ''"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 mt-1.5 w-72 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2.5 text-xs text-slate-700"
+                             x-cloak>
+                            
+                            <!-- Header inside Dropdown -->
+                            <div class="flex items-center justify-between px-1 mb-2">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pilih Akun Studio</span>
+                                <span class="text-[10px] text-[#009B7E] bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-bold" x-text="studioEmails.length + ' akun'"></span>
+                            </div>
+
+                            <!-- Search Input inside Dropdown -->
+                            <div class="relative mb-2">
+                                <input type="text"
+                                       x-ref="accountSearchInput"
+                                       x-model="searchAccount"
+                                       placeholder="Cari nama akun studio..."
+                                       class="w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl pl-8 pr-7 py-1.5 text-xs focus:ring-1 focus:ring-[#00B090] focus:border-[#00B090] outline-none transition">
+                                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <button x-show="searchAccount" @click="searchAccount = ''" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">✕</button>
+                            </div>
+
+                            <!-- Account List (Scrollable) -->
+                            <div class="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
+                                <!-- Option: Semua Akun -->
+                                <button type="button"
+                                        @click="filters.email = 'all'; applyFilters(1); openAccountDropdown = false; searchAccount = ''"
+                                        class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition group"
+                                        :class="filters.email === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full" :class="filters.email === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                        <span class="text-xs">Semua Akun (All)</span>
+                                    </div>
+                                    <span x-show="filters.email === 'all'" class="text-[#00B090] font-black">✓</span>
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100"></div>
+
+                                <!-- Filtered Accounts Loop -->
+                                <template x-for="email in filteredStudioEmails(searchAccount)" :key="email">
+                                    <button type="button"
+                                            @click="filters.email = email; applyFilters(1); openAccountDropdown = false; searchAccount = ''"
+                                            class="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-xl transition group"
+                                            :class="filters.email === email ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span class="w-2 h-2 rounded-full shrink-0" :class="filters.email === email ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                            <div class="truncate">
+                                                <div class="text-xs font-semibold leading-tight" x-text="getAccountName(email)"></div>
+                                                <div class="text-[10px] text-slate-400 truncate leading-tight" x-text="email"></div>
+                                            </div>
+                                        </div>
+                                        <span x-show="filters.email === email" class="text-[#00B090] font-black shrink-0 ml-1">✓</span>
+                                    </button>
+                                </template>
+
+                                <!-- Empty State -->
+                                <div x-show="filteredStudioEmails(searchAccount).length === 0" 
+                                     class="text-center py-4 text-xs text-slate-400">
+                                    Tidak ditemukan akun "<span x-text="searchAccount" class="text-slate-700 font-semibold"></span>"
+                                </div>
+                            </div>
+
+                            <!-- Footer Button: Tambah / Kelola Akun -->
+                            <div class="pt-2 border-t border-slate-100 mt-1">
+                                <button type="button"
+                                        @click="openAccountsModal(); openAccountDropdown = false" 
+                                        class="w-full text-center py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 text-[#009B7E] font-bold text-xs transition flex items-center justify-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    <span>+ Tambah / Kelola Akun Studio</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Filter Status QC (Custom Dropdown) -->
                     <div class="relative shrink-0" x-data="{ openStatusDropdown: false }">
                         <button type="button" 
@@ -1054,6 +1131,10 @@
                         </div>
                     </div>
 
+                </div>
+
+                <!-- Right: View Toggle & Reset Controls -->
+                <div class="flex items-center gap-2 shrink-0 ml-auto">
                     <!-- View Toggle: List / Grid -->
                     <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shadow-2xs">
                         <button type="button"
@@ -1076,7 +1157,6 @@
                     <button @click="resetFilters()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition" title="Reset Semua Filter">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </button>
-
                 </div>
 
             </div>
@@ -2062,6 +2142,7 @@
                     { name: 'Aida Fitri', short: 'Aida', initials: 'AD' }
                 ],
                 contributors: [],
+                availableTasks: [],
                 recordings: [],
                 selectedIds: [],
                 lastSelectedIndex: null,
@@ -2102,6 +2183,7 @@
                 filters: {
                     email: 'all',
                     worker: 'all',
+                    task: 'all',
                     status: 'all',
                     source: 'all',
                     search: '',
@@ -2437,6 +2519,7 @@
                     this.$watch('viewMode', val => { try { localStorage.setItem('aiku_recordings_view_mode', String(val)); } catch(e) {} });
                     await this.fetchContributors();
                     this.fetchStudioAccounts();
+                    this.fetchAvailableTasks();
                     await this.fetchRecordings(1);
                     await this.fetchAutoSyncStatus();
                     setInterval(() => {
@@ -2678,6 +2761,27 @@
                     });
                 },
 
+                async fetchAvailableTasks() {
+                    try {
+                        const res = await fetch('/api/studio-recordings/tasks');
+                        if (res.ok) {
+                            const data = await res.json();
+                            const list = Array.isArray(data) ? data : (data.tasks || []);
+                            const set = new Set(this.availableTasks || []);
+                            list.forEach(t => t && set.add(t));
+                            this.availableTasks = Array.from(set).sort();
+                        }
+                    } catch (e) {
+                        console.error('Error fetching tasks:', e);
+                    }
+                },
+
+                filteredTasks(query) {
+                    if (!query || !query.trim()) return this.availableTasks || [];
+                    const q = query.trim().toLowerCase();
+                    return (this.availableTasks || []).filter(task => (task || '').toLowerCase().includes(q));
+                },
+
                 async fetchRecordings(page = 1) {
                     this.isLoading = true;
                     this.pagination.page = page;
@@ -2690,6 +2794,7 @@
                             status: this.filters.status,
                             search: this.filters.search
                         });
+                        if (this.filters.task && this.filters.task !== 'all') params.append('task', this.filters.task);
                         if (this.filters.source && this.filters.source !== 'all') params.append('source', this.filters.source);
                         if (this.filters.startDate) params.append('startDate', this.filters.startDate);
                         if (this.filters.endDate) params.append('endDate', this.filters.endDate);
@@ -2706,6 +2811,12 @@
                             if (data.stats) {
                                 this.stats = { ...this.stats, ...data.stats };
                             }
+                            (data.recordings || []).forEach(r => {
+                                if (r.task_title && !this.availableTasks.includes(r.task_title)) {
+                                    this.availableTasks.push(r.task_title);
+                                    this.availableTasks.sort();
+                                }
+                            });
                         }
                     } catch (e) {
                         console.error('Error fetching recordings:', e);
@@ -2723,6 +2834,7 @@
                     this.filters = {
                         email: 'all',
                         worker: 'all',
+                        task: 'all',
                         status: 'all',
                         source: 'all',
                         search: '',

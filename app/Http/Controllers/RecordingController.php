@@ -15,7 +15,7 @@ class RecordingController extends Controller
     {
         $request->validate(['page' => 'sometimes|integer|min:1', 'limit' => 'sometimes|integer|min:1|max:10000',
             'startDate' => 'nullable|date_format:Y-m-d', 'endDate' => 'nullable|date_format:Y-m-d',
-            'email' => 'nullable|string|max:255', 'worker' => 'nullable|string|max:255', 'status' => 'nullable|string|max:64',
+            'email' => 'nullable|string|max:255', 'worker' => 'nullable|string|max:255', 'task' => 'nullable|string|max:255', 'status' => 'nullable|string|max:64',
             'source' => 'nullable|string|max:64', 'search' => 'nullable|string|max:255']);
         $query = StudioRecording::query();
         if ($request->filled('email') && $request->email !== 'all') {
@@ -25,6 +25,9 @@ class RecordingController extends Controller
             $request->worker === 'unassigned'
                 ? $query->where(fn ($q) => $q->whereNull('assigned_worker_name')->orWhere('assigned_worker_name', ''))
                 : $query->where('assigned_worker_name', trim($request->worker));
+        }
+        if ($request->filled('task') && $request->task !== 'all') {
+            $query->where('task_title', trim($request->task));
         }
         if ($request->filled('status') && $request->status !== 'all') {
             if ($request->status === 'approved') {
@@ -116,5 +119,19 @@ class RecordingController extends Controller
         $count = $update ? StudioRecording::whereIn('record_id', $data['record_ids'])->update($update) : 0;
 
         return response()->json(['success' => true, 'updated' => $count]);
+    }
+
+    public function tasks()
+    {
+        $tasks = StudioRecording::whereNotNull('task_title')
+            ->where('task_title', '!=', '')
+            ->distinct()
+            ->orderBy('task_title')
+            ->pluck('task_title');
+
+        return response()->json([
+            'success' => true,
+            'tasks' => $tasks,
+        ]);
     }
 }
