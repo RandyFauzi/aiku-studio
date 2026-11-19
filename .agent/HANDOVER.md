@@ -1,3 +1,7 @@
+### [2026-11-19 20:26 WITA] — Antigravity: tambah 2 filter (Task & HP) di laporan kerja admin
+- `work-reports.admin` & `work-reports.js`: Menambahkan 2 filter khusus (Filter List Tugas yang dapat dicari lengkap dengan badge jumlah laporan, dan Filter HP digunakan) dengan icon semantik dan tombol reset cepat (`✕`). Menampilkan tag badge tugas yang dikerjakan langsung pada tabel daftar kontributor serta mendukung pencarian multi-bidang (nama kontributor, judul task, nama HP).
+- Validasi: `npm run build` sukses, PHPUnit `RecordingMatchingTest` & `PayrollMigrationTest` lulus 100% (26 tests, 204 assertions), view cache cleared. State IDLE.
+
 ### [2026-11-19 20:12 WITA] — Antigravity: icon semantik & tombol reset cepat (✕) pada filter rekaman
 - `panel.recordings`: Mengganti dot generik dengan icon SVG semantik yang relevan pada seluruh filter bar (User untuk Pekerja, Clipboard Checklist untuk Tugas, Studio Building untuk Akun Studio, Check Circle adaptif untuk Status QC, dan Circle Stack Database untuk Sumber Data), setara dengan icon kalender pada filter tanggal. Menambahkan tombol reset cepat (`✕`) saat filter aktif dan tooltip informatif pada setiap tombol filter.
 - Validasi: PHPUnit `RecordingMatchingTest` & `PayrollMigrationTest` lulus 100% (26 tests, 204 assertions), view cache cleared. State IDLE.

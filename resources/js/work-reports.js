@@ -364,6 +364,8 @@ window.adminWorkReportsData = () => ({
     today,
     rows: [],
     search: '',
+    filterTask: 'all',
+    filterPhone: 'all',
     loading: true,
     assistLoading: false,
     assistData: [],
@@ -1130,7 +1132,96 @@ window.adminWorkReportsData = () => ({
         }
     },
 
+    getReportTasks(report) {
+        if (!report || !report.phone_tasks) return [];
+        const tasks = [];
+        Object.values(report.phone_tasks).forEach(item => {
+            if (Array.isArray(item)) {
+                item.forEach(t => {
+                    if (t && typeof t === 'string' && t.trim()) tasks.push(t.trim());
+                });
+            } else if (typeof item === 'string' && item.trim()) {
+                tasks.push(item.trim());
+            }
+        });
+        return Array.from(new Set(tasks));
+    },
+
+    get availableTasks() {
+        const taskMap = new Map();
+        (this.rows || []).forEach(r => {
+            this.getReportTasks(r).forEach(t => {
+                taskMap.set(t, (taskMap.get(t) || 0) + 1);
+            });
+        });
+        return Array.from(taskMap.entries()).map(([title, count]) => ({
+            title,
+            count
+        })).sort((a, b) => a.title.localeCompare(b.title));
+    },
+
+    get availablePhones() {
+        const pMap = new Map();
+        (this.rows || []).forEach(r => {
+            (r.phones || []).forEach(pk => {
+                pMap.set(pk, (pMap.get(pk) || 0) + 1);
+            });
+        });
+        return Array.from(pMap.entries()).map(([key, count]) => ({
+            key,
+            label: this.formatPhoneName(key),
+            count
+        })).sort((a, b) => a.label.localeCompare(b.label));
+    },
+
+    hasActiveFilters() {
+        return Boolean(
+            (this.search && this.search.trim()) ||
+            this.filterTask !== 'all' ||
+            this.filterPhone !== 'all'
+        );
+    },
+
+    resetFilters() {
+        this.search = '';
+        this.filterTask = 'all';
+        this.filterPhone = 'all';
+    },
+
     get filtered() {
-        return this.rows.filter(row => row.contributor_name.toLowerCase().includes(this.search.toLowerCase()));
+        const q = (this.search || '').toLowerCase().trim();
+        return (this.rows || []).filter(row => {
+            // 1. Search Query: Contributor name, Task titles, Phone names, Shift
+            if (q) {
+                const nameMatch = (row.contributor_name || '').toLowerCase().includes(q);
+                const shiftMatch = (row.shift_label || '').toLowerCase().includes(q);
+                const tasks = this.getReportTasks(row);
+                const taskMatch = tasks.some(t => t.toLowerCase().includes(q));
+                const phoneMatch = (row.phones || []).some(pk => {
+                    const pLabel = (this.phoneOptions[pk] || pk).toLowerCase();
+                    return pLabel.includes(q) || pk.toLowerCase().includes(q);
+                });
+                if (!nameMatch && !shiftMatch && !taskMatch && !phoneMatch) {
+                    return false;
+                }
+            }
+
+            // 2. Filter Task
+            if (this.filterTask && this.filterTask !== 'all') {
+                const tasks = this.getReportTasks(row);
+                if (!tasks.includes(this.filterTask)) {
+                    return false;
+                }
+            }
+
+            // 3. Filter Phone
+            if (this.filterPhone && this.filterPhone !== 'all') {
+                if (!Array.isArray(row.phones) || !row.phones.includes(this.filterPhone)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
     },
 });

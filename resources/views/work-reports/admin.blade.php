@@ -38,19 +38,21 @@
     <p x-show="error" x-text="error" role="alert" class="rounded-xl bg-red-50 p-4 text-sm text-red-700"></p>
 
     <!-- Filter Bar Modern AIKu Style -->
-    <div class="flex flex-col lg:flex-row lg:items-end gap-3.5 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xs">
+    <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xs space-y-3.5">
         
-        <!-- 1. KONTROL TANGGAL (WITA) DENGAN FLOATING CALENDAR POPOVER -->
-        <div class="w-full lg:w-auto space-y-1.5" @click.outside="calendarOpen = false">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <span>📅</span>
-                    <span>Pilih Tanggal (WITA)</span>
-                </span>
-                <span x-show="isTodaySelected()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/70">
-                    Hari Ini
-                </span>
-            </div>
+        <!-- Top Row: Date Picker & Search Input -->
+        <div class="flex flex-col lg:flex-row lg:items-end gap-3.5">
+            <!-- 1. KONTROL TANGGAL (WITA) DENGAN FLOATING CALENDAR POPOVER -->
+            <div class="w-full lg:w-auto space-y-1.5" @click.outside="calendarOpen = false">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Pilih Tanggal (WITA)</span>
+                    </span>
+                    <span x-show="isTodaySelected()" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/70">
+                        Hari Ini
+                    </span>
+                </div>
 
             <!-- Button Group Navigator Tanggal -->
             <div class="relative flex items-center gap-1.5 bg-slate-50 p-1 rounded-2xl border border-slate-200/80">
@@ -184,16 +186,19 @@
             </div>
         </div>
 
-        <!-- 2. CARI NAMA KONTRIBUTOR -->
+        <!-- 2. PENCARIAN CEPAT -->
         <div class="w-full lg:flex-1 space-y-1.5">
-            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <span>🔍</span>
-                <span>Cari Nama Kontributor</span>
-            </span>
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <span>Pencarian Cepat</span>
+                </span>
+                <span x-show="filtered.length !== rows.length" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60" x-text="filtered.length + ' dari ' + rows.length + ' laporan'"></span>
+            </div>
             <div class="relative">
                 <input type="search" 
                        x-model="search" 
-                       placeholder="Ketik nama kontributor…" 
+                       placeholder="Ketik nama kontributor, judul task, atau nama HP…" 
                        class="h-11 w-full rounded-2xl border border-slate-200/90 bg-slate-50/60 pl-10 pr-9 text-xs sm:text-sm font-medium focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 transition">
                 <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -207,8 +212,204 @@
                 </button>
             </div>
         </div>
-
     </div>
+
+    <!-- Bottom Row: Filter Badges & Dropdowns -->
+    <div class="flex items-center gap-2 flex-wrap pt-3 border-t border-slate-100">
+        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Filter Laporan:</span>
+
+        <!-- Filter List Tugas (Custom Dropdown Dengan Pencarian) -->
+        <div class="relative shrink-0" x-data="{ openTaskDropdown: false, searchTaskQuery: '' }">
+            <button type="button" 
+                    @click="openTaskDropdown = !openTaskDropdown; if(openTaskDropdown) $nextTick(() => $refs.taskSearchInput?.focus())"
+                    title="Filter berdasarkan nama tugas"
+                    class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                    :class="filterTask !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
+                <svg class="w-4 h-4 shrink-0 transition" 
+                     :class="filterTask !== 'all' ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                </svg>
+                <span class="truncate max-w-[150px] font-semibold" 
+                      :class="filterTask !== 'all' ? 'font-bold' : ''"
+                      x-text="filterTask === 'all' ? 'Semua Tugas' : filterTask" 
+                      :title="filterTask !== 'all' ? filterTask : 'Semua Tugas'"></span>
+
+                <!-- Reset Button inside trigger -->
+                <template x-if="filterTask !== 'all'">
+                    <span @click.stop="filterTask = 'all'" 
+                          class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                          title="Reset filter tugas">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </span>
+                </template>
+                <svg x-show="filterTask === 'all'" 
+                     class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                     :class="openTaskDropdown ? 'rotate-180' : ''" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+
+            <!-- Floating Dropdown Menu Tugas -->
+            <div x-show="openTaskDropdown" 
+                 @click.outside="openTaskDropdown = false; searchTaskQuery = ''"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                 class="absolute left-0 mt-1.5 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2.5 text-xs text-slate-700"
+                 x-cloak>
+                
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pilih List Tugas</span>
+                    <span class="text-[10px] text-[#009B7E] bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-bold" x-text="availableTasks.length + ' tugas'"></span>
+                </div>
+
+                <div class="relative mb-2">
+                    <input type="text"
+                           x-ref="taskSearchInput"
+                           x-model="searchTaskQuery"
+                           placeholder="Cari nama tugas..."
+                           class="w-full bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl pl-8 pr-7 py-1.5 text-xs focus:ring-1 focus:ring-[#00B090] focus:border-[#00B090] outline-none transition">
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <button x-show="searchTaskQuery" @click="searchTaskQuery = ''" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <div class="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
+                    <button type="button"
+                            @click="filterTask = 'all'; openTaskDropdown = false; searchTaskQuery = ''"
+                            class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl transition group"
+                            :class="filterTask === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full" :class="filterTask === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                            <span class="text-xs">Semua Tugas (All)</span>
+                        </div>
+                        <span x-show="filterTask === 'all'" class="text-[#00B090] font-black">✓</span>
+                    </button>
+
+                    <div class="my-1 border-t border-slate-100"></div>
+
+                    <template x-for="t in availableTasks.filter(item => !searchTaskQuery || item.title.toLowerCase().includes(searchTaskQuery.toLowerCase().trim()))" :key="t.title">
+                        <button type="button"
+                                @click="filterTask = t.title; openTaskDropdown = false; searchTaskQuery = ''"
+                                class="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-xl transition group"
+                                :class="filterTask === t.title ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'"
+                                :title="t.title">
+                            <div class="flex items-center gap-2 truncate">
+                                <span class="w-2 h-2 rounded-full shrink-0" :class="filterTask === t.title ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                <span class="text-xs truncate font-medium" x-text="t.title"></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
+                                <span class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded font-mono" x-text="t.count + ' lap'"></span>
+                                <span x-show="filterTask === t.title" class="text-[#00B090] font-black">✓</span>
+                            </div>
+                        </button>
+                    </template>
+
+                    <div x-show="availableTasks.filter(item => !searchTaskQuery || item.title.toLowerCase().includes(searchTaskQuery.toLowerCase().trim())).length === 0" 
+                         class="text-center py-4 text-xs text-slate-400">
+                        Tidak ditemukan tugas "<span x-text="searchTaskQuery" class="text-slate-700 font-semibold"></span>"
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter HP Digunakan (Custom Dropdown) -->
+        <div class="relative shrink-0" x-data="{ openPhoneDropdown: false }">
+            <button type="button" 
+                    @click="openPhoneDropdown = !openPhoneDropdown"
+                    title="Filter berdasarkan HP yang digunakan"
+                    class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                    :class="filterPhone !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
+                <svg class="w-4 h-4 shrink-0 transition" 
+                     :class="filterPhone !== 'all' ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                <span class="truncate max-w-[120px] font-semibold" 
+                      :class="filterPhone !== 'all' ? 'font-bold' : ''"
+                      x-text="filterPhone === 'all' ? 'Semua HP' : formatPhoneName(filterPhone)"></span>
+
+                <!-- Reset Button inside trigger -->
+                <template x-if="filterPhone !== 'all'">
+                    <span @click.stop="filterPhone = 'all'" 
+                          class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                          title="Reset filter HP">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </span>
+                </template>
+                <svg x-show="filterPhone === 'all'" 
+                     class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                     :class="openPhoneDropdown ? 'rotate-180' : ''" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+
+            <!-- Dropdown Menu HP -->
+            <div x-show="openPhoneDropdown" 
+                 @click.outside="openPhoneDropdown = false"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                 class="absolute left-0 mt-1.5 w-52 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 p-2 text-xs text-slate-700"
+                 x-cloak>
+                
+                <div class="px-2 py-1 mb-1">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pilih HP Digunakan</span>
+                </div>
+
+                <div class="space-y-0.5 max-h-56 overflow-y-auto custom-scrollbar">
+                    <button type="button"
+                            @click="filterPhone = 'all'; openPhoneDropdown = false"
+                            class="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-xl transition"
+                            :class="filterPhone === 'all' ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full" :class="filterPhone === 'all' ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                            <span>Semua HP (All)</span>
+                        </div>
+                        <span x-show="filterPhone === 'all'" class="text-[#00B090] font-black">✓</span>
+                    </button>
+
+                    <div class="my-1 border-t border-slate-100"></div>
+
+                    <template x-for="p in availablePhones" :key="p.key">
+                        <button type="button"
+                                @click="filterPhone = p.key; openPhoneDropdown = false"
+                                class="w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-xl transition"
+                                :class="filterPhone === p.key ? 'bg-[#EDFAF8] text-[#009B7E] font-bold' : 'hover:bg-slate-50 text-slate-700'">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full" :class="filterPhone === p.key ? 'bg-[#00B090]' : 'bg-slate-300'"></span>
+                                <span x-text="p.label"></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded font-mono" x-text="p.count + ' lap'"></span>
+                                <span x-show="filterPhone === p.key" class="text-[#00B090] font-black">✓</span>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tombol Reset Filter -->
+        <button type="button" 
+                x-show="hasActiveFilters()" 
+                @click="resetFilters()" 
+                class="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200/60 transition cursor-pointer"
+                title="Reset semua filter">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span>Reset Filter</span>
+        </button>
+    </div>
+
+</div>
 
     <!-- Summary Metrics Cards -->
     <div class="grid gap-3 sm:grid-cols-3">
@@ -259,6 +460,25 @@
                                     <span x-show="report.shift_label" class="px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300" x-text="report.shift_label"></span>
                                 </div>
                                 <p class="mt-1 text-xs text-slate-500" :title="reportTimestamp(report.created_at)" x-text="'Dikirim ' + (reportTimestamp(report.created_at).match(/\d{2}:\d{2} WITA$/)?.[0] || '—') + (report.revision > 1 ? ' · Direvisi' : '')"></p>
+
+                                <!-- Badges Task yang Dilaporkan -->
+                                <template x-if="getReportTasks(report).length > 0">
+                                    <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                                        <template x-for="tName in getReportTasks(report).slice(0, 2)" :key="tName">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold truncate max-w-[220px] transition cursor-pointer"
+                                                  @click="filterTask = tName"
+                                                  :class="filterTask === tName ? 'bg-emerald-100 text-[#009B7E] border border-emerald-300 font-bold' : 'bg-slate-100/90 hover:bg-slate-200/70 text-slate-600 border border-slate-200/60'"
+                                                  :title="'Filter task: ' + tName">
+                                                <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                                <span class="truncate" x-text="tName"></span>
+                                            </span>
+                                        </template>
+                                        <span x-show="getReportTasks(report).length > 2" 
+                                              class="text-[10px] text-slate-400 hover:text-emerald-700 font-bold cursor-pointer"
+                                              @click="openDetailModal(report)"
+                                              x-text="'+' + (getReportTasks(report).length - 2) + ' task lagi'"></span>
+                                    </div>
+                                </template>
                             </td>
                             <td class="block px-4 py-2 align-middle md:table-cell md:py-4">
                                 <span class="mb-1 block text-xs text-slate-500 md:hidden">Total durasi</span>
@@ -541,7 +761,11 @@
         </div>
 
         <p x-show="loading" class="p-8 text-center text-sm text-slate-500">Memuat laporan kerja…</p>
-        <p x-show="!loading && !filtered.length" class="p-8 text-center text-sm text-slate-500">Belum ada laporan kerja pada tanggal ini.</p>
+        <p x-show="!loading && !filtered.length && rows.length > 0" class="p-8 text-center text-sm text-slate-500">
+            Tidak ada laporan yang cocok dengan filter yang dipilih.
+            <button type="button" @click="resetFilters()" class="text-emerald-700 hover:text-emerald-800 font-bold underline ml-1 cursor-pointer">Reset filter</button>
+        </p>
+        <p x-show="!loading && !rows.length" class="p-8 text-center text-sm text-slate-500">Belum ada laporan kerja pada tanggal ini.</p>
     </div>
 
     <!-- Details are kept out of the compact report table. -->
