@@ -1,3 +1,7 @@
+### [2026-11-19 20:12 WITA] — Antigravity: icon semantik & tombol reset cepat (✕) pada filter rekaman
+- `panel.recordings`: Mengganti dot generik dengan icon SVG semantik yang relevan pada seluruh filter bar (User untuk Pekerja, Clipboard Checklist untuk Tugas, Studio Building untuk Akun Studio, Check Circle adaptif untuk Status QC, dan Circle Stack Database untuk Sumber Data), setara dengan icon kalender pada filter tanggal. Menambahkan tombol reset cepat (`✕`) saat filter aktif dan tooltip informatif pada setiap tombol filter.
+- Validasi: PHPUnit `RecordingMatchingTest` & `PayrollMigrationTest` lulus 100% (26 tests, 204 assertions), view cache cleared. State IDLE.
+
 ### [2026-11-19 20:00 WITA] — Antigravity: rapikan layout filter rekaman & tambah filter pencarian list tugas
 - `panel.recordings`, `RecordingController`, `web.php`: Merapikan tata letak bilah filter menjadi satu alur rapi dan responsif (Search ID/Task/Worker -> Tanggal -> Pekerja -> List Tugas -> Akun Studio -> QC -> Sumber -> Toggle List/Grid & Reset). Menambahkan endpoint `GET /api/studio-recordings/tasks` dan komponen dropdown pencarian `Semua Tugas` yang konsisten dengan filter akun/pekerja.
 - Validasi: PHPUnit `RecordingMatchingTest` & `PayrollMigrationTest` lulus 100% (26 tests, 204 assertions), view cache cleared. State IDLE.

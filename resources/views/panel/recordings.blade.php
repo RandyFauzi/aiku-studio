@@ -443,6 +443,7 @@
                     <div class="relative shrink-0" @click.outside="datePickerOpen = false">
                         <button type="button" 
                                 @click="toggleDatePicker()" 
+                                title="Filter rentang tanggal"
                                 class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="(filters.startDate || filters.endDate) ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
                             <svg class="w-4 h-4 shrink-0 transition" 
@@ -697,14 +698,32 @@
                     <div class="relative shrink-0" x-data="{ openWorkerDropdown: false, searchWorkerFilter: '' }">
                         <button type="button" 
                                 @click="openWorkerDropdown = !openWorkerDropdown; if(openWorkerDropdown) $nextTick(() => $refs.workerSearchInput?.focus())"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                title="Filter pekerja"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.worker !== 'all' ? (filters.worker === 'unassigned' ? 'border-amber-300 text-amber-800 bg-amber-50/60' : 'border-[#00B090] text-[#009B7E] bg-emerald-50/50') : ''">
-                            <div class="flex items-center gap-1.5 truncate max-w-[130px]">
-                                <span class="w-2 h-2 rounded-full shrink-0" 
-                                      :class="filters.worker === 'all' ? 'bg-slate-400' : (filters.worker === 'unassigned' ? 'bg-amber-500' : 'bg-[#00B090]')"></span>
-                                <span class="truncate" x-text="filters.worker === 'all' ? 'Semua Pekerja' : (filters.worker === 'unassigned' ? 'Belum Ditandai' : filters.worker)"></span>
-                            </div>
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openWorkerDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-4 h-4 shrink-0 transition" 
+                                 :class="filters.worker !== 'all' ? (filters.worker === 'unassigned' ? 'text-amber-600' : 'text-[#00B090]') : 'text-slate-400 group-hover:text-slate-600'" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span class="truncate max-w-[130px] font-semibold" 
+                                  :class="filters.worker !== 'all' ? 'font-bold' : ''"
+                                  x-text="filters.worker === 'all' ? 'Semua Pekerja' : (filters.worker === 'unassigned' ? 'Belum Ditandai' : filters.worker)"></span>
+
+                            <!-- Reset Button inside trigger -->
+                            <template x-if="filters.worker !== 'all'">
+                                <span @click.stop="filters.worker = 'all'; applyFilters(1)" 
+                                      class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                                      title="Reset filter pekerja">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </span>
+                            </template>
+                            <svg x-show="filters.worker === 'all'" 
+                                 class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                                 :class="openWorkerDropdown ? 'rotate-180' : ''" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
 
                         <!-- Floating Dropdown Menu Pekerja -->
@@ -786,13 +805,33 @@
                     <div class="relative shrink-0" x-data="{ openTaskDropdown: false, searchTaskFilter: '' }">
                         <button type="button" 
                                 @click="openTaskDropdown = !openTaskDropdown; if(openTaskDropdown) $nextTick(() => $refs.taskSearchInput?.focus())"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                title="Filter tugas"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.task !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
-                            <div class="flex items-center gap-1.5 truncate max-w-[140px]">
-                                <span class="w-2 h-2 rounded-full shrink-0" :class="filters.task !== 'all' ? 'bg-[#00B090]' : 'bg-slate-400'"></span>
-                                <span class="truncate" x-text="filters.task === 'all' ? 'Semua Tugas' : filters.task" :title="filters.task !== 'all' ? filters.task : 'Semua Tugas'"></span>
-                            </div>
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openTaskDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-4 h-4 shrink-0 transition" 
+                                 :class="filters.task !== 'all' ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                            <span class="truncate max-w-[140px] font-semibold" 
+                                  :class="filters.task !== 'all' ? 'font-bold' : ''"
+                                  x-text="filters.task === 'all' ? 'Semua Tugas' : filters.task" 
+                                  :title="filters.task !== 'all' ? filters.task : 'Semua Tugas'"></span>
+
+                            <!-- Reset Button inside trigger -->
+                            <template x-if="filters.task !== 'all'">
+                                <span @click.stop="filters.task = 'all'; applyFilters(1)" 
+                                      class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                                      title="Reset filter tugas">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </span>
+                            </template>
+                            <svg x-show="filters.task === 'all'" 
+                                 class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                                 :class="openTaskDropdown ? 'rotate-180' : ''" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
 
                         <!-- Floating Dropdown Menu Tugas -->
@@ -862,13 +901,32 @@
                     <div class="relative shrink-0" x-data="{ openAccountDropdown: false, searchAccount: '' }">
                         <button type="button"
                                 @click="openAccountDropdown = !openAccountDropdown; if(openAccountDropdown) $nextTick(() => $refs.accountSearchInput.focus())"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                title="Filter akun studio"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.email !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
-                            <div class="flex items-center gap-1.5 truncate max-w-[140px]">
-                                <span class="w-2 h-2 rounded-full shrink-0" :class="filters.email !== 'all' ? 'bg-[#00B090]' : 'bg-slate-400'"></span>
-                                <span class="truncate" x-text="filters.email === 'all' ? 'Semua Akun' : getAccountName(filters.email)"></span>
-                            </div>
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openAccountDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-4 h-4 shrink-0 transition" 
+                                 :class="filters.email !== 'all' ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <span class="truncate max-w-[140px] font-semibold" 
+                                  :class="filters.email !== 'all' ? 'font-bold' : ''"
+                                  x-text="filters.email === 'all' ? 'Semua Akun' : getAccountName(filters.email)"></span>
+
+                            <!-- Reset Button inside trigger -->
+                            <template x-if="filters.email !== 'all'">
+                                <span @click.stop="filters.email = 'all'; applyFilters(1)" 
+                                      class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                                      title="Reset filter akun">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </span>
+                            </template>
+                            <svg x-show="filters.email === 'all'" 
+                                 class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                                 :class="openAccountDropdown ? 'rotate-180' : ''" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
 
                         <!-- Floating Searchable Dropdown Menu -->
@@ -956,20 +1014,38 @@
                     <div class="relative shrink-0" x-data="{ openStatusDropdown: false }">
                         <button type="button" 
                                 @click="openStatusDropdown = !openStatusDropdown"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                title="Filter status QC"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.status !== 'all' ? (filters.status === 'unassigned' ? 'border-amber-300 text-amber-800 bg-amber-50/60' : 'border-[#00B090] text-[#009B7E] bg-emerald-50/50') : ''">
-                            <div class="flex items-center gap-1.5 truncate max-w-[140px]">
-                                <span class="w-2 h-2 rounded-full shrink-0" 
-                                      :class="{
-                                          'bg-slate-400': filters.status === 'all',
-                                          'bg-emerald-500': filters.status === 'approved',
-                                          'bg-rose-500': filters.status === 'rejected',
-                                          'bg-amber-500': filters.status === 'pending' || filters.status === 'unassigned',
-                                          'bg-purple-500': filters.status === 'qc_changed',
-                                      }"></span>
-                                <span class="truncate" x-text="getStatusLabel(filters.status)"></span>
-                            </div>
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openStatusDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-4 h-4 shrink-0 transition" 
+                                 :class="{
+                                     'text-slate-400 group-hover:text-slate-600': filters.status === 'all',
+                                     'text-emerald-600': filters.status === 'approved',
+                                     'text-rose-600': filters.status === 'rejected',
+                                     'text-amber-600': filters.status === 'pending' || filters.status === 'unassigned',
+                                     'text-purple-600': filters.status === 'qc_changed',
+                                 }" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="truncate max-w-[140px] font-semibold" 
+                                  :class="filters.status !== 'all' ? 'font-bold' : ''"
+                                  x-text="getStatusLabel(filters.status)"></span>
+
+                            <!-- Reset Button inside trigger -->
+                            <template x-if="filters.status !== 'all'">
+                                <span @click.stop="filters.status = 'all'; applyFilters(1)" 
+                                      class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                                      title="Reset filter status QC">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </span>
+                            </template>
+                            <svg x-show="filters.status === 'all'" 
+                                 class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                                 :class="openStatusDropdown ? 'rotate-180' : ''" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
 
                         <!-- Floating Dropdown Menu Status QC -->
@@ -1064,18 +1140,36 @@
                     <div class="relative shrink-0" x-data="{ openSourceDropdown: false }">
                         <button type="button" 
                                 @click="openSourceDropdown = !openSourceDropdown"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs"
+                                title="Filter sumber data"
+                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.source !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
-                            <div class="flex items-center gap-1.5 truncate">
-                                <span class="w-2 h-2 rounded-full shrink-0" 
-                                      :class="{
-                                          'bg-slate-400': filters.source === 'all',
-                                          'bg-emerald-500': filters.source === 'atlas' || filters.source === 'verbos',
-                                          'bg-sky-500': filters.source === '1618',
-                                      }"></span>
-                                <span class="truncate" x-text="filters.source === 'all' ? 'Semua Sumber' : (filters.source === '1618' ? '1618' : 'Verbos')"></span>
-                            </div>
-                            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" :class="openSourceDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-4 h-4 shrink-0 transition" 
+                                 :class="{
+                                     'text-slate-400 group-hover:text-slate-600': filters.source === 'all',
+                                     'text-emerald-600': filters.source === 'atlas' || filters.source === 'verbos',
+                                     'text-sky-600': filters.source === '1618',
+                                 }" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                            </svg>
+                            <span class="truncate font-semibold" 
+                                  :class="filters.source !== 'all' ? 'font-bold' : ''"
+                                  x-text="filters.source === 'all' ? 'Semua Sumber' : (filters.source === '1618' ? '1618' : 'Verbos')"></span>
+
+                            <!-- Reset Button inside trigger -->
+                            <template x-if="filters.source !== 'all'">
+                                <span @click.stop="filters.source = 'all'; applyFilters(1)" 
+                                      class="ml-0.5 p-0.5 rounded-md hover:bg-emerald-100 text-slate-400 hover:text-emerald-700 transition" 
+                                      title="Reset filter sumber">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </span>
+                            </template>
+                            <svg x-show="filters.source === 'all'" 
+                                 class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" 
+                                 :class="openSourceDropdown ? 'rotate-180' : ''" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
 
                         <!-- Floating Dropdown Menu Sumber Data -->
