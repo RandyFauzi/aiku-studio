@@ -135,7 +135,7 @@ class DeviceAccountController extends Controller
             'email' => ['required', 'string', 'email', 'max:128'],
             'account_name' => ['nullable', 'string', 'max:128'],
             'create_kamerakita_partner' => ['nullable', 'boolean'],
-            'full_name' => [Rule::requiredIf($request->boolean('create_kamerakita_partner')), 'nullable', 'string', 'max:255'],
+            'full_name' => ['nullable', 'string', 'max:255'],
             'whatsapp_number' => [Rule::requiredIf($request->boolean('create_kamerakita_partner')), 'nullable', 'string', 'max:20'],
             'mitra_parent_id' => [Rule::requiredIf($request->boolean('create_kamerakita_partner')), 'nullable', 'uuid'],
         ]);
@@ -174,10 +174,13 @@ class DeviceAccountController extends Controller
         });
 
         if ($request->boolean('create_kamerakita_partner')) {
+            $phoneLabel = DailyWorkReport::phoneOptions()[$phoneKey] ?? ucfirst($phoneKey);
+            $partnerFullName = trim((string) ($data['full_name'] ?? '')) ?: (trim((string) ($data['account_name'] ?? '')) ?: ('HP ' . $phoneLabel));
+
             try {
                 $existing = $kamerakita->findByEmail($email);
                 $partner = $existing ?: $kamerakita->create([
-                    'full_name' => $data['full_name'],
+                    'full_name' => $partnerFullName,
                     'email' => $email,
                     'password' => Str::password(32),
                     'whatsapp_number' => $data['whatsapp_number'],
@@ -404,23 +407,36 @@ class DeviceAccountController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, DeviceAccount $deviceAccount): JsonResponse
+    public function destroy(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
 
-        abort_if($deviceAccount->kamerakita_partner_id, 422, 'Akun ini terhubung ke mitra KameraKita. Nonaktifkan mitra dan simpan tautannya; jangan hapus riwayat HP.');
+        if ($deviceAccount->kamerakita_partner_id) {
+            abort_unless($this->isStudioOwner($request), 403, 'Menghapus akun mitra KameraKita khusus untuk owner AIKU Studio.');
+            try {
+                $kamerakita->delete($deviceAccount->kamerakita_partner_id);
+            } catch (\Throwable $exception) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus akun mitra di KameraKita: ' . $exception->getMessage(),
+                ], 502);
+            }
+        } elseif ($deviceAccount->is_active && ! $this->isStudioOwner($request)) {
+            abort(422, 'Akun yang sedang aktif tidak dapat dihapus. Silakan aktifkan akun lain terlebih dahulu.');
+        }
 
         $email = $deviceAccount->email;
         $label = $deviceAccount->phone_label;
+        $hasKamerakita = (bool) $deviceAccount->kamerakita_partner_id;
+
         $this->mutate(function () use ($deviceAccount) {
             $deviceAccount->refresh();
-            abort_if($deviceAccount->is_active, 422, 'Akun yang sedang aktif tidak dapat dihapus. Silakan aktifkan akun lain terlebih dahulu.');
             $deviceAccount->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => "Akun {$email} berhasil dihapus dari daftar {$label}.",
+            'message' => "Akun {$email} berhasil dihapus dari daftar {$label}" . ($hasKamerakita ? ' dan akun mitra KameraKita berhasil dihapus.' : '.'),
         ]);
     }
 }

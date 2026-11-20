@@ -230,15 +230,10 @@
                                         <span class="block mt-0.5 text-xs text-slate-600">Privat untuk Studio ini. Email yang sama didaftarkan sebagai mitra dan langsung terhubung ke akun mitra pengampu pilihan.</span>
                                     </span>
                                 </label>
-                                <div x-show="createKamerakitaPartner" x-cloak class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama lengkap mitra *</label>
-                                        <input type="text" x-model="partnerFullName" maxlength="255" :required="createKamerakitaPartner" placeholder="Nama sesuai profil" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
-                                    </div>
+                                <div x-show="createKamerakitaPartner" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                     <div>
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Akun Mitra Pengampu *</label>
                                         <select x-model="partnerParentId" @change="onParentChange()" :required="createKamerakitaPartner" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
-                                            <option value="">Pilih akun mitra pengampu</option>
                                             <template x-for="parent in kamerakita.parents || []" :key="parent.id">
                                                 <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
                                             </template>
@@ -248,8 +243,9 @@
                                         <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
                                         <input type="tel" x-model="partnerWhatsapp" maxlength="20" :required="createKamerakitaPartner" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
                                     </div>
-                                    <p x-show="!kamerakita.configured" class="sm:col-span-3 text-xs font-semibold text-amber-800">Koneksi server belum disiapkan. Minta admin memasang URL dan token sesuai panduan integrasi.</p>
-                                    <p x-show="kamerakita.configured && !(kamerakita.parents || []).length" class="sm:col-span-3 text-xs font-semibold text-amber-800">Daftar akun mitra pengampu belum dapat dimuat. Periksa token dan koneksi Kamerakita.</p>
+                                    <p class="sm:col-span-2 text-[11px] text-slate-500 italic">Nama mitra KameraKita akan otomatis mengikuti isi Catatan / Label di atas.</p>
+                                    <p x-show="!kamerakita.configured" class="sm:col-span-2 text-xs font-semibold text-amber-800">Koneksi server belum disiapkan. Minta admin memasang URL dan token sesuai panduan integrasi.</p>
+                                    <p x-show="kamerakita.configured && !(kamerakita.parents || []).length" class="sm:col-span-2 text-xs font-semibold text-amber-800">Daftar akun mitra pengampu belum dapat dimuat. Periksa token dan koneksi Kamerakita.</p>
                                 </div>
                             </div>
 
@@ -342,14 +338,12 @@
                                                         <span>Edit</span>
                                                     </button>
 
-                                                    <template x-if="!acc.is_active">
-                                                        <button type="button" 
-                                                                @click="deleteAccount(acc)"
-                                                                class="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
-                                                                title="Hapus dari daftar HP ini">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                        </button>
-                                                    </template>
+                                                    <button type="button" 
+                                                            @click="deleteAccount(acc)"
+                                                            class="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+                                                            :title="acc.kamerakita_partner_id ? 'Hapus dari daftar HP dan hapus mitra KameraKita' : 'Hapus dari daftar HP ini'">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -674,9 +668,6 @@
                 onToggleCreatePartner() {
                     if (this.createKamerakitaPartner) {
                         this.autoSelectParent();
-                        if (!this.partnerFullName && this.formName) {
-                            this.partnerFullName = this.formName;
-                        }
                     }
                 },
 
@@ -727,7 +718,7 @@
                                 email: this.formEmail,
                                 account_name: this.formName,
                                 create_kamerakita_partner: this.createKamerakitaPartner,
-                                full_name: this.partnerFullName || this.formName,
+                                full_name: this.formName || ('Akun ' + (this.selectedPhone?.label || 'Studio')),
                                 whatsapp_number: this.partnerWhatsapp,
                                 mitra_parent_id: this.partnerParentId
                             })
@@ -852,9 +843,18 @@
                 },
 
                 async deleteAccount(acc) {
+                    let title = 'Hapus dari Daftar HP?';
+                    let text = `Hapus akun ${acc.email} dari daftar HP ${this.selectedPhone?.label}?`;
+                    if (acc.kamerakita_partner_id) {
+                        title = 'Hapus Akun & Mitra KameraKita?';
+                        text = `Hapus akun ${acc.email} dari daftar HP ${this.selectedPhone?.label} dan OTOMATIS HAPUS akun Mitra di KameraKita?`;
+                    } else if (acc.is_active) {
+                        text = `Akun ${acc.email} sedang aktif di HP ${this.selectedPhone?.label}. Yakin ingin menghapusnya?`;
+                    }
+
                     const confirm = await Swal.fire({
-                        title: 'Hapus dari Daftar HP?',
-                        text: `Hapus akun ${acc.email} dari daftar HP ${this.selectedPhone?.label}?`,
+                        title: title,
+                        text: text,
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonText: 'Ya, Hapus',
@@ -883,13 +883,13 @@
                             icon: 'success',
                             title: 'Terhapus',
                             text: data.message,
-                            timer: 1500,
+                            timer: 2000,
                             showConfirmButton: false
                         });
                     } catch (error) {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal',
+                            title: 'Gagal Menghapus',
                             text: error.message
                         });
                     }

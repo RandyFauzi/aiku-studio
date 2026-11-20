@@ -105,4 +105,13 @@ class KameraKitaPartnerClient
             $this->handleException($e);
         }
     }
+
+    public function delete(string $partnerId): array
+    {
+        try {
+            return $this->request()->delete('/partners/'.$partnerId)->throw()->json();
+        } catch (RequestException $e) {
+            $this->handleException($e);
+        }
+    }
 }

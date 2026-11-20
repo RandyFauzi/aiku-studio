@@ -309,7 +309,36 @@ class KameraKitaPartnerIntegrationTest extends TestCase
         $this->assertEquals('Brand New Name', $account->account_name);
     }
 
-    public function test_cannot_delete_or_change_email_of_linked_kamerakita_account(): void
+    public function test_owner_can_delete_linked_kamerakita_account_and_deletes_on_kamerakita(): void
+    {
+        $account = DeviceAccount::create([
+            'phone_key' => 'hitam',
+            'email' => 'deletable.mitra@example.com',
+            'account_name' => 'Deletable Mitra',
+            'is_active' => true,
+            'kamerakita_partner_id' => '77777777-7777-7777-7777-777777777777',
+        ]);
+
+        Http::fake([
+            self::BASE_URL.'/api/private/studio/partners/77777777-7777-7777-7777-777777777777' => Http::response(['deleted' => true], 200),
+        ]);
+
+        // Regular admin is forbidden
+        $this->actingAs($this->admin)
+            ->deleteJson("/api/devices/accounts/{$account->id}")
+            ->assertForbidden();
+
+        // Owner can delete, which also calls delete on KameraKita
+        $this->actingAs($this->owner)
+            ->deleteJson("/api/devices/accounts/{$account->id}")
+            ->assertOk();
+
+        $this->assertDatabaseMissing('device_accounts', ['id' => $account->id]);
+
+        Http::assertSent(fn ($request) => $request->method() === 'DELETE' && str_contains($request->url(), '77777777-7777-7777-7777-777777777777'));
+    }
+
+    public function test_cannot_rename_email_of_linked_kamerakita_account(): void
     {
         $account = DeviceAccount::create([
             'phone_key' => 'hitam',
@@ -318,13 +347,6 @@ class KameraKitaPartnerIntegrationTest extends TestCase
             'is_active' => false,
             'kamerakita_partner_id' => '77777777-7777-7777-7777-777777777777',
         ]);
-
-        // Cannot delete
-        $this->actingAs($this->owner)
-            ->deleteJson("/api/devices/accounts/{$account->id}")
-            ->assertStatus(422);
-
-        $this->assertDatabaseHas('device_accounts', ['id' => $account->id]);
 
         // Cannot rename email
         $this->actingAs($this->owner)

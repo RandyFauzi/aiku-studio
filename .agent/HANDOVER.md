@@ -1,3 +1,7 @@
+### [2026-11-20 13:08 WITA] — Antigravity: tombol hapus akun otomatis hapus mitra KameraKita & nama mitra otomatis dari catatan
+- `KameraKitaPartnerClient`, `DeviceAccountController`, `devices.blade.php`: Menghilangkan input manual nama mitra dan mengotomatiskan nama mitra KameraKita dari isi Catatan / Label (atau nama HP). Mengaktifkan tombol hapus akun di tabel HP (termasuk saat akun aktif) yang otomatis menghapus akun mitra + user di KameraKita secara server-to-server.
+- Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (12 tests, 44 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%, `npm run build` sukses. State IDLE.
+
 ### [2026-11-20 12:57 WITA] — Antigravity: batasi pilihan akun mitra ke akun studio owner (KMK-847 & KMK-210)
 - `config/services.php`, `DeviceAccountController`, `devices.blade.php`, `KAMERAKITA_INTEGRATION.md`: Membatasi akun mitra pengampu yang muncul di dropdown hanya untuk akun milik studio (`KMK-847` & `KMK-210`) via `KAMERAKITA_ALLOWED_PARENT_CODES`, mengabaikan mitra pihak luar lainnya. Akun `KMK-847 - AI KU STUDIO 2` otomatis diprioritaskan di urutan teratas dan terpilih secara default beserta nomor WA-nya (`+62895366583095`).
 - Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (11 tests, 42 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%. State IDLE.
