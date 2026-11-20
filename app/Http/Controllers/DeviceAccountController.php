@@ -94,7 +94,26 @@ class DeviceAccountController extends Controller
     private function safeParents(KameraKitaPartnerClient $client): array
     {
         try {
-            return $client->parents();
+            $parents = $client->parents();
+            $allowed = (array) config('services.kamerakita.allowed_parent_codes', ['KMK-847', 'KMK-210']);
+
+            if (! empty($allowed)) {
+                $allowedUpper = array_map('strtoupper', $allowed);
+                $parents = array_values(array_filter($parents, function ($parent) use ($allowedUpper) {
+                    $code = strtoupper((string) ($parent['mitra_id'] ?? ''));
+                    return in_array($code, $allowedUpper, true);
+                }));
+
+                usort($parents, function ($a, $b) use ($allowedUpper) {
+                    $posA = array_search(strtoupper((string) ($a['mitra_id'] ?? '')), $allowedUpper, true);
+                    $posB = array_search(strtoupper((string) ($b['mitra_id'] ?? '')), $allowedUpper, true);
+                    $posA = $posA === false ? PHP_INT_MAX : $posA;
+                    $posB = $posB === false ? PHP_INT_MAX : $posB;
+                    return $posA <=> $posB;
+                });
+            }
+
+            return $parents;
         } catch (\Throwable) {
             return [];
         }

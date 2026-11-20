@@ -88,7 +88,9 @@ class KameraKitaPartnerIntegrationTest extends TestCase
         Http::fake([
             self::BASE_URL.'/api/private/studio/parents' => Http::response([
                 'data' => [
-                    ['id' => '22222222-2222-2222-2222-222222222222', 'mitra_id' => 'KMK-999', 'full_name' => 'Akun Utama Pusat'],
+                    ['id' => '99999999-9999-9999-9999-999999999999', 'mitra_id' => 'KMK-999', 'full_name' => 'Mitra Lain Luar Studio'],
+                    ['id' => '21000000-0000-0000-0000-000000000210', 'mitra_id' => 'KMK-210', 'full_name' => 'AI KU Studio'],
+                    ['id' => '84700000-0000-0000-0000-000000000847', 'mitra_id' => 'KMK-847', 'full_name' => 'AI KU STUDIO 2', 'whatsapp_number' => '+62895366583095'],
                 ],
             ], 200),
         ]);
@@ -98,8 +100,10 @@ class KameraKitaPartnerIntegrationTest extends TestCase
         $this->assertTrue($response->json('kamerakita.owner_access'));
         $this->assertTrue($response->json('kamerakita.configured'));
         $parents = $response->json('kamerakita.parents');
-        $this->assertCount(1, $parents);
-        $this->assertEquals('KMK-999', $parents[0]['mitra_id']);
+        // Hanya KMK-847 dan KMK-210 yang diizinkan untuk studio
+        $this->assertCount(2, $parents);
+        $this->assertEquals('KMK-847', $parents[0]['mitra_id']);
+        $this->assertEquals('KMK-210', $parents[1]['mitra_id']);
     }
 
     public function test_non_owner_cannot_create_device_account_with_partner(): void

@@ -647,10 +647,12 @@
                     const parents = this.kamerakita?.parents || [];
                     if (!parents.length) return;
 
+                    // Prioritaskan akun KMK-847 (yang aktif terpakai saat ini)
                     let target = parents.find(p => 
-                        (p.mitra_id && p.mitra_id.toUpperCase().includes('847')) || 
-                        (p.full_name && p.full_name.toUpperCase().includes('AI KU STUDIO'))
-                    ) || (parents.length === 1 ? parents[0] : null);
+                        (p.mitra_id && p.mitra_id.toUpperCase().includes('847'))
+                    ) || parents.find(p => 
+                        (p.full_name && p.full_name.toUpperCase().includes('AI KU STUDIO 2'))
+                    ) || parents[0];
 
                     if (target) {
                         if (!this.partnerParentId) {
@@ -690,9 +692,10 @@
                         const parents = this.kamerakita?.parents || [];
                         if (parents.length && !this.editForm.partner_parent_id) {
                             let target = parents.find(p => 
-                                (p.mitra_id && p.mitra_id.toUpperCase().includes('847')) || 
-                                (p.full_name && p.full_name.toUpperCase().includes('AI KU STUDIO'))
-                            ) || (parents.length === 1 ? parents[0] : null);
+                                (p.mitra_id && p.mitra_id.toUpperCase().includes('847'))
+                            ) || parents.find(p => 
+                                (p.full_name && p.full_name.toUpperCase().includes('AI KU STUDIO 2'))
+                            ) || parents[0];
 
                             if (target) {
                                 this.editForm.partner_parent_id = target.id;

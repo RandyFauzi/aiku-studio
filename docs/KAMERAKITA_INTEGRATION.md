@@ -46,8 +46,10 @@ Buka file `.env` di server AIKU Studio dan tambahkan variabel berikut:
 KAMERAKITA_API_URL=https://kamerakitaid.site
 KAMERAKITA_API_TOKEN=masukkan_token_64_karakter_hex_yang_sama_disini
 AIKU_STUDIO_OWNER_EMAIL=email_owner_anda@example.com
+# Daftar kode mitra yang boleh dipilih sebagai induk akun studio (diprioritaskan sesuai urutan)
+KAMERAKITA_ALLOWED_PARENT_CODES=KMK-847,KMK-210
 ```
-*Catatan: `KAMERAKITA_API_URL` harus menggunakan domain HTTPS publik tanpa akhiran `/api`.*
+*Catatan: `KAMERAKITA_API_URL` harus menggunakan domain HTTPS publik tanpa akhiran `/api`. Secara default, hanya akun `KMK-847` (AI KU STUDIO 2) dan `KMK-210` (AI KU Studio) yang ditampilkan di menu dropdown studio agar terisolasi dari mitra lain.*
 
 ### Langkah 4: Jalankan Migrasi Database di AIKU Studio
 Jalankan migrasi di server AIKU Studio untuk menambahkan kolom tautan mitra ke tabel `device_accounts`:

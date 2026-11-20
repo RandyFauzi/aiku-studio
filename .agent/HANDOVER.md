@@ -1,3 +1,7 @@
+### [2026-11-20 12:57 WITA] — Antigravity: batasi pilihan akun mitra ke akun studio owner (KMK-847 & KMK-210)
+- `config/services.php`, `DeviceAccountController`, `devices.blade.php`, `KAMERAKITA_INTEGRATION.md`: Membatasi akun mitra pengampu yang muncul di dropdown hanya untuk akun milik studio (`KMK-847` & `KMK-210`) via `KAMERAKITA_ALLOWED_PARENT_CODES`, mengabaikan mitra pihak luar lainnya. Akun `KMK-847 - AI KU STUDIO 2` otomatis diprioritaskan di urutan teratas dan terpilih secara default beserta nomor WA-nya (`+62895366583095`).
+- Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (11 tests, 42 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-20 12:35 WITA] — Antigravity: dukungan akun mitra pengampu & nomor WhatsApp otomatis
 - `resources/views/panel/devices.blade.php`: Mengubah label dari "Akun utama" menjadi "Akun Mitra Pengampu (Koordinator)". Mengintegrasikan auto-select akun mitra studio (KMK-847 / AI KU STUDIO) dan auto-fill nomor WhatsApp mitra baru secara otomatis dari nomor WA akun mitra pengampu (`+62895366583095`), baik saat pendaftaran HP baru maupun modal edit/penautan mitra.
 - Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (11 tests, 41 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%, `npm run build` sukses. State IDLE.

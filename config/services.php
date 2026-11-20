@@ -6,6 +6,7 @@ return [
         'url' => env('KAMERAKITA_API_URL'),
         'token' => env('KAMERAKITA_API_TOKEN'),
         'owner_email' => env('AIKU_STUDIO_OWNER_EMAIL'),
+        'allowed_parent_codes' => array_filter(array_map('trim', explode(',', (string) env('KAMERAKITA_ALLOWED_PARENT_CODES', 'KMK-847,KMK-210')))),
     ],
 
     /*
