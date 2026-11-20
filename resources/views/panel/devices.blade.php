@@ -224,10 +224,10 @@
 
                             <div x-show="kamerakita.owner_access" x-cloak class="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 space-y-3">
                                 <label class="flex items-start gap-3 cursor-pointer">
-                                    <input type="checkbox" x-model="createKamerakitaPartner" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                    <input type="checkbox" x-model="createKamerakitaPartner" @change="onToggleCreatePartner()" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                     <span>
                                         <span class="block text-sm font-bold text-slate-800">Buat akun Mitra KameraKita juga</span>
-                                        <span class="block mt-0.5 text-xs text-slate-600">Privat untuk Studio ini. Email yang sama didaftarkan sebagai mitra dan langsung terhubung ke akun utama pilihan.</span>
+                                        <span class="block mt-0.5 text-xs text-slate-600">Privat untuk Studio ini. Email yang sama didaftarkan sebagai mitra dan langsung terhubung ke akun mitra pengampu pilihan.</span>
                                     </span>
                                 </label>
                                 <div x-show="createKamerakitaPartner" x-cloak class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -236,20 +236,20 @@
                                         <input type="text" x-model="partnerFullName" maxlength="255" :required="createKamerakitaPartner" placeholder="Nama sesuai profil" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
-                                        <input type="tel" x-model="partnerWhatsapp" maxlength="20" :required="createKamerakitaPartner" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun utama KameraKita *</label>
-                                        <select x-model="partnerParentId" :required="createKamerakitaPartner" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
-                                            <option value="">Pilih akun utama</option>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun Mitra Pengampu *</label>
+                                        <select x-model="partnerParentId" @change="onParentChange()" :required="createKamerakitaPartner" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
+                                            <option value="">Pilih akun mitra pengampu</option>
                                             <template x-for="parent in kamerakita.parents || []" :key="parent.id">
                                                 <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
                                             </template>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
+                                        <input type="tel" x-model="partnerWhatsapp" maxlength="20" :required="createKamerakitaPartner" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
+                                    </div>
                                     <p x-show="!kamerakita.configured" class="sm:col-span-3 text-xs font-semibold text-amber-800">Koneksi server belum disiapkan. Minta admin memasang URL dan token sesuai panduan integrasi.</p>
-                                    <p x-show="kamerakita.configured && !(kamerakita.parents || []).length" class="sm:col-span-3 text-xs font-semibold text-amber-800">Daftar akun utama belum dapat dimuat. Periksa token dan koneksi Kamerakita.</p>
+                                    <p x-show="kamerakita.configured && !(kamerakita.parents || []).length" class="sm:col-span-3 text-xs font-semibold text-amber-800">Daftar akun mitra pengampu belum dapat dimuat. Periksa token dan koneksi Kamerakita.</p>
                                 </div>
                             </div>
 
@@ -461,8 +461,8 @@
                                         <input type="tel" x-model="editForm.partner_whatsapp" maxlength="20" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
                                     </div>
                                     <div class="sm:col-span-2">
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun utama *</label>
-                                        <select x-model="editForm.partner_parent_id" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun Mitra Pengampu (Koordinator) *</label>
+                                        <select x-model="editForm.partner_parent_id" @change="onEditParentChange()" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
                                             <template x-for="parent in kamerakita.parents || []" :key="parent.id">
                                                 <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
                                             </template>
@@ -473,7 +473,7 @@
 
                             <div x-show="!editForm.kamerakita_partner_id && kamerakita.owner_access" x-cloak class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-3">
                                 <label class="flex items-start gap-2.5 cursor-pointer">
-                                    <input type="checkbox" x-model="editForm.link_kamerakita" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                    <input type="checkbox" x-model="editForm.link_kamerakita" @change="onToggleEditLinkKamerakita()" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                     <span>
                                         <span class="block text-xs font-bold text-indigo-900">Tautkan ke Akun Mitra KameraKita</span>
                                         <span class="block mt-0.5 text-[11px] text-slate-500">Buat atau hubungkan akun mitra KameraKita untuk email ini.</span>
@@ -485,17 +485,17 @@
                                         <input type="text" x-model="editForm.partner_full_name" maxlength="255" :required="editForm.link_kamerakita" placeholder="Nama mitra" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
-                                        <input type="tel" x-model="editForm.partner_whatsapp" maxlength="20" :required="editForm.link_kamerakita" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun utama KameraKita *</label>
-                                        <select x-model="editForm.partner_parent_id" :required="editForm.link_kamerakita" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
-                                            <option value="">Pilih akun utama</option>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun Mitra Pengampu *</label>
+                                        <select x-model="editForm.partner_parent_id" @change="onEditParentChange()" :required="editForm.link_kamerakita" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
+                                            <option value="">Pilih akun mitra pengampu</option>
                                             <template x-for="parent in kamerakita.parents || []" :key="parent.id">
                                                 <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
                                             </template>
                                         </select>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
+                                        <input type="tel" x-model="editForm.partner_whatsapp" maxlength="20" :required="editForm.link_kamerakita" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
                                     </div>
                                 </div>
                             </div>
@@ -627,6 +627,10 @@
                         if (this.phones.length && !this.phones.some(p => p.key === this.selectedPhoneKey)) {
                             this.selectedPhoneKey = this.phones[0].key;
                         }
+
+                        if (this.createKamerakitaPartner) {
+                            this.autoSelectParent();
+                        }
                     } catch (error) {
                         console.error('Error fetching devices:', error);
                         Swal.fire({
@@ -636,6 +640,70 @@
                         });
                     } finally {
                         this.isLoading = false;
+                    }
+                },
+
+                autoSelectParent() {
+                    const parents = this.kamerakita?.parents || [];
+                    if (!parents.length) return;
+
+                    let target = parents.find(p => 
+                        (p.mitra_id && p.mitra_id.toUpperCase().includes('847')) || 
+                        (p.full_name && p.full_name.toUpperCase().includes('AI KU STUDIO'))
+                    ) || (parents.length === 1 ? parents[0] : null);
+
+                    if (target) {
+                        if (!this.partnerParentId) {
+                            this.partnerParentId = target.id;
+                        }
+                        if (!this.partnerWhatsapp && target.whatsapp_number) {
+                            this.partnerWhatsapp = target.whatsapp_number;
+                        }
+                    }
+                },
+
+                onParentChange() {
+                    const parent = (this.kamerakita?.parents || []).find(p => p.id === this.partnerParentId);
+                    if (parent && parent.whatsapp_number) {
+                        this.partnerWhatsapp = parent.whatsapp_number;
+                    }
+                },
+
+                onToggleCreatePartner() {
+                    if (this.createKamerakitaPartner) {
+                        this.autoSelectParent();
+                        if (!this.partnerFullName && this.formName) {
+                            this.partnerFullName = this.formName;
+                        }
+                    }
+                },
+
+                onEditParentChange() {
+                    const parent = (this.kamerakita?.parents || []).find(p => p.id === this.editForm.partner_parent_id);
+                    if (parent && parent.whatsapp_number) {
+                        this.editForm.partner_whatsapp = parent.whatsapp_number;
+                    }
+                },
+
+                onToggleEditLinkKamerakita() {
+                    if (this.editForm.link_kamerakita) {
+                        const parents = this.kamerakita?.parents || [];
+                        if (parents.length && !this.editForm.partner_parent_id) {
+                            let target = parents.find(p => 
+                                (p.mitra_id && p.mitra_id.toUpperCase().includes('847')) || 
+                                (p.full_name && p.full_name.toUpperCase().includes('AI KU STUDIO'))
+                            ) || (parents.length === 1 ? parents[0] : null);
+
+                            if (target) {
+                                this.editForm.partner_parent_id = target.id;
+                                if (!this.editForm.partner_whatsapp && target.whatsapp_number) {
+                                    this.editForm.partner_whatsapp = target.whatsapp_number;
+                                }
+                            }
+                        }
+                        if (!this.editForm.partner_full_name && this.editForm.account_name) {
+                            this.editForm.partner_full_name = this.editForm.account_name;
+                        }
                     }
                 },
 

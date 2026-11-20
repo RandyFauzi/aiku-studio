@@ -1,3 +1,7 @@
+### [2026-11-20 12:35 WITA] — Antigravity: dukungan akun mitra pengampu & nomor WhatsApp otomatis
+- `resources/views/panel/devices.blade.php`: Mengubah label dari "Akun utama" menjadi "Akun Mitra Pengampu (Koordinator)". Mengintegrasikan auto-select akun mitra studio (KMK-847 / AI KU STUDIO) dan auto-fill nomor WhatsApp mitra baru secara otomatis dari nomor WA akun mitra pengampu (`+62895366583095`), baik saat pendaftaran HP baru maupun modal edit/penautan mitra.
+- Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (11 tests, 41 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%, `npm run build` sukses. State IDLE.
+
 ### [2026-11-20 12:02 WITA] — Antigravity: integrasi privat AIKU STUDIO ↔ KameraKita (kelola mitra per HP)
 - `DeviceAccountController`, `DeviceAccount`, `KameraKitaPartnerClient`, `devices.blade.php`, `web.php`, `KAMERAKITA_INTEGRATION.md`: Mengimplementasikan integrasi privat server-to-server owner-only untuk pendaftaran, penautan akun HP ke mitra KameraKita, update profil mitra, aktivasi/penonaktifan (active/suspended), idempotensi retry tanpa duplikat, dan penanganan kegagalan parsial 502 secara transparan di UI Pengaturan HP & Akun.
 - Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (11 tests, 41 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%, `npm run build` sukses, `git diff --check` clean, Graphify local updated. State IDLE.
