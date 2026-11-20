@@ -106,6 +106,10 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
                 Route::post('/accounts', [DeviceAccountController::class, 'store']);
                 Route::match(['put', 'patch'], '/accounts/{deviceAccount}', [DeviceAccountController::class, 'update']);
                 Route::patch('/accounts/{deviceAccount}/activate', [DeviceAccountController::class, 'activate']);
+                Route::patch('/accounts/{deviceAccount}/kamerakita-status', [DeviceAccountController::class, 'setKamerakitaStatus']);
+                Route::get('/accounts/{deviceAccount}/kamerakita', [DeviceAccountController::class, 'showKamerakitaPartner']);
+                Route::put('/accounts/{deviceAccount}/kamerakita', [DeviceAccountController::class, 'updateKamerakitaPartner']);
+                Route::post('/accounts/{deviceAccount}/kamerakita', [DeviceAccountController::class, 'linkKamerakitaPartner']);
                 Route::delete('/accounts/{deviceAccount}', [DeviceAccountController::class, 'destroy']);
             });
             Route::get('/slips', [PayslipController::class, 'index']);

@@ -11,9 +11,9 @@ CREATE TABLE "cache_locks" ("key" varchar not null, "owner" varchar not null, "e
 
 CREATE TABLE "contributors" ("id" integer primary key autoincrement not null, "nama" varchar, "no_wa" varchar, "domisili" varchar, "no_rek" varchar, "shift" varchar, "hp" varchar, "email" varchar, "role" varchar not null default 'contributor');
 
-CREATE TABLE "daily_work_reports" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "total_duration_minutes" integer not null, "phones" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime, "phone_durations" text, "phone_emails" text, "phone_tasks" text, "shift_label" varchar, "notes" varchar);
+CREATE TABLE "daily_work_reports" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "total_duration_minutes" integer not null, "phones" text not null, "revision" integer not null default '1', "created_at" datetime, "updated_at" datetime, "phone_durations" text, "phone_emails" text, "phone_tasks" text, "shift_label" varchar, "notes" varchar, "is_validated" tinyint(1) not null default '0');
 
-CREATE TABLE "device_accounts" ("id" integer primary key autoincrement not null, "phone_key" varchar not null, "email" varchar not null, "account_name" varchar, "is_active" tinyint(1) not null default '0', "activated_at" datetime, "created_at" datetime, "updated_at" datetime);
+CREATE TABLE "device_accounts" ("id" integer primary key autoincrement not null, "phone_key" varchar not null, "email" varchar not null, "account_name" varchar, "is_active" tinyint(1) not null default '0', "activated_at" datetime, "created_at" datetime, "updated_at" datetime, "kamerakita_partner_id" varchar, "kamerakita_partner_code" varchar, "kamerakita_status" varchar);
 
 CREATE TABLE "failed_jobs" ("id" integer primary key autoincrement not null, "uuid" varchar not null, "connection" text not null, "queue" text not null, "payload" text not null, "exception" text not null, "failed_at" datetime not null default CURRENT_TIMESTAMP);
 
@@ -90,6 +90,8 @@ CREATE INDEX "daily_work_reports_work_date_index" on "daily_work_reports" ("work
 CREATE INDEX "device_accounts_email_index" on "device_accounts" ("email");
 
 CREATE INDEX "device_accounts_is_active_index" on "device_accounts" ("is_active");
+
+CREATE INDEX "device_accounts_kamerakita_partner_id_index" on "device_accounts" ("kamerakita_partner_id");
 
 CREATE UNIQUE INDEX "device_accounts_phone_key_email_unique" on "device_accounts" ("phone_key", "email");
 

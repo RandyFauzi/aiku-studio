@@ -1,3 +1,7 @@
+### [2026-11-20 12:02 WITA] — Antigravity: integrasi privat AIKU STUDIO ↔ KameraKita (kelola mitra per HP)
+- `DeviceAccountController`, `DeviceAccount`, `KameraKitaPartnerClient`, `devices.blade.php`, `web.php`, `KAMERAKITA_INTEGRATION.md`: Mengimplementasikan integrasi privat server-to-server owner-only untuk pendaftaran, penautan akun HP ke mitra KameraKita, update profil mitra, aktivasi/penonaktifan (active/suspended), idempotensi retry tanpa duplikat, dan penanganan kegagalan parsial 502 secara transparan di UI Pengaturan HP & Akun.
+- Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (11 tests, 41 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%, `npm run build` sukses, `git diff --check` clean, Graphify local updated. State IDLE.
+
 ### [2026-11-19 20:38 WITA] — Antigravity: tombol centang penanda validasi (is_validated) laporan kerja admin
 - `DailyWorkReport`, `DailyWorkReportController`, `routes/web.php`, `resources/views/work-reports/admin.blade.php`, `work-reports.js`: Menambahkan penanda boolean mandiri `is_validated` (default false) dengan tombol centang interaktif `Validasi / Valid` di kolom Aksi tabel laporan kerja dan detail modal admin, disertai badge hijau `✓ Valid` pada nama kontributor saat tervalidasi.
 - Validasi: Migrasi DDL `add_is_validated_to_daily_work_reports_table`, PHPUnit `DailyWorkReportTest` lulus 100% (20 tests, 198 assertions), `npm run build` sukses, view cache cleared. State IDLE.
@@ -511,3 +515,8 @@
 - **File Diubah**: `resources/views/portal/*`, `routes/web.php`, `resources/js/attendance.js`, `resources/views/layouts/sidebar.blade.php`.
 - **Status**: 84/84 PHPUnit PASS, Vite build PASS. Ter-push ke `origin/main` (`059698c`).
 - **Pesan untuk CODEX**: Gunakan `@extends('portal.layout')` jika menambah fitur portal. Selalu periksa & update `.agent/STATE.json` sebelum mengedit file.
+
+### [2026-11-20] — CODEX
+- Implemented private, owner-email-gated KameraKita partner integration in AIKU Studio, plus bearer-token API, create/update/status operations, linked IDs, migration, and setup guide.
+- PHP syntax, route registration, Blade cache, Graphify refresh, and diff whitespace checks passed; no tests or live database migrations were run.
+- Deploy both codebases, configure matching random API token in both server .env files and AIKU owner email, then run AIKU migration before enabling the UI.

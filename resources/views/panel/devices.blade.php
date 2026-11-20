@@ -222,6 +222,37 @@
                                 </div>
                             </div>
 
+                            <div x-show="kamerakita.owner_access" x-cloak class="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 space-y-3">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" x-model="createKamerakitaPartner" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span>
+                                        <span class="block text-sm font-bold text-slate-800">Buat akun Mitra KameraKita juga</span>
+                                        <span class="block mt-0.5 text-xs text-slate-600">Privat untuk Studio ini. Email yang sama didaftarkan sebagai mitra dan langsung terhubung ke akun utama pilihan.</span>
+                                    </span>
+                                </label>
+                                <div x-show="createKamerakitaPartner" x-cloak class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama lengkap mitra *</label>
+                                        <input type="text" x-model="partnerFullName" maxlength="255" :required="createKamerakitaPartner" placeholder="Nama sesuai profil" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
+                                        <input type="tel" x-model="partnerWhatsapp" maxlength="20" :required="createKamerakitaPartner" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun utama KameraKita *</label>
+                                        <select x-model="partnerParentId" :required="createKamerakitaPartner" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
+                                            <option value="">Pilih akun utama</option>
+                                            <template x-for="parent in kamerakita.parents || []" :key="parent.id">
+                                                <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <p x-show="!kamerakita.configured" class="sm:col-span-3 text-xs font-semibold text-amber-800">Koneksi server belum disiapkan. Minta admin memasang URL dan token sesuai panduan integrasi.</p>
+                                    <p x-show="kamerakita.configured && !(kamerakita.parents || []).length" class="sm:col-span-3 text-xs font-semibold text-amber-800">Daftar akun utama belum dapat dimuat. Periksa token dan koneksi Kamerakita.</p>
+                                </div>
+                            </div>
+
                             <div class="flex justify-end pt-1">
                                 <button type="submit" 
                                         :disabled="isSubmitting || !formEmail"
@@ -279,6 +310,12 @@
                                                         Nonaktif
                                                     </span>
                                                 </template>
+                                                <div x-show="acc.kamerakita_partner_id && kamerakita.owner_access" class="mt-1">
+                                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold" :class="acc.kamerakita_status === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'" x-text="'Mitra KK: ' + (acc.kamerakita_status || 'terhubung')"></span>
+                                                </div>
+                                                <div x-show="!acc.kamerakita_partner_id && kamerakita.owner_access" class="mt-1">
+                                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500">Non-Mitra KK</span>
+                                                </div>
                                             </td>
                                             <td class="px-3 py-3.5 text-slate-400 tabular-nums" x-text="formatDate(acc.activated_at)"></td>
                                             <td class="py-3.5 pl-3 pr-6 text-right">
@@ -290,6 +327,7 @@
                                                             Jadikan Aktif
                                                         </button>
                                                     </template>
+                                                    <button x-show="acc.kamerakita_partner_id && kamerakita.owner_access" type="button" @click="toggleKamerakitaStatus(acc)" class="px-2.5 py-1 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 font-bold text-xs transition" x-text="acc.kamerakita_status === 'active' ? 'Nonaktifkan Mitra' : 'Aktifkan Mitra'"></button>
                                                     <template x-if="acc.is_active">
                                                         <span class="text-xs text-slate-400 font-semibold px-2 py-1">
                                                             Sedang Aktif
@@ -396,8 +434,10 @@
                                 <input type="email" 
                                        x-model="editForm.email" 
                                        required 
+                                       :disabled="!!editForm.kamerakita_partner_id"
                                        placeholder="contoh: akun.streamer1@gmail.com"
                                        class="w-full h-11 px-3.5 rounded-xl border border-slate-200 text-sm font-mono font-medium focus:outline-none focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20 bg-slate-50/50 focus:bg-white transition">
+                                <p x-show="editForm.kamerakita_partner_id" class="mt-1 text-[11px] text-slate-500">Email dikunci agar identitas akun mitra tetap sama di kedua sistem.</p>
                             </div>
 
                             <!-- Catatan / Label -->
@@ -407,6 +447,57 @@
                                        x-model="editForm.account_name" 
                                        placeholder="misal: 3 Nov, Akun Batch 3"
                                        class="w-full h-11 px-3.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20 bg-slate-50/50 focus:bg-white transition">
+                            </div>
+                            <div x-show="editForm.kamerakita_partner_id && kamerakita.owner_access" x-cloak class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 space-y-3">
+                                <div class="text-xs font-bold text-indigo-800">Profil Mitra KameraKita</div>
+                                <p x-show="editForm.partner_loading" class="text-xs text-slate-500">Memuat profil mitra…</p>
+                                <div x-show="!editForm.partner_loading" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama lengkap *</label>
+                                        <input type="text" x-model="editForm.partner_full_name" maxlength="255" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp *</label>
+                                        <input type="tel" x-model="editForm.partner_whatsapp" maxlength="20" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun utama *</label>
+                                        <select x-model="editForm.partner_parent_id" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
+                                            <template x-for="parent in kamerakita.parents || []" :key="parent.id">
+                                                <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div x-show="!editForm.kamerakita_partner_id && kamerakita.owner_access" x-cloak class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-3">
+                                <label class="flex items-start gap-2.5 cursor-pointer">
+                                    <input type="checkbox" x-model="editForm.link_kamerakita" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span>
+                                        <span class="block text-xs font-bold text-indigo-900">Tautkan ke Akun Mitra KameraKita</span>
+                                        <span class="block mt-0.5 text-[11px] text-slate-500">Buat atau hubungkan akun mitra KameraKita untuk email ini.</span>
+                                    </span>
+                                </label>
+                                <div x-show="editForm.link_kamerakita" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama lengkap mitra *</label>
+                                        <input type="text" x-model="editForm.partner_full_name" maxlength="255" :required="editForm.link_kamerakita" placeholder="Nama mitra" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
+                                        <input type="tel" x-model="editForm.partner_whatsapp" maxlength="20" :required="editForm.link_kamerakita" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun utama KameraKita *</label>
+                                        <select x-model="editForm.partner_parent_id" :required="editForm.link_kamerakita" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
+                                            <option value="">Pilih akun utama</option>
+                                            <template x-for="parent in kamerakita.parents || []" :key="parent.id">
+                                                <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -418,7 +509,7 @@
                                 Batal
                             </button>
                             <button type="submit" 
-                                    :disabled="isSavingEdit || !editForm.email"
+                                    :disabled="isSavingEdit || !editForm.email || editForm.partner_loading"
                                     class="h-10 px-5 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white text-xs font-bold transition shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <svg x-show="isSavingEdit" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                 <span x-text="isSavingEdit ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
@@ -444,6 +535,11 @@
                 selectedPhoneKey: 'putih',
                 formEmail: '',
                 formName: '',
+                createKamerakitaPartner: false,
+                partnerFullName: '',
+                partnerWhatsapp: '',
+                partnerParentId: '',
+                kamerakita: { configured: false, owner_access: false, parents: [] },
                 isLoading: false,
                 isSubmitting: false,
                 showEditModal: false,
@@ -453,6 +549,12 @@
                     phone_key: '',
                     email: '',
                     account_name: '',
+                    kamerakita_partner_id: null,
+                    partner_loading: false,
+                    partner_full_name: '',
+                    partner_whatsapp: '',
+                    partner_parent_id: '',
+                    link_kamerakita: false,
                     is_active: false
                 },
 
@@ -476,6 +578,10 @@
                     this.selectedPhoneKey = key;
                     this.formEmail = '';
                     this.formName = '';
+                    this.createKamerakitaPartner = false;
+                    this.partnerFullName = '';
+                    this.partnerWhatsapp = '';
+                    this.partnerParentId = '';
                 },
 
                 async addPhone() {
@@ -516,6 +622,7 @@
                         const data = await res.json();
                         this.phones = data.phones || [];
                         this.accounts = data.accounts || [];
+                        this.kamerakita = data.kamerakita || { configured: false, parents: [] };
 
                         if (this.phones.length && !this.phones.some(p => p.key === this.selectedPhoneKey)) {
                             this.selectedPhoneKey = this.phones[0].key;
@@ -547,17 +654,40 @@
                             body: JSON.stringify({
                                 phone_key: this.selectedPhoneKey,
                                 email: this.formEmail,
-                                account_name: this.formName
+                                account_name: this.formName,
+                                create_kamerakita_partner: this.createKamerakitaPartner,
+                                full_name: this.partnerFullName || this.formName,
+                                whatsapp_number: this.partnerWhatsapp,
+                                mitra_parent_id: this.partnerParentId
                             })
                         });
 
                         const data = await res.json();
                         if (!res.ok) {
-                            throw new Error(data.message || 'Gagal mendaftarkan akun.');
+                            if (res.status === 502 && data.account) {
+                                this.formEmail = '';
+                                this.formName = '';
+                                this.createKamerakitaPartner = false;
+                                this.partnerFullName = '';
+                                this.partnerWhatsapp = '';
+                                this.partnerParentId = '';
+                                await this.fetchDevices();
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Tersimpan Sebagian',
+                                    text: data.message
+                                });
+                                return;
+                            }
+                            throw new Error(data.message || Object.values(data.errors || {}).flat().join(' ') || 'Gagal mendaftarkan akun.');
                         }
 
                         this.formEmail = '';
                         this.formName = '';
+                        this.createKamerakitaPartner = false;
+                        this.partnerFullName = '';
+                        this.partnerWhatsapp = '';
+                        this.partnerParentId = '';
                         await this.fetchDevices();
 
                         Swal.fire({
@@ -622,6 +752,34 @@
                     }
                 },
 
+                async toggleKamerakitaStatus(acc) {
+                    const nextStatus = acc.kamerakita_status === 'active' ? 'suspended' : 'active';
+                    const result = await Swal.fire({
+                        title: nextStatus === 'active' ? 'Aktifkan Mitra?' : 'Nonaktifkan Mitra?',
+                        text: `${acc.email} akan ${nextStatus === 'active' ? 'dapat mengakses' : 'kehilangan akses ke'} akun KameraKita.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Lanjutkan',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: nextStatus === 'active' ? '#4f46e5' : '#d97706'
+                    });
+                    if (!result.isConfirmed) return;
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const response = await fetch(`/api/devices/accounts/${acc.id}/kamerakita-status`, {
+                            method: 'PATCH',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                            body: JSON.stringify({ status: nextStatus })
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || 'Status mitra gagal diperbarui.');
+                        await this.fetchDevices();
+                        Swal.fire({ icon: 'success', title: 'Status diperbarui', text: data.message, timer: 1700, showConfirmButton: false });
+                    } catch (error) {
+                        Swal.fire({ icon: 'error', title: 'Gagal memperbarui', text: error.message });
+                    }
+                },
+
                 async deleteAccount(acc) {
                     const confirm = await Swal.fire({
                         title: 'Hapus dari Daftar HP?',
@@ -671,16 +829,38 @@
                     return p ? p.label : (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
                 },
 
-                openEditModal(acc) {
+                async openEditModal(acc) {
                     if (!acc) return;
                     this.editForm = {
                         id: acc.id,
                         phone_key: acc.phone_key || this.selectedPhoneKey,
                         email: acc.email,
                         account_name: acc.account_name || '',
-                        is_active: !!acc.is_active
+                        is_active: !!acc.is_active,
+                        kamerakita_partner_id: acc.kamerakita_partner_id || null,
+                        partner_loading: !!acc.kamerakita_partner_id,
+                        partner_full_name: '',
+                        partner_whatsapp: '',
+                        partner_parent_id: '',
+                        link_kamerakita: false
                     };
                     this.showEditModal = true;
+                    if (acc.kamerakita_partner_id && this.kamerakita.owner_access) {
+                        try {
+                            const response = await fetch(`/api/devices/accounts/${acc.id}/kamerakita`, { headers: { 'Accept': 'application/json' } });
+                            const payload = await response.json();
+                            if (!response.ok) throw new Error(payload.message || 'Profil mitra tidak dapat dimuat.');
+                            Object.assign(this.editForm, {
+                                partner_full_name: payload.data.full_name || '',
+                                partner_whatsapp: payload.data.whatsapp_number || '',
+                                partner_parent_id: payload.data.mitra_parent_id || '',
+                                partner_loading: false
+                            });
+                        } catch (error) {
+                            this.editForm.partner_loading = false;
+                            Swal.fire({ icon: 'error', title: 'Gagal memuat profil mitra', text: error.message });
+                        }
+                    }
                 },
 
                 closeEditModal() {
@@ -690,7 +870,13 @@
                         phone_key: '',
                         email: '',
                         account_name: '',
-                        is_active: false
+                        is_active: false,
+                        kamerakita_partner_id: null,
+                        partner_loading: false,
+                        partner_full_name: '',
+                        partner_whatsapp: '',
+                        partner_parent_id: '',
+                        link_kamerakita: false
                     };
                 },
 
@@ -699,6 +885,27 @@
                     this.isSavingEdit = true;
                     try {
                         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        if (this.editForm.kamerakita_partner_id && this.kamerakita.owner_access) {
+                            const partnerResponse = await fetch(`/api/devices/accounts/${this.editForm.id}/kamerakita`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+                                body: JSON.stringify({ full_name: this.editForm.partner_full_name, whatsapp_number: this.editForm.partner_whatsapp, mitra_parent_id: this.editForm.partner_parent_id })
+                            });
+                            const partnerPayload = await partnerResponse.json();
+                            if (!partnerResponse.ok) throw new Error(partnerPayload.message || Object.values(partnerPayload.errors || {}).flat().join(' ') || 'Profil mitra gagal diperbarui.');
+                        } else if (!this.editForm.kamerakita_partner_id && this.editForm.link_kamerakita && this.kamerakita.owner_access) {
+                            const linkResponse = await fetch(`/api/devices/accounts/${this.editForm.id}/kamerakita`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+                                body: JSON.stringify({
+                                    full_name: this.editForm.partner_full_name || this.editForm.account_name,
+                                    whatsapp_number: this.editForm.partner_whatsapp,
+                                    mitra_parent_id: this.editForm.partner_parent_id
+                                })
+                            });
+                            const linkPayload = await linkResponse.json();
+                            if (!linkResponse.ok) throw new Error(linkPayload.message || Object.values(linkPayload.errors || {}).flat().join(' ') || 'Gagal menautkan ke mitra KameraKita.');
+                        }
                         const res = await fetch(`/api/devices/accounts/${this.editForm.id}`, {
                             method: 'PUT',
                             headers: {

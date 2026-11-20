@@ -2,6 +2,12 @@
 
 return [
 
+    'kamerakita' => [
+        'url' => env('KAMERAKITA_API_URL'),
+        'token' => env('KAMERAKITA_API_TOKEN'),
+        'owner_email' => env('AIKU_STUDIO_OWNER_EMAIL'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

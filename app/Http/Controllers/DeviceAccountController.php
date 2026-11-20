@@ -6,6 +6,7 @@ use App\Models\DailyWorkReport;
 use App\Models\DeviceAccount;
 use App\Models\StudioAccount;
 use App\Models\StudioDevice;
+use App\Services\KameraKitaPartnerClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -47,7 +48,7 @@ class DeviceAccountController extends Controller
         return response()->json(['success' => true, 'phone' => $device->only(['key', 'label'])], 201);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
 
@@ -56,6 +57,13 @@ class DeviceAccountController extends Controller
             ->orderByDesc('activated_at')
             ->orderByDesc('id')
             ->get();
+
+        $ownerAccess = $this->isStudioOwner($request);
+        if (! $ownerAccess) {
+            $accounts->each(fn (DeviceAccount $account) => $account->makeHidden([
+                'kamerakita_partner_id', 'kamerakita_partner_code', 'kamerakita_status',
+            ]));
+        }
 
         $phones = [];
         foreach ($phonesConfig as $key => $label) {
@@ -75,10 +83,30 @@ class DeviceAccountController extends Controller
         return response()->json([
             'phones' => $phones,
             'accounts' => $accounts,
+            'kamerakita' => [
+                'configured' => $ownerAccess && (bool) config('services.kamerakita.url') && (bool) config('services.kamerakita.token'),
+                'owner_access' => $ownerAccess,
+                'parents' => $ownerAccess ? $this->safeParents($kamerakita) : [],
+            ],
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    private function safeParents(KameraKitaPartnerClient $client): array
+    {
+        try {
+            return $client->parents();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private function isStudioOwner(Request $request): bool
+    {
+        $ownerEmail = strtolower(trim((string) config('services.kamerakita.owner_email')));
+        return $ownerEmail !== '' && strtolower((string) $request->user()?->email) === $ownerEmail;
+    }
+
+    public function store(Request $request, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
 
@@ -87,7 +115,15 @@ class DeviceAccountController extends Controller
             'phone_key' => ['required', 'string', Rule::in($allowedPhones)],
             'email' => ['required', 'string', 'email', 'max:128'],
             'account_name' => ['nullable', 'string', 'max:128'],
+            'create_kamerakita_partner' => ['nullable', 'boolean'],
+            'full_name' => [Rule::requiredIf($request->boolean('create_kamerakita_partner')), 'nullable', 'string', 'max:255'],
+            'whatsapp_number' => [Rule::requiredIf($request->boolean('create_kamerakita_partner')), 'nullable', 'string', 'max:20'],
+            'mitra_parent_id' => [Rule::requiredIf($request->boolean('create_kamerakita_partner')), 'nullable', 'uuid'],
         ]);
+
+        if ($request->boolean('create_kamerakita_partner')) {
+            abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        }
 
         $email = strtolower(trim($data['email']));
         $phoneKey = $data['phone_key'];
@@ -118,16 +154,93 @@ class DeviceAccountController extends Controller
             return $entry;
         });
 
+        if ($request->boolean('create_kamerakita_partner')) {
+            try {
+                $existing = $kamerakita->findByEmail($email);
+                $partner = $existing ?: $kamerakita->create([
+                    'full_name' => $data['full_name'],
+                    'email' => $email,
+                    'password' => Str::password(32),
+                    'whatsapp_number' => $data['whatsapp_number'],
+                    'mitra_parent_id' => $data['mitra_parent_id'],
+                    'phone_key' => $phoneKey,
+                    'account_name' => $name,
+                ]);
+
+                $account->update([
+                    'kamerakita_partner_id' => $partner['id'] ?? null,
+                    'kamerakita_partner_code' => $partner['mitra_id'] ?? null,
+                    'kamerakita_status' => $partner['status'] ?? 'active',
+                ]);
+            } catch (\Throwable $exception) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akun HP tersimpan, tetapi pembuatan mitra KameraKita gagal: '.$exception->getMessage(),
+                    'account' => $account->fresh(),
+                ], 502);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => "Akun {$email} berhasil didaftarkan dan diaktifkan pada {$account->phone_label}.",
-            'account' => $account,
+            'account' => $account->fresh(),
         ], 201);
     }
 
-    public function activate(Request $request, DeviceAccount $deviceAccount): JsonResponse
+    public function linkKamerakitaPartner(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
+        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+
+        $data = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'whatsapp_number' => 'required|string|max:20',
+            'mitra_parent_id' => 'required|uuid',
+        ]);
+
+        $email = $deviceAccount->email;
+        $phoneKey = $deviceAccount->phone_key;
+        $name = trim($data['full_name']);
+
+        try {
+            $existing = $kamerakita->findByEmail($email);
+            $partner = $existing ?: $kamerakita->create([
+                'full_name' => $data['full_name'],
+                'email' => $email,
+                'password' => Str::password(32),
+                'whatsapp_number' => $data['whatsapp_number'],
+                'mitra_parent_id' => $data['mitra_parent_id'],
+                'phone_key' => $phoneKey,
+                'account_name' => $name,
+            ]);
+
+            $deviceAccount->update([
+                'kamerakita_partner_id' => $partner['id'] ?? null,
+                'kamerakita_partner_code' => $partner['mitra_id'] ?? null,
+                'kamerakita_status' => $partner['status'] ?? 'active',
+                'account_name' => $name ?: $deviceAccount->account_name,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Akun {$email} berhasil ditautkan ke mitra KameraKita ({$deviceAccount->kamerakita_partner_code}).",
+                'account' => $deviceAccount->fresh(),
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menautkan ke mitra KameraKita: '.$exception->getMessage(),
+            ], 502);
+        }
+    }
+
+    public function activate(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        if ($deviceAccount->kamerakita_partner_id) {
+            abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        }
 
         $this->mutate(function () use ($deviceAccount) {
             $deviceAccount->refresh();
@@ -148,11 +261,70 @@ class DeviceAccountController extends Controller
             ]);
         });
 
+        if ($deviceAccount->kamerakita_partner_id) {
+            try {
+                $partner = $kamerakita->setStatus($deviceAccount->kamerakita_partner_id, 'active');
+                $deviceAccount->update(['kamerakita_status' => $partner['status'] ?? 'active']);
+            } catch (\Throwable) {
+                return response()->json(['message' => 'Akun HP aktif, tetapi status mitra KameraKita gagal diperbarui.'], 502);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => "Akun {$deviceAccount->email} sekarang aktif di {$deviceAccount->phone_label}.",
             'account' => $deviceAccount->fresh(),
         ]);
+    }
+
+    public function setKamerakitaStatus(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        abort_unless($deviceAccount->kamerakita_partner_id, 404, 'Akun ini belum tertaut ke mitra KameraKita.');
+        $data = $request->validate(['status' => 'required|in:active,inactive,suspended']);
+
+        try {
+            $partner = $kamerakita->setStatus($deviceAccount->kamerakita_partner_id, $data['status']);
+            $deviceAccount->update(['kamerakita_status' => $partner['status'] ?? $data['status']]);
+        } catch (\Throwable $exception) {
+            return response()->json(['message' => 'Status mitra KameraKita gagal diperbarui: '.$exception->getMessage()], 502);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Status mitra KameraKita diperbarui.', 'account' => $deviceAccount->fresh()]);
+    }
+
+    public function showKamerakitaPartner(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        abort_unless($deviceAccount->kamerakita_partner_id, 404, 'Akun ini belum tertaut ke mitra KameraKita.');
+
+        try {
+            return response()->json(['data' => $kamerakita->partner($deviceAccount->kamerakita_partner_id)]);
+        } catch (\Throwable $exception) {
+            return response()->json(['message' => 'Profil mitra gagal dimuat: '.$exception->getMessage()], 502);
+        }
+    }
+
+    public function updateKamerakitaPartner(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        abort_unless($deviceAccount->kamerakita_partner_id, 404, 'Akun ini belum tertaut ke mitra KameraKita.');
+        $data = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'whatsapp_number' => 'required|string|max:20',
+            'mitra_parent_id' => 'required|uuid',
+        ]);
+
+        try {
+            $partner = $kamerakita->update($deviceAccount->kamerakita_partner_id, $data);
+            $deviceAccount->update(['account_name' => $data['full_name']]);
+            return response()->json(['success' => true, 'message' => 'Profil mitra KameraKita berhasil diperbarui.', 'data' => $partner]);
+        } catch (\Throwable $exception) {
+            return response()->json(['message' => 'Profil mitra gagal diperbarui: '.$exception->getMessage()], 502);
+        }
     }
 
     public function update(Request $request, DeviceAccount $deviceAccount): JsonResponse
@@ -177,6 +349,10 @@ class DeviceAccountController extends Controller
             ],
             'account_name' => ['nullable', 'string', 'max:128'],
         ]);
+
+        if ($deviceAccount->kamerakita_partner_id && $data['email'] !== $deviceAccount->email) {
+            abort(422, 'Email akun mitra terhubung tidak dapat diganti dari daftar HP agar identitas KameraKita tetap konsisten.');
+        }
 
         $newEmail = strtolower(trim($data['email']));
         $phoneKey = $data['phone_key'] ?? $deviceAccount->phone_key;
@@ -212,6 +388,8 @@ class DeviceAccountController extends Controller
     public function destroy(Request $request, DeviceAccount $deviceAccount): JsonResponse
     {
         $this->ensureAdmin($request);
+
+        abort_if($deviceAccount->kamerakita_partner_id, 422, 'Akun ini terhubung ke mitra KameraKita. Nonaktifkan mitra dan simpan tautannya; jangan hapus riwayat HP.');
 
         $email = $deviceAccount->email;
         $label = $deviceAccount->phone_label;

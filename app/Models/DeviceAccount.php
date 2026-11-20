@@ -13,6 +13,9 @@ class DeviceAccount extends Model
         'account_name',
         'is_active',
         'activated_at',
+        'kamerakita_partner_id',
+        'kamerakita_partner_code',
+        'kamerakita_status',
     ];
 
     protected function casts(): array
