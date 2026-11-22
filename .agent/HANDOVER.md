@@ -1,3 +1,7 @@
+### [2026-11-22 19:30 WITA] — Antigravity: perbarui jadwal shift kontributor mingguan sesuai spreadsheet
+- `studio-weekly-schedule.json`, `weekly-matrix.blade.php`, `schedule.blade.php`, `ShiftSetting`: Memperbarui seluruh jadwal shift operasional kontributor mingguan (Selasa–Minggu, 10 Sesi 08:00–23:00 + Midnight 23:30–07:00, serta jadwal libur rutin harian) persis sesuai referensi gambar spreadsheet terbaru, termasuk penambahan worker baru `Rizqi`.
+- Validasi: Sinkronisasi database `shift_settings` berhasil, API verifikasi response valid, PHPUnit `ShiftRosterTest` (4 tests, 24 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-22 19:17 WITA] — Antigravity: buka akses integrasi KameraKita untuk seluruh akun admin studio
 - `DeviceAccountController`, `KAMERAKITA_INTEGRATION.md`, `KameraKitaPartnerIntegrationTest`: Membuka akses manajemen pendaftaran akun mitra KameraKita (box pendaftaran, dropdown akun pengampu KMK-847, auto-fill WA, badge status, aktivasi, dan penghapusan) untuk seluruh user dengan role `admin` di AIKU Studio. Akses non-admin (contributor/pekerja) tetap diblokir.
 - Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (13 tests, 47 assertions) lulus 100%. State IDLE.

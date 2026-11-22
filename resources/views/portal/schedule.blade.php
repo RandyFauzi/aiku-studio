@@ -934,7 +934,7 @@ function scheduleManager() {
                 session_duration: "90 Menit per sesi (1 Jam Rekaman + 30 Menit Prep/Cas)",
                 device_setup: "1 Alat · 6 HP per orang",
                 day_hours: "08:00 – 23:00 WITA (10 Sesi)",
-                midnight_hours: "23:00 – Subuh WITA (Midnight)",
+                midnight_hours: "23:30 – 07:00 WITA (Midnight)",
                 target_video: "6 Jam Video / orang per sesi"
             },
             notes: [
@@ -944,29 +944,29 @@ function scheduleManager() {
                 "Task Harus Sesuai dengan List yang ditentukan"
             ],
             days_off: {
-                selasa: ["Muhammad Nugraha Dwiputra", "Aida"],
-                rabu: ["Fai", "Aida"],
-                kamis: ["Fahri", "Aida"],
-                jumat: ["Muhammad Diyoga"],
-                sabtu: ["Rahmatullah"],
-                minggu: ["Siti Mariyam", "Ghina Mawaddah"],
-                senin: ["Semua Anggota (Libur Studio)"]
+                selasa: ["Aida", "Rizqi"],
+                rabu: ["Aida", "Sasa"],
+                kamis: ["Muhammad Nugraha Dwiputra", "Aida"],
+                jumat: ["Fahri", "Rahmatullah"],
+                sabtu: ["Fai", "Muhammad Diyoga"],
+                minggu: ["Ghina Mawaddah", "Siti Mariyam"],
+                senin: ["Semua Anggota Studio (Libur Bersama)"]
             },
             sessions: [
-                { id: 1, shift: "Shift 1", time: "08:00 – 09:30", days: { selasa: "Aufa Anugraha", rabu: "Aufa Anugraha", kamis: "Aufa Anugraha", jumat: "Aufa Anugraha", sabtu: "Aufa Anugraha", minggu: "Aufa Anugraha", senin: null } },
-                { id: 2, shift: "Shift 2", time: "09:31 – 11:00", days: { selasa: "Muhamad Zikri Fadhilah", rabu: "Muhamad Zikri Fadhilah", kamis: "Muhamad Zikri Fadhilah", jumat: "Muhamad Zikri Fadhilah", sabtu: "Muhamad Zikri Fadhilah", minggu: "Muhamad Zikri Fadhilah", senin: null } },
-                { id: 3, shift: "Shift 3", time: "11:01 – 12:30", days: { selasa: "Muhammad Diyoga", rabu: "Muhammad Diyoga", kamis: "Muhammad Diyoga", jumat: "Aida", sabtu: "Aida", minggu: "Aida", senin: null } },
-                { id: 4, shift: "Shift 4", time: "12:31 – 14:00", days: { selasa: "Rahmatullah", rabu: "Rahmatullah", kamis: "Rahmatullah", jumat: "Rahmatullah", sabtu: "Muhammad Diyoga", minggu: "Muhammad Diyoga", senin: null } },
-                { id: 5, shift: "Shift 5", time: "14:01 – 15:30", days: { selasa: "Ghina Mawaddah", rabu: "Ghina Mawaddah", kamis: "Ghina Mawaddah", jumat: "Siti Mariyam", sabtu: "Siti Mariyam", minggu: "Rahmatullah", senin: null } },
-                { id: 6, shift: "Shift 6", time: "15:31 – 17:00", days: { selasa: "Siti Mariyam", rabu: "Siti Mariyam", kamis: "Siti Mariyam", jumat: "Ghina Mawaddah", sabtu: "Ghina Mawaddah", minggu: "Sasa", senin: null } },
-                { id: 7, shift: "Shift 7", time: "17:01 – 18:30", days: { selasa: "Afif Anshari", rabu: "Afif Anshari", kamis: "Afif Anshari", jumat: "Sasa", sabtu: "Sasa", minggu: "Muhammad Nugraha Dwiputra", senin: null } },
-                { id: 8, shift: "Shift 8", time: "18:31 – 20:00", days: { selasa: "Sasa", rabu: "Sasa", kamis: "Sasa", jumat: "Muhammad Nugraha Dwiputra", sabtu: "Muhammad Nugraha Dwiputra", minggu: "Fahri", senin: null } },
-                { id: 9, shift: "Shift 9", time: "20:01 – 21:30", days: { selasa: "Fai", rabu: "Muhammad Nugraha Dwiputra", kamis: "Muhammad Nugraha Dwiputra", jumat: "Fai", sabtu: "Fahri", minggu: "Muhammad Rio Hadi", senin: null } },
-                { id: 10, shift: "Shift 10", time: "21:31 – 23:00", days: { selasa: "Fahri", rabu: "Fahri", kamis: "Fai", jumat: "Fahri", sabtu: "Fai", minggu: "Afif Anshari", senin: null } }
+                { id: 1, shift: "Shift 1", time: "08:00 – 09:30", days: { selasa: "Muhamad Zikri Fadhilah", rabu: "Muhamad Zikri Fadhilah", kamis: "Muhamad Zikri Fadhilah", jumat: "Muhamad Zikri Fadhilah", sabtu: "Muhamad Zikri Fadhilah", minggu: "Muhamad Zikri Fadhilah", senin: null } },
+                { id: 2, shift: "Shift 2", time: "09:31 – 11:00", days: { selasa: "Aufa Anugraha", rabu: "Aufa Anugraha", kamis: "Aufa Anugraha", jumat: "Aufa Anugraha", sabtu: "Aufa Anugraha", minggu: "Aufa Anugraha", senin: null } },
+                { id: 3, shift: "Shift 3", time: "11:01 – 12:30", days: { selasa: "Muhammad Diyoga", rabu: "Rizqi", kamis: "Rizqi", jumat: "Rizqi", sabtu: "Rizqi", minggu: "Muhammad Diyoga", senin: null } },
+                { id: 4, shift: "Shift 4", time: "12:31 – 14:00", days: { selasa: "Siti Mariyam", rabu: "Siti Mariyam", kamis: "Siti Mariyam", jumat: "Siti Mariyam", sabtu: "Siti Mariyam", minggu: "Rahmatullah", senin: null } },
+                { id: 5, shift: "Shift 5", time: "14:01 – 15:30", days: { selasa: "Ghina Mawaddah", rabu: "Ghina Mawaddah", kamis: "Ghina Mawaddah", jumat: "Ghina Mawaddah", sabtu: "Ghina Mawaddah", minggu: "Sasa", senin: null } },
+                { id: 6, shift: "Shift 6", time: "15:31 – 17:00", days: { selasa: "Rahmatullah", rabu: "Rahmatullah", kamis: "Rahmatullah", jumat: "Muhammad Diyoga", sabtu: "Rahmatullah", minggu: "Muhammad Nugraha Dwiputra", senin: null } },
+                { id: 7, shift: "Shift 7", time: "17:01 – 18:30", days: { selasa: "Sasa", rabu: "Muhammad Diyoga", kamis: "Muhammad Diyoga", jumat: "Sasa", sabtu: "Sasa", minggu: "Aida", senin: null } },
+                { id: 8, shift: "Shift 8", time: "18:31 – 20:00", days: { selasa: "Fahri", rabu: "Fahri", kamis: "Sasa", jumat: "Aida", sabtu: "Aida", minggu: "Fahri", senin: null } },
+                { id: 9, shift: "Shift 9", time: "20:01 – 21:30", days: { selasa: "Fai", rabu: "Fai", kamis: "Fahri", jumat: "Fai", sabtu: "Fahri", minggu: "Fai", senin: null } },
+                { id: 10, shift: "Shift 10", time: "21:31 – 23:00", days: { selasa: "Muhammad Nugraha Dwiputra", rabu: "Muhammad Nugraha Dwiputra", kamis: "Fai", jumat: "Muhammad Nugraha Dwiputra", sabtu: "Muhammad Nugraha Dwiputra", minggu: "Rizqi", senin: null } }
             ],
             midnight: [
-                { id: "mid-1", role: "Midnight 1", time: "23:00 – Subuh", days: { selasa: "Muhammad Rio Hadi", rabu: "Muhammad Rio Hadi", kamis: "Muhammad Rio Hadi", jumat: "Muhammad Rio Hadi", sabtu: "Muhammad Rio Hadi", minggu: "Muhammad Rio Hadi", senin: null } },
-                { id: "mid-2", role: "Midnight 2", time: "23:00 – Subuh", days: { selasa: "Afif Anshari", rabu: "Afif Anshari", kamis: "Afif Anshari", jumat: "Afif Anshari", sabtu: "Afif Anshari", minggu: "Afif Anshari", senin: null } }
+                { id: "mid-1", role: "Midnight 1", time: "23:30 – 07:00", days: { selasa: "Muhammad Rio Hadi", rabu: "Muhammad Rio Hadi", kamis: "Muhammad Rio Hadi", jumat: "Muhammad Rio Hadi", sabtu: "Muhammad Rio Hadi", minggu: "Muhammad Rio Hadi", senin: null } },
+                { id: "mid-2", role: "Midnight 2", time: "23:30 – 07:00", days: { selasa: "Afif Anshari", rabu: "Afif Anshari", kamis: "Afif Anshari", jumat: "Afif Anshari", sabtu: "Afif Anshari", minggu: "Afif Anshari", senin: null } }
             ]
         },
 
@@ -974,6 +974,7 @@ function scheduleManager() {
             "Aufa Anugraha",
             "Muhamad Zikri Fadhilah",
             "Muhammad Diyoga",
+            "Rizqi",
             "Rahmatullah",
             "Ghina Mawaddah",
             "Siti Mariyam",
@@ -1062,6 +1063,7 @@ function scheduleManager() {
                 'Aufa Anugraha': 'Aufa',
                 'Muhamad Zikri Fadhilah': 'Zikri',
                 'Muhammad Diyoga': 'Yoga',
+                'Rizqi': 'Rizqi',
                 'Rahmatullah': 'Rahmat',
                 'Ghina Mawaddah': 'Ghina',
                 'Siti Mariyam': 'Maryam',
@@ -1183,7 +1185,7 @@ function scheduleManager() {
                         shift: {
                             shift: m.role,
                             time: m.time,
-                            detail: 'Sesi Midnight (23:00 – Subuh)',
+                            detail: 'Sesi Midnight (' + (m.time || '23:30 – 07:00') + ')',
                             target: '6 Jam Video',
                             hp: '6 HP',
                             alat: '1 Alat'
@@ -1228,12 +1230,12 @@ function scheduleManager() {
             text += "========================================\n\n";
 
             text += "JADWAL LIBUR MINGGUAN:\n";
-            text += "- Selasa: Nuga, Aida\n";
-            text += "- Rabu: Fai, Aida\n";
-            text += "- Kamis: Fahri, Aida\n";
-            text += "- Jumat: Yoga\n";
-            text += "- Sabtu: Rahmat\n";
-            text += "- Minggu: Maryam, Ghina\n";
+            text += "- Selasa: Aida, Rizqi\n";
+            text += "- Rabu: Aida, Sasa\n";
+            text += "- Kamis: Nuga, Aida\n";
+            text += "- Jumat: Fahri, Rahmat\n";
+            text += "- Sabtu: Fai, Yoga\n";
+            text += "- Minggu: Ghina, Maryam\n";
             text += "- Senin: LIBUR BERSAMA STUDIO\n\n";
 
             text += "SESI SHIFT HARIAN (Selasa - Minggu):\n";
@@ -1242,7 +1244,7 @@ function scheduleManager() {
                 text += `  Sel: ${this.getShortName(s.days.selasa)} | Rab: ${this.getShortName(s.days.rabu)} | Kam: ${this.getShortName(s.days.kamis)} | Jum: ${this.getShortName(s.days.jumat)} | Sab: ${this.getShortName(s.days.sabtu)} | Min: ${this.getShortName(s.days.minggu)}\n`;
             });
 
-            text += "\nSESI MIDNIGHT (23:00 – Subuh):\n";
+            text += "\nSESI MIDNIGHT (23:30 – 07:00 WITA):\n";
             (this.scheduleData.midnight || []).forEach(m => {
                 text += `• ${m.role} (${m.time}):\n`;
                 text += `  Sel-Min: ${this.getShortName(m.days.selasa)}\n`;
