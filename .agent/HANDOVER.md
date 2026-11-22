@@ -1,3 +1,7 @@
+### [2026-11-22 19:48 WITA] — Antigravity: hilangkan nama panjang dalam kurung pada matriks shift admin
+- `resources/views/shifts/weekly-matrix.blade.php`: Mengubah teks dropdown penugasan pada matriks sesi harian dan midnight agar hanya menampilkan nama panggilan pekerja (`w.short`), menghilangkan teks nama panjang dalam kurung yang memadati sel dropdown. Menghilangkan juga tanda kurung nama panjang pada kartu jadwal libur rutin dan format WhatsApp.
+- Validasi: PHPUnit `ShiftRosterTest` (4 tests, 24 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-22 19:30 WITA] — Antigravity: perbarui jadwal shift kontributor mingguan sesuai spreadsheet
 - `studio-weekly-schedule.json`, `weekly-matrix.blade.php`, `schedule.blade.php`, `ShiftSetting`: Memperbarui seluruh jadwal shift operasional kontributor mingguan (Selasa–Minggu, 10 Sesi 08:00–23:00 + Midnight 23:30–07:00, serta jadwal libur rutin harian) persis sesuai referensi gambar spreadsheet terbaru, termasuk penambahan worker baru `Rizqi`.
 - Validasi: Sinkronisasi database `shift_settings` berhasil, API verifikasi response valid, PHPUnit `ShiftRosterTest` (4 tests, 24 assertions) lulus 100%. State IDLE.

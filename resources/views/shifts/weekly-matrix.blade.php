@@ -129,7 +129,7 @@
                                                 :class="session.days[dayKey] ? 'bg-white hover:bg-emerald-50/40 text-slate-800 border-slate-200/90' : 'bg-slate-50 text-slate-400 border-dashed border-slate-200'">
                                             <option value="">— Kosong —</option>
                                             <template x-for="w in allWorkers" :key="w.name">
-                                                <option :value="w.name" :selected="session.days[dayKey] === w.name" x-text="w.short + ' (' + w.name + ')'"></option>
+                                                <option :value="w.name" :selected="session.days[dayKey] === w.name || session.days[dayKey] === w.short" x-text="w.short"></option>
                                             </template>
                                         </select>
                                     </div>
@@ -174,7 +174,7 @@
                                                 class="w-full text-center py-1.5 px-2 rounded-xl text-xs font-bold border transition cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs bg-white text-indigo-950 border-indigo-200/90 hover:bg-indigo-50">
                                             <option value="">— Kosong —</option>
                                             <template x-for="w in allWorkers" :key="w.name">
-                                                <option :value="w.name" :selected="mid.days[dayKey] === w.name" x-text="w.short + ' (' + w.name + ')'"></option>
+                                                <option :value="w.name" :selected="mid.days[dayKey] === w.name || mid.days[dayKey] === w.short" x-text="w.short"></option>
                                             </template>
                                         </select>
                                     </div>
@@ -235,7 +235,7 @@
                 <div class="py-2.5 flex items-center justify-between">
                     <span class="font-bold text-slate-800 w-24">Kamis</span>
                     <div class="flex items-center gap-1.5 flex-wrap justify-end">
-                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Nuga (Muhammad Nugraha Dwiputra)</span>
+                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Nuga</span>
                         <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Aida</span>
                     </div>
                 </div>
@@ -244,7 +244,7 @@
                     <span class="font-bold text-slate-800 w-24">Jumat</span>
                     <div class="flex items-center gap-1.5 flex-wrap justify-end">
                         <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Fahri</span>
-                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Rahmat (Rahmatullah)</span>
+                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Rahmat</span>
                     </div>
                 </div>
 
@@ -252,15 +252,15 @@
                     <span class="font-bold text-slate-800 w-24">Sabtu</span>
                     <div class="flex items-center gap-1.5 flex-wrap justify-end">
                         <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Fai</span>
-                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Yoga (Muhammad Diyoga)</span>
+                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Yoga</span>
                     </div>
                 </div>
 
                 <div class="py-2.5 flex items-center justify-between">
                     <span class="font-bold text-slate-800 w-24">Minggu</span>
                     <div class="flex items-center gap-1.5 flex-wrap justify-end">
-                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Ghina (Ghina Mawaddah)</span>
-                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Maryam (Siti Mariyam)</span>
+                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Ghina</span>
+                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold">Maryam</span>
                     </div>
                 </div>
 
@@ -377,6 +377,12 @@ function weeklyMatrixAdmin() {
             this.resetToDefault();
         },
 
+        getShortName(fullName) {
+            if (!fullName) return '—';
+            const found = this.allWorkers.find(w => w.name === fullName || w.short === fullName);
+            return found ? found.short : fullName;
+        },
+
         updateCell(sIndex, dayKey, newName) {
             if (this.scheduleData.sessions[sIndex]) {
                 this.scheduleData.sessions[sIndex].days[dayKey] = newName || null;
@@ -488,13 +494,13 @@ function weeklyMatrixAdmin() {
             text += "SESI SHIFT HARIAN (Selasa - Minggu):\n";
             this.scheduleData.sessions.forEach(s => {
                 text += `• ${s.shift} (${s.time}):\n`;
-                text += `  Sel: ${s.days.selasa || '-'} | Rab: ${s.days.rabu || '-'} | Kam: ${s.days.kamis || '-'} | Jum: ${s.days.jumat || '-'} | Sab: ${s.days.sabtu || '-'} | Min: ${s.days.minggu || '-'}\n`;
+                text += `  Sel: ${this.getShortName(s.days.selasa)} | Rab: ${this.getShortName(s.days.rabu)} | Kam: ${this.getShortName(s.days.kamis)} | Jum: ${this.getShortName(s.days.jumat)} | Sab: ${this.getShortName(s.days.sabtu)} | Min: ${this.getShortName(s.days.minggu)}\n`;
             });
 
             text += "\nSESI MIDNIGHT (23:30 – 07:00 WITA):\n";
             this.scheduleData.midnight.forEach(m => {
                 text += `• ${m.role} (${m.time}):\n`;
-                text += `  Sel-Min: ${m.days.selasa || '-'}\n`;
+                text += `  Sel-Min: ${this.getShortName(m.days.selasa)}\n`;
             });
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
