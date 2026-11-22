@@ -1,3 +1,7 @@
+### [2026-11-22 19:17 WITA] — Antigravity: buka akses integrasi KameraKita untuk seluruh akun admin studio
+- `DeviceAccountController`, `KAMERAKITA_INTEGRATION.md`, `KameraKitaPartnerIntegrationTest`: Membuka akses manajemen pendaftaran akun mitra KameraKita (box pendaftaran, dropdown akun pengampu KMK-847, auto-fill WA, badge status, aktivasi, dan penghapusan) untuk seluruh user dengan role `admin` di AIKU Studio. Akses non-admin (contributor/pekerja) tetap diblokir.
+- Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (13 tests, 47 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-20 13:08 WITA] — Antigravity: tombol hapus akun otomatis hapus mitra KameraKita & nama mitra otomatis dari catatan
 - `KameraKitaPartnerClient`, `DeviceAccountController`, `devices.blade.php`: Menghilangkan input manual nama mitra dan mengotomatiskan nama mitra KameraKita dari isi Catatan / Label (atau nama HP). Mengaktifkan tombol hapus akun di tabel HP (termasuk saat akun aktif) yang otomatis menghapus akun mitra + user di KameraKita secara server-to-server.
 - Validasi: PHPUnit `KameraKitaPartnerIntegrationTest` (12 tests, 44 assertions) & `DeviceAccountTest` (9 tests, 52 assertions) lulus 100%, `npm run build` sukses. State IDLE.

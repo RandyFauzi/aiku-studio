@@ -58,8 +58,8 @@ class DeviceAccountController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $ownerAccess = $this->isStudioOwner($request);
-        if (! $ownerAccess) {
+        $hasKamerakitaAccess = $this->canManageKamerakita($request);
+        if (! $hasKamerakitaAccess) {
             $accounts->each(fn (DeviceAccount $account) => $account->makeHidden([
                 'kamerakita_partner_id', 'kamerakita_partner_code', 'kamerakita_status',
             ]));
@@ -84,9 +84,9 @@ class DeviceAccountController extends Controller
             'phones' => $phones,
             'accounts' => $accounts,
             'kamerakita' => [
-                'configured' => $ownerAccess && (bool) config('services.kamerakita.url') && (bool) config('services.kamerakita.token'),
-                'owner_access' => $ownerAccess,
-                'parents' => $ownerAccess ? $this->safeParents($kamerakita) : [],
+                'configured' => $hasKamerakitaAccess && (bool) config('services.kamerakita.url') && (bool) config('services.kamerakita.token'),
+                'owner_access' => $hasKamerakitaAccess,
+                'parents' => $hasKamerakitaAccess ? $this->safeParents($kamerakita) : [],
             ],
         ]);
     }
@@ -119,10 +119,14 @@ class DeviceAccountController extends Controller
         }
     }
 
+    private function canManageKamerakita(Request $request): bool
+    {
+        return $request->user()?->role === 'admin';
+    }
+
     private function isStudioOwner(Request $request): bool
     {
-        $ownerEmail = strtolower(trim((string) config('services.kamerakita.owner_email')));
-        return $ownerEmail !== '' && strtolower((string) $request->user()?->email) === $ownerEmail;
+        return $this->canManageKamerakita($request);
     }
 
     public function store(Request $request, KameraKitaPartnerClient $kamerakita): JsonResponse
@@ -141,7 +145,7 @@ class DeviceAccountController extends Controller
         ]);
 
         if ($request->boolean('create_kamerakita_partner')) {
-            abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+            abort_unless($this->canManageKamerakita($request), 403, 'Akses integrasi mitra KameraKita terbatas untuk Administrator.');
         }
 
         $email = strtolower(trim($data['email']));
@@ -213,7 +217,7 @@ class DeviceAccountController extends Controller
     public function linkKamerakitaPartner(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
-        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        abort_unless($this->canManageKamerakita($request), 403, 'Akses integrasi mitra KameraKita terbatas untuk Administrator.');
 
         $data = $request->validate([
             'full_name' => 'required|string|max:255',
@@ -261,7 +265,7 @@ class DeviceAccountController extends Controller
     {
         $this->ensureAdmin($request);
         if ($deviceAccount->kamerakita_partner_id) {
-            abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+            abort_unless($this->canManageKamerakita($request), 403, 'Akses integrasi mitra KameraKita terbatas untuk Administrator.');
         }
 
         $this->mutate(function () use ($deviceAccount) {
@@ -302,7 +306,7 @@ class DeviceAccountController extends Controller
     public function setKamerakitaStatus(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
-        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        abort_unless($this->canManageKamerakita($request), 403, 'Akses integrasi mitra KameraKita terbatas untuk Administrator.');
         abort_unless($deviceAccount->kamerakita_partner_id, 404, 'Akun ini belum tertaut ke mitra KameraKita.');
         $data = $request->validate(['status' => 'required|in:active,inactive,suspended']);
 
@@ -319,7 +323,7 @@ class DeviceAccountController extends Controller
     public function showKamerakitaPartner(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
-        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        abort_unless($this->canManageKamerakita($request), 403, 'Akses integrasi mitra KameraKita terbatas untuk Administrator.');
         abort_unless($deviceAccount->kamerakita_partner_id, 404, 'Akun ini belum tertaut ke mitra KameraKita.');
 
         try {
@@ -332,7 +336,7 @@ class DeviceAccountController extends Controller
     public function updateKamerakitaPartner(Request $request, DeviceAccount $deviceAccount, KameraKitaPartnerClient $kamerakita): JsonResponse
     {
         $this->ensureAdmin($request);
-        abort_unless($this->isStudioOwner($request), 403, 'Integrasi mitra KameraKita khusus owner AIKU Studio.');
+        abort_unless($this->canManageKamerakita($request), 403, 'Akses integrasi mitra KameraKita terbatas untuk Administrator.');
         abort_unless($deviceAccount->kamerakita_partner_id, 404, 'Akun ini belum tertaut ke mitra KameraKita.');
         $data = $request->validate([
             'full_name' => 'required|string|max:255',
@@ -412,7 +416,7 @@ class DeviceAccountController extends Controller
         $this->ensureAdmin($request);
 
         if ($deviceAccount->kamerakita_partner_id) {
-            abort_unless($this->isStudioOwner($request), 403, 'Menghapus akun mitra KameraKita khusus untuk owner AIKU Studio.');
+            abort_unless($this->canManageKamerakita($request), 403, 'Menghapus akun mitra KameraKita terbatas untuk Administrator.');
             try {
                 $kamerakita->delete($deviceAccount->kamerakita_partner_id);
             } catch (\Throwable $exception) {

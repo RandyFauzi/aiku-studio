@@ -10,9 +10,9 @@ Integrasi privat ini memungkinkan Owner AIKU Studio membuat dan mengelola akun M
    - Komunikasi berlangsung langsung antara backend AIKU Studio dan backend KameraKita via endpoint `/api/private/studio/*`.
    - Menggunakan Bearer Token yang hanya tersimpan di `.env` backend masing-masing server.
    - **Kredensial tidak pernah dikirim ke browser**, tidak pernah dicatat ke file log, dan tidak boleh di-commit ke Git.
-2. **Otorisasi Ketat (Owner-Only)**:
-   - Di AIKU Studio, antarmuka dan endpoint integrasi hanya dapat diakses oleh user admin yang emailnya cocok dengan `AIKU_STUDIO_OWNER_EMAIL`.
-   - Admin non-owner tidak dapat melihat detail tautan mitra, kode mitra, maupun opsi pembuatan mitra KameraKita.
+2. **Otorisasi Administrator (Role Admin)**:
+   - Di AIKU Studio, antarmuka dan endpoint integrasi KameraKita dapat diakses oleh seluruh user dengan role `admin` (administrator studio).
+   - Pengguna non-admin (seperti kontributor/pekerja) diblokir dari endpoint dan tidak dapat melihat opsi maupun data integrasi KameraKita.
 3. **Idempotensi & Transaksi Atomik**:
    - Pembuatan akun mitra di KameraKita (`User` dan `Partner`) dieksekusi dalam satu transaksi database (`DB::transaction`).
    - Jika terjadi network retry atau timeout, API KameraKita memeriksa keberadaan email terlebih dahulu dan mengembalikan data mitra yang sudah ada secara idempoten (status 200 OK) tanpa membuat duplikasi akun.

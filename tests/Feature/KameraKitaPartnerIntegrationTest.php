@@ -59,7 +59,7 @@ class KameraKitaPartnerIntegrationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_non_owner_does_not_see_sensitive_fields_or_owner_access(): void
+    public function test_all_admins_see_kamerakita_fields_and_parents(): void
     {
         DeviceAccount::create([
             'phone_key' => 'putih',
@@ -71,16 +71,26 @@ class KameraKitaPartnerIntegrationTest extends TestCase
             'kamerakita_status' => 'active',
         ]);
 
+        Http::fake([
+            self::BASE_URL.'/api/private/studio/parents' => Http::response([
+                'data' => [
+                    ['id' => '84700000-0000-0000-0000-000000000847', 'mitra_id' => 'KMK-847', 'full_name' => 'AI KU STUDIO 2', 'whatsapp_number' => '+62895366583095'],
+                ],
+            ], 200),
+        ]);
+
+        // Regular admin (bukan owner) juga melihat akses KameraKita dan akun pengampu
         $response = $this->actingAs($this->admin)->getJson('/api/devices')->assertOk();
 
-        $this->assertFalse($response->json('kamerakita.owner_access'));
-        $this->assertEmpty($response->json('kamerakita.parents'));
+        $this->assertTrue($response->json('kamerakita.owner_access'));
+        $this->assertTrue($response->json('kamerakita.configured'));
+        $this->assertNotEmpty($response->json('kamerakita.parents'));
 
         $accounts = $response->json('accounts');
         $this->assertCount(1, $accounts);
-        $this->assertArrayNotHasKey('kamerakita_partner_id', $accounts[0]);
-        $this->assertArrayNotHasKey('kamerakita_partner_code', $accounts[0]);
-        $this->assertArrayNotHasKey('kamerakita_status', $accounts[0]);
+        $this->assertEquals('11111111-1111-1111-1111-111111111111', $accounts[0]['kamerakita_partner_id']);
+        $this->assertEquals('KMK-001', $accounts[0]['kamerakita_partner_code']);
+        $this->assertEquals('active', $accounts[0]['kamerakita_status']);
     }
 
     public function test_owner_sees_kamerakita_status_and_parents(): void
@@ -106,9 +116,9 @@ class KameraKitaPartnerIntegrationTest extends TestCase
         $this->assertEquals('KMK-210', $parents[1]['mitra_id']);
     }
 
-    public function test_non_owner_cannot_create_device_account_with_partner(): void
+    public function test_non_admin_cannot_create_device_account_with_partner(): void
     {
-        $this->actingAs($this->admin)->postJson('/api/devices/accounts', [
+        $this->actingAs($this->worker)->postJson('/api/devices/accounts', [
             'phone_key' => 'putih',
             'email' => 'hack@example.com',
             'create_kamerakita_partner' => true,
@@ -116,6 +126,40 @@ class KameraKitaPartnerIntegrationTest extends TestCase
             'whatsapp_number' => '08123456789',
             'mitra_parent_id' => '22222222-2222-2222-2222-222222222222',
         ])->assertForbidden();
+    }
+
+    public function test_regular_admin_can_create_device_account_with_partner(): void
+    {
+        Http::fake([
+            self::BASE_URL.'/api/private/studio/partners*' => function (\Illuminate\Http\Client\Request $request) {
+                if ($request->method() === 'GET') {
+                    return Http::response(['data' => null], 200);
+                }
+                return Http::response([
+                    'data' => [
+                        'id' => '33333333-3333-3333-3333-333333333333',
+                        'mitra_id' => 'KMK-777',
+                        'email' => 'admin.other@example.com',
+                        'status' => 'active',
+                    ],
+                ], 201);
+            },
+        ]);
+
+        $this->actingAs($this->admin)->postJson('/api/devices/accounts', [
+            'phone_key' => 'putih',
+            'email' => 'admin.other@example.com',
+            'account_name' => 'HP Putih Admin Lain',
+            'create_kamerakita_partner' => true,
+            'whatsapp_number' => '+62895366583095',
+            'mitra_parent_id' => '84700000-0000-0000-0000-000000000847',
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('device_accounts', [
+            'email' => 'admin.other@example.com',
+            'kamerakita_partner_code' => 'KMK-777',
+            'kamerakita_status' => 'active',
+        ]);
     }
 
     public function test_owner_creates_device_account_and_kamerakita_partner(): void
@@ -323,13 +367,13 @@ class KameraKitaPartnerIntegrationTest extends TestCase
             self::BASE_URL.'/api/private/studio/partners/77777777-7777-7777-7777-777777777777' => Http::response(['deleted' => true], 200),
         ]);
 
-        // Regular admin is forbidden
-        $this->actingAs($this->admin)
+        // Worker/non-admin is forbidden
+        $this->actingAs($this->worker)
             ->deleteJson("/api/devices/accounts/{$account->id}")
             ->assertForbidden();
 
-        // Owner can delete, which also calls delete on KameraKita
-        $this->actingAs($this->owner)
+        // Admin (termasuk admin lain selain owner) can delete, which also calls delete on KameraKita
+        $this->actingAs($this->admin)
             ->deleteJson("/api/devices/accounts/{$account->id}")
             ->assertOk();
 
