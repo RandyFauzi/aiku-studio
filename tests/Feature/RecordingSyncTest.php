@@ -18,7 +18,7 @@ class RecordingSyncTest extends TestCase
         $robot->shouldReceive('sync')->once()->andReturn(['status' => 'success']);
         $robot->shouldReceive('state')->andReturn(['isRunning' => false, 'stage' => 'completed', 'percent' => 100, 'message' => '1618 selesai']);
         $sync = app(RecordingSync::class);
-        $sync->request(); $sync->tick();
+        $sync->request('all'); $sync->tick();
         $state = $sync->state();
         $this->assertFalse($state['isRunning']);
         $this->assertSame('error', $state['stage']);
@@ -33,7 +33,7 @@ class RecordingSyncTest extends TestCase
         $this->assertFalse(app(RecordingSync::class)->state()['isRunning']);
     }
 
-    public function test_due_shared_schedule_queues_both_sources(): void
+    public function test_due_schedule_queues_only_1618_source(): void
     {
         config(['payroll.atlas_cookie' => '', 'payroll.robotics_1618_username' => 'test', 'payroll.robotics_1618_password' => 'test']);
         ShiftSetting::create(['setting_key' => 'atlas_auto_sync', 'setting_value' => ['enabled' => true, 'intervalMinutes' => 30, 'nextRun' => null]]);
@@ -41,7 +41,8 @@ class RecordingSyncTest extends TestCase
         $robot->shouldReceive('sync')->once()->andReturn([]);
         $robot->shouldReceive('state')->andReturn(['stage' => 'completed', 'percent' => 100, 'message' => 'Selesai']);
         app(RecordingSync::class)->tick();
-        $this->assertCount(2, app(RecordingSync::class)->state()['sources']);
+        $this->assertCount(1, app(RecordingSync::class)->state()['sources']);
+        $this->assertSame(['robotics'], array_keys(app(RecordingSync::class)->state()['sources']));
         $this->assertNotNull(ShiftSetting::where('setting_key', 'atlas_auto_sync')->value('setting_value')['nextRun']);
     }
     public function test_atlas_continues_past_three_pages_until_finished_in_one_tick(): void

@@ -1,3 +1,7 @@
+### [2026-11-22 21:48 WITA] — Antigravity: bot utama dan auto-sync cron dikhususkan untuk 1618 Robotics
+- `recordings.blade.php`, `RecordingSync`, `SyncController`, `RecordingSyncTest`: Tombol utama "Bot AIKu Studio" dan cron auto-sync berkala kini hanya menjalankan sinkronisasi 1618 Robotics (`source = '1618'`). Verbos dinonaktifkan dari jadwal cron otomatis, namun tetap tersedia untuk disinkronkan secara manual melalui menu dropdown popup sinkronisasi ("Verbos (Manual)").
+- Validasi: PHPUnit `RecordingSyncTest` (6 tests, 28 assertions) & `SystemAuditRegressionTest` lulus 100%. State IDLE.
+
 ### [2026-11-22 19:48 WITA] — Antigravity: hilangkan nama panjang dalam kurung pada matriks shift admin
 - `resources/views/shifts/weekly-matrix.blade.php`: Mengubah teks dropdown penugasan pada matriks sesi harian dan midnight agar hanya menampilkan nama panggilan pekerja (`w.short`), menghilangkan teks nama panjang dalam kurung yang memadati sel dropdown. Menghilangkan juga tanda kurung nama panjang pada kartu jadwal libur rutin dan format WhatsApp.
 - Validasi: PHPUnit `ShiftRosterTest` (4 tests, 24 assertions) lulus 100%. State IDLE.

@@ -13,7 +13,7 @@ class SyncController extends Controller
     public function requestSync(Request $request, \App\Services\RecordingSync $sync)
     {
         try {
-            $source = (string) $request->input('source', 'all');
+            $source = (string) $request->input('source', '1618');
 
             return response()->json($sync->request($source), 202);
         } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {

@@ -42,7 +42,7 @@ class RecordingSync
         return $state;
     }
 
-    public function request(string $target = 'all'): array
+    public function request(string $target = '1618'): array
     {
         $target = strtolower(trim($target));
         if ($target === 'verbos') {
@@ -108,7 +108,7 @@ class RecordingSync
         $state = $this->state();
         if (! $state['isRunning'] && $auto['enabled'] && (! $auto['nextRun'] || now()->gte($auto['nextRun']))) {
             try {
-                $this->request();
+                $this->request('1618');
             } catch (\RuntimeException $e) {
                 // The persisted source errors remain visible; retry at the next scheduled interval.
                 report($e);
