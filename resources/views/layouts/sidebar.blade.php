@@ -29,6 +29,7 @@
                 ['label' => 'Teams & Kontributor', 'path' => 'contributors', 'icon' => 'M16 21v-2a4 4 0 00-8 0v2M12 11a4 4 0 100-8 4 4 0 000 8m8 10v-2a4 4 0 00-3-3.87M4 21v-2a4 4 0 013-3.87'],
                 ['label' => 'Pengaturan Shift', 'path' => 'shifts', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ['label' => 'HP & Akun Studio', 'path' => 'devices', 'icon' => 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z'],
+                ['label' => 'Integrasi MCP', 'path' => 'admin/integrations/mcp', 'icon' => 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1'],
             ],
         ],
     ];

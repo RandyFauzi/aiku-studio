@@ -1,3 +1,7 @@
+### [2026-11-24 15:48 WITA] — Antigravity: implementasi AIKu Studio MCP Server (22 read-only tools, auth, audit, dan UI admin)
+- `AikuServer`, `ReadTool`, 22 read-only tools, 3 resources, 2 prompts, `AuthenticateAikuMcp`, `AuditAikuMcp`, `McpAccess`, `McpReadQueries`, `McpConnectionController`, `mcp.blade.php`, dan migrasi `mcp_connections`/`mcp_tool_calls`/`account_version`: Membangun server MCP Streamable HTTP (`POST /mcp/aiku`) & local (`aiku`) dengan isolasi peran (`admin` vs `contributor`), redaksi GPS/kredensial/rekening, dan manajemen token terenkripsi di `/admin/integrations/mcp`.
+- Validasi: Migrasi lokal sukses, `python scripts/graphify_project.py build` sukses, PHPUnit `AikuMcpServerTest` (8 tests, 49 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-24 15:46 WITA] — Antigravity: hilangkan kolom Status Bayar dari tabel Task List (Rekaman)
 - `resources/views/panel/recordings.blade.php`: Menghapus kolom `Status Bayar` dari header/body tabel desktop dan badge `Payment Status` pada kartu mobile, serta menyesuaikan `colspan` dari 11 menjadi 10 atas izin pengguna (tanpa menyentuh lock `.agent/STATE.json` agen lain).
 - Validasi: Review diff, `php artisan view:clear` sukses.

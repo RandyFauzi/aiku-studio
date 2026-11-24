@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\McpConnectionController;
 use App\Http\Controllers\AdminNoteController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
@@ -90,6 +91,11 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::view('/'.$page, $view)->name($page);
             Route::view('/'.$page.'.html', $view);
         }
+
+        Route::get('/admin/integrations/mcp', [McpConnectionController::class, 'index'])->name('admin.integrations.mcp');
+        Route::post('/admin/integrations/mcp', [McpConnectionController::class, 'store'])->name('admin.integrations.mcp.store');
+        Route::post('/admin/integrations/mcp/{connection}/reveal', [McpConnectionController::class, 'reveal'])->name('admin.integrations.mcp.reveal');
+        Route::delete('/admin/integrations/mcp/{connection}', [McpConnectionController::class, 'destroy'])->name('admin.integrations.mcp.destroy');
 
         Route::get('/api/admin-notes', [AdminNoteController::class, 'index']);
         Route::post('/api/admin-notes', [AdminNoteController::class, 'store']);

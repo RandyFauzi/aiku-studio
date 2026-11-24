@@ -3,7 +3,7 @@
 
 CREATE TABLE "admin_notes" ("id" integer primary key autoincrement not null, "user_id" integer not null, "assigned_to_user_id" integer, "title" varchar not null, "content" text, "type" varchar not null default 'note', "priority" varchar not null default 'normal', "note_date" date not null, "is_pinned" tinyint(1) not null default '0', "is_completed" tinyint(1) not null default '0', "completed_at" datetime, "completed_by_user_id" integer, "checklist_items" text, "created_at" datetime, "updated_at" datetime, foreign key("user_id") references "users"("id") on delete cascade, foreign key("assigned_to_user_id") references "users"("id") on delete set null, foreign key("completed_by_user_id") references "users"("id") on delete set null);
 
-CREATE TABLE "attendances" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "checked_in_at" datetime not null, "latitude" numeric, "longitude" numeric, "accuracy_m" double, "gps_captured_at" datetime, "created_at" datetime, "updated_at" datetime, "checkin_method" varchar not null default ('gps'), "client_ip" varchar, "wifi_verified" tinyint(1) not null default ('0'));
+CREATE TABLE "attendances" ("id" integer primary key autoincrement not null, "user_id" integer not null, "contributor_id" integer not null, "contributor_name" varchar not null, "work_date" date not null, "checked_in_at" datetime not null, "latitude" numeric, "longitude" numeric, "accuracy_m" double, "gps_captured_at" datetime, "created_at" datetime, "updated_at" datetime, "checkin_method" varchar not null default ('gps'), "client_ip" varchar, "wifi_verified" tinyint(1) not null default ('0'), "attendance_status" varchar not null default 'hadir', "notes" varchar);
 
 CREATE TABLE "cache" ("key" varchar not null, "value" text not null, "expiration" integer not null, primary key ("key"));
 
@@ -20,6 +20,10 @@ CREATE TABLE "failed_jobs" ("id" integer primary key autoincrement not null, "uu
 CREATE TABLE "job_batches" ("id" varchar not null, "name" varchar not null, "total_jobs" integer not null, "pending_jobs" integer not null, "failed_jobs" integer not null, "failed_job_ids" text not null, "options" text, "cancelled_at" integer, "created_at" integer not null, "finished_at" integer, primary key ("id"));
 
 CREATE TABLE "jobs" ("id" integer primary key autoincrement not null, "queue" varchar not null, "payload" text not null, "attempts" integer not null, "reserved_at" integer, "available_at" integer not null, "created_at" integer not null);
+
+CREATE TABLE "mcp_connections" ("id" varchar not null, "user_id" integer not null, "name" varchar not null, "client_type" varchar not null default 'custom', "token_hash" varchar, "token_suffix" varchar, "token_encrypted" text, "account_version" integer not null default '1', "expires_at" datetime, "last_used_at" datetime, "revoked_at" datetime, "created_at" datetime, "updated_at" datetime, foreign key("user_id") references "users"("id") on delete cascade, primary key ("id"));
+
+CREATE TABLE "mcp_tool_calls" ("id" integer primary key autoincrement not null, "trace_id" varchar not null, "mcp_connection_id" varchar, "user_id" integer, "role" varchar, "method" varchar not null, "tool_name" varchar, "input_digest" text, "outcome" varchar not null, "http_status" integer not null default '200', "latency_ms" integer not null default '0', "ip_address" varchar, "created_at" datetime not null default CURRENT_TIMESTAMP);
 
 CREATE TABLE "migrations" ("id" integer primary key autoincrement not null, "migration" varchar not null, "batch" integer not null);
 
@@ -51,7 +55,7 @@ CREATE TABLE "studio_devices" ("id" integer primary key autoincrement not null, 
 
 CREATE TABLE "studio_recordings" ("record_id" varchar not null, "participant_email" varchar not null, "task_title" varchar, "recorded_utc" varchar, "recorded_at" datetime, "duration_sec" double not null default '0', "duration_min" double not null default '0', "billable_min" double not null default '0', "rejected_min" double not null default '0', "pending_min" double not null default '0', "deferred_min" double not null default '0', "processing_status" varchar, "billable_status" varchar, "reviewed_utc" varchar, "reconciliation" varchar, "assigned_contributor_id" integer, "assigned_worker_name" varchar, "manual_payment_status" varchar not null default 'Belum Rekap', "notes" text, "assigned_at" datetime, "last_synced_at" datetime, "createdAt" datetime, "updatedAt" datetime, "atlas_synced_at" datetime, "robotics_1618_synced_at" datetime, "prev_billable_min" numeric, "prev_rejected_min" numeric, "qc_changed_at" datetime, primary key ("record_id"));
 
-CREATE TABLE "users" ("id" integer primary key autoincrement not null, "name" varchar not null, "email" varchar not null, "email_verified_at" datetime, "password" varchar not null, "remember_token" varchar, "created_at" datetime, "updated_at" datetime, "role" varchar not null default 'contributor', "contributor_id" integer, "is_active" tinyint(1) not null default '1');
+CREATE TABLE "users" ("id" integer primary key autoincrement not null, "name" varchar not null, "email" varchar not null, "email_verified_at" datetime, "password" varchar not null, "remember_token" varchar, "created_at" datetime, "updated_at" datetime, "role" varchar not null default 'contributor', "contributor_id" integer, "is_active" tinyint(1) not null default '1', "account_version" integer not null default '1');
 
 CREATE INDEX "admin_notes_is_completed_index" on "admin_notes" ("is_completed");
 
@@ -100,6 +104,20 @@ CREATE INDEX "device_accounts_phone_key_index" on "device_accounts" ("phone_key"
 CREATE UNIQUE INDEX "failed_jobs_uuid_unique" on "failed_jobs" ("uuid");
 
 CREATE INDEX "jobs_queue_index" on "jobs" ("queue");
+
+CREATE UNIQUE INDEX "mcp_connections_token_hash_unique" on "mcp_connections" ("token_hash");
+
+CREATE INDEX "mcp_connections_user_id_revoked_at_index" on "mcp_connections" ("user_id", "revoked_at");
+
+CREATE INDEX "mcp_tool_calls_created_at_index" on "mcp_tool_calls" ("created_at");
+
+CREATE INDEX "mcp_tool_calls_mcp_connection_id_index" on "mcp_tool_calls" ("mcp_connection_id");
+
+CREATE INDEX "mcp_tool_calls_tool_name_index" on "mcp_tool_calls" ("tool_name");
+
+CREATE INDEX "mcp_tool_calls_trace_id_index" on "mcp_tool_calls" ("trace_id");
+
+CREATE INDEX "mcp_tool_calls_user_id_index" on "mcp_tool_calls" ("user_id");
 
 CREATE UNIQUE INDEX "payroll_statuses_worker_name_period_unique" on "payroll_statuses" ("worker_name", "period");
 
