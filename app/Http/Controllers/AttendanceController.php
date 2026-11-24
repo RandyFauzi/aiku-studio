@@ -446,9 +446,13 @@ class AttendanceController extends Controller
         $fields = $request->validate([
             'contributor_id' => 'required|integer|exists:contributors,id',
             'work_date' => 'required|date_format:Y-m-d',
+            'status' => 'nullable|string|in:hadir,izin,sakit,tanpa_keterangan,lainnya',
             'time' => 'nullable|string',
             'notes' => 'nullable|string|max:255',
         ]);
+
+        $status = $fields['status'] ?? 'hadir';
+        $notes = trim((string) ($fields['notes'] ?? ''));
 
         $contributor = Contributor::findOrFail($fields['contributor_id']);
 
@@ -464,7 +468,7 @@ class AttendanceController extends Controller
         if ($existing) {
             $timeFormatted = CarbonImmutable::instance($existing->checked_in_at)->setTimezone('Asia/Makassar')->format('H:i:s');
             throw ValidationException::withMessages([
-                'contributor_id' => "{$contributor->nama} sudah tercatat absen masuk pada tanggal {$fields['work_date']} pukul {$timeFormatted} WITA.",
+                'contributor_id' => "{$contributor->nama} sudah tercatat absen pada tanggal {$fields['work_date']} pukul {$timeFormatted} WITA.",
             ]);
         }
 
@@ -484,11 +488,11 @@ class AttendanceController extends Controller
         $adminUser = $request->user();
         $adminName = $adminUser ? ($adminUser->name ?? $adminUser->email) : 'Admin';
         $clientIp = 'Manual Admin ('.$adminName.')';
-        if (! empty($fields['notes'])) {
-            $clientIp .= ' - '.trim($fields['notes']);
+        if ($notes !== '') {
+            $clientIp .= ' - '.$notes;
         }
 
-        $row = DB::transaction(function () use ($user, $contributor, $fields, $checkinInstant, $clientIp) {
+        $row = DB::transaction(function () use ($user, $contributor, $fields, $checkinInstant, $clientIp, $status, $notes) {
             User::whereKey($user->id)->lockForUpdate()->firstOrFail();
 
             $attributes = [
@@ -501,8 +505,15 @@ class AttendanceController extends Controller
                 'gps_captured_at' => null,
                 'checkin_method' => 'manual',
                 'client_ip' => $clientIp,
-                'wifi_verified' => true,
+                'wifi_verified' => $status === 'hadir',
             ];
+
+            if (Schema::hasColumn('attendances', 'attendance_status')) {
+                $attributes['attendance_status'] = $status;
+            }
+            if (Schema::hasColumn('attendances', 'notes')) {
+                $attributes['notes'] = $notes !== '' ? $notes : null;
+            }
 
             return Attendance::create(array_merge(
                 ['user_id' => $user->id, 'work_date' => $fields['work_date']],
@@ -510,10 +521,18 @@ class AttendanceController extends Controller
             ));
         });
 
+        $message = match ($status) {
+            'izin' => "Status Izin untuk {$contributor->nama} berhasil disimpan.",
+            'sakit' => "Status Sakit untuk {$contributor->nama} berhasil disimpan.",
+            'tanpa_keterangan' => "Status Tanpa Keterangan untuk {$contributor->nama} berhasil disimpan.",
+            'lainnya' => "Status keterangan lainnya untuk {$contributor->nama} berhasil disimpan.",
+            default => "Absensi manual untuk {$contributor->nama} berhasil disimpan.",
+        };
+
         return response()->json([
             'success' => true,
             'attendance' => $row,
-            'message' => "Absensi manual untuk {$contributor->nama} berhasil disimpan.",
+            'message' => $message,
         ]);
     }
 

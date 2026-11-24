@@ -1,3 +1,7 @@
+### [2026-11-24 10:40 WITA] — Antigravity: tambah pilihan status izin/sakit/tanpa keterangan pada absensi manual admin
+- `AttendanceController`, `RecordStreak`, `admin.blade.php`, `attendance.js`, migrasi `2026_11_24_000001_add_status_and_notes_to_attendances_table`: Menambahkan pilihan status kehadiran (`hadir`, `izin`, `sakit`, `tanpa_keterangan`, `lainnya`) beserta kolom `notes` opsional (dengan keterangan atau tanpa keterangan) pada modal & tabel rekap absensi manual admin. Status selain `hadir` tidak dihitung sebagai hadir masuk di `RecordStreak`.
+- Validasi: `npm run build` sukses, migrasi lokal sukses, PHPUnit `AttendanceManualAdminTest` (5 tests, 26 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-24] — CODEX
 - Pengaturan HP membuat dan menautkan worker lewat POST privat agar KameraKita memeriksa vendor pilihan.
 - Tes integrasi 13 lulus. Perubahan API KameraKita perlu dipasang di server agar peran worker berlaku.

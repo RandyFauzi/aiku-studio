@@ -165,7 +165,7 @@
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <div class="p-5">
                 <h2 class="font-bold text-slate-900" x-text="dateLabel(date)"></h2>
-                <p class="mt-1 text-sm text-slate-500" x-text="rows.length+' orang sudah masuk'"></p>
+                <p class="mt-1 text-sm text-slate-500" x-text="summaryText"></p>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[620px] text-left text-sm">
@@ -201,9 +201,10 @@
                                         </div>
                                     </template>
                                     <template x-if="row.checkin_method === 'manual'">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200/60 shadow-2xs">
-                                            <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                            <span>Manual Admin</span>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs"
+                                              :class="manualStatusBadgeClass(row.attendance_status)">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                            <span x-text="manualStatusLabel(row.attendance_status)"></span>
                                         </span>
                                     </template>
                                     <template x-if="row.checkin_method !== 'qr_wifi' && row.checkin_method !== 'manual'">
@@ -216,8 +217,10 @@
                                 <td class="p-4">
                                     <template x-if="row.checkin_method === 'manual'">
                                         <div>
-                                            <p class="font-semibold text-xs text-indigo-900" x-text="row.client_ip || 'Manual Admin'"></p>
-                                            <p class="text-[11px] text-emerald-600 font-medium mt-0.5">Diverifikasi oleh Admin</p>
+                                            <p class="font-semibold text-xs text-slate-800" x-text="row.notes ? ('Keterangan: ' + row.notes) : (row.attendance_status && row.attendance_status !== 'hadir' ? 'Tanpa keterangan' : (row.client_ip || 'Manual Admin'))"></p>
+                                            <p class="text-[11px] font-medium mt-0.5"
+                                               :class="(!row.attendance_status || row.attendance_status === 'hadir') ? 'text-emerald-600' : 'text-slate-500'"
+                                               x-text="row.client_ip || 'Dicatat oleh Admin'"></p>
                                         </div>
                                     </template>
                                     <template x-if="row.checkin_method === 'qr_wifi'">
@@ -282,7 +285,7 @@
                 <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900">Tambah Absensi Manual</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Bantu absensi kontributor yang mengalami kendala QR atau GPS.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Catat kehadiran manual, izin, sakit, atau tanpa keterangan kontributor.</p>
                     </div>
                     <button type="button" @click="closeManualModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -311,6 +314,22 @@
                         </select>
                     </div>
 
+                    <!-- Pilihan Status Kehadiran -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            Status Kehadiran <span class="text-rose-500">*</span>
+                        </label>
+                        <select x-model="manualForm.status" 
+                                required
+                                class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition cursor-pointer">
+                            <option value="hadir">Hadir (Absen Masuk Manual)</option>
+                            <option value="izin">Izin</option>
+                            <option value="sakit">Sakit</option>
+                            <option value="tanpa_keterangan">Tanpa Keterangan (Alpa)</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                    </div>
+
                     <!-- Tanggal Kerja & Jam Masuk (Grid 2 kolom) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -324,8 +343,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                Jam Masuk (WITA) <span class="text-rose-500">*</span>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                   x-text="manualForm.status === 'hadir' ? 'Jam Masuk (WITA) *' : 'Jam Pencatatan (WITA) *'">
                             </label>
                             <input type="time" 
                                    step="1"
@@ -338,11 +357,11 @@
                     <!-- Catatan / Keterangan Alasan -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                            Catatan / Alasan Manual <span class="text-slate-400 font-normal">(opsional)</span>
+                            Alasan / Keterangan <span class="text-slate-400 font-normal">(opsional — kosongkan jika tanpa keterangan)</span>
                         </label>
                         <input type="text" 
                                x-model="manualForm.notes" 
-                               placeholder="Contoh: Kendala scan QR WiFi / GPS HP bermasalah" 
+                               :placeholder="manualForm.status === 'hadir' ? 'Contoh: Kendala scan QR WiFi / GPS HP bermasalah' : (manualForm.status === 'tanpa_keterangan' ? 'Kosongkan jika tanpa keterangan, atau isi catatan tambahan' : 'Contoh: Izin acara keluarga / Sakit demam')" 
                                maxlength="200"
                                class="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition">
                     </div>
@@ -350,8 +369,8 @@
                     <!-- Info Box -->
                     <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-start gap-2.5 text-xs text-amber-800">
                         <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <p class="leading-relaxed">
-                            Absensi manual akan langsung tercatat sebagai hadir dan terverifikasi untuk tanggal kerja terkait. Pastikan kontributor benar-benar hadir.
+                        <p class="leading-relaxed"
+                           x-text="manualForm.status === 'hadir' ? 'Absensi manual akan langsung tercatat sebagai hadir dan terverifikasi untuk tanggal kerja terkait. Pastikan kontributor benar-benar hadir.' : 'Status izin, sakit, atau tanpa keterangan akan tercatat pada rekap harian admin dan tidak dihitung sebagai hadir masuk.'">
                         </p>
                     </div>
 

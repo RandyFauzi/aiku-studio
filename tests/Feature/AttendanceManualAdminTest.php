@@ -132,4 +132,60 @@ class AttendanceManualAdminTest extends TestCase
             'id' => $attendance->id,
         ]);
     }
+
+    public function test_admin_can_record_izin_sakit_and_tanpa_keterangan_with_or_without_notes(): void
+    {
+        $admin = $this->adminUser();
+        ['contributor' => $p1, 'user' => $u1] = $this->contributorUser('Siti Mariyam', 'mariyam@example.com');
+        ['contributor' => $p2, 'user' => $u2] = $this->contributorUser('Fahri', 'fahri@example.com');
+        ['contributor' => $p3, 'user' => $u3] = $this->contributorUser('Fai', 'fai@example.com');
+
+        // Izin dengan keterangan
+        $this->actingAs($admin)->postJson('/api/attendance/manual', [
+            'contributor_id' => $p1->id,
+            'work_date' => '2026-11-24',
+            'status' => 'izin',
+            'time' => '09:00:00',
+            'notes' => 'Acara keluarga',
+        ])->assertOk()->assertJsonPath('attendance.attendance_status', 'izin');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $u1->id,
+            'work_date' => '2026-11-24',
+            'attendance_status' => 'izin',
+            'notes' => 'Acara keluarga',
+            'wifi_verified' => 0,
+        ]);
+
+        // Sakit tanpa keterangan tambahan
+        $this->actingAs($admin)->postJson('/api/attendance/manual', [
+            'contributor_id' => $p2->id,
+            'work_date' => '2026-11-24',
+            'status' => 'sakit',
+            'time' => '09:05:00',
+        ])->assertOk()->assertJsonPath('attendance.attendance_status', 'sakit');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $u2->id,
+            'work_date' => '2026-11-24',
+            'attendance_status' => 'sakit',
+            'notes' => null,
+            'wifi_verified' => 0,
+        ]);
+
+        // Tanpa keterangan
+        $this->actingAs($admin)->postJson('/api/attendance/manual', [
+            'contributor_id' => $p3->id,
+            'work_date' => '2026-11-24',
+            'status' => 'tanpa_keterangan',
+            'time' => '09:10:00',
+        ])->assertOk()->assertJsonPath('attendance.attendance_status', 'tanpa_keterangan');
+
+        // Status tidak valid ditolak
+        $this->actingAs($admin)->postJson('/api/attendance/manual', [
+            'contributor_id' => $p3->id,
+            'work_date' => '2026-11-25',
+            'status' => 'invalid_status',
+        ])->assertStatus(422)->assertJsonValidationErrors(['status']);
+    }
 }

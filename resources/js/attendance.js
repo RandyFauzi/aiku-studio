@@ -841,6 +841,7 @@ window.adminAttendanceData = () => ({
     manualSuccess: '',
     manualForm: {
         contributor_id: '',
+        status: 'hadir',
         work_date: witaDate(),
         time: '',
         notes: ''
@@ -879,6 +880,7 @@ window.adminAttendanceData = () => ({
 
         this.manualForm = {
             contributor_id: '',
+            status: 'hadir',
             work_date: this.date || witaDate(),
             time: defaultTime,
             notes: ''
@@ -987,5 +989,30 @@ window.adminAttendanceData = () => ({
     },
     get filtered() {
         return this.rows.filter(row => row.contributor_name.toLowerCase().includes(this.search.toLowerCase()));
+    },
+    get summaryText() {
+        const hadir = this.rows.filter((r) => !r.attendance_status || r.attendance_status === 'hadir').length;
+        const other = this.rows.length - hadir;
+        return other > 0
+            ? `${hadir} orang masuk · ${other} izin/sakit/keterangan lain`
+            : `${hadir} orang sudah masuk`;
+    },
+    manualStatusLabel(status) {
+        return {
+            hadir: 'Manual Admin',
+            izin: 'Izin',
+            sakit: 'Sakit',
+            tanpa_keterangan: 'Tanpa Keterangan',
+            lainnya: 'Lainnya',
+        }[status || 'hadir'] || 'Manual Admin';
+    },
+    manualStatusBadgeClass(status) {
+        return {
+            hadir: 'bg-indigo-100 text-indigo-800 border-indigo-200/60',
+            izin: 'bg-amber-100 text-amber-800 border-amber-200/70',
+            sakit: 'bg-orange-100 text-orange-800 border-orange-200/70',
+            tanpa_keterangan: 'bg-rose-100 text-rose-800 border-rose-200/70',
+            lainnya: 'bg-slate-100 text-slate-700 border-slate-200/80',
+        }[status || 'hadir'] || 'bg-indigo-100 text-indigo-800 border-indigo-200/60';
     },
 });

@@ -33,7 +33,12 @@ class RecordStreak
             }
             $workDate = $this->dateForInstant($now, $schedules);
             $reports = DailyWorkReport::where('contributor_id', $person->id)->whereBetween('work_date', [$start, $today])->get()->keyBy('work_date');
-            $attendances = Attendance::where('contributor_id', $person->id)->whereBetween('checked_in_at', [CarbonImmutable::parse($start, 'Asia/Makassar')->utc(), $now->utc()])->get();
+            $attendances = Attendance::where('contributor_id', $person->id)
+                ->whereBetween('checked_in_at', [CarbonImmutable::parse($start, 'Asia/Makassar')->utc(), $now->utc()])
+                ->where(function ($q) {
+                    $q->whereNull('attendance_status')->orWhere('attendance_status', 'hadir');
+                })
+                ->get();
             $attendanceByDate = [];
             foreach ($attendances as $attendance) {
                 $date = $this->dateForInstant(CarbonImmutable::instance($attendance->checked_in_at)->setTimezone('Asia/Makassar'), $schedules);
