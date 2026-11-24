@@ -1266,7 +1266,6 @@
                                     <input type="checkbox" @change="toggleSelectAll($event)" :checked="isAllSelected" class="rounded text-[#00B090] focus:ring-[#00B090] w-3.5 h-3.5 cursor-pointer">
                                 </th>
                                 <th class="py-2.5 px-2 min-w-[130px]">Pekerja (Ditandai)</th>
-                                <th class="py-2.5 px-1.5 w-20">Status Bayar</th>
                                 <th class="py-2.5 px-2.5 min-w-[140px]">Akun Studio</th>
                                 <th class="py-2.5 px-2 min-w-[140px] max-w-[240px]">Nama Tugas (Task)</th>
                                 <th class="py-2.5 px-1.5 min-w-[125px]">Waktu Rekam (WITA)</th>
@@ -1280,7 +1279,7 @@
                         <tbody class="divide-y divide-slate-100 text-slate-700">
                             <!-- Loading Skeleton -->
                             <tr x-show="isLoading" x-cloak>
-                                <td colspan="11" class="p-16 text-center text-slate-400">
+                                <td colspan="10" class="p-16 text-center text-slate-400">
                                     <div class="flex flex-col items-center justify-center">
                                         <svg class="animate-spin h-7 w-7 text-brand-600 mb-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                                         <span class="text-sm font-semibold text-slate-600">Memuat data rekaman studio...</span>
@@ -1290,7 +1289,7 @@
 
                             <!-- Empty State -->
                             <tr x-show="!isLoading && recordings.length === 0" x-cloak>
-                                <td colspan="11" class="p-16 text-center text-slate-400">
+                                <td colspan="10" class="p-16 text-center text-slate-400">
                                     <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
                                         <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -1305,7 +1304,7 @@
                         <template x-for="group in recordingGroups" :key="group.key">
                             <tbody class="divide-y divide-slate-100 text-slate-700">
                                 <tr class="bg-slate-50 border-y border-slate-200" data-shift-divider>
-                                    <th colspan="11" scope="colgroup" class="px-3 py-2 text-left font-semibold text-slate-600">
+                                    <th colspan="10" scope="colgroup" class="px-3 py-2 text-left font-semibold text-slate-600">
                                         <span x-text="group.label"></span>
                                         <span class="ml-3 font-normal text-slate-400" x-text="group.time"></span>
                                     </th>
@@ -1349,26 +1348,6 @@
 
                                             @include('panel.partials.recording-worker-picker', ['pickerView' => 'list'])
                                         </div>
-                                    </td>
-
-                                    <!-- Status Bayar - Click to Cycle Toggle -->
-                                    <td class="py-2.5 px-2.5" @click.stop>
-                                        <button @click="cyclePaymentStatus(rec.record_id, rec.manual_payment_status)"
-                                                :title="'Klik untuk ganti status bayar'"
-                                                :class="{
-                                                    'bg-emerald-50 text-emerald-700 border-emerald-300/80 hover:bg-emerald-100': rec.manual_payment_status === 'Paid',
-                                                    'bg-amber-50 text-amber-700 border-amber-300/80 hover:bg-amber-100': rec.manual_payment_status === 'Belum',
-                                                    'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/80': !rec.manual_payment_status || rec.manual_payment_status === 'Belum Rekap'
-                                                }"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition shadow-2xs">
-                                            <span class="w-1.5 h-1.5 rounded-full"
-                                                  :class="{
-                                                      'bg-emerald-500': rec.manual_payment_status === 'Paid',
-                                                      'bg-amber-500': rec.manual_payment_status === 'Belum',
-                                                      'bg-slate-400': !rec.manual_payment_status || rec.manual_payment_status === 'Belum Rekap'
-                                                  }"></span>
-                                            <span x-text="rec.manual_payment_status || 'Belum Rekap'"></span>
-                                        </button>
                                     </td>
 
                                     <!-- Akun Studio -->
@@ -1541,31 +1520,12 @@
                                             <span class="text-[10px] font-mono text-slate-400" x-text="'#' + rec.record_id"></span>
                                         </div>
 
-                                        <!-- Badges: QC Status & Payment Status -->
+                                        <!-- Badges: QC Status -->
                                         <div class="flex items-center gap-1" @click.stop>
                                             <!-- QC Status Badge -->
                                             <span :class="rec.processing_status === 'processed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'" 
                                                   class="px-2 py-0.5 rounded-lg text-[10px] font-bold border" 
                                                   x-text="rec.processing_status || '-'"></span>
-
-                                            <!-- Payment Status Toggle Button -->
-                                            <button type="button"
-                                                    @click="cyclePaymentStatus(rec.record_id, rec.manual_payment_status)"
-                                                    :title="'Klik untuk ganti status bayar'"
-                                                    :class="{
-                                                        'bg-emerald-50 text-emerald-700 border-emerald-300/80 hover:bg-emerald-100': rec.manual_payment_status === 'Paid',
-                                                        'bg-amber-50 text-amber-700 border-amber-300/80 hover:bg-amber-100': rec.manual_payment_status === 'Belum',
-                                                        'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/80': !rec.manual_payment_status || rec.manual_payment_status === 'Belum Rekap'
-                                                    }"
-                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border transition shadow-2xs cursor-pointer">
-                                                <span class="w-1.5 h-1.5 rounded-full"
-                                                      :class="{
-                                                          'bg-emerald-500': rec.manual_payment_status === 'Paid',
-                                                          'bg-amber-500': rec.manual_payment_status === 'Belum',
-                                                          'bg-slate-400': !rec.manual_payment_status || rec.manual_payment_status === 'Belum Rekap'
-                                                      }"></span>
-                                                <span x-text="rec.manual_payment_status || 'Belum Rekap'"></span>
-                                            </button>
                                         </div>
                                     </div>
 

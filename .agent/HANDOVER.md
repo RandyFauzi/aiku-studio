@@ -1,3 +1,7 @@
+### [2026-11-24 15:46 WITA] — Antigravity: hilangkan kolom Status Bayar dari tabel Task List (Rekaman)
+- `resources/views/panel/recordings.blade.php`: Menghapus kolom `Status Bayar` dari header/body tabel desktop dan badge `Payment Status` pada kartu mobile, serta menyesuaikan `colspan` dari 11 menjadi 10 atas izin pengguna (tanpa menyentuh lock `.agent/STATE.json` agen lain).
+- Validasi: Review diff, `php artisan view:clear` sukses.
+
 ### [2026-11-24 10:40 WITA] — Antigravity: tambah pilihan status izin/sakit/tanpa keterangan pada absensi manual admin
 - `AttendanceController`, `RecordStreak`, `admin.blade.php`, `attendance.js`, migrasi `2026_11_24_000001_add_status_and_notes_to_attendances_table`: Menambahkan pilihan status kehadiran (`hadir`, `izin`, `sakit`, `tanpa_keterangan`, `lainnya`) beserta kolom `notes` opsional (dengan keterangan atau tanpa keterangan) pada modal & tabel rekap absensi manual admin. Status selain `hadir` tidak dihitung sebagai hadir masuk di `RecordStreak`.
 - Validasi: `npm run build` sukses, migrasi lokal sukses, PHPUnit `AttendanceManualAdminTest` (5 tests, 26 assertions) lulus 100%. State IDLE.
