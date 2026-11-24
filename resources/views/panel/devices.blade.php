@@ -226,13 +226,13 @@
                                 <label class="flex items-start gap-3 cursor-pointer">
                                     <input type="checkbox" x-model="createKamerakitaPartner" @change="onToggleCreatePartner()" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                     <span>
-                                        <span class="block text-sm font-bold text-slate-800">Buat akun Mitra KameraKita juga</span>
-                                        <span class="block mt-0.5 text-xs text-slate-600">Privat untuk Studio ini. Email yang sama didaftarkan sebagai mitra dan langsung terhubung ke akun mitra pengampu pilihan.</span>
+                                        <span class="block text-sm font-bold text-slate-800">Buat akun Worker KameraKita juga</span>
+                                        <span class="block mt-0.5 text-xs text-slate-600">Privat untuk Studio ini. Email yang sama didaftarkan sebagai worker di bawah vendor yang dipilih.</span>
                                     </span>
                                 </label>
                                 <div x-show="createKamerakitaPartner" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun Mitra Pengampu *</label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Vendor Pengampu *</label>
                                         <select x-model="partnerParentId" @change="onParentChange()" :required="createKamerakitaPartner" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
                                             <template x-for="parent in kamerakita.parents || []" :key="parent.id">
                                                 <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
@@ -240,12 +240,12 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp worker *</label>
                                         <input type="tel" x-model="partnerWhatsapp" maxlength="20" :required="createKamerakitaPartner" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none">
                                     </div>
-                                    <p class="sm:col-span-2 text-[11px] text-slate-500 italic">Nama mitra KameraKita akan otomatis mengikuti isi Catatan / Label di atas.</p>
+                                    <p class="sm:col-span-2 text-[11px] text-slate-500 italic">Nama worker KameraKita akan otomatis mengikuti isi Catatan / Label di atas.</p>
                                     <p x-show="!kamerakita.configured" class="sm:col-span-2 text-xs font-semibold text-amber-800">Koneksi server belum disiapkan. Minta admin memasang URL dan token sesuai panduan integrasi.</p>
-                                    <p x-show="kamerakita.configured && !(kamerakita.parents || []).length" class="sm:col-span-2 text-xs font-semibold text-amber-800">Daftar akun mitra pengampu belum dapat dimuat. Periksa token dan koneksi Kamerakita.</p>
+                                    <p x-show="kamerakita.configured && !(kamerakita.parents || []).length" class="sm:col-span-2 text-xs font-semibold text-amber-800">Daftar vendor pengampu belum dapat dimuat. Periksa token dan koneksi Kamerakita.</p>
                                 </div>
                             </div>
 
@@ -307,10 +307,10 @@
                                                     </span>
                                                 </template>
                                                 <div x-show="acc.kamerakita_partner_id && kamerakita.owner_access" class="mt-1">
-                                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold" :class="acc.kamerakita_status === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'" x-text="'Mitra KK: ' + (acc.kamerakita_status || 'terhubung')"></span>
+                                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold" :class="acc.kamerakita_status === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'" x-text="'KameraKita: ' + (acc.kamerakita_status || 'terhubung')"></span>
                                                 </div>
                                                 <div x-show="!acc.kamerakita_partner_id && kamerakita.owner_access" class="mt-1">
-                                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500">Non-Mitra KK</span>
+                                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500">Belum terhubung ke KK</span>
                                                 </div>
                                             </td>
                                             <td class="px-3 py-3.5 text-slate-400 tabular-nums" x-text="formatDate(acc.activated_at)"></td>
@@ -323,7 +323,7 @@
                                                             Jadikan Aktif
                                                         </button>
                                                     </template>
-                                                    <button x-show="acc.kamerakita_partner_id && kamerakita.owner_access" type="button" @click="toggleKamerakitaStatus(acc)" class="px-2.5 py-1 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 font-bold text-xs transition" x-text="acc.kamerakita_status === 'active' ? 'Nonaktifkan Mitra' : 'Aktifkan Mitra'"></button>
+                                                    <button x-show="acc.kamerakita_partner_id && kamerakita.owner_access" type="button" @click="toggleKamerakitaStatus(acc)" class="px-2.5 py-1 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 font-bold text-xs transition" x-text="acc.kamerakita_status === 'active' ? 'Nonaktifkan Worker' : 'Aktifkan Worker'"></button>
                                                     <template x-if="acc.is_active">
                                                         <span class="text-xs text-slate-400 font-semibold px-2 py-1">
                                                             Sedang Aktif
@@ -341,7 +341,7 @@
                                                     <button type="button" 
                                                             @click="deleteAccount(acc)"
                                                             class="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
-                                                            :title="acc.kamerakita_partner_id ? 'Hapus dari daftar HP dan hapus mitra KameraKita' : 'Hapus dari daftar HP ini'">
+                                                            :title="acc.kamerakita_partner_id ? 'Hapus dari daftar HP dan hapus worker KameraKita' : 'Hapus dari daftar HP ini'">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                     </button>
                                                 </div>
@@ -431,7 +431,7 @@
                                        :disabled="!!editForm.kamerakita_partner_id"
                                        placeholder="contoh: akun.streamer1@gmail.com"
                                        class="w-full h-11 px-3.5 rounded-xl border border-slate-200 text-sm font-mono font-medium focus:outline-none focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20 bg-slate-50/50 focus:bg-white transition">
-                                <p x-show="editForm.kamerakita_partner_id" class="mt-1 text-[11px] text-slate-500">Email dikunci agar identitas akun mitra tetap sama di kedua sistem.</p>
+                                <p x-show="editForm.kamerakita_partner_id" class="mt-1 text-[11px] text-slate-500">Email dikunci agar identitas akun worker tetap sama di kedua sistem.</p>
                             </div>
 
                             <!-- Catatan / Label -->
@@ -443,8 +443,8 @@
                                        class="w-full h-11 px-3.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20 bg-slate-50/50 focus:bg-white transition">
                             </div>
                             <div x-show="editForm.kamerakita_partner_id && kamerakita.owner_access" x-cloak class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 space-y-3">
-                                <div class="text-xs font-bold text-indigo-800">Profil Mitra KameraKita</div>
-                                <p x-show="editForm.partner_loading" class="text-xs text-slate-500">Memuat profil mitra…</p>
+                                <div class="text-xs font-bold text-indigo-800">Profil Worker KameraKita</div>
+                                <p x-show="editForm.partner_loading" class="text-xs text-slate-500">Memuat profil worker…</p>
                                 <div x-show="!editForm.partner_loading" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Nama lengkap *</label>
@@ -455,7 +455,7 @@
                                         <input type="tel" x-model="editForm.partner_whatsapp" maxlength="20" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
                                     </div>
                                     <div class="sm:col-span-2">
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun Mitra Pengampu (Koordinator) *</label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Vendor Pengampu *</label>
                                         <select x-model="editForm.partner_parent_id" @change="onEditParentChange()" :required="!!editForm.kamerakita_partner_id && kamerakita.owner_access" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
                                             <template x-for="parent in kamerakita.parents || []" :key="parent.id">
                                                 <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
@@ -469,26 +469,26 @@
                                 <label class="flex items-start gap-2.5 cursor-pointer">
                                     <input type="checkbox" x-model="editForm.link_kamerakita" @change="onToggleEditLinkKamerakita()" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                     <span>
-                                        <span class="block text-xs font-bold text-indigo-900">Tautkan ke Akun Mitra KameraKita</span>
-                                        <span class="block mt-0.5 text-[11px] text-slate-500">Buat atau hubungkan akun mitra KameraKita untuk email ini.</span>
+                                        <span class="block text-xs font-bold text-indigo-900">Tautkan ke Akun Worker KameraKita</span>
+                                        <span class="block mt-0.5 text-[11px] text-slate-500">Buat atau hubungkan akun worker KameraKita untuk email ini.</span>
                                     </span>
                                 </label>
                                 <div x-show="editForm.link_kamerakita" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama lengkap mitra *</label>
-                                        <input type="text" x-model="editForm.partner_full_name" maxlength="255" :required="editForm.link_kamerakita" placeholder="Nama mitra" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama lengkap worker *</label>
+                                        <input type="text" x-model="editForm.partner_full_name" maxlength="255" :required="editForm.link_kamerakita" placeholder="Nama worker" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">Akun Mitra Pengampu *</label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Vendor Pengampu *</label>
                                         <select x-model="editForm.partner_parent_id" @change="onEditParentChange()" :required="editForm.link_kamerakita" class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
-                                            <option value="">Pilih akun mitra pengampu</option>
+                                            <option value="">Pilih vendor pengampu</option>
                                             <template x-for="parent in kamerakita.parents || []" :key="parent.id">
                                                 <option :value="parent.id" x-text="parent.full_name + ' (' + parent.mitra_id + ')' "></option>
                                             </template>
                                         </select>
                                     </div>
                                     <div class="sm:col-span-2">
-                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp mitra *</label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp worker *</label>
                                         <input type="tel" x-model="editForm.partner_whatsapp" maxlength="20" :required="editForm.link_kamerakita" placeholder="08xxxxxxxxxx" class="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm">
                                     </div>
                                 </div>
@@ -817,7 +817,7 @@
                 async toggleKamerakitaStatus(acc) {
                     const nextStatus = acc.kamerakita_status === 'active' ? 'suspended' : 'active';
                     const result = await Swal.fire({
-                        title: nextStatus === 'active' ? 'Aktifkan Mitra?' : 'Nonaktifkan Mitra?',
+                        title: nextStatus === 'active' ? 'Aktifkan Worker?' : 'Nonaktifkan Worker?',
                         text: `${acc.email} akan ${nextStatus === 'active' ? 'dapat mengakses' : 'kehilangan akses ke'} akun KameraKita.`,
                         icon: 'warning',
                         showCancelButton: true,
@@ -834,7 +834,7 @@
                             body: JSON.stringify({ status: nextStatus })
                         });
                         const data = await response.json();
-                        if (!response.ok) throw new Error(data.message || 'Status mitra gagal diperbarui.');
+                        if (!response.ok) throw new Error(data.message || 'Status worker gagal diperbarui.');
                         await this.fetchDevices();
                         Swal.fire({ icon: 'success', title: 'Status diperbarui', text: data.message, timer: 1700, showConfirmButton: false });
                     } catch (error) {
@@ -846,8 +846,8 @@
                     let title = 'Hapus dari Daftar HP?';
                     let text = `Hapus akun ${acc.email} dari daftar HP ${this.selectedPhone?.label}?`;
                     if (acc.kamerakita_partner_id) {
-                        title = 'Hapus Akun & Mitra KameraKita?';
-                        text = `Hapus akun ${acc.email} dari daftar HP ${this.selectedPhone?.label} dan OTOMATIS HAPUS akun Mitra di KameraKita?`;
+                        title = 'Hapus Akun & Worker KameraKita?';
+                        text = `Hapus akun ${acc.email} dari daftar HP ${this.selectedPhone?.label} dan OTOMATIS HAPUS akun worker di KameraKita?`;
                     } else if (acc.is_active) {
                         text = `Akun ${acc.email} sedang aktif di HP ${this.selectedPhone?.label}. Yakin ingin menghapusnya?`;
                     }
@@ -920,7 +920,7 @@
                         try {
                             const response = await fetch(`/api/devices/accounts/${acc.id}/kamerakita`, { headers: { 'Accept': 'application/json' } });
                             const payload = await response.json();
-                            if (!response.ok) throw new Error(payload.message || 'Profil mitra tidak dapat dimuat.');
+                            if (!response.ok) throw new Error(payload.message || 'Profil worker tidak dapat dimuat.');
                             Object.assign(this.editForm, {
                                 partner_full_name: payload.data.full_name || '',
                                 partner_whatsapp: payload.data.whatsapp_number || '',
@@ -929,7 +929,7 @@
                             });
                         } catch (error) {
                             this.editForm.partner_loading = false;
-                            Swal.fire({ icon: 'error', title: 'Gagal memuat profil mitra', text: error.message });
+                            Swal.fire({ icon: 'error', title: 'Gagal memuat profil worker', text: error.message });
                         }
                     }
                 },
@@ -963,7 +963,7 @@
                                 body: JSON.stringify({ full_name: this.editForm.partner_full_name, whatsapp_number: this.editForm.partner_whatsapp, mitra_parent_id: this.editForm.partner_parent_id })
                             });
                             const partnerPayload = await partnerResponse.json();
-                            if (!partnerResponse.ok) throw new Error(partnerPayload.message || Object.values(partnerPayload.errors || {}).flat().join(' ') || 'Profil mitra gagal diperbarui.');
+                            if (!partnerResponse.ok) throw new Error(partnerPayload.message || Object.values(partnerPayload.errors || {}).flat().join(' ') || 'Profil worker gagal diperbarui.');
                         } else if (!this.editForm.kamerakita_partner_id && this.editForm.link_kamerakita && this.kamerakita.owner_access) {
                             const linkResponse = await fetch(`/api/devices/accounts/${this.editForm.id}/kamerakita`, {
                                 method: 'POST',
@@ -975,7 +975,7 @@
                                 })
                             });
                             const linkPayload = await linkResponse.json();
-                            if (!linkResponse.ok) throw new Error(linkPayload.message || Object.values(linkPayload.errors || {}).flat().join(' ') || 'Gagal menautkan ke mitra KameraKita.');
+                            if (!linkResponse.ok) throw new Error(linkPayload.message || Object.values(linkPayload.errors || {}).flat().join(' ') || 'Gagal menautkan ke worker KameraKita.');
                         }
                         const res = await fetch(`/api/devices/accounts/${this.editForm.id}`, {
                             method: 'PUT',

@@ -177,7 +177,7 @@ class KameraKitaPartnerIntegrationTest extends TestCase
                         'mitra_id' => 'KMK-123',
                         'email' => 'streamer.mitra@example.com',
                         'status' => 'active',
-                        'partner_role' => 'mitra',
+                        'partner_role' => 'worker',
                     ],
                 ], 201);
             },
@@ -225,7 +225,7 @@ class KameraKitaPartnerIntegrationTest extends TestCase
         ])->assertStatus(502);
 
         $this->assertFalse($response->json('success'));
-        $this->assertStringContainsString('Akun HP tersimpan, tetapi pembuatan mitra KameraKita gagal', $response->json('message'));
+        $this->assertStringContainsString('Akun HP tersimpan, tetapi pembuatan worker KameraKita gagal', $response->json('message'));
 
         // Device account is saved locally
         $this->assertDatabaseHas('device_accounts', [

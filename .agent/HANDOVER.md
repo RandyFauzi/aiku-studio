@@ -1,3 +1,7 @@
+### [2026-11-24] — CODEX
+- Pengaturan HP membuat dan menautkan worker lewat POST privat agar KameraKita memeriksa vendor pilihan.
+- Tes integrasi 13 lulus. Perubahan API KameraKita perlu dipasang di server agar peran worker berlaku.
+
 ### [2026-11-22 21:48 WITA] — Antigravity: bot utama dan auto-sync cron dikhususkan untuk 1618 Robotics
 - `recordings.blade.php`, `RecordingSync`, `SyncController`, `RecordingSyncTest`: Tombol utama "Bot AIKu Studio" dan cron auto-sync berkala kini hanya menjalankan sinkronisasi 1618 Robotics (`source = '1618'`). Verbos dinonaktifkan dari jadwal cron otomatis, namun tetap tersedia untuk disinkronkan secara manual melalui menu dropdown popup sinkronisasi ("Verbos (Manual)").
 - Validasi: PHPUnit `RecordingSyncTest` (6 tests, 28 assertions) & `SystemAuditRegressionTest` lulus 100%. State IDLE.
