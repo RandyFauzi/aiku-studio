@@ -1,3 +1,7 @@
+### [2026-11-25 23:46 WITA] — Antigravity: rapikan layout filter Validasi Tugas & Rekaman untuk tablet & layar kecil
+- `resources/views/panel/recordings.blade.php`: Memisahkan bar filter menjadi 2 baris rapi — baris atas berisi Search input (`flex-1 min-w-0`) + toggle List/Grid + Reset di kanan atas, dan baris bawah berisi 6 dropdown filter dalam grid responsif (`grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`) dengan lebar tombol penuh simetris.
+- Validasi: `php artisan view:clear` sukses. State IDLE.
+
 ### [2026-11-25 23:39 WITA] — Antigravity: optimasi PageSpeed (LCP, CLS, unused JS, caching & gzip)
 - `Login page.webp`, `login.blade.php`, `investor/dashboard.blade.php`, `resources/js/login.js`, `vite.config.js`, `public/.htaccess`, `public/build/*`: Mengonversi ilustrasi LCP `/login` ke animated WebP (`388 KB` → `210 KB`) dengan `<picture>`, `fetchpriority="high"`, preload `<link>`, dan atribut `width="482" height="362"` (atasi CLS); memecah entry Vite `login.js` khusus Alpine (`55 KB` vs `593 KB` `app.js`); menghapus CDN Tailwind runtime di `/investor`; serta menambah Gzip (`mod_deflate`) + `Cache-Control` / `mod_expires` di `public/.htaccess`.
 - Validasi: `npm run build` sukses, `php artisan view:clear` sukses, `AuthLoginTest` & `InvestorPortalTest` (13 tests, 65 assertions) lulus 100%. State IDLE.

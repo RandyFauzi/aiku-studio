@@ -452,12 +452,12 @@
             </div>
 
             <!-- FILTER & SEARCH CONTROLS ROW -->
-            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2.5">
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col gap-2.5">
                 
-                <!-- Left: Search Box & Filter Controls Group -->
-                <div class="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                <!-- Top Row: Search Box + View Toggle & Reset -->
+                <div class="flex items-center justify-between gap-2 w-full">
                     <!-- Search Input -->
-                    <div class="relative w-60 sm:w-68 shrink-0">
+                    <div class="relative flex-1 min-w-0">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
@@ -469,19 +469,49 @@
                         <button x-show="filters.search" @click="filters.search = ''; applyFilters(1)" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">✕</button>
                     </div>
 
+                    <!-- Right: View Toggle & Reset Controls -->
+                    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        <!-- View Toggle: List / Grid -->
+                        <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shadow-2xs">
+                            <button type="button"
+                                    @click="viewMode = 'list'"
+                                    :class="viewMode === 'list' ? 'bg-white text-slate-800 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
+                                <svg class="w-3.5 h-3.5" :class="viewMode === 'list' ? 'text-[#00B090]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                <span class="hidden sm:inline">List</span>
+                            </button>
+                            <button type="button"
+                                    @click="viewMode = 'grid'"
+                                    :class="viewMode === 'grid' ? 'bg-white text-slate-800 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
+                                <svg class="w-3.5 h-3.5" :class="viewMode === 'grid' ? 'text-[#00B090]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                <span class="hidden sm:inline">Grid</span>
+                            </button>
+                        </div>
+
+                        <!-- Reset Filters -->
+                        <button @click="resetFilters()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer" title="Reset Semua Filter">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Responsive Filter Controls Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+
                     <!-- Atur Range Tanggal (Ala Tiket.com) -->
-                    <div class="relative shrink-0" @click.outside="datePickerOpen = false">
+                    <div class="relative w-full min-w-0" @click.outside="datePickerOpen = false">
                         <button type="button" 
                                 @click="toggleDatePicker()" 
                                 title="Filter rentang tanggal"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                                class="w-full min-w-0 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="(filters.startDate || filters.endDate) ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
                             <svg class="w-4 h-4 shrink-0 transition" 
                                  :class="(filters.startDate || filters.endDate) ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
-                            <span class="font-bold whitespace-nowrap" x-text="getDateRangeLabel()"></span>
+                            <span class="font-bold truncate flex-1 text-left" x-text="getDateRangeLabel()"></span>
 
                             <!-- Reset Button inside trigger -->
                             <template x-if="filters.startDate || filters.endDate">
@@ -725,18 +755,18 @@
                     </div>
 
                     <!-- Filter Pekerja (Custom Dropdown Dengan Pencarian) -->
-                    <div class="relative shrink-0" x-data="{ openWorkerDropdown: false, searchWorkerFilter: '' }">
+                    <div class="relative w-full min-w-0" x-data="{ openWorkerDropdown: false, searchWorkerFilter: '' }">
                         <button type="button" 
                                 @click="openWorkerDropdown = !openWorkerDropdown; if(openWorkerDropdown) $nextTick(() => $refs.workerSearchInput?.focus())"
                                 title="Filter pekerja"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                                class="w-full min-w-0 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.worker !== 'all' ? (filters.worker === 'unassigned' ? 'border-amber-300 text-amber-800 bg-amber-50/60' : 'border-[#00B090] text-[#009B7E] bg-emerald-50/50') : ''">
                             <svg class="w-4 h-4 shrink-0 transition" 
                                  :class="filters.worker !== 'all' ? (filters.worker === 'unassigned' ? 'text-amber-600' : 'text-[#00B090]') : 'text-slate-400 group-hover:text-slate-600'" 
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span class="truncate max-w-[130px] font-semibold" 
+                            <span class="truncate flex-1 text-left font-semibold" 
                                   :class="filters.worker !== 'all' ? 'font-bold' : ''"
                                   x-text="filters.worker === 'all' ? 'Semua Pekerja' : (filters.worker === 'unassigned' ? 'Belum Ditandai' : filters.worker)"></span>
 
@@ -833,18 +863,18 @@
                     </div>
 
                     <!-- Filter List Tugas (Custom Dropdown Dengan Pencarian) -->
-                    <div class="relative shrink-0" x-data="{ openTaskDropdown: false, searchTaskFilter: '' }">
+                    <div class="relative w-full min-w-0" x-data="{ openTaskDropdown: false, searchTaskFilter: '' }">
                         <button type="button" 
                                 @click="openTaskDropdown = !openTaskDropdown; if(openTaskDropdown) $nextTick(() => $refs.taskSearchInput?.focus())"
                                 title="Filter tugas"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                                class="w-full min-w-0 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.task !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
                             <svg class="w-4 h-4 shrink-0 transition" 
                                  :class="filters.task !== 'all' ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                             </svg>
-                            <span class="truncate max-w-[140px] font-semibold" 
+                            <span class="truncate flex-1 text-left font-semibold" 
                                   :class="filters.task !== 'all' ? 'font-bold' : ''"
                                   x-text="filters.task === 'all' ? 'Semua Tugas' : filters.task" 
                                   :title="filters.task !== 'all' ? filters.task : 'Semua Tugas'"></span>
@@ -929,18 +959,18 @@
                     </div>
 
                     <!-- Dropdown Filter Akun Studio (Dengan Pencarian) -->
-                    <div class="relative shrink-0" x-data="{ openAccountDropdown: false, searchAccount: '' }">
+                    <div class="relative w-full min-w-0" x-data="{ openAccountDropdown: false, searchAccount: '' }">
                         <button type="button"
                                 @click="openAccountDropdown = !openAccountDropdown; if(openAccountDropdown) $nextTick(() => $refs.accountSearchInput.focus())"
                                 title="Filter akun studio"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                                class="w-full min-w-0 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.email !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
                             <svg class="w-4 h-4 shrink-0 transition" 
                                  :class="filters.email !== 'all' ? 'text-[#00B090]' : 'text-slate-400 group-hover:text-slate-600'" 
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                             </svg>
-                            <span class="truncate max-w-[140px] font-semibold" 
+                            <span class="truncate flex-1 text-left font-semibold" 
                                   :class="filters.email !== 'all' ? 'font-bold' : ''"
                                   x-text="filters.email === 'all' ? 'Semua Akun' : getAccountName(filters.email)"></span>
 
@@ -1042,11 +1072,11 @@
                     </div>
 
                     <!-- Filter Status QC (Custom Dropdown) -->
-                    <div class="relative shrink-0" x-data="{ openStatusDropdown: false }">
+                    <div class="relative w-full min-w-0" x-data="{ openStatusDropdown: false }">
                         <button type="button" 
                                 @click="openStatusDropdown = !openStatusDropdown"
                                 title="Filter status QC"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                                class="w-full min-w-0 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.status !== 'all' ? (filters.status === 'unassigned' ? 'border-amber-300 text-amber-800 bg-amber-50/60' : 'border-[#00B090] text-[#009B7E] bg-emerald-50/50') : ''">
                             <svg class="w-4 h-4 shrink-0 transition" 
                                  :class="{
@@ -1059,7 +1089,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span class="truncate max-w-[140px] font-semibold" 
+                            <span class="truncate flex-1 text-left font-semibold" 
                                   :class="filters.status !== 'all' ? 'font-bold' : ''"
                                   x-text="getStatusLabel(filters.status)"></span>
 
@@ -1168,11 +1198,11 @@
                     </div>
 
                     <!-- Filter Sumber Data (Verbos / 1618 Custom Dropdown) -->
-                    <div class="relative shrink-0" x-data="{ openSourceDropdown: false }">
+                    <div class="relative w-full min-w-0" x-data="{ openSourceDropdown: false }">
                         <button type="button" 
                                 @click="openSourceDropdown = !openSourceDropdown"
                                 title="Filter sumber data"
-                                class="bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                                class="w-full min-w-0 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/90 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 transition cursor-pointer shadow-2xs group"
                                 :class="filters.source !== 'all' ? 'border-[#00B090] text-[#009B7E] bg-emerald-50/50' : ''">
                             <svg class="w-4 h-4 shrink-0 transition" 
                                  :class="{
@@ -1183,7 +1213,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                             </svg>
-                            <span class="truncate font-semibold" 
+                            <span class="truncate flex-1 text-left font-semibold" 
                                   :class="filters.source !== 'all' ? 'font-bold' : ''"
                                   x-text="filters.source === 'all' ? 'Semua Sumber' : (filters.source === '1618' ? '1618' : 'Verbos')"></span>
 
@@ -1256,32 +1286,6 @@
                         </div>
                     </div>
 
-                </div>
-
-                <!-- Right: View Toggle & Reset Controls -->
-                <div class="flex items-center gap-2 shrink-0 ml-auto">
-                    <!-- View Toggle: List / Grid -->
-                    <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shadow-2xs">
-                        <button type="button"
-                                @click="viewMode = 'list'"
-                                :class="viewMode === 'list' ? 'bg-white text-slate-800 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'"
-                                class="px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
-                            <svg class="w-3.5 h-3.5" :class="viewMode === 'list' ? 'text-[#00B090]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                            <span>List</span>
-                        </button>
-                        <button type="button"
-                                @click="viewMode = 'grid'"
-                                :class="viewMode === 'grid' ? 'bg-white text-slate-800 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-medium'"
-                                class="px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
-                            <svg class="w-3.5 h-3.5" :class="viewMode === 'grid' ? 'text-[#00B090]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                            <span>Grid</span>
-                        </button>
-                    </div>
-
-                    <!-- Reset Filters -->
-                    <button @click="resetFilters()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition" title="Reset Semua Filter">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    </button>
                 </div>
 
             </div>
