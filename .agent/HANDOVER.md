@@ -1,3 +1,7 @@
+### [2026-11-25 14:52 WITA] — Antigravity: perbaiki grid palet warna menjadi 8 kolom compact (3 baris rapi)
+- `resources/views/panel/contributors.blade.php`: Mengganti `grid-cols-6` (yang sebelumnya belum ter-compile di bundle CSS halaman kontributor sehingga menumpuk 1 kolom ke bawah) dengan inline CSS grid 8 kolom compact (`26px` lingkaran warna solid, 24 warna tersusun rapi dalam 3 baris + Custom RGB picker di bawahnya).
+- Validasi: `php artisan view:clear` sukses. State IDLE.
+
 ### [2026-11-25 14:50 WITA] — Antigravity: perluas pilihan warna (24 preset + custom color picker RGB bebas)
 - `Contributor`, `ContributorController`, `app.js`, `contributors.blade.php`, `recordings.blade.php`, `recording-worker-picker.blade.php`, `ContributorRoleManagementTest`: Memperluas pilihan warna menjadi 24 preset kontras plus pemilih warna kustom RGB bebas (`#RRGGBB` via `<input type="color">`) baik di quick popover tabel maupun modal Edit, dengan render dinamis yang sinkron penuh di Task List Rekaman.
 - Validasi: `php artisan view:clear` sukses, PHPUnit `ContributorRoleManagementTest` (9 tests, 97 assertions) lulus 100%. State IDLE.
