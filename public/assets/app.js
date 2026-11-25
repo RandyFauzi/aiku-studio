@@ -2082,6 +2082,10 @@ document.addEventListener('alpine:init', () => {
         selectedInvestorDetail: null,
         showDetailModal: false,
 
+        showAccountModal: false,
+        accountTargetInvestor: null,
+        accountForm: { email: '', username: '', password: '', is_active: true },
+
         formatRupiah,
 
         get filteredInvestors() {
@@ -2324,6 +2328,55 @@ document.addEventListener('alpine:init', () => {
         openDetail(inv) {
             this.selectedInvestorDetail = inv;
             this.showDetailModal = true;
+        },
+
+        openAccountModal(inv) {
+            this.accountTargetInvestor = inv;
+            const acc = inv.login_account;
+            this.accountForm = {
+                email: acc?.email || inv.email || '',
+                username: acc?.name || inv.name || '',
+                password: '',
+                is_active: acc ? Boolean(acc.is_active) : true,
+            };
+            this.showAccountModal = true;
+        },
+
+        async saveAccount() {
+            if (!this.accountTargetInvestor) return;
+            this.saving = true;
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const res = await fetch(`/api/investors/${this.accountTargetInvestor.id}/account`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: JSON.stringify(this.accountForm)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || Object.values(data.errors || {}).flat().join(', ') || 'Gagal menyimpan akun login.');
+                this.showAccountModal = false;
+                await this.loadAnalytics();
+                window.Swal?.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1800, showConfirmButton: false });
+            } catch (e) {
+                window.Swal ? window.Swal.fire({ icon: 'error', title: 'Gagal', text: e.message }) : alert(e.message);
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async toggleAccountStatus(inv) {
+            if (!inv?.login_account) return;
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const res = await fetch(`/api/investors/${inv.id}/account/toggle`, {
+                method: 'PATCH',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                this.showAccountModal = false;
+                await this.loadAnalytics();
+                window.Swal?.fire({ icon: 'success', title: 'Status Login Diperbarui', text: data.message, timer: 1800, showConfirmButton: false });
+            }
         },
 
         copyInvestorReport(inv) {

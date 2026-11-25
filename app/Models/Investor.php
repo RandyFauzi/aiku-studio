@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Investor extends Model
 {
     protected $fillable = [
+        'user_id',
         'code',
         'name',
         'no_wa',
@@ -24,6 +26,11 @@ class Investor extends Model
         return [
             'is_active' => 'boolean',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function contracts(): HasMany

@@ -1,3 +1,7 @@
+### [2026-11-25 15:13 WITA] — Antigravity: implementasi login & portal khusus Investor (`/investor`)
+- `2026_11_25_000004_add_user_id_to_investors_table`, `User`, `Investor`, `EnsureInvestor`, `EnsureContributor`, `AuthController`, `InvestorController`, `InvestorPortalController`, `InvestorProfitService`, `routes/web.php`, `investors.blade.php`, `investor/dashboard.blade.php`, `app.js`, `InvestorPortalTest`: Menambahkan relasi `investors.user_id` + role `'investor'`, isolasi akses via middleware `EnsureInvestor` & `EnsureContributor`, portal read-only `/investor` (ringkasan profit, performa per HP milik sendiri, tren harian WITA, riwayat pencairan, ganti sandi), serta modal pembuatan/pengelolaan akun login investor di `/investors`.
+- Validasi: `InvestorPortalTest`, `InvestorAnalyticsTest`, `AuthLoginTest` (15 tests, 88 assertions) lulus 100%; full suite 250 passed, 4 pre-existing failures (`DeviceAccountTest`, `SystemAuditRegressionTest`) di luar scope investor. State IDLE.
+
 ### [2026-11-25 14:52 WITA] — Antigravity: perbaiki grid palet warna menjadi 8 kolom compact (3 baris rapi)
 - `resources/views/panel/contributors.blade.php`: Mengganti `grid-cols-6` (yang sebelumnya belum ter-compile di bundle CSS halaman kontributor sehingga menumpuk 1 kolom ke bawah) dengan inline CSS grid 8 kolom compact (`26px` lingkaran warna solid, 24 warna tersusun rapi dalam 3 baris + Custom RGB picker di bawahnya).
 - Validasi: `php artisan view:clear` sukses. State IDLE.

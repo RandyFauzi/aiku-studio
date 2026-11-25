@@ -6,11 +6,13 @@ use App\Models\Investor;
 use App\Models\InvestorDeviceContract;
 use App\Models\InvestorPayout;
 use App\Models\StudioDevice;
+use App\Models\User;
 use App\Services\InvestorProfitService;
 use App\Services\PayrollPeriod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -68,11 +70,110 @@ class InvestorController extends Controller
     {
         $this->ensureAdmin($request);
         $name = $investor->name;
-        $investor->delete();
+        DB::transaction(function () use ($investor) {
+            $user = $investor->user;
+            $investor->delete();
+            if ($user && $user->role === 'investor') {
+                $user->delete();
+            }
+        });
 
         return response()->json([
             'success' => true,
             'message' => "Investor {$name} beserta kontrak HP-nya telah dihapus.",
+        ]);
+    }
+
+    public function provisionAccount(Request $request, Investor $investor): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        $existingUser = $investor->user;
+
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email', ''))),
+            'username' => trim((string) $request->input('username', '')),
+        ]);
+
+        $rules = [
+            'email' => ['required', 'email', 'max:128', Rule::unique('users', 'email')->ignore($existingUser?->id)],
+            'username' => ['nullable', 'string', 'max:120'],
+            'password' => [$existingUser ? 'nullable' : 'required', 'string', 'min:6', 'max:100'],
+            'is_active' => ['nullable', 'boolean'],
+        ];
+
+        $data = $request->validate($rules, [
+            'email.required' => 'Email login wajib diisi.',
+            'email.unique' => 'Email ini sudah digunakan akun lain.',
+            'password.required' => 'Kata sandi awal minimal 6 karakter wajib diisi.',
+            'password.min' => 'Kata sandi minimal 6 karakter.',
+        ]);
+
+        $user = DB::transaction(function () use ($investor, $existingUser, $data) {
+            $name = ($data['username'] ?? '') !== '' ? $data['username'] : $investor->name;
+            $isActive = array_key_exists('is_active', $data) ? (bool) $data['is_active'] : true;
+
+            if ($existingUser) {
+                $existingUser->name = $name;
+                $existingUser->email = $data['email'];
+                $existingUser->is_active = $isActive;
+                if (! empty($data['password'])) {
+                    $existingUser->password = Hash::make($data['password']);
+                }
+                $existingUser->save();
+
+                return $existingUser;
+            }
+
+            $created = new User([
+                'name' => $name,
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+            $created->role = 'investor';
+            $created->is_active = $isActive;
+            $created->save();
+
+            $investor->update(['user_id' => $created->id]);
+
+            return $created;
+        });
+
+        return response()->json([
+            'success' => true,
+            'login_account' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_active' => (bool) $user->is_active,
+            ],
+            'message' => $existingUser
+                ? "Akun login investor {$investor->name} berhasil diperbarui."
+                : "Akun login investor {$investor->name} berhasil dibuat.",
+        ]);
+    }
+
+    public function toggleAccount(Request $request, Investor $investor): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        $user = $investor->user;
+        if (! $user) {
+            return response()->json(['message' => 'Investor ini belum memiliki akun login.'], 422);
+        }
+
+        $user->is_active = ! $user->is_active;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'login_account' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_active' => (bool) $user->is_active,
+            ],
+            'message' => $user->is_active
+                ? "Akses login {$investor->name} diaktifkan kembali."
+                : "Akses login {$investor->name} dinonaktifkan.",
         ]);
     }
 

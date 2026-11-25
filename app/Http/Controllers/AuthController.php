@@ -35,7 +35,9 @@ class AuthController extends Controller
             if (Auth::attempt($credentials, $remember)) {
                 $request->session()->regenerate();
 
-                return $request->user()->role === 'contributor' ? redirect('/me') : redirect()->intended('/');
+                $home = $request->user()->homePath();
+
+                return $home === '/' ? redirect()->intended('/') : redirect($home);
             }
         } else {
             $user = User::whereRaw('LOWER(name) = ?', [strtolower($loginInput)])
@@ -46,7 +48,9 @@ class AuthController extends Controller
                 Auth::login($user, $remember);
                 $request->session()->regenerate();
 
-                return $request->user()->role === 'contributor' ? redirect('/me') : redirect()->intended('/');
+                $home = $request->user()->homePath();
+
+                return $home === '/' ? redirect()->intended('/') : redirect($home);
             }
         }
 

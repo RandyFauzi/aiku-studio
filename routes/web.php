@@ -8,6 +8,7 @@ use App\Http\Controllers\ContributorController;
 use App\Http\Controllers\DailyWorkReportController;
 use App\Http\Controllers\DeviceAccountController;
 use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\InvestorPortalController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\MyRecordingController;
@@ -19,6 +20,8 @@ use App\Http\Controllers\ShiftDayController;
 use App\Http\Controllers\SyncController;
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\EnsureAdministrator;
+use App\Http\Middleware\EnsureContributor;
+use App\Http\Middleware\EnsureInvestor;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -29,30 +32,43 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/', fn () => auth()->user()->role === 'contributor' ? redirect('/me') : view('panel.index'));
+    Route::get('/', function () {
+        $home = auth()->user()->homePath();
+
+        return $home === '/' ? view('panel.index') : redirect($home);
+    });
+
+    // Investor Portal (Read-only, isolated to the logged-in investor)
+    Route::middleware(EnsureInvestor::class)->group(function () {
+        Route::view('/investor', 'investor.dashboard')->name('investor.dashboard');
+        Route::get('/api/investor/dashboard', [InvestorPortalController::class, 'dashboard']);
+        Route::put('/api/investor/password', [AuthController::class, 'updatePassword'])->middleware('throttle:10,1');
+    });
 
     // Contributor Portal (Separate Blade Pages for Each Function)
-    Route::get('/me', fn () => view('portal.home'))->name('portal.home');
-    Route::get('/me/laporan', fn () => view('portal.work-reports'))->name('portal.work-reports');
-    Route::get('/me/jadwal', fn () => view('portal.schedule'))->name('portal.schedule');
-    Route::get('/me/rekaman', fn () => view('portal.recordings'))->name('portal.recordings');
-    Route::get('/me/slip', fn () => view('portal.payslips'))->name('portal.payslips');
-    Route::get('/me/profil', fn () => view('portal.profile'))->name('portal.profile');
-    Route::get('/me/profile', fn () => redirect('/me/profil'));
-    Route::get('/api/me/attendance', [AttendanceController::class, 'mine']);
-    Route::get('/api/me/streak', [RecordStreakController::class, 'mine'])->middleware('throttle:60,1');
-    Route::post('/api/me/streak/celebrate', [RecordStreakController::class, 'celebrate'])->middleware('throttle:30,1');
-    Route::post('/api/me/attendance', [AttendanceController::class, 'checkIn'])->middleware('throttle:20,1');
-    Route::post('/api/me/attendance/qr', [AttendanceController::class, 'checkInQr'])->middleware('throttle:20,1');
-    Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
-    Route::get('/api/report-tasks', [DailyWorkReportController::class, 'taskOptions'])->middleware('throttle:120,1');
-    Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
-    Route::post('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
-    Route::delete('/api/me/work-reports/{report}', [DailyWorkReportController::class, 'destroy'])->middleware('throttle:30,1');
-    Route::get('/api/me/recordings', [MyRecordingController::class, 'index']);
-    Route::get('/api/me/payslips', [PayslipController::class, 'mine']);
-    Route::put('/api/me/password', [AuthController::class, 'updatePassword'])->middleware('throttle:10,1');
-    Route::get('/api/shifts/weekly-schedule', [SettingController::class, 'weeklySchedule']);
+    Route::middleware(EnsureContributor::class)->group(function () {
+        Route::get('/me', fn () => view('portal.home'))->name('portal.home');
+        Route::get('/me/laporan', fn () => view('portal.work-reports'))->name('portal.work-reports');
+        Route::get('/me/jadwal', fn () => view('portal.schedule'))->name('portal.schedule');
+        Route::get('/me/rekaman', fn () => view('portal.recordings'))->name('portal.recordings');
+        Route::get('/me/slip', fn () => view('portal.payslips'))->name('portal.payslips');
+        Route::get('/me/profil', fn () => view('portal.profile'))->name('portal.profile');
+        Route::get('/me/profile', fn () => redirect('/me/profil'));
+        Route::get('/api/me/attendance', [AttendanceController::class, 'mine']);
+        Route::get('/api/me/streak', [RecordStreakController::class, 'mine'])->middleware('throttle:60,1');
+        Route::post('/api/me/streak/celebrate', [RecordStreakController::class, 'celebrate'])->middleware('throttle:30,1');
+        Route::post('/api/me/attendance', [AttendanceController::class, 'checkIn'])->middleware('throttle:20,1');
+        Route::post('/api/me/attendance/qr', [AttendanceController::class, 'checkInQr'])->middleware('throttle:20,1');
+        Route::get('/api/me/work-reports', [DailyWorkReportController::class, 'mine']);
+        Route::get('/api/report-tasks', [DailyWorkReportController::class, 'taskOptions'])->middleware('throttle:120,1');
+        Route::put('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
+        Route::post('/api/me/work-report', [DailyWorkReportController::class, 'save'])->middleware('throttle:30,1');
+        Route::delete('/api/me/work-reports/{report}', [DailyWorkReportController::class, 'destroy'])->middleware('throttle:30,1');
+        Route::get('/api/me/recordings', [MyRecordingController::class, 'index']);
+        Route::get('/api/me/payslips', [PayslipController::class, 'mine']);
+        Route::put('/api/me/password', [AuthController::class, 'updatePassword'])->middleware('throttle:10,1');
+        Route::get('/api/shifts/weekly-schedule', [SettingController::class, 'weeklySchedule']);
+    });
 
     // Workers may only open their final archived slips; live calculations are admin-only.
     Route::get('/slip/live/{worker}', [PayslipController::class, 'live'])->middleware(EnsureAdministrator::class);
@@ -167,6 +183,8 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::post('/investors', [InvestorController::class, 'store']);
             Route::put('/investors/{investor}', [InvestorController::class, 'update']);
             Route::delete('/investors/{investor}', [InvestorController::class, 'destroy']);
+            Route::post('/investors/{investor}/account', [InvestorController::class, 'provisionAccount']);
+            Route::patch('/investors/{investor}/account/toggle', [InvestorController::class, 'toggleAccount']);
             Route::post('/investors/{investor}/contracts', [InvestorController::class, 'storeContract']);
             Route::put('/investors/contracts/{contract}', [InvestorController::class, 'updateContract']);
             Route::delete('/investors/contracts/{contract}', [InvestorController::class, 'destroyContract']);

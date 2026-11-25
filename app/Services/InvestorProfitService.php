@@ -13,9 +13,13 @@ use Illuminate\Support\Collection;
 
 class InvestorProfitService
 {
-    public function summaryForPeriod(array $period): array
+    public function summaryForPeriod(array $period, ?int $investorId = null): array
     {
-        $investors = Investor::with(['contracts' => fn ($q) => $q->orderBy('id')])
+        $investors = Investor::with([
+            'contracts' => fn ($q) => $q->orderBy('id'),
+            'user:id,name,email,is_active',
+        ])
+            ->when($investorId !== null, fn ($q) => $q->whereKey($investorId))
             ->orderBy('name')
             ->get();
 
@@ -275,6 +279,12 @@ class InvestorProfitService
                 'account_holder' => $investor->account_holder,
                 'is_active' => $investor->is_active,
                 'notes' => $investor->notes,
+                'login_account' => $investor->user ? [
+                    'id' => $investor->user->id,
+                    'name' => $investor->user->name,
+                    'email' => $investor->user->email,
+                    'is_active' => (bool) $investor->user->is_active,
+                ] : null,
                 'device_count' => count($contractRows),
                 'contracts' => $contractRows,
                 'tasks' => $invTasks,

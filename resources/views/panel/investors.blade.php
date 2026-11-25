@@ -207,6 +207,10 @@
                                                 :title="'Klik untuk ubah status bayar periode ini'">
                                             <span x-text="inv.payout_status === 'paid' ? '✓ Sudah Dibayar' : '⏳ Belum Dibayar'"></span>
                                         </button>
+                                        <span x-show="inv.login_account"
+                                              class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                                              :class="inv.login_account?.is_active ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+                                              x-text="inv.login_account?.is_active ? ('Login Aktif · ' + inv.login_account?.email) : 'Login Nonaktif'"></span>
                                     </div>
                                     <p class="text-xs text-slate-500 mt-0.5">
                                         <span x-text="inv.no_wa || 'Tanpa WA'"></span>
@@ -232,6 +236,10 @@
                                 <button type="button" @click="copyInvestorReport(inv)" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition cursor-pointer">
                                     Salin WA
                                 </button>
+                                <button type="button" @click="openAccountModal(inv)"
+                                        class="px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer"
+                                        :class="inv.login_account ? 'bg-sky-50 border-sky-200 hover:bg-sky-100 text-sky-800' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'"
+                                        x-text="inv.login_account ? 'Akun Login' : '+ Buat Login'"></button>
                                 <button type="button" @click="openInvestorModal(inv)" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold transition cursor-pointer">
                                     Edit
                                 </button>
@@ -470,6 +478,49 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL KELOLA AKUN LOGIN INVESTOR -->
+    <div x-show="showAccountModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+        <div @click.outside="showAccountModal = false" class="bg-white rounded-2xl border border-slate-200 w-full max-w-md shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900" x-text="accountTargetInvestor?.login_account ? 'Kelola Akun Login Investor' : 'Buat Akun Login Investor'"></h3>
+                    <p class="text-[11px] text-slate-500" x-text="'Investor: ' + (accountTargetInvestor?.name || '') + ' (' + (accountTargetInvestor?.code || '') + ')'"></p>
+                </div>
+                <button type="button" @click="showAccountModal = false" class="text-slate-400 hover:text-slate-700 text-lg">✕</button>
+            </div>
+            <form @submit.prevent="saveAccount()" class="p-6 space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Email Login *</label>
+                    <input type="email" x-model="accountForm.email" required placeholder="investor@email.com" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 font-semibold">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Username / Nama Tampil</label>
+                    <input type="text" x-model="accountForm.username" placeholder="Nama tampilan saat login" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1" x-text="accountTargetInvestor?.login_account ? 'Reset Kata Sandi (Opsional, min. 6 karakter)' : 'Kata Sandi Awal (min. 6 karakter) *'"></label>
+                    <input type="password" x-model="accountForm.password" :required="!accountTargetInvestor?.login_account" minlength="6" placeholder="Minimal 6 karakter" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50">
+                </div>
+                <label class="flex items-center gap-2 font-semibold text-slate-700 cursor-pointer">
+                    <input type="checkbox" x-model="accountForm.is_active" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                    <span>Izinkan investor ini login ke Portal Investor (/investor)</span>
+                </label>
+                <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                    <template x-if="accountTargetInvestor?.login_account">
+                        <button type="button" @click="toggleAccountStatus(accountTargetInvestor)"
+                                class="px-3 py-2 rounded-xl border text-xs font-bold cursor-pointer"
+                                :class="accountTargetInvestor.login_account.is_active ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'"
+                                x-text="accountTargetInvestor.login_account.is_active ? 'Nonaktifkan Cepat' : 'Aktifkan Cepat'"></button>
+                    </template>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button type="button" @click="showAccountModal = false" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold">Batal</button>
+                        <button type="submit" :disabled="saving" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white font-bold disabled:opacity-50" x-text="saving ? 'Menyimpan...' : 'Simpan Akun'"></button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
