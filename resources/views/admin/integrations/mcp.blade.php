@@ -3,26 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrasi MCP - AIKu Studio</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>AIKu Studio - Integrasi MCP</title>
+    <meta name="theme-color" content="#edf6d9">
+    <link rel="preload" href="/fonts/manrope-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
+    <style>[x-cloak] { display: none !important; }</style>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="/assets/session.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
+<body class="portal admin-theme bg-[#F4F6F8] text-[#1E293B] min-h-screen font-sans flex antialiased"
+      x-data="{ sidebarOpen: window.innerWidth >= 768 && localStorage.getItem('aiku_sidebar_open') !== 'false' }"
+      x-init="$watch('sidebarOpen', val => { if (window.innerWidth >= 768) localStorage.setItem('aiku_sidebar_open', val); })"
+      x-cloak>
     @include('layouts.sidebar')
 
-    <main id="admin-content" class="lg:pl-64 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
-        <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
+    <main id="admin-content" class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-[#F4F6F8]">
+        <!-- TOP APP HEADER -->
+        <header class="h-16 sm:h-20 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
+            <div class="flex items-center gap-3">
+                <button type="button" @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition" title="Buka atau tutup menu" aria-label="Buka atau tutup menu" aria-controls="workspace-sidebar" :aria-expanded="sidebarOpen">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div class="text-sm font-semibold text-slate-700">
+                    Tim & Pengaturan <span class="text-slate-300 mx-1">/</span> Integrasi MCP
+                </div>
+            </div>
+            <div class="hidden sm:block text-xs font-mono bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700">
+                Endpoint: <span class="font-semibold">{{ $endpointUrl }}</span>
+            </div>
+        </header>
+
+        <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">Integrasi MCP (Model Context Protocol)</h1>
                 <p class="text-sm text-slate-600 mt-1">
                     Hubungkan asisten AI (Antigravity, Claude Code, Codex CLI, Gemini CLI) ke AIKu Studio secara read-only dan teraudit.
                 </p>
             </div>
-            <div class="text-xs font-mono bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-700">
+            <div class="sm:hidden text-xs font-mono bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 break-all">
                 Endpoint: <span class="font-semibold">{{ $endpointUrl }}</span>
             </div>
-        </header>
+        </div>
 
         @if (session('status'))
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -176,6 +205,7 @@
                 </table>
             </div>
         </section>
+        </div>
     </main>
 
     <script>
