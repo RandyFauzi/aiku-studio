@@ -1,3 +1,7 @@
+### [2026-11-25 09:55 WITA] — Antigravity: info & salin cepat Kode Vendor Atlas di Pengaturan HP & Akun
+- `resources/views/panel/devices.blade.php`: Menambahkan widget Kode Vendor Atlas (`QUAXTJ`) dengan tampilan semi-transparan elegan pada banner hijau (header) halaman Pengaturan HP & Akun, lengkap dengan tombol 1-klik salin ke clipboard dan feedback `Tersalin!`.
+- Validasi: Review diff, `php artisan view:clear` sukses. State IDLE.
+
 ### [2026-11-24 15:48 WITA] — Antigravity: implementasi AIKu Studio MCP Server (22 read-only tools, auth, audit, dan UI admin)
 - `AikuServer`, `ReadTool`, 22 read-only tools, 3 resources, 2 prompts, `AuthenticateAikuMcp`, `AuditAikuMcp`, `McpAccess`, `McpReadQueries`, `McpConnectionController`, `mcp.blade.php`, dan migrasi `mcp_connections`/`mcp_tool_calls`/`account_version`: Membangun server MCP Streamable HTTP (`POST /mcp/aiku`) & local (`aiku`) dengan isolasi peran (`admin` vs `contributor`), redaksi GPS/kredensial/rekening, dan manajemen token terenkripsi di `/admin/integrations/mcp`.
 - Validasi: Migrasi lokal sukses, `python scripts/graphify_project.py build` sukses, PHPUnit `AikuMcpServerTest` (8 tests, 49 assertions) lulus 100%. State IDLE.
