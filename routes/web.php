@@ -154,6 +154,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::post('/payroll/status', [PayrollController::class, 'status']);
             Route::post('/studio-recordings/sync-now', [SyncController::class, 'requestSync']);
             Route::post('/studio-recordings/sync-1618', [SyncController::class, 'sync1618']);
+            Route::post('/studio-recordings/1618-add-workers', [SyncController::class, 'addWorkers1618']);
             Route::get('/studio-recordings/1618-status', [SyncController::class, 'status1618']);
             Route::get('/studio-recordings/sync-status', [SyncController::class, 'status']);
             Route::post('/studio-recordings/auto-sync-toggle', [SyncController::class, 'toggle']);

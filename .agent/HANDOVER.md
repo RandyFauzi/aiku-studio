@@ -1,3 +1,7 @@
+### [2026-11-25 09:56 WITA] — Antigravity: fitur otomatis Add New Email worker ke portal 1618 Robotics
+- `2026_11_25_000001_add_robotics_1618_registered_at_to_studio_accounts_table`, `StudioAccount`, `Robotics1618Sync`, `SyncController`, `routes/web.php`, `recordings.blade.php`, `Robotics1618SyncTest`: Menambahkan penanda `robotics_1618_registered_at` pada `studio_accounts` (seluruh akun lama otomatis ditandai terdaftar saat migrasi, akun baru `null`), API `POST /api/studio-recordings/1618-add-workers` via endpoint ringan `/roster` + `/roster-result` 1618, serta tombol `+ Add New Email` & badge jumlah email baru di popover Bot AIKu Studio.
+- Validasi: Migrasi lokal sukses, `php artisan view:clear` sukses, PHPUnit `Robotics1618SyncTest` & `RecordingSyncTest` (10 tests, 52 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-25 09:55 WITA] — Antigravity: info & salin cepat Kode Vendor Atlas di Pengaturan HP & Akun
 - `resources/views/panel/devices.blade.php`: Menambahkan widget Kode Vendor Atlas (`QUAXTJ`) dengan tampilan semi-transparan elegan pada banner hijau (header) halaman Pengaturan HP & Akun, lengkap dengan tombol 1-klik salin ke clipboard dan feedback `Tersalin!`.
 - Validasi: Review diff, `php artisan view:clear` sukses. State IDLE.

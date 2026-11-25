@@ -120,10 +120,83 @@ class Robotics1618SyncTest extends TestCase
             ->getJson('/api/studio-recordings/1618-status')
             ->assertForbidden();
 
+        $this->actingAs($this->worker)
+            ->postJson('/api/studio-recordings/1618-add-workers')
+            ->assertForbidden();
+
         // Admin can access status
         $this->actingAs($this->admin)
             ->getJson('/api/studio-recordings/1618-status')
             ->assertOk()
             ->assertJsonStructure(['isRunning', 'state']);
+    }
+
+    public function test_pending_worker_emails_and_register_pending_workers_batch(): void
+    {
+        StudioAccount::create([
+            'email' => 'sudah@kamerakitaid.site',
+            'name' => 'Sudah Ada',
+            'active' => true,
+            'robotics_1618_registered_at' => now()->subDay(),
+        ]);
+        StudioAccount::create([
+            'email' => 'baru1@kamerakitaid.site',
+            'name' => 'Baru 1',
+            'active' => true,
+            'robotics_1618_registered_at' => null,
+        ]);
+        StudioAccount::create([
+            'email' => 'baru2@kamerakitaid.site',
+            'name' => 'Baru 2',
+            'active' => true,
+            'robotics_1618_registered_at' => null,
+        ]);
+
+        config([
+            'payroll.robotics_1618_username' => 'kamerakita-ai',
+            'payroll.robotics_1618_password' => 'secret',
+            'payroll.robotics_1618_tenant' => 'kamerakita-ai',
+        ]);
+
+        $sync = \Mockery::mock(Robotics1618Sync::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $sync->shouldReceive('submitAddWorkersToPortal')
+            ->once()
+            ->withArgs(function ($baseUrl, $tenant, $username, $password, $program, $emailsText) {
+                return $tenant === 'kamerakita-ai'
+                    && $program === 'household-asia'
+                    && $emailsText === 'baru1@kamerakitaid.site, baru2@kamerakitaid.site';
+            })
+            ->andReturn([
+                'ok' => true,
+                'changed' => true,
+                'lines' => ['Added 2 worker(s) to Household Asia.'],
+            ]);
+
+        $this->app->instance(Robotics1618Sync::class, $sync);
+
+        $this->assertSame(
+            ['baru1@kamerakitaid.site', 'baru2@kamerakitaid.site'],
+            $sync->pendingWorkerEmails()
+        );
+
+        $res = $this->actingAs($this->admin)->postJson('/api/studio-recordings/1618-add-workers');
+        $res->assertOk()
+            ->assertJson([
+                'status' => 'success',
+                'added_count' => 2,
+                'pending1618Workers' => [],
+                'message' => 'Added 2 worker(s) to Household Asia.',
+            ]);
+
+        $this->assertNotNull(StudioAccount::where('email', 'baru1@kamerakitaid.site')->value('robotics_1618_registered_at'));
+        $this->assertNotNull(StudioAccount::where('email', 'baru2@kamerakitaid.site')->value('robotics_1618_registered_at'));
+        $this->assertSame([], $sync->pendingWorkerEmails());
+
+        // Panggil ulang saat kosong mengembalikan noop tanpa memanggil portal
+        $this->actingAs($this->admin)
+            ->postJson('/api/studio-recordings/1618-add-workers')
+            ->assertOk()
+            ->assertJsonPath('status', 'noop')
+            ->assertJsonPath('added_count', 0);
     }
 }

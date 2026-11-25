@@ -160,6 +160,198 @@ class Robotics1618Sync
         return array_keys($normalized);
     }
 
+    public function pendingWorkerEmails(): array
+    {
+        $emails = StudioAccount::query()
+            ->where('active', true)
+            ->whereNull('robotics_1618_registered_at')
+            ->orderBy('id')
+            ->pluck('email')
+            ->all();
+
+        $normalized = [];
+        foreach ($emails as $email) {
+            $clean = strtolower(trim((string) $email));
+            if ($clean !== '' && filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                $normalized[$clean] = true;
+            }
+        }
+
+        return array_keys($normalized);
+    }
+
+    public function registerPendingWorkers(?array $explicitEmails = null, ?string $program = null): array
+    {
+        $emails = [];
+        $sourceEmails = $explicitEmails ?? $this->pendingWorkerEmails();
+        foreach ($sourceEmails as $email) {
+            $clean = strtolower(trim((string) $email));
+            if ($clean !== '' && filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                $emails[$clean] = true;
+            }
+        }
+        $emails = array_values(array_keys($emails));
+
+        if ($emails === []) {
+            return [
+                'status' => 'noop',
+                'added_count' => 0,
+                'emails' => [],
+                'lines' => ['Semua email studio sudah terdaftar di 1618 Robotics.'],
+                'message' => 'Tidak ada email baru yang perlu didaftarkan ke 1618 Robotics.',
+            ];
+        }
+
+        $lock = Cache::lock('robotics-1618-roster-lock', 60);
+        if (! $lock->get()) {
+            throw new RuntimeException('Proses pendaftaran worker 1618 sedang berjalan. Tunggu beberapa saat.');
+        }
+
+        try {
+            $baseUrl = rtrim(config('payroll.robotics_1618_url', 'https://partners.1618robotics.com'), '/');
+            $tenant = config('payroll.robotics_1618_tenant', 'kamerakita-ai');
+            $username = config('payroll.robotics_1618_username');
+            $password = config('payroll.robotics_1618_password');
+            $timeout = (int) config('payroll.robotics_1618_timeout', 60);
+            $targetProgram = $program ?: config('payroll.robotics_1618_program', 'household-asia');
+
+            if (empty($username) || empty($password)) {
+                throw new RuntimeException('Kredensial ROBOTICS_1618_USERNAME atau ROBOTICS_1618_PASSWORD belum diatur di file .env.');
+            }
+
+            $result = $this->submitAddWorkersToPortal(
+                $baseUrl,
+                $tenant,
+                $username,
+                $password,
+                $targetProgram,
+                implode(', ', $emails),
+                $timeout
+            );
+
+            StudioAccount::whereIn('email', $emails)
+                ->update(['robotics_1618_registered_at' => now()]);
+
+            $lines = array_values(array_filter(array_map('strval', $result['lines'] ?? [])));
+            $summary = $lines[0] ?? ('Berhasil mendaftarkan '.count($emails).' email baru ke 1618 Robotics.');
+
+            return [
+                'status' => 'success',
+                'added_count' => count($emails),
+                'emails' => $emails,
+                'lines' => $lines,
+                'changed' => (bool) ($result['changed'] ?? true),
+                'message' => $summary,
+            ];
+        } finally {
+            $lock->release();
+        }
+    }
+
+    protected function submitAddWorkersToPortal(
+        string $baseUrl,
+        string $tenant,
+        string $username,
+        string $password,
+        string $program,
+        string $emailsText,
+        int $timeout
+    ): array {
+        $tempCookie = tempnam(sys_get_temp_dir(), '1618_r_');
+
+        try {
+            $this->login($baseUrl, $tenant, $username, $password, $tempCookie, $timeout);
+
+            $payload = json_encode([
+                'slug' => $tenant,
+                'action' => 'add',
+                'program' => $program,
+                'text' => $emailsText,
+            ], JSON_THROW_ON_ERROR);
+
+            [$postCode, $postBody, $postErr] = $this->curlJson(
+                "{$baseUrl}/roster",
+                $tempCookie,
+                $timeout,
+                $payload,
+                ['Content-Type: application/json', 'X-1618-Roster: 1']
+            );
+
+            if ($postBody === false) {
+                throw new RuntimeException("Gagal mengirim daftar worker ke 1618: {$postErr}");
+            }
+
+            $asked = json_decode($postBody, true);
+            if ($postCode !== 202 || empty($asked['id'])) {
+                $err = is_array($asked) ? ($asked['error'] ?? null) : null;
+                throw new RuntimeException($err ?: "Portal 1618 menolak permintaan Add workers (HTTP {$postCode}).");
+            }
+
+            $requestId = urlencode((string) $asked['id']);
+            for ($attempt = 0; $attempt < 25; $attempt++) {
+                usleep($attempt < 5 ? 500_000 : 1_000_000);
+
+                [$resCode, $resBody] = $this->curlJson(
+                    "{$baseUrl}/roster-result?id={$requestId}",
+                    $tempCookie,
+                    $timeout
+                );
+
+                if ($resCode === 202 || $resBody === false) {
+                    continue;
+                }
+
+                $done = json_decode($resBody, true);
+                if ($resCode === 200 && is_array($done)) {
+                    if (! ($done['ok'] ?? false)) {
+                        $msg = implode(' ', (array) ($done['lines'] ?? [])) ?: ($done['error'] ?? 'Penambahan worker ditolak oleh portal 1618.');
+                        throw new RuntimeException($msg);
+                    }
+
+                    return $done;
+                }
+
+                $err = is_array($done) ? ($done['error'] ?? null) : null;
+                throw new RuntimeException($err ?: "Gagal membaca hasil Add workers dari 1618 (HTTP {$resCode}).");
+            }
+
+            throw new RuntimeException('Portal 1618 masih memproses daftar worker. Periksa halaman Workers 1618 beberapa saat lagi.');
+        } finally {
+            @unlink($tempCookie);
+        }
+    }
+
+    /**
+     * @return array{0: int, 1: string|false, 2: string}
+     */
+    private function curlJson(string $url, string $cookieFile, int $timeout, ?string $jsonBody = null, array $headers = []): array
+    {
+        $ch = curl_init($url);
+        $opts = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_COOKIEFILE => $cookieFile,
+            CURLOPT_COOKIEJAR => $cookieFile,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_USERAGENT => 'AIKuStudioSync/1.0',
+            CURLOPT_SSL_VERIFYPEER => ! app()->isLocal(),
+            CURLOPT_HTTPHEADER => array_merge(['Accept: application/json'], $headers),
+        ];
+
+        if ($jsonBody !== null) {
+            $opts[CURLOPT_POST] = true;
+            $opts[CURLOPT_POSTFIELDS] = $jsonBody;
+        }
+
+        curl_setopt_array($ch, $opts);
+        $body = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        return [$code, $body, $err];
+    }
+
     private function login(string $baseUrl, string $tenant, string $username, string $password, string $cookieFile, int $timeout): void
     {
         $loginUrl = "{$baseUrl}/login";

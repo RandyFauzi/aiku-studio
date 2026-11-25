@@ -153,6 +153,10 @@
                             class="px-2 py-2 text-slate-300 hover:text-white transition flex items-center gap-1.5"
                             title="Menu Pilihan Sinkronisasi (Pilih Sumber / Auto-Sync)">
                         <span class="w-2 h-2 rounded-full" :class="autoSync.enabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'"></span>
+                        <span x-show="pending1618Workers.length > 0" x-cloak
+                              class="px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black leading-none"
+                              x-text="pending1618Workers.length"
+                              title="Ada email baru yang belum didaftarkan ke 1618"></span>
                         <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showAutoSyncModal ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
 
@@ -198,6 +202,32 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- 1b. Daftarkan Email Baru ke Roster 1618 -->
+                        <div class="py-3 border-b border-slate-100 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="font-bold text-slate-900 text-xs">Worker Baru 1618</div>
+                                <span x-show="pending1618Workers.length > 0"
+                                      class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold"
+                                      x-text="pending1618Workers.length + ' belum terdaftar'"></span>
+                                <span x-show="pending1618Workers.length === 0"
+                                      class="text-[10px] text-emerald-600 font-semibold">Semua terdaftar</span>
+                            </div>
+
+                            <template x-if="pending1618Workers.length > 0">
+                                <div class="p-2 rounded-xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-900 font-mono break-all max-h-20 overflow-y-auto"
+                                     x-text="pending1618Workers.join(', ')"></div>
+                            </template>
+
+                            <button type="button"
+                                    @click="addNewWorkersTo1618()"
+                                    :disabled="adding1618Workers || pending1618Workers.length === 0"
+                                    class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :class="pending1618Workers.length > 0 ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-slate-100 text-slate-500'">
+                                <svg x-show="adding1618Workers" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                <span x-text="adding1618Workers ? 'Mendaftarkan ke 1618...' : (pending1618Workers.length > 0 ? '+ Add New Email (' + pending1618Workers.length + ')' : 'Add New Email ke 1618')"></span>
+                            </button>
                         </div>
 
                         <!-- 2. Pengaturan Jadwal Auto-Sync (Khusus 1618) -->
@@ -2204,6 +2234,8 @@
                 workerPickerStyle: {},
                 isLoading: false,
                 isSyncing: false,
+                adding1618Workers: false,
+                pending1618Workers: [],
                 syncPollingTimer: null,
                 lastSyncedAt: null,
                 showAutoSyncModal: false,
@@ -2428,6 +2460,7 @@
                             this.isSyncing = Boolean(data.isRunning);
                             if (data.lastSyncedAt) this.lastSyncedAt = data.lastSyncedAt;
                             if (data.autoSync) this.autoSync = data.autoSync;
+                            if (Array.isArray(data.pending1618Workers)) this.pending1618Workers = data.pending1618Workers;
                             if (data.progress) {
                                 this.botProgress = { ...this.botProgress, ...data.progress };
                                 if (data.progress.recent_logs && data.progress.recent_logs.length) {
@@ -2456,6 +2489,7 @@
                         try {
                             const data = await this.syncRequest('/api/studio-recordings/sync-status');
                             if (data.autoSync) this.autoSync = data.autoSync;
+                            if (Array.isArray(data.pending1618Workers)) this.pending1618Workers = data.pending1618Workers;
                             this.isSyncing = Boolean(data.isRunning);
                             if (data.lastSyncedAt) this.lastSyncedAt = data.lastSyncedAt;
                             if (data.progress) {
@@ -3406,6 +3440,39 @@
                             if (data.stats) this.stats = { ...this.stats, ...data.stats };
                         }
                     } catch (e) {}
+                },
+
+                async addNewWorkersTo1618() {
+                    if (this.adding1618Workers || !this.pending1618Workers.length) return;
+                    this.adding1618Workers = true;
+                    try {
+                        const data = await this.syncRequest('/api/studio-recordings/1618-add-workers', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({})
+                        });
+                        if (Array.isArray(data.pending1618Workers)) {
+                            this.pending1618Workers = data.pending1618Workers;
+                        }
+                        this.showAutoSyncModal = false;
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Worker Ditambahkan ke 1618',
+                                text: data.message || 'Email baru berhasil didaftarkan ke 1618 Robotics.',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        }
+                    } catch (err) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Gagal Add Worker 1618', text: err.message });
+                        } else {
+                            alert(err.message);
+                        }
+                    } finally {
+                        this.adding1618Workers = false;
+                    }
                 },
 
                 async triggerSyncAtlas(source = '1618') {

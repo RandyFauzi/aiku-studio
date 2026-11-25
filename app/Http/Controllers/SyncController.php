@@ -43,14 +43,47 @@ class SyncController extends Controller
         ]);
     }
 
-    public function status(\App\Services\RecordingSync $sync, AtlasSync $atlas)
+    public function status(\App\Services\RecordingSync $sync, AtlasSync $atlas, Robotics1618Sync $robotics)
     {
         $state = $sync->state();
 
-        return response()->json(['isRunning' => $state['isRunning'] ?? false, 'progress' => $state,
+        return response()->json([
+            'isRunning' => $state['isRunning'] ?? false,
+            'progress' => $state,
             'liveOutput' => implode("\n", $state['recent_logs'] ?? []),
             'lastResult' => empty($state['completedAt']) && empty($state['error']) ? null : ['timestamp' => $state['updatedAt'], 'exitCode' => empty($state['error']) ? 0 : 1, 'output' => $state['message'], 'error' => $state['error'] ?? ''],
-            'lastSyncedAt' => StudioRecording::lastSyncedAtIso(), 'autoSync' => $atlas->auto()]);
+            'lastSyncedAt' => StudioRecording::lastSyncedAtIso(),
+            'autoSync' => $atlas->auto(),
+            'pending1618Workers' => $robotics->pendingWorkerEmails(),
+        ]);
+    }
+
+    public function addWorkers1618(Request $request, Robotics1618Sync $sync)
+    {
+        $data = $request->validate([
+            'emails' => 'nullable|string|max:10000',
+        ]);
+
+        $explicitEmails = null;
+        if (! empty($data['emails'])) {
+            $explicitEmails = array_values(array_filter(array_map(
+                fn ($e) => strtolower(trim($e)),
+                preg_split('/[\r\n,;]+/', $data['emails']) ?: []
+            )));
+        }
+
+        try {
+            $result = $sync->registerPendingWorkers($explicitEmails);
+            $result['pending1618Workers'] = $sync->pendingWorkerEmails();
+
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'failed',
+                'error' => $e->getMessage(),
+                'pending1618Workers' => $sync->pendingWorkerEmails(),
+            ], 422);
+        }
     }
 
     public function toggle(Request $request, AtlasSync $sync)
