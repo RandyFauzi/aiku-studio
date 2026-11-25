@@ -274,7 +274,12 @@ class Robotics1618Sync
                 $tempCookie,
                 $timeout,
                 $payload,
-                ['Content-Type: application/json', 'X-1618-Roster: 1']
+                [
+                    'Content-Type: application/json',
+                    'X-1618-Roster: 1',
+                    "Origin: {$baseUrl}",
+                    "Referer: {$baseUrl}/{$tenant}/",
+                ]
             );
 
             if ($postBody === false) {
@@ -294,7 +299,12 @@ class Robotics1618Sync
                 [$resCode, $resBody] = $this->curlJson(
                     "{$baseUrl}/roster-result?id={$requestId}",
                     $tempCookie,
-                    $timeout
+                    $timeout,
+                    null,
+                    [
+                        "Origin: {$baseUrl}",
+                        "Referer: {$baseUrl}/{$tenant}/",
+                    ]
                 );
 
                 if ($resCode === 202 || $resBody === false) {

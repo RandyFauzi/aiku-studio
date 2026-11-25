@@ -1,3 +1,7 @@
+### [2026-11-25 13:11 WITA] — Antigravity: tambahkan header Origin & Referer pada request Add Worker 1618
+- `app/Services/Robotics1618Sync.php`: Menambahkan header `Origin` (`https://partners.1618robotics.com`) dan `Referer` (`https://partners.1618robotics.com/{tenant}/`) pada request `POST /roster` dan `GET /roster-result` untuk memenuhi validasi origin server 1618 (mengatasi error *"That change didn't come from this page. Reload it and try again."*).
+- Validasi: Uji langsung header Origin ke endpoint `/roster` 1618 lolos dari blokir origin, PHPUnit `Robotics1618SyncTest` (4 tests, 24 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-25 10:10 WITA] — Antigravity: perbaiki CSS/Vite & layout sidebar halaman Integrasi MCP
 - `resources/views/admin/integrations/mcp.blade.php` & `public/build/*`: Menambahkan `@vite(['resources/css/app.css', 'resources/js/app.js'])`, body class `portal admin-theme`, Alpine `sidebarOpen`, serta top app header agar halaman `/admin/integrations/mcp` ter-render normal dengan sidebar dan Tailwind CSS.
 - Validasi: `npm run build` sukses, `php artisan view:clear` sukses, PHPUnit `AikuMcpServerTest` (8 tests, 49 assertions) lulus 100%. State IDLE.
