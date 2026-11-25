@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContributorController;
 use App\Http\Controllers\DailyWorkReportController;
 use App\Http\Controllers\DeviceAccountController;
+use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\MyRecordingController;
@@ -86,7 +87,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
         Route::post('/api/work-reports/assist-unassign', [DailyWorkReportController::class, 'assistUnassign']);
         Route::view('/devices', 'panel.devices')->name('devices');
         Route::view('/devices.html', 'panel.devices');
-        foreach (['index', 'contributors', 'create', 'notes', 'payslips', 'profit', 'recordings', 'shifts'] as $page) {
+        foreach (['index', 'contributors', 'create', 'notes', 'payslips', 'profit', 'investors', 'recordings', 'shifts'] as $page) {
             $view = 'panel.'.$page;
             Route::view('/'.$page, $view)->name($page);
             Route::view('/'.$page.'.html', $view);
@@ -161,6 +162,15 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::post('/studio-recordings/auto-sync-toggle', [SyncController::class, 'toggle']);
             Route::get('/finance/settings', [SettingController::class, 'finance']);
             Route::post('/finance/settings', [SettingController::class, 'saveFinance']);
+
+            Route::get('/investors/analytics', [InvestorController::class, 'analytics']);
+            Route::post('/investors', [InvestorController::class, 'store']);
+            Route::put('/investors/{investor}', [InvestorController::class, 'update']);
+            Route::delete('/investors/{investor}', [InvestorController::class, 'destroy']);
+            Route::post('/investors/{investor}/contracts', [InvestorController::class, 'storeContract']);
+            Route::put('/investors/contracts/{contract}', [InvestorController::class, 'updateContract']);
+            Route::delete('/investors/contracts/{contract}', [InvestorController::class, 'destroyContract']);
+            Route::post('/investors/{investor}/payout', [InvestorController::class, 'updatePayout']);
         });
     });
 });

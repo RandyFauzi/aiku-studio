@@ -345,6 +345,10 @@
                             <div class="bg-slate-400 h-full transition-all duration-500" 
                                  :style="'width: ' + profitSummary.opExRatioPct + '%'" 
                                  :title="'Biaya Operasional: ' + profitSummary.opExRatioPct + '%'"></div>
+                            <!-- Investor Share Portion -->
+                            <div class="bg-amber-500 h-full transition-all duration-500" 
+                                 :style="'width: ' + profitSummary.investorRatioPct + '%'" 
+                                 :title="'Bagi Hasil Investor HP: ' + profitSummary.investorRatioPct + '%'"></div>
                             <!-- Net Profit Portion -->
                             <div class="bg-emerald-500 h-full transition-all duration-500" 
                                  :style="'width: ' + profitSummary.profitRatioPct + '%'" 
@@ -366,6 +370,13 @@
                                     <span class="text-gray-600 font-medium">Biaya Operasional (OpEx)</span>
                                 </div>
                                 <span class="font-bold text-gray-900" x-text="profitSummary.opExRatioPct + '%'"></span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                    <a href="/investors" class="text-gray-600 hover:text-amber-700 font-medium underline decoration-dotted">Bagi Hasil Investor HP</a>
+                                </div>
+                                <span class="font-bold text-amber-700" x-text="formatRupiah(profitSummary.investorShare) + ' (' + profitSummary.investorRatioPct + '%)'"></span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">

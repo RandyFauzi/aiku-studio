@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PayrollStatus;
 use App\Models\Payslip;
 use App\Models\StudioRecording;
+use App\Services\InvestorProfitService;
 use App\Services\PayrollCalculator;
 use App\Services\PayrollPeriod;
 use App\Services\PayslipWriter;
@@ -37,9 +38,13 @@ class PayrollController extends Controller
         return response()->json(['periods' => $periods, 'currentPeriod' => $current, 'defaultPeriodId' => $default]);
     }
 
-    public function summary(Request $request, PayrollPeriod $resolver, PayrollCalculator $calculator)
+    public function summary(Request $request, PayrollPeriod $resolver, PayrollCalculator $calculator, InvestorProfitService $investorProfit)
     {
-        return response()->json($calculator->summary($resolver->resolve($request->query())));
+        $period = $resolver->resolve($request->query());
+        $data = $calculator->summary($period);
+        $data['investor_share'] = $investorProfit->totalShareForPeriod($period);
+
+        return response()->json($data);
     }
 
     public function evidence(Request $request, PayrollPeriod $resolver, PayrollCalculator $calculator)

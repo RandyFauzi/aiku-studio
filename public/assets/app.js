@@ -411,6 +411,9 @@ document.addEventListener('alpine:init', () => {
             totalLoggedHours: 0
         },
         liveWorkers: [],
+        investorShareTotal: 0,
+        investorBillableHours: 0,
+        investorDeviceCount: 0,
 
         // Daily Breakdown Modal State
         showDailyModal: false,
@@ -628,6 +631,9 @@ document.addEventListener('alpine:init', () => {
                     const data = await response.json();
                     this.liveStats = data.stats || { totalWorkers: 0, totalThp: 0, totalApprovedHours: 0, totalRejectedHours: 0, totalLoggedHours: 0 };
                     this.liveWorkers = data.workers || [];
+                    this.investorShareTotal = data.investor_share?.total_investor_profit_idr || 0;
+                    this.investorBillableHours = data.investor_share?.total_billable_hours || 0;
+                    this.investorDeviceCount = data.investor_share?.device_count || 0;
                 }
             } catch (error) {
                 console.error("Error loading payroll period data:", error);
@@ -895,6 +901,9 @@ document.addEventListener('alpine:init', () => {
             totalLoggedHours: 0
         },
         liveWorkers: [],
+        investorShareTotal: 0,
+        investorBillableHours: 0,
+        investorDeviceCount: 0,
 
         // Training Slips (Historical DB Slips 1-9)
         trainingSlips: [],
@@ -995,6 +1004,9 @@ document.addEventListener('alpine:init', () => {
                     const data = await response.json();
                     this.liveStats = data.stats || { totalWorkers: 0, totalThp: 0, totalApprovedHours: 0, totalRejectedHours: 0, totalLoggedHours: 0 };
                     this.liveWorkers = data.workers || [];
+                    this.investorShareTotal = data.investor_share?.total_investor_profit_idr || 0;
+                    this.investorBillableHours = data.investor_share?.total_billable_hours || 0;
+                    this.investorDeviceCount = data.investor_share?.device_count || 0;
                 }
             } catch (error) {
                 console.error('Error loading profit data:', error);
@@ -1064,11 +1076,13 @@ document.addEventListener('alpine:init', () => {
             const grossRevenue = Math.round(totalApprovedHours * rate);
             const grossProfit = grossRevenue - totalPayrollCost;
             const opEx = parseFloat(this.operationalExpense) || 0;
-            const netProfit = grossProfit - opEx;
+            const investorShare = this.isTrainingView ? 0 : (parseFloat(this.investorShareTotal) || 0);
+            const netProfit = grossProfit - opEx - investorShare;
             const profitMarginPct = grossRevenue > 0 ? ((netProfit / grossRevenue) * 100).toFixed(1) : '0.0';
             const payrollRatioPct = grossRevenue > 0 ? Math.min(100, ((totalPayrollCost / grossRevenue) * 100)).toFixed(1) : '0.0';
             const opExRatioPct = grossRevenue > 0 ? Math.min(100, ((opEx / grossRevenue) * 100)).toFixed(1) : '0.0';
-            const profitRatioPct = grossRevenue > 0 ? Math.max(0, (100 - parseFloat(payrollRatioPct) - parseFloat(opExRatioPct))).toFixed(1) : '0.0';
+            const investorRatioPct = grossRevenue > 0 ? Math.min(100, ((investorShare / grossRevenue) * 100)).toFixed(1) : '0.0';
+            const profitRatioPct = grossRevenue > 0 ? Math.max(0, (100 - parseFloat(payrollRatioPct) - parseFloat(opExRatioPct) - parseFloat(investorRatioPct))).toFixed(1) : '0.0';
 
             const potentialPendingRevenue = Math.round(totalPendingHours * rate);
             const avgProfitPerHour = totalApprovedHours > 0 ? Math.round(netProfit / totalApprovedHours) : 0;
@@ -1084,10 +1098,12 @@ document.addEventListener('alpine:init', () => {
                 grossRevenue,
                 totalPayrollCost,
                 grossProfit,
+                investorShare,
                 netProfit,
                 profitMarginPct,
                 payrollRatioPct,
                 opExRatioPct,
+                investorRatioPct,
                 profitRatioPct,
                 potentialPendingRevenue,
                 avgProfitPerHour,
@@ -1973,6 +1989,321 @@ document.addEventListener('alpine:init', () => {
                 console.error(err);
                 alert('Gagal terhubung ke server');
             }
+        }
+    }));
+
+    // Investor & Aset HP Analytics Logic
+    Alpine.data('investorAnalyticsData', () => ({
+        sidebarOpen: getInitialSidebarOpen(),
+        isLoading: true,
+        saving: false,
+        periods: [],
+        selectedPeriodId: '',
+        selectedPeriodObj: null,
+        searchQuery: '',
+
+        totals: {
+            investor_count: 0,
+            active_investor_count: 0,
+            device_count: 0,
+            total_tasks: 0,
+            total_billable_hours: 0,
+            total_logged_hours: 0,
+            total_pending_hours: 0,
+            total_rejected_hours: 0,
+            total_investor_profit_idr: 0,
+            total_paid_idr: 0,
+            total_unpaid_idr: 0,
+        },
+        investors: [],
+        dailyUtilization: [],
+        availableDevices: [],
+
+        // Modals
+        showInvestorModal: false,
+        isEditingInvestor: false,
+        investorForm: {
+            id: null, code: '', name: '', no_wa: '', email: '',
+            bank_name: '', no_rek: '', account_holder: '', is_active: true, notes: ''
+        },
+
+        showContractModal: false,
+        isEditingContract: false,
+        contractTargetInvestor: null,
+        contractForm: {
+            id: null, device_mode: 'new', device_key: '', new_device_label: '',
+            device_code: '', rate_per_hour_idr: 10000, rate_basis: 'billable',
+            effective_from: '', effective_to: '', is_active: true, notes: ''
+        },
+
+        selectedInvestorDetail: null,
+        showDetailModal: false,
+
+        formatRupiah,
+
+        get filteredInvestors() {
+            const q = (this.searchQuery || '').trim().toLowerCase();
+            if (!q) return this.investors;
+            return this.investors.filter(inv => {
+                const hay = [
+                    inv.code, inv.name, inv.no_wa, inv.email,
+                    ...(inv.contracts || []).map(c => `${c.device_code} ${c.device_label} ${c.active_email || ''}`)
+                ].join(' ').toLowerCase();
+                return hay.includes(q);
+            });
+        },
+
+        get maxDailyProfit() {
+            if (!this.dailyUtilization.length) return 1;
+            return Math.max(1, ...this.dailyUtilization.map(d => d.profit_idr || 0));
+        },
+
+        async init() {
+            this.$watch('sidebarOpen', val => {
+                try { if (window.innerWidth >= 768) localStorage.setItem('aiku_sidebar_open', String(val)); } catch (e) {}
+            });
+            await this.loadPeriods();
+        },
+
+        async loadPeriods() {
+            this.isLoading = true;
+            try {
+                const res = await fetch('/api/payroll/periods');
+                const data = await res.json();
+                const allPeriods = (data.periods || []).filter(p => !p.isTraining);
+                this.periods = allPeriods;
+                this.selectedPeriodId = data.defaultPeriodId && allPeriods.some(p => p.id === data.defaultPeriodId)
+                    ? data.defaultPeriodId
+                    : (allPeriods[0]?.id || '');
+                await this.loadAnalytics();
+            } catch (e) {
+                console.error('Gagal memuat periode investor:', e);
+                this.isLoading = false;
+            }
+        },
+
+        async selectPeriod(periodId) {
+            this.selectedPeriodId = periodId;
+            await this.loadAnalytics();
+        },
+
+        async loadAnalytics() {
+            if (!this.selectedPeriodId) return;
+            this.isLoading = true;
+            this.selectedPeriodObj = this.periods.find(p => p.id === this.selectedPeriodId) || null;
+            try {
+                const res = await fetch(`/api/investors/analytics?periodId=${encodeURIComponent(this.selectedPeriodId)}`, {
+                    headers: { Accept: 'application/json' }
+                });
+                const data = await res.json();
+                this.totals = data.totals || this.totals;
+                this.investors = data.investors || [];
+                this.dailyUtilization = data.daily_utilization || [];
+                this.availableDevices = data.available_devices || [];
+                if (this.selectedInvestorDetail) {
+                    const refreshed = this.investors.find(i => i.id === this.selectedInvestorDetail.id);
+                    if (refreshed) this.selectedInvestorDetail = refreshed;
+                }
+            } catch (e) {
+                console.error('Gagal memuat analitik investor:', e);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        openInvestorModal(inv = null) {
+            if (inv) {
+                this.isEditingInvestor = true;
+                this.investorForm = {
+                    id: inv.id,
+                    code: inv.code || '',
+                    name: inv.name || '',
+                    no_wa: inv.no_wa || '',
+                    email: inv.email || '',
+                    bank_name: inv.bank_name || '',
+                    no_rek: inv.no_rek || '',
+                    account_holder: inv.account_holder || '',
+                    is_active: inv.is_active !== false,
+                    notes: inv.notes || '',
+                };
+            } else {
+                this.isEditingInvestor = false;
+                this.investorForm = {
+                    id: null, code: '', name: '', no_wa: '', email: '',
+                    bank_name: '', no_rek: '', account_holder: '', is_active: true, notes: ''
+                };
+            }
+            this.showInvestorModal = true;
+        },
+
+        async saveInvestor() {
+            this.saving = true;
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const url = this.isEditingInvestor ? `/api/investors/${this.investorForm.id}` : '/api/investors';
+                const method = this.isEditingInvestor ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: JSON.stringify(this.investorForm)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || Object.values(data.errors || {}).flat().join(', ') || 'Gagal menyimpan investor.');
+                this.showInvestorModal = false;
+                await this.loadAnalytics();
+                window.Swal?.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1800, showConfirmButton: false });
+            } catch (e) {
+                window.Swal ? window.Swal.fire({ icon: 'error', title: 'Gagal', text: e.message }) : alert(e.message);
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async deleteInvestor(inv) {
+            const ok = window.Swal
+                ? (await window.Swal.fire({
+                    title: 'Hapus Investor?',
+                    text: `Data ${inv.name} beserta kontrak HP-nya akan dihapus.`,
+                    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal'
+                })).isConfirmed
+                : confirm(`Hapus investor ${inv.name}?`);
+            if (!ok) return;
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const res = await fetch(`/api/investors/${inv.id}`, { method: 'DELETE', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf } });
+            const data = await res.json();
+            if (res.ok) {
+                await this.loadAnalytics();
+                window.Swal?.fire({ icon: 'success', title: 'Terhapus', text: data.message, timer: 1600, showConfirmButton: false });
+            }
+        },
+
+        openContractModal(inv, contract = null) {
+            this.contractTargetInvestor = inv;
+            if (contract) {
+                this.isEditingContract = true;
+                this.contractForm = {
+                    id: contract.id,
+                    device_mode: 'existing',
+                    device_key: contract.device_key,
+                    new_device_label: '',
+                    device_code: contract.device_code || '',
+                    rate_per_hour_idr: contract.rate_per_hour_idr ?? 10000,
+                    rate_basis: contract.rate_basis || 'billable',
+                    effective_from: contract.effective_from || '',
+                    effective_to: contract.effective_to || '',
+                    is_active: contract.is_active !== false,
+                    notes: contract.notes || '',
+                };
+            } else {
+                this.isEditingContract = false;
+                const nextIdx = (inv.contracts?.length || 0) + 1;
+                const suggestedCode = `${inv.code}-HP${nextIdx}`;
+                this.contractForm = {
+                    id: null,
+                    device_mode: 'new',
+                    device_key: '',
+                    new_device_label: suggestedCode,
+                    device_code: suggestedCode,
+                    rate_per_hour_idr: 10000,
+                    rate_basis: 'billable',
+                    effective_from: '',
+                    effective_to: '',
+                    is_active: true,
+                    notes: '',
+                };
+            }
+            this.showContractModal = true;
+        },
+
+        async saveContract() {
+            this.saving = true;
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const payload = { ...this.contractForm };
+                if (!this.isEditingContract && payload.device_mode === 'new') {
+                    payload.device_key = '';
+                }
+                const url = this.isEditingContract
+                    ? `/api/investors/contracts/${this.contractForm.id}`
+                    : `/api/investors/${this.contractTargetInvestor.id}/contracts`;
+                const method = this.isEditingContract ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || Object.values(data.errors || {}).flat().join(', ') || 'Gagal menyimpan unit HP.');
+                this.showContractModal = false;
+                await this.loadAnalytics();
+                window.Swal?.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1800, showConfirmButton: false });
+            } catch (e) {
+                window.Swal ? window.Swal.fire({ icon: 'error', title: 'Gagal', text: e.message }) : alert(e.message);
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async deleteContract(contract) {
+            const ok = window.Swal
+                ? (await window.Swal.fire({
+                    title: 'Lepas Kontrak HP?',
+                    text: `Kontrak unit ${contract.device_code} akan dihapus dari investor ini.`,
+                    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'Ya, Lepas', cancelButtonText: 'Batal'
+                })).isConfirmed
+                : confirm(`Lepas kontrak HP ${contract.device_code}?`);
+            if (!ok) return;
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const res = await fetch(`/api/investors/contracts/${contract.id}`, { method: 'DELETE', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf } });
+            if (res.ok) {
+                await this.loadAnalytics();
+            }
+        },
+
+        async togglePayout(inv) {
+            const nextStatus = inv.payout_status === 'paid' ? 'pending' : 'paid';
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const res = await fetch(`/api/investors/${inv.id}/payout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: JSON.stringify({ period_id: this.selectedPeriodId, status: nextStatus })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                await this.loadAnalytics();
+                window.Swal?.fire({ icon: 'success', title: 'Status Diperbarui', text: data.message, timer: 1800, showConfirmButton: false });
+            }
+        },
+
+        openDetail(inv) {
+            this.selectedInvestorDetail = inv;
+            this.showDetailModal = true;
+        },
+
+        copyInvestorReport(inv) {
+            const periodName = this.selectedPeriodObj?.name || this.selectedPeriodId;
+            let text = `*LAPORAN PROFIT INVESTOR HP — AIKU STUDIO*\n`;
+            text += `Investor: *${inv.name}* (${inv.code})\n`;
+            text += `Periode: ${periodName}\n`;
+            text += `Status Bayar: ${inv.payout_status === 'paid' ? 'SUDAH DIBAYAR' : 'MENUNGGU PEMBAYARAN'}\n\n`;
+            text += `*RINCIAN UNIT HP:*\n`;
+            (inv.contracts || []).forEach(c => {
+                text += `• *${c.device_code}* (${c.device_label})\n`;
+                text += `  Tarif: ${this.formatRupiah(c.rate_per_hour_idr)}/jam (${c.rate_basis === 'duration' ? 'Total Rekam' : 'Billable'})\n`;
+                text += `  Jam Billable: ${c.billable_hours} jam (${c.tasks} task, Approval ${c.approval_rate}%)\n`;
+                text += `  Pendapatan: *${this.formatRupiah(c.profit_idr)}*\n`;
+            });
+            text += `\n*TOTAL BAGI HASIL:* *${this.formatRupiah(inv.profit_idr)}*\n`;
+            if (inv.bank_name || inv.no_rek) {
+                text += `Rekening: ${inv.bank_name || ''} ${inv.no_rek || ''} ${inv.account_holder ? '(' + inv.account_holder + ')' : ''}\n`;
+            }
+
+            navigator.clipboard?.writeText(text.trim()).then(() => {
+                window.Swal?.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Laporan WA investor disalin!', timer: 1800, showConfirmButton: false });
+            });
         }
     }));
 });

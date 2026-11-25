@@ -21,6 +21,7 @@
                 ['label' => 'Buat Slip Gaji', 'path' => 'create', 'icon' => 'M12 8v8m-4-4h8m5 0a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ['label' => 'Riwayat Slip Gaji', 'path' => 'payslips', 'icon' => 'M14 3H5v18h14V8l-5-5v5h5M9 12h6m-6 4h6'],
                 ['label' => 'Reporting & Profit', 'path' => 'profit', 'icon' => 'M12 3v9h9A9 9 0 1012 3zM16 3.5V8h4.5'],
+                ['label' => 'Investor & Aset HP', 'path' => 'investors', 'icon' => 'M17 9V7a5 5 0 00-10 0v2M5 9h14l1 11H4L5 9zm7 4v3'],
             ],
         ],
         [
