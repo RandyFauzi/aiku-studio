@@ -1,3 +1,7 @@
+### [2026-11-25 14:45 WITA] — Antigravity: rapikan UI pemilih warna di tabel Teams & Kontributor
+- `resources/views/panel/contributors.blade.php`: Menghapus tombol kotak label warna di sebelah nama kontributor agar kolom nama tetap bersih; warna direpresentasikan lewat avatar inisial dengan titik warna kecil di sudut avatar (klik avatar untuk ganti warna cepat, atau lewat modal Edit).
+- Validasi: Review diff, `php artisan view:clear` sukses. State IDLE.
+
 ### [2026-11-25 14:33 WITA] — Antigravity: sistem & dashboard analitik Investor HP (Rp 10.000/jam billable) terintegrasi Estimasi Profit
 - `2026_11_25_000003_create_investor_tables`, `Investor`, `InvestorDeviceContract`, `InvestorPayout`, `InvestorProfitService`, `InvestorController`, `PayrollController`, `routes/web.php`, `sidebar.blade.php`, `investors.blade.php`, `profit.blade.php`, `app.js`, `InvestorAnalyticsTest`: Membangun sistem investasi HP multi-investor & multi-unit berkode khusus dengan kalkulasi berbasis jam billable (`billable_min`, default Rp 10.000/jam) yang melacak histori email per HP (`device_accounts.activated_at`), menu sidebar baru `/investors` (KPI, grafik utilisasi harian, CRUD investor & kontrak HP, status bayar, salin laporan WA), serta integrasi langsung pemotongan beban bagi hasil investor ke Estimasi Net Profit di `/profit`.
 - Validasi: Migrasi lokal sukses, `npm run build` sukses, `php artisan view:clear` sukses, PHPUnit `InvestorAnalyticsTest` & `PayrollMigrationTest` (17 tests, 136 assertions) lulus 100%. State IDLE.

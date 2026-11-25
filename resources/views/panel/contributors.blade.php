@@ -253,23 +253,15 @@
                                     <div class="flex items-center relative">
                                         <button type="button"
                                                 @click="colorPickerId = (colorPickerId === c.id ? null : c.id)"
-                                                title="Klik untuk ubah warna badge worker"
+                                                title="Klik avatar untuk ubah warna badge worker"
                                                 :style="`background-color: ${getBadgeColorMeta(c.badge_color).bg}; color: ${getBadgeColorMeta(c.badge_color).text}; border-color: ${getBadgeColorMeta(c.badge_color).border};`"
-                                                class="h-9 w-9 rounded-xl border flex items-center justify-center font-bold text-xs uppercase shadow-sm hover:scale-105 transition cursor-pointer shrink-0">
+                                                class="relative h-9 w-9 rounded-xl border flex items-center justify-center font-bold text-xs uppercase shadow-sm hover:scale-105 hover:ring-2 hover:ring-offset-1 hover:ring-slate-300 transition cursor-pointer shrink-0 group/avatar">
                                             <span x-text="c.nama ? c.nama.substring(0,2) : '?'"></span>
+                                            <span class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white shadow-2xs"
+                                                  :style="`background-color: ${getBadgeColorMeta(c.badge_color).dot};`"></span>
                                         </button>
                                         <div class="ml-3">
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="text-sm font-bold text-gray-900" x-text="c.nama"></span>
-                                                <button type="button"
-                                                        @click="colorPickerId = (colorPickerId === c.id ? null : c.id)"
-                                                        title="Ubah warna worker"
-                                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-semibold hover:opacity-80 transition cursor-pointer"
-                                                        :style="`background-color: ${getBadgeColorMeta(c.badge_color).bg}; color: ${getBadgeColorMeta(c.badge_color).text}; border-color: ${getBadgeColorMeta(c.badge_color).border};`">
-                                                    <span class="w-2 h-2 rounded-full" :style="`background-color: ${getBadgeColorMeta(c.badge_color).dot};`"></span>
-                                                    <span x-text="getBadgeColorMeta(c.badge_color).label"></span>
-                                                </button>
-                                            </div>
+                                            <div class="text-sm font-bold text-gray-900" x-text="c.nama"></div>
                                             <div class="text-[11px] text-slate-400" x-text="'ID #' + c.id"></div>
                                         </div>
 
