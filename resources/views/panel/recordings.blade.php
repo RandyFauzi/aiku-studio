@@ -816,6 +816,7 @@
                                         <div class="flex items-center gap-2 truncate">
                                             <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
                                                   :class="getWorkerAvatarStyle(c.name)"
+                                                  :style="getWorkerAvatarInlineStyle(c.name)"
                                                   x-text="getWorkerInitials(c.name)"></span>
                                             <span class="text-xs truncate font-medium" x-text="c.name"></span>
                                         </div>
@@ -1360,9 +1361,11 @@
                                             <button x-show="rec.assigned_worker_name"
                                                     @click="togglePopover(rec.record_id, $event)"
                                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold shadow-2xs hover:shadow-sm border transition max-w-[170px]"
-                                                    :class="getWorkerStyle(rec.assigned_worker_name)">
+                                                    :class="getWorkerStyle(rec.assigned_worker_name)"
+                                                    :style="getWorkerInlineStyle(rec.assigned_worker_name)">
                                                 <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black uppercase"
                                                       :class="getWorkerAvatarStyle(rec.assigned_worker_name)"
+                                                      :style="getWorkerAvatarInlineStyle(rec.assigned_worker_name)"
                                                       x-text="getWorkerInitials(rec.assigned_worker_name)"></span>
                                                 <span class="truncate" x-text="getWorkerShortName(rec.assigned_worker_name)"></span>
                                                 <svg class="w-3 h-3 text-slate-400 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -1658,10 +1661,12 @@
                                                 x-show="rec.assigned_worker_name"
                                                 @click="togglePopover(rec.record_id, $event)"
                                                 class="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold shadow-2xs hover:shadow-sm border transition cursor-pointer"
-                                                :class="getWorkerStyle(rec.assigned_worker_name)">
+                                                :class="getWorkerStyle(rec.assigned_worker_name)"
+                                                :style="getWorkerInlineStyle(rec.assigned_worker_name)">
                                             <div class="flex items-center gap-1.5 truncate">
                                                 <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black uppercase shrink-0"
                                                       :class="getWorkerAvatarStyle(rec.assigned_worker_name)"
+                                                      :style="getWorkerAvatarInlineStyle(rec.assigned_worker_name)"
                                                       x-text="getWorkerInitials(rec.assigned_worker_name)"></span>
                                                 <span class="truncate" x-text="getWorkerShortName(rec.assigned_worker_name)"></span>
                                             </div>
@@ -3685,8 +3690,13 @@
                             const full = (c.nama || c.name || '').trim().toLowerCase();
                             return full === n || (full && n.length >= 3 && full.includes(n));
                         });
-                        if (matched && matched.badge_color && this.workerColorClasses[matched.badge_color]) {
-                            return matched.badge_color;
+                        if (matched && matched.badge_color) {
+                            if (this.workerColorClasses[matched.badge_color]) {
+                                return matched.badge_color;
+                            }
+                            if (/^#[0-9a-f]{6}$/i.test(matched.badge_color)) {
+                                return matched.badge_color;
+                            }
                         }
                     }
 
@@ -3705,12 +3715,40 @@
 
                 getWorkerStyle(name) {
                     const key = this.resolveWorkerColorKey(name);
+                    if (key.startsWith('#')) return '';
                     return (this.workerColorClasses[key] || this.workerColorClasses.slate).pill;
                 },
 
                 getWorkerAvatarStyle(name) {
                     const key = this.resolveWorkerColorKey(name);
+                    if (key.startsWith('#')) return '';
                     return (this.workerColorClasses[key] || this.workerColorClasses.slate).avatar;
+                },
+
+                getWorkerInlineStyle(name) {
+                    const key = this.resolveWorkerColorKey(name);
+                    if (!key.startsWith('#')) return '';
+                    const clean = key.slice(1);
+                    const r = parseInt(clean.substring(0, 2), 16);
+                    const g = parseInt(clean.substring(2, 4), 16);
+                    const b = parseInt(clean.substring(4, 6), 16);
+                    const dr = Math.max(0, Math.round(r * 0.62));
+                    const dg = Math.max(0, Math.round(g * 0.62));
+                    const db = Math.max(0, Math.round(b * 0.62));
+                    return `background-color: rgba(${r}, ${g}, ${b}, 0.14); color: rgb(${dr}, ${dg}, ${db}); border-color: rgba(${r}, ${g}, ${b}, 0.42);`;
+                },
+
+                getWorkerAvatarInlineStyle(name) {
+                    const key = this.resolveWorkerColorKey(name);
+                    if (!key.startsWith('#')) return '';
+                    const clean = key.slice(1);
+                    const r = parseInt(clean.substring(0, 2), 16);
+                    const g = parseInt(clean.substring(2, 4), 16);
+                    const b = parseInt(clean.substring(4, 6), 16);
+                    const dr = Math.max(0, Math.round(r * 0.62));
+                    const dg = Math.max(0, Math.round(g * 0.62));
+                    const db = Math.max(0, Math.round(b * 0.62));
+                    return `background-color: rgba(${r}, ${g}, ${b}, 0.25); color: rgb(${dr}, ${dg}, ${db});`;
                 },
 
                 formatWITA(dateStr) {

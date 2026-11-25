@@ -63,7 +63,16 @@ class ContributorController extends Controller
             'hp' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'role' => 'nullable|string|in:admin,contributor',
-            'badge_color' => ['nullable', 'string', Rule::in(Contributor::BADGE_COLORS)],
+            'badge_color' => [
+                'nullable',
+                'string',
+                'max:32',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! Contributor::isValidBadgeColor(is_string($value) ? $value : null)) {
+                        $fail('Pilihan warna badge tidak valid.');
+                    }
+                },
+            ],
         ]);
     }
 
@@ -155,7 +164,16 @@ class ContributorController extends Controller
         ]);
 
         $data = $request->validate([
-            'badge_color' => ['nullable', 'string', Rule::in(Contributor::BADGE_COLORS)],
+            'badge_color' => [
+                'nullable',
+                'string',
+                'max:32',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! Contributor::isValidBadgeColor(is_string($value) ? $value : null)) {
+                        $fail('Pilihan warna badge tidak valid.');
+                    }
+                },
+            ],
         ]);
 
         $contributor->update(['badge_color' => $data['badge_color']]);

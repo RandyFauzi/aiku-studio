@@ -393,6 +393,14 @@ class ContributorRoleManagementTest extends TestCase
 
         $this->assertSame('fuchsia', $worker->fresh()->badge_color);
 
+        // Admin juga bisa memilih warna custom hex bebas
+        $this->actingAs($admin)
+            ->patchJson('/api/contributors/'.$worker->id.'/color', ['badge_color' => '#ff5722'])
+            ->assertOk()
+            ->assertJsonPath('badge_color', '#ff5722');
+
+        $this->assertSame('#ff5722', $worker->fresh()->badge_color);
+
         // Warna tidak valid ditolak
         $this->actingAs($admin)
             ->patchJson('/api/contributors/'.$worker->id.'/color', ['badge_color' => 'neon-invalid'])

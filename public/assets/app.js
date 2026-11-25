@@ -1197,28 +1197,71 @@ document.addEventListener('alpine:init', () => {
         showModal: false,
         isEditing: false,
         colorPickerId: null,
+        customHexColor: '#00b090',
         formData: { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor', badge_color: '' },
 
         badgeColorOptions: [
-            { key: 'violet', label: 'Violet', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd', dot: '#8b5cf6' },
-            { key: 'blue', label: 'Biru', bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd', dot: '#3b82f6' },
-            { key: 'sky', label: 'Langit', bg: '#e0f2fe', text: '#0369a1', border: '#7dd3fc', dot: '#0ea5e9' },
-            { key: 'cyan', label: 'Cyan', bg: '#cffafe', text: '#0e7490', border: '#67e8f9', dot: '#06b6d4' },
-            { key: 'teal', label: 'Tosca', bg: '#ccfbf1', text: '#0f766e', border: '#5eead4', dot: '#14b8a6' },
-            { key: 'emerald', label: 'Hijau', bg: '#d1fae5', text: '#047857', border: '#6ee7b7', dot: '#10b981' },
-            { key: 'lime', label: 'Lime', bg: '#ecfccb', text: '#4d7c0f', border: '#bef264', dot: '#84cc16' },
-            { key: 'amber', label: 'Amber', bg: '#fef3c7', text: '#b45309', border: '#fcd34d', dot: '#f59e0b' },
+            { key: 'rose', label: 'Merah Mawar', bg: '#ffe4e6', text: '#be123c', border: '#fda4af', dot: '#f43f5e' },
+            { key: '#dc2626', label: 'Merah Terang', bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5', dot: '#dc2626' },
+            { key: '#ea580c', label: 'Coral', bg: '#ffedd5', text: '#c2410c', border: '#fdba74', dot: '#ea580c' },
             { key: 'orange', label: 'Oranye', bg: '#ffedd5', text: '#c2410c', border: '#fdba74', dot: '#f97316' },
-            { key: 'rose', label: 'Mawar', bg: '#ffe4e6', text: '#be123c', border: '#fda4af', dot: '#f43f5e' },
-            { key: 'pink', label: 'Pink', bg: '#fce7f3', text: '#be185d', border: '#f9a8d4', dot: '#ec4899' },
-            { key: 'fuchsia', label: 'Fuchsia', bg: '#fae8ff', text: '#a21caf', border: '#f0abfc', dot: '#d946ef' },
-            { key: 'purple', label: 'Ungu', bg: '#f3e8ff', text: '#7e22ce', border: '#d8b4fe', dot: '#a855f7' },
+            { key: 'amber', label: 'Kuning Emas', bg: '#fef3c7', text: '#b45309', border: '#fcd34d', dot: '#f59e0b' },
+            { key: '#ca8a04', label: 'Mustard', bg: '#fef9c3', text: '#854d0e', border: '#fde047', dot: '#ca8a04' },
+            { key: 'lime', label: 'Hijau Lime', bg: '#ecfccb', text: '#4d7c0f', border: '#bef264', dot: '#84cc16' },
+            { key: '#16a34a', label: 'Hijau Daun', bg: '#dcfce7', text: '#15803d', border: '#86efac', dot: '#16a34a' },
+            { key: 'emerald', label: 'Emerald', bg: '#d1fae5', text: '#047857', border: '#6ee7b7', dot: '#10b981' },
+            { key: 'teal', label: 'Tosca', bg: '#ccfbf1', text: '#0f766e', border: '#5eead4', dot: '#14b8a6' },
+            { key: 'cyan', label: 'Cyan', bg: '#cffafe', text: '#0e7490', border: '#67e8f9', dot: '#06b6d4' },
+            { key: 'sky', label: 'Biru Langit', bg: '#e0f2fe', text: '#0369a1', border: '#7dd3fc', dot: '#0ea5e9' },
+            { key: 'blue', label: 'Biru Royal', bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd', dot: '#3b82f6' },
+            { key: '#1e3a8a', label: 'Biru Navy', bg: '#dbeafe', text: '#1e3a8a', border: '#93c5fd', dot: '#1e40af' },
             { key: 'indigo', label: 'Indigo', bg: '#e0e7ff', text: '#4338ca', border: '#a5b4fc', dot: '#6366f1' },
-            { key: 'slate', label: 'Abu', bg: '#f1f5f9', text: '#334155', border: '#cbd5e1', dot: '#64748b' },
+            { key: 'violet', label: 'Violet', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd', dot: '#8b5cf6' },
+            { key: 'purple', label: 'Ungu', bg: '#f3e8ff', text: '#7e22ce', border: '#d8b4fe', dot: '#a855f7' },
+            { key: 'fuchsia', label: 'Magenta', bg: '#fae8ff', text: '#a21caf', border: '#f0abfc', dot: '#d946ef' },
+            { key: 'pink', label: 'Pink', bg: '#fce7f3', text: '#be185d', border: '#f9a8d4', dot: '#ec4899' },
+            { key: '#92400e', label: 'Coklat Kayu', bg: '#fef3c7', text: '#78350f', border: '#fcd34d', dot: '#92400e' },
+            { key: '#7c2d12', label: 'Terakota', bg: '#ffedd5', text: '#7c2d12', border: '#fdba74', dot: '#9a3412' },
+            { key: '#4d7c0f', label: 'Olive', bg: '#ecfccb', text: '#3f6212', border: '#bef264', dot: '#4d7c0f' },
+            { key: '#334155', label: 'Charcoal', bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', dot: '#334155' },
+            { key: 'slate', label: 'Abu Netral', bg: '#f1f5f9', text: '#334155', border: '#cbd5e1', dot: '#64748b' },
         ],
 
         getBadgeColorMeta(colorKey) {
-            return this.badgeColorOptions.find(o => o.key === colorKey) || this.badgeColorOptions[this.badgeColorOptions.length - 1];
+            const preset = this.badgeColorOptions.find(o => o.key.toLowerCase() === (colorKey || '').toLowerCase());
+            if (preset) return preset;
+            if (typeof colorKey === 'string' && /^#[0-9a-f]{6}$/i.test(colorKey)) {
+                return this.hexToBadgeMeta(colorKey);
+            }
+            return this.badgeColorOptions[this.badgeColorOptions.length - 1];
+        },
+
+        hexToBadgeMeta(hex) {
+            const clean = hex.replace('#', '');
+            const r = parseInt(clean.substring(0, 2), 16);
+            const g = parseInt(clean.substring(2, 4), 16);
+            const b = parseInt(clean.substring(4, 6), 16);
+            const darkR = Math.max(0, Math.round(r * 0.62));
+            const darkG = Math.max(0, Math.round(g * 0.62));
+            const darkB = Math.max(0, Math.round(b * 0.62));
+            return {
+                key: '#' + clean.toLowerCase(),
+                label: '#' + clean.toUpperCase(),
+                bg: `rgba(${r}, ${g}, ${b}, 0.14)`,
+                text: `rgb(${darkR}, ${darkG}, ${darkB})`,
+                border: `rgba(${r}, ${g}, ${b}, 0.42)`,
+                dot: '#' + clean.toLowerCase(),
+            };
+        },
+
+        openQuickColorPicker(contributor) {
+            if (this.colorPickerId === contributor.id) {
+                this.colorPickerId = null;
+                return;
+            }
+            const meta = this.getBadgeColorMeta(contributor.badge_color);
+            this.customHexColor = meta.dot || '#00b090';
+            this.colorPickerId = contributor.id;
         },
 
         // Performance & Evaluation State

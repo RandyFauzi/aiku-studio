@@ -1,3 +1,7 @@
+### [2026-11-25 14:50 WITA] — Antigravity: perluas pilihan warna (24 preset + custom color picker RGB bebas)
+- `Contributor`, `ContributorController`, `app.js`, `contributors.blade.php`, `recordings.blade.php`, `recording-worker-picker.blade.php`, `ContributorRoleManagementTest`: Memperluas pilihan warna menjadi 24 preset kontras plus pemilih warna kustom RGB bebas (`#RRGGBB` via `<input type="color">`) baik di quick popover tabel maupun modal Edit, dengan render dinamis yang sinkron penuh di Task List Rekaman.
+- Validasi: `php artisan view:clear` sukses, PHPUnit `ContributorRoleManagementTest` (9 tests, 97 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-25 14:45 WITA] — Antigravity: rapikan UI pemilih warna di tabel Teams & Kontributor
 - `resources/views/panel/contributors.blade.php`: Menghapus tombol kotak label warna di sebelah nama kontributor agar kolom nama tetap bersih; warna direpresentasikan lewat avatar inisial dengan titik warna kecil di sudut avatar (klik avatar untuk ganti warna cepat, atau lewat modal Edit).
 - Validasi: Review diff, `php artisan view:clear` sukses. State IDLE.

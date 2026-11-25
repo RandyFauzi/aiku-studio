@@ -29,6 +29,7 @@
                             <div class="flex items-center gap-2 min-w-0">
                                 <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
                                       :class="getWorkerAvatarStyle(c.name || c.nama)"
+                                      :style="getWorkerAvatarInlineStyle(c.name || c.nama)"
                                       x-text="getWorkerInitials(c.name || c.nama)"></span>
                                 <span class="truncate break-words" x-text="c.name || c.nama"></span>
                             </div>
