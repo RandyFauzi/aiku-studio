@@ -3658,34 +3658,59 @@
                     return name.substring(0, 2).toUpperCase();
                 },
 
+                workerColorClasses: {
+                    violet: { pill: 'bg-violet-50 text-violet-700 border-violet-200', avatar: 'bg-violet-200 text-violet-800' },
+                    blue: { pill: 'bg-blue-50 text-blue-700 border-blue-200', avatar: 'bg-blue-200 text-blue-800' },
+                    sky: { pill: 'bg-sky-50 text-sky-700 border-sky-200', avatar: 'bg-sky-200 text-sky-800' },
+                    cyan: { pill: 'bg-cyan-50 text-cyan-700 border-cyan-200', avatar: 'bg-cyan-200 text-cyan-800' },
+                    teal: { pill: 'bg-teal-50 text-teal-700 border-teal-200', avatar: 'bg-teal-200 text-teal-800' },
+                    emerald: { pill: 'bg-emerald-50 text-emerald-700 border-emerald-200', avatar: 'bg-emerald-200 text-emerald-800' },
+                    lime: { pill: 'bg-lime-50 text-lime-700 border-lime-200', avatar: 'bg-lime-200 text-lime-800' },
+                    amber: { pill: 'bg-amber-50 text-amber-700 border-amber-200', avatar: 'bg-amber-200 text-amber-800' },
+                    orange: { pill: 'bg-orange-50 text-orange-700 border-orange-200', avatar: 'bg-orange-200 text-orange-800' },
+                    rose: { pill: 'bg-rose-50 text-rose-700 border-rose-200', avatar: 'bg-rose-200 text-rose-800' },
+                    pink: { pill: 'bg-pink-50 text-pink-700 border-pink-200', avatar: 'bg-pink-200 text-pink-800' },
+                    fuchsia: { pill: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200', avatar: 'bg-fuchsia-200 text-fuchsia-800' },
+                    purple: { pill: 'bg-purple-50 text-purple-700 border-purple-200', avatar: 'bg-purple-200 text-purple-800' },
+                    indigo: { pill: 'bg-indigo-50 text-indigo-700 border-indigo-200', avatar: 'bg-indigo-200 text-indigo-800' },
+                    slate: { pill: 'bg-slate-100 text-slate-700 border-slate-200', avatar: 'bg-slate-200 text-slate-700' },
+                },
+
+                resolveWorkerColorKey(name) {
+                    const n = (name || '').trim().toLowerCase();
+                    if (!n) return 'slate';
+
+                    if (Array.isArray(this.contributors) && this.contributors.length) {
+                        const matched = this.contributors.find(c => {
+                            const full = (c.nama || c.name || '').trim().toLowerCase();
+                            return full === n || (full && n.length >= 3 && full.includes(n));
+                        });
+                        if (matched && matched.badge_color && this.workerColorClasses[matched.badge_color]) {
+                            return matched.badge_color;
+                        }
+                    }
+
+                    if (n.includes('aufa')) return 'violet';
+                    if (n.includes('zikri')) return 'blue';
+                    if (n.includes('ghina')) return 'rose';
+                    if (n.includes('rio')) return 'cyan';
+                    if (n.includes('rahmat')) return 'emerald';
+                    if (n.includes('yoga') || n.includes('diyoga')) return 'amber';
+                    if (n.includes('tina') || n.includes('tilopha')) return 'purple';
+                    if (n.includes('fahri')) return 'indigo';
+                    if (n.includes('aida')) return 'pink';
+                    if (n.includes('maryam') || n.includes('mariyam')) return 'teal';
+                    return 'slate';
+                },
+
                 getWorkerStyle(name) {
-                    const n = (name || '').toLowerCase();
-                    if (n.includes('aufa')) return 'bg-violet-50 text-violet-700 border-violet-200';
-                    if (n.includes('zikri')) return 'bg-blue-50 text-blue-700 border-blue-200';
-                    if (n.includes('ghina')) return 'bg-rose-50 text-rose-700 border-rose-200';
-                    if (n.includes('rio')) return 'bg-cyan-50 text-cyan-700 border-cyan-200';
-                    if (n.includes('rahmat')) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                    if (n.includes('yoga') || n.includes('diyoga')) return 'bg-amber-50 text-amber-700 border-amber-200';
-                    if (n.includes('tina') || n.includes('tilopha')) return 'bg-purple-50 text-purple-700 border-purple-200';
-                    if (n.includes('fahri')) return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-                    if (n.includes('aida')) return 'bg-pink-50 text-pink-700 border-pink-200';
-                    if (n.includes('maryam') || n.includes('mariyam')) return 'bg-teal-50 text-teal-700 border-teal-200';
-                    return 'bg-slate-100 text-slate-700 border-slate-200';
+                    const key = this.resolveWorkerColorKey(name);
+                    return (this.workerColorClasses[key] || this.workerColorClasses.slate).pill;
                 },
 
                 getWorkerAvatarStyle(name) {
-                    const n = (name || '').toLowerCase();
-                    if (n.includes('aufa')) return 'bg-violet-200 text-violet-800';
-                    if (n.includes('zikri')) return 'bg-blue-200 text-blue-800';
-                    if (n.includes('ghina')) return 'bg-rose-200 text-rose-800';
-                    if (n.includes('rio')) return 'bg-cyan-200 text-cyan-800';
-                    if (n.includes('rahmat')) return 'bg-emerald-200 text-emerald-800';
-                    if (n.includes('yoga') || n.includes('diyoga')) return 'bg-amber-200 text-amber-800';
-                    if (n.includes('tina') || n.includes('tilopha')) return 'bg-purple-200 text-purple-800';
-                    if (n.includes('fahri')) return 'bg-indigo-200 text-indigo-800';
-                    if (n.includes('aida')) return 'bg-pink-200 text-pink-800';
-                    if (n.includes('maryam') || n.includes('mariyam')) return 'bg-teal-200 text-teal-800';
-                    return 'bg-slate-200 text-slate-700';
+                    const key = this.resolveWorkerColorKey(name);
+                    return (this.workerColorClasses[key] || this.workerColorClasses.slate).avatar;
                 },
 
                 formatWITA(dateStr) {

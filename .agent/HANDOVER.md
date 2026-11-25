@@ -1,3 +1,7 @@
+### [2026-11-25 14:20 WITA] — Antigravity: pengaturan warna akun worker di Teams & Kontributor serta sinkron ke Task List
+- `2026_11_25_000002_add_badge_color_to_contributors_table`, `Contributor`, `ContributorController`, `routes/web.php`, `contributors.blade.php`, `app.js`, `recordings.blade.php`, `recording-worker-picker.blade.php`, `ContributorRoleManagementTest`: Menambahkan kolom `badge_color` (15 preset warna) pada tabel `contributors` dengan backfill warna default worker lama, pemilih warna cepat 1-klik di tabel maupun di modal Edit/Add Teams & Kontributor (`PATCH /api/contributors/{id}/color`), serta sinkronisasi warna dinamis pada pill & avatar worker di Task List Rekaman.
+- Validasi: Migrasi lokal sukses, `npm run build` sukses, `php artisan view:clear` sukses, PHPUnit `ContributorRoleManagementTest` (9 tests, 94 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-25 13:11 WITA] — Antigravity: tambahkan header Origin & Referer pada request Add Worker 1618
 - `app/Services/Robotics1618Sync.php`: Menambahkan header `Origin` (`https://partners.1618robotics.com`) dan `Referer` (`https://partners.1618robotics.com/{tenant}/`) pada request `POST /roster` dan `GET /roster-result` untuk memenuhi validasi origin server 1618 (mengatasi error *"That change didn't come from this page. Reload it and try again."*).
 - Validasi: Uji langsung header Origin ke endpoint `/roster` 1618 lolos dari blokir origin, PHPUnit `Robotics1618SyncTest` (4 tests, 24 assertions) lulus 100%. State IDLE.

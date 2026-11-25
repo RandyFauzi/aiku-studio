@@ -27,7 +27,9 @@
                     <template x-for="c in contributors.filter(c => !searchWorkerPicker || (c.name || c.nama || '').toLowerCase().includes(searchWorkerPicker.toLowerCase().trim()))" :key="c.contributor_id || c.id">
                         <button type="button" @click="assignWorker(rec.record_id, (c.name || c.nama)); activePopover = null" :disabled="saving" class="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-2 text-left text-xs hover:bg-slate-100 transition" :class="rec.assigned_worker_name === (c.name || c.nama) ? 'bg-green-50 font-bold text-green-900' : 'text-slate-700'">
                             <div class="flex items-center gap-2 min-w-0">
-                                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold" x-text="getWorkerInitials(c.name || c.nama)"></span>
+                                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+                                      :class="getWorkerAvatarStyle(c.name || c.nama)"
+                                      x-text="getWorkerInitials(c.name || c.nama)"></span>
                                 <span class="truncate break-words" x-text="c.name || c.nama"></span>
                             </div>
                             <span x-show="rec.assigned_worker_name === (c.name || c.nama)" class="text-[#00B090] font-black text-xs shrink-0">✓</span>

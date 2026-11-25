@@ -15,6 +15,7 @@ use App\Services\ContributorAccess;
 use App\Services\ContributorPerformanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ContributorController extends Controller
@@ -42,7 +43,11 @@ class ContributorController extends Controller
 
     private function fields(Request $request, ?Contributor $person = null): array
     {
-        $request->merge(['nama' => trim((string) $request->input('nama', ''))]);
+        $badgeColor = $request->input('badge_color');
+        $request->merge([
+            'nama' => trim((string) $request->input('nama', '')),
+            'badge_color' => is_string($badgeColor) && trim($badgeColor) !== '' ? strtolower(trim($badgeColor)) : null,
+        ]);
         $duplicate = Contributor::whereRaw('LOWER(TRIM(nama)) = ?', [mb_strtolower($request->input('nama'))])
             ->when($person, fn ($query) => $query->whereKeyNot($person->id))->exists();
         if ($duplicate) {
@@ -58,6 +63,7 @@ class ContributorController extends Controller
             'hp' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'role' => 'nullable|string|in:admin,contributor',
+            'badge_color' => ['nullable', 'string', Rule::in(Contributor::BADGE_COLORS)],
         ]);
     }
 
@@ -138,6 +144,27 @@ class ContributorController extends Controller
                 'login_enabled' => (bool) ($user && $user->is_active),
             ]);
         });
+    }
+
+    public function updateColor(Request $request, Contributor $contributor)
+    {
+        $this->ensureAdmin($request);
+        $raw = $request->input('badge_color');
+        $request->merge([
+            'badge_color' => is_string($raw) && trim($raw) !== '' ? strtolower(trim($raw)) : null,
+        ]);
+
+        $data = $request->validate([
+            'badge_color' => ['nullable', 'string', Rule::in(Contributor::BADGE_COLORS)],
+        ]);
+
+        $contributor->update(['badge_color' => $data['badge_color']]);
+
+        return response()->json([
+            'success' => true,
+            'id' => $contributor->id,
+            'badge_color' => $contributor->badge_color,
+        ]);
     }
 
     public function destroy(Request $request, Contributor $contributor)

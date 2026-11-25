@@ -357,4 +357,46 @@ class ContributorRoleManagementTest extends TestCase
         ])->assertUnprocessable()
           ->assertJsonValidationErrors(['nama']);
     }
+
+    public function test_admin_can_update_contributor_badge_color_and_non_admin_is_forbidden(): void
+    {
+        $admin = $this->createAdmin();
+        $worker = $this->createContributor('Rizqi', 'rizqi@example.com', 'contributor');
+        $workerUser = User::where('contributor_id', $worker->id)->firstOrFail();
+
+        // Non-admin ditolak
+        $this->actingAs($workerUser)
+            ->patchJson('/api/contributors/'.$worker->id.'/color', ['badge_color' => 'orange'])
+            ->assertForbidden();
+
+        // Admin ubah warna cepat via PATCH /color
+        $this->actingAs($admin)
+            ->patchJson('/api/contributors/'.$worker->id.'/color', ['badge_color' => 'orange'])
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'id' => $worker->id,
+                'badge_color' => 'orange',
+            ]);
+
+        $this->assertSame('orange', $worker->fresh()->badge_color);
+
+        // Admin ubah warna via PUT /api/contributors/{id}
+        $this->actingAs($admin)
+            ->putJson('/api/contributors/'.$worker->id, [
+                'nama' => 'Rizqi',
+                'email' => 'rizqi@example.com',
+                'role' => 'contributor',
+                'badge_color' => 'fuchsia',
+            ])->assertOk()
+            ->assertJsonPath('badge_color', 'fuchsia');
+
+        $this->assertSame('fuchsia', $worker->fresh()->badge_color);
+
+        // Warna tidak valid ditolak
+        $this->actingAs($admin)
+            ->patchJson('/api/contributors/'.$worker->id.'/color', ['badge_color' => 'neon-invalid'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['badge_color']);
+    }
 }

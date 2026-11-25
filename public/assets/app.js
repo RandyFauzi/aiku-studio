@@ -1180,7 +1180,30 @@ document.addEventListener('alpine:init', () => {
         isLoading: true,
         showModal: false,
         isEditing: false,
-        formData: { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor' },
+        colorPickerId: null,
+        formData: { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor', badge_color: '' },
+
+        badgeColorOptions: [
+            { key: 'violet', label: 'Violet', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd', dot: '#8b5cf6' },
+            { key: 'blue', label: 'Biru', bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd', dot: '#3b82f6' },
+            { key: 'sky', label: 'Langit', bg: '#e0f2fe', text: '#0369a1', border: '#7dd3fc', dot: '#0ea5e9' },
+            { key: 'cyan', label: 'Cyan', bg: '#cffafe', text: '#0e7490', border: '#67e8f9', dot: '#06b6d4' },
+            { key: 'teal', label: 'Tosca', bg: '#ccfbf1', text: '#0f766e', border: '#5eead4', dot: '#14b8a6' },
+            { key: 'emerald', label: 'Hijau', bg: '#d1fae5', text: '#047857', border: '#6ee7b7', dot: '#10b981' },
+            { key: 'lime', label: 'Lime', bg: '#ecfccb', text: '#4d7c0f', border: '#bef264', dot: '#84cc16' },
+            { key: 'amber', label: 'Amber', bg: '#fef3c7', text: '#b45309', border: '#fcd34d', dot: '#f59e0b' },
+            { key: 'orange', label: 'Oranye', bg: '#ffedd5', text: '#c2410c', border: '#fdba74', dot: '#f97316' },
+            { key: 'rose', label: 'Mawar', bg: '#ffe4e6', text: '#be123c', border: '#fda4af', dot: '#f43f5e' },
+            { key: 'pink', label: 'Pink', bg: '#fce7f3', text: '#be185d', border: '#f9a8d4', dot: '#ec4899' },
+            { key: 'fuchsia', label: 'Fuchsia', bg: '#fae8ff', text: '#a21caf', border: '#f0abfc', dot: '#d946ef' },
+            { key: 'purple', label: 'Ungu', bg: '#f3e8ff', text: '#7e22ce', border: '#d8b4fe', dot: '#a855f7' },
+            { key: 'indigo', label: 'Indigo', bg: '#e0e7ff', text: '#4338ca', border: '#a5b4fc', dot: '#6366f1' },
+            { key: 'slate', label: 'Abu', bg: '#f1f5f9', text: '#334155', border: '#cbd5e1', dot: '#64748b' },
+        ],
+
+        getBadgeColorMeta(colorKey) {
+            return this.badgeColorOptions.find(o => o.key === colorKey) || this.badgeColorOptions[this.badgeColorOptions.length - 1];
+        },
 
         // Performance & Evaluation State
         studioSummary: null,
@@ -1310,10 +1333,10 @@ document.addEventListener('alpine:init', () => {
         openModal(contributor = null) {
             if (contributor) {
                 this.isEditing = true;
-                this.formData = { ...contributor, role: contributor.role || 'contributor' };
+                this.formData = { ...contributor, role: contributor.role || 'contributor', badge_color: contributor.badge_color || '' };
             } else {
                 this.isEditing = false;
-                this.formData = { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor' };
+                this.formData = { id: null, nama: '', no_wa: '', email: '', domisili: '', shift: '', hp: '', no_rek: '', role: 'contributor', badge_color: '' };
             }
             this.showModal = true;
         },
@@ -1347,6 +1370,38 @@ document.addEventListener('alpine:init', () => {
                 this.fetchStudioSummary();
             } catch (error) {
                 console.error("Error saving contributor:", error);
+            }
+        },
+
+        async quickUpdateColor(contributor, colorKey) {
+            if (!contributor?.id) return;
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const res = await fetch(`/api/contributors/${contributor.id}/color`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                    },
+                    body: JSON.stringify({ badge_color: colorKey || null }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Gagal mengubah warna.');
+                contributor.badge_color = data.badge_color;
+                this.colorPickerId = null;
+                if (window.Swal) {
+                    window.Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: `Warna ${contributor.nama} diperbarui`,
+                        timer: 1600,
+                        showConfirmButton: false,
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating color:', error);
             }
         },
 

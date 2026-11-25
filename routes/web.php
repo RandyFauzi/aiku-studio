@@ -125,6 +125,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::get('/contributors/{contributor}/performance', [ContributorController::class, 'performance'])->whereNumber('contributor');
             Route::put('/contributors/{contributor}', [ContributorController::class, 'update']);
             Route::patch('/contributors/{contributor}/role', [ContributorController::class, 'updateRole']);
+            Route::patch('/contributors/{contributor}/color', [ContributorController::class, 'updateColor']);
             Route::delete('/contributors/{contributor}', [ContributorController::class, 'destroy']);
             Route::post('/upload-evidence', [PayslipController::class, 'upload']);
             Route::post('/payslips', [PayslipController::class, 'store']);

@@ -8,7 +8,25 @@ class Contributor extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['nama', 'no_wa', 'domisili', 'no_rek', 'shift', 'hp', 'email', 'role'];
+    public const BADGE_COLORS = [
+        'violet',
+        'blue',
+        'rose',
+        'cyan',
+        'emerald',
+        'amber',
+        'purple',
+        'indigo',
+        'pink',
+        'teal',
+        'orange',
+        'lime',
+        'sky',
+        'fuchsia',
+        'slate',
+    ];
+
+    protected $fillable = ['nama', 'no_wa', 'domisili', 'no_rek', 'shift', 'hp', 'email', 'role', 'badge_color'];
 
     protected $attributes = ['role' => 'contributor'];
 

@@ -250,13 +250,50 @@
                         <template x-for="c in filteredContributors" :key="c.id">
                             <tr class="hover:bg-gray-50/80 transition-colors group">
                                 <td class="px-5 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                                    <div class="flex items-center relative">
+                                        <button type="button"
+                                                @click="colorPickerId = (colorPickerId === c.id ? null : c.id)"
+                                                title="Klik untuk ubah warna badge worker"
+                                                :style="`background-color: ${getBadgeColorMeta(c.badge_color).bg}; color: ${getBadgeColorMeta(c.badge_color).text}; border-color: ${getBadgeColorMeta(c.badge_color).border};`"
+                                                class="h-9 w-9 rounded-xl border flex items-center justify-center font-bold text-xs uppercase shadow-sm hover:scale-105 transition cursor-pointer shrink-0">
                                             <span x-text="c.nama ? c.nama.substring(0,2) : '?'"></span>
-                                        </div>
+                                        </button>
                                         <div class="ml-3">
-                                            <div class="text-sm font-bold text-gray-900" x-text="c.nama"></div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-sm font-bold text-gray-900" x-text="c.nama"></span>
+                                                <button type="button"
+                                                        @click="colorPickerId = (colorPickerId === c.id ? null : c.id)"
+                                                        title="Ubah warna worker"
+                                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-semibold hover:opacity-80 transition cursor-pointer"
+                                                        :style="`background-color: ${getBadgeColorMeta(c.badge_color).bg}; color: ${getBadgeColorMeta(c.badge_color).text}; border-color: ${getBadgeColorMeta(c.badge_color).border};`">
+                                                    <span class="w-2 h-2 rounded-full" :style="`background-color: ${getBadgeColorMeta(c.badge_color).dot};`"></span>
+                                                    <span x-text="getBadgeColorMeta(c.badge_color).label"></span>
+                                                </button>
+                                            </div>
                                             <div class="text-[11px] text-slate-400" x-text="'ID #' + c.id"></div>
+                                        </div>
+
+                                        <!-- Quick Color Picker Popover -->
+                                        <div x-show="colorPickerId === c.id"
+                                             @click.outside="colorPickerId = null"
+                                             x-cloak
+                                             class="absolute left-0 top-11 z-40 w-60 rounded-2xl bg-white border border-slate-200 shadow-xl p-3">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-[11px] font-bold text-slate-700">Pilih Warna Worker</span>
+                                                <button type="button" @click="colorPickerId = null" class="text-xs text-slate-400 hover:text-slate-600">✕</button>
+                                            </div>
+                                            <div class="grid grid-cols-5 gap-2">
+                                                <template x-for="opt in badgeColorOptions" :key="opt.key">
+                                                    <button type="button"
+                                                            @click="quickUpdateColor(c, opt.key)"
+                                                            :title="opt.label"
+                                                            :style="`background-color: ${opt.bg}; border-color: ${(c.badge_color || 'slate') === opt.key ? opt.text : opt.border};`"
+                                                            :class="(c.badge_color || 'slate') === opt.key ? 'ring-2 ring-offset-1 ring-slate-700 scale-105' : 'hover:scale-105'"
+                                                            class="h-8 w-full rounded-lg border flex items-center justify-center transition cursor-pointer">
+                                                        <span class="w-3.5 h-3.5 rounded-full" :style="`background-color: ${opt.dot};`"></span>
+                                                    </button>
+                                                </template>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -688,6 +725,32 @@
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 mb-1">No. Rekening</label>
                                 <input type="text" x-model="formData.no_rek" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all">
+                            </div>
+
+                            <!-- Warna Badge / Pill Worker -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="block text-xs font-semibold text-gray-500">Warna Akun / Badge Worker</label>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-semibold border"
+                                          :style="`background-color: ${getBadgeColorMeta(formData.badge_color).bg}; color: ${getBadgeColorMeta(formData.badge_color).text}; border-color: ${getBadgeColorMeta(formData.badge_color).border};`">
+                                        <span class="w-4 h-4 rounded-md flex items-center justify-center text-[9px] font-black uppercase"
+                                              :style="`background-color: ${getBadgeColorMeta(formData.badge_color).border}; color: ${getBadgeColorMeta(formData.badge_color).text};`"
+                                              x-text="formData.nama ? formData.nama.substring(0,2) : 'WK'"></span>
+                                        <span x-text="formData.nama || 'Preview Worker'"></span>
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-5 sm:grid-cols-8 gap-2 p-2.5 rounded-xl bg-gray-50 border border-gray-200">
+                                    <template x-for="opt in badgeColorOptions" :key="opt.key">
+                                        <button type="button"
+                                                @click="formData.badge_color = opt.key"
+                                                :title="opt.label"
+                                                :style="`background-color: ${opt.bg}; border-color: ${(formData.badge_color || 'slate') === opt.key ? opt.text : opt.border};`"
+                                                :class="(formData.badge_color || 'slate') === opt.key ? 'ring-2 ring-offset-1 ring-slate-800 scale-105' : 'hover:scale-105'"
+                                                class="h-8 rounded-lg border flex items-center justify-center transition cursor-pointer">
+                                            <span class="w-3.5 h-3.5 rounded-full" :style="`background-color: ${opt.dot};`"></span>
+                                        </button>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
