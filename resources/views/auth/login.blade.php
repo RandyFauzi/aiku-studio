@@ -7,7 +7,8 @@
     <meta name="theme-color" content="#ecfccb">
     <title>Masuk — AIKu Studio</title>
     <link rel="preload" href="/fonts/manrope-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="preload" href="{{ asset('assets/object/Login page.webp') }}" as="image" type="image/webp" fetchpriority="high">
+    @vite(['resources/css/app.css', 'resources/js/login.js'])
     <style>
         @font-face {
             font-family: 'Manrope';
@@ -63,10 +64,17 @@
                 <div class="absolute inset-0 w-3/4 max-w-lg mx-auto bg-gradient-to-tr from-emerald-200/80 via-lime-200/70 to-emerald-100/50 rounded-full blur-3xl -z-10 scale-110 opacity-90 pointer-events-none"></div>
                 
                 <div class="relative w-full max-w-[440px] sm:max-w-[520px] lg:max-w-[620px] xl:max-w-[700px] flex items-center justify-center p-1 sm:p-2">
-                    <img src="{{ asset('assets/object/Login page.gif') }}" 
-                         alt="Ilustrasi Kontributor dan Robot AIKu Studio" 
-                         class="w-full h-auto object-contain drop-shadow-md select-none pointer-events-none transition-transform duration-300"
-                         loading="eager">
+                    <picture class="w-full">
+                        <source srcset="{{ asset('assets/object/Login page.webp') }}" type="image/webp">
+                        <img src="{{ asset('assets/object/Login page.gif') }}"
+                             alt="Ilustrasi Kontributor dan Robot AIKu Studio"
+                             width="482"
+                             height="362"
+                             fetchpriority="high"
+                             decoding="async"
+                             loading="eager"
+                             class="w-full h-auto object-contain drop-shadow-md select-none pointer-events-none transition-transform duration-300">
+                    </picture>
                 </div>
             </div>
 
