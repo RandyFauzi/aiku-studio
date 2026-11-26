@@ -129,8 +129,11 @@
             return {
                 qrUrl: @json($qrUrl),
                 initPoster() {
-                    this.$nextTick(() => {
+                    this.$nextTick(async () => {
                         const canvas = document.getElementById('qr-canvas');
+                        if (!window.QRCode && window.loadQRCode) {
+                            await window.loadQRCode();
+                        }
                         if (window.QRCode && canvas) {
                             window.QRCode.toCanvas(canvas, this.qrUrl, {
                                 width: 320,

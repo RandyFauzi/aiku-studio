@@ -28,7 +28,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script>window.AIKU_CONFIG = { hourlyRate: @json(config('payroll.hourly_rate')), currentUserId: {{ auth()->id() }} };</script>
     <script src="/assets/session.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="portal admin-theme bg-[#F4F6F8] text-[#1E293B] min-h-screen font-sans flex antialiased" 

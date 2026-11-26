@@ -583,6 +583,9 @@ window.attendancePortalData = () => ({
 
         this.$nextTick(async () => {
             try {
+                if (!window.Html5Qrcode && window.loadHtml5Qrcode) {
+                    await window.loadHtml5Qrcode();
+                }
                 if (!window.Html5Qrcode) {
                     throw new Error('Scanner barcode belum siap. Silakan muat ulang halaman.');
                 }

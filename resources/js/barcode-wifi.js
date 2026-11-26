@@ -36,10 +36,13 @@ window.liveQrCard = () => ({
         }
     },
 
-    drawQr() {
+    async drawQr() {
         if (!this.qrUrl) return;
         const canvas = document.getElementById(this.canvasId);
         if (!canvas) return;
+        if (!window.QRCode && window.loadQRCode) {
+            await window.loadQRCode();
+        }
 
         let attempts = 0;
         const render = () => {
@@ -202,10 +205,13 @@ window.barcodeWifiModal = () => ({
         }
     },
 
-    renderQrCode() {
+    async renderQrCode() {
         if (!this.qrUrl) return;
         const canvas = document.getElementById('admin-barcode-canvas');
         if (!canvas) return;
+        if (!window.QRCode && window.loadQRCode) {
+            await window.loadQRCode();
+        }
 
         let attempts = 0;
         const draw = () => {

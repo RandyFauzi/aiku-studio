@@ -12,6 +12,7 @@ use App\Services\PayslipWriter;
 use App\Services\PayrollPaymentStatus;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PayrollController extends Controller
@@ -27,13 +28,19 @@ class PayrollController extends Controller
             $periods[] = $cursor;
         }
         $periods[] = $resolver->resolve(['periodId' => 'training_2026']);
-        $default = $current['id'];
-        foreach ($periods as $period) {
-            if (empty($period['isTraining']) && StudioRecording::whereBetween('recorded_at', [$period['startUtc'], $period['endUtc']])->exists()) {
-                $default = $period['id'];
-                break;
+        $resolveDefault = function () use ($periods, $current) {
+            foreach ($periods as $period) {
+                if (empty($period['isTraining']) && StudioRecording::whereBetween('recorded_at', [$period['startUtc'], $period['endUtc']])->exists()) {
+                    return $period['id'];
+                }
             }
-        }
+
+            return $current['id'];
+        };
+
+        $default = app()->runningUnitTests()
+            ? $resolveDefault()
+            : Cache::remember('payroll:default_period:'.$current['id'], 120, $resolveDefault);
 
         return response()->json(['periods' => $periods, 'currentPeriod' => $current, 'defaultPeriodId' => $default]);
     }

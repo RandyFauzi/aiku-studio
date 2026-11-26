@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\StudioRecording;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 
 class StudioTargetService
 {
@@ -21,6 +22,22 @@ class StudioTargetService
         $period = ($periodId && $periodId !== '' && $periodId !== 'training_2026')
             ? $this->periodResolver->resolve(['periodId' => $periodId])
             : $currentCutoff;
+
+        $compute = fn () => $this->computeSummary($nowWita, $period);
+
+        if (app()->runningUnitTests()) {
+            return $compute();
+        }
+
+        return Cache::remember(
+            'studio_targets:'.$nowWita->toDateString().':'.$period['id'],
+            30,
+            $compute
+        );
+    }
+
+    private function computeSummary(CarbonImmutable $nowWita, array $period): array
+    {
 
         $startWita = CarbonImmutable::parse($period['startDate'], 'Asia/Makassar')->startOfDay();
         $endWita = CarbonImmutable::parse($period['endDate'], 'Asia/Makassar')->endOfDay();

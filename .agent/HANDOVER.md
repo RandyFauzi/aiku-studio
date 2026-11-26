@@ -1,3 +1,7 @@
+### [2026-11-26 15:03 WITA] — Antigravity: optimasi performa backend & frontend tanpa mengubah UI/UX
+- `2026_11_26_000001_add_performance_indexes`, `StudioTargetService`, `PayrollController`, `PayrollCalculator`, `app.js`, `attendance.js`, `barcode-wifi.js`, `poster.blade.php`, `devices.blade.php`, `investors.blade.php`, `notes.blade.php`, `public/build/*`: Menambahkan composite index pada `studio_recordings` & `payslips`, caching pendek pada `StudioTargetService` (30s) & `PayrollController::periods()` (120s), membatasi kolom `Payslip` di `PayrollCalculator::summary()`, memindahkan `html5-qrcode` & `qrcode` ke dynamic import (`app.js` turun 537 KB → 178 KB), serta menghapus CDN Tailwind/SweetAlert2 ganda.
+- Validasi: `npm run build` & `php artisan view:clear` sukses; PHPUnit (`StudioTargetTest`, `AttendanceQrWifiTest`, `PayrollMigrationTest`, `InvestorAnalyticsTest`, `InvestorPortalTest`) lulus 100%. State IDLE.
+
 ### [2026-11-26 13:45 WITA] — Antigravity: ubah Target Harian Studio menjadi 80 jam/hari
 - `StudioTargetService`, `app.js`, `studio-targets.blade.php`, `panel/index.blade.php`, `StudioTargetTest`: Mengubah `DAILY_TARGET_HOURS` dari `2150 / total_days` (`71.7`) menjadi tetap `80` jam/hari sementara target bulanan tetap `2.150` jam per siklus cut-off 16–15.
 - Validasi: `php artisan view:clear` sukses, `StudioTargetTest` (3 tests, 24 assertions) lulus 100%. State IDLE.

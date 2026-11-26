@@ -103,7 +103,11 @@ class PayrollCalculator
             ->selectRaw('assigned_worker_name, COUNT(*) as total_tasks, SUM(duration_min) as duration, SUM(billable_min) as approved, SUM(rejected_min) as rejected, SUM(pending_min) as pending')
             ->groupBy('assigned_worker_name')->orderByDesc('approved')->get();
         $writer = app(PayslipWriter::class);
-        $slips = Payslip::whereNull('superseded_by_id')->get()->filter(fn ($slip) => $writer->period($slip->period) === $period['name'])->groupBy(fn ($slip) => $writer->workerKey($slip->employee_name));
+        $slips = Payslip::whereNull('superseded_by_id')
+            ->select(['id', 'employee_name', 'period', 'pending_carry_over_amount', 'status', 'is_locked', 'total_approved_hours', 'bonus', 'total_thp'])
+            ->get()
+            ->filter(fn ($slip) => $writer->period($slip->period) === $period['name'])
+            ->groupBy(fn ($slip) => $writer->workerKey($slip->employee_name));
         $statuses = PayrollStatus::where('period', $period['name'])->pluck('status', 'worker_name');
         $workers = [];
         foreach ($groups as $group) {

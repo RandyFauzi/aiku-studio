@@ -1,7 +1,28 @@
 {
+  "__commonjsHelpers-Cpj98o6Y.js": {
+    "file": "assets/_commonjsHelpers-Cpj98o6Y.js",
+    "name": "_commonjsHelpers"
+  },
+  "_browser-DlzZMmFA.js": {
+    "file": "assets/browser-DlzZMmFA.js",
+    "name": "browser",
+    "isDynamicEntry": true,
+    "imports": [
+      "__commonjsHelpers-Cpj98o6Y.js"
+    ]
+  },
   "_module.esm-BK6u66ms.js": {
     "file": "assets/module.esm-BK6u66ms.js",
     "name": "module.esm"
+  },
+  "node_modules/html5-qrcode/esm/index.js": {
+    "file": "assets/index-DVGUZA9i.js",
+    "name": "index",
+    "src": "node_modules/html5-qrcode/esm/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "__commonjsHelpers-Cpj98o6Y.js"
+    ]
   },
   "resources/css/app.css": {
     "file": "assets/app-DLFK2cFq.css",
@@ -13,12 +34,16 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-nqky0lEl.js",
+    "file": "assets/app-ClqF5_eU.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "_module.esm-BK6u66ms.js"
+    ],
+    "dynamicImports": [
+      "_browser-DlzZMmFA.js",
+      "node_modules/html5-qrcode/esm/index.js"
     ],
     "css": [
       "assets/app-BuZ9JEVh.css"
