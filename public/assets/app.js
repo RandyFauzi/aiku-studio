@@ -80,6 +80,11 @@ document.addEventListener('alpine:init', () => {
             totalBelum: 0
         },
         monthlyWorkers: [],
+        studioTargets: {
+            period: { id: '', name: 'Siklus 16 - 15', total_days: 30, days_elapsed: 0, days_remaining: 30, is_current: true },
+            daily: { date: '', target_hours: 71.7, actual_hours: 0, logged_hours: 0, remaining_hours: 71.7, percent: 0, bar_percent: 0, achieved: false },
+            monthly: { target_hours: 2150, actual_hours: 0, logged_hours: 0, remaining_hours: 2150, expected_hours_to_date: 0, recommended_daily_pace: 71.7, percent: 0, bar_percent: 0, achieved: false, on_track: false }
+        },
 
         formatRupiah,
         formatDate,
@@ -93,13 +98,17 @@ document.addEventListener('alpine:init', () => {
         async loadAllDashboardData() {
             this.loading = true;
             try {
-                const [periodsRes, slipsRes, recRes, contRes, syncRes] = await Promise.all([
+                const [periodsRes, slipsRes, recRes, contRes, syncRes, targetRes] = await Promise.all([
                     fetch('/api/payroll/periods').then(r => r.json()).catch(() => ({ periods: [], currentPeriod: null })),
                     fetch('/api/slips').then(r => r.json()).catch(() => []),
                     fetch('/api/studio-recordings?limit=1').then(r => r.json()).catch(() => ({ stats: {} })),
                     fetch('/api/contributors').then(r => r.json()).catch(() => []),
-                    fetch('/api/studio-recordings/sync-status').then(r => r.json()).catch(() => null)
+                    fetch('/api/studio-recordings/sync-status').then(r => r.json()).catch(() => null),
+                    fetch('/api/studio-targets').then(r => r.json()).catch(() => null)
                 ]);
+                if (targetRes && targetRes.daily && targetRes.monthly) {
+                    this.studioTargets = targetRes;
+                }
 
                 this.periods = (periodsRes && periodsRes.periods) ? periodsRes.periods : [];
                 this.currentPeriod = (periodsRes && periodsRes.currentPeriod) ? periodsRes.currentPeriod : null;
@@ -142,7 +151,13 @@ document.addEventListener('alpine:init', () => {
         async changePeriod(periodId) {
             this.selectedPeriodId = periodId;
             this.loading = true;
-            await this.loadMonthlyData(periodId);
+            await Promise.all([
+                this.loadMonthlyData(periodId),
+                fetch(`/api/studio-targets?periodId=${encodeURIComponent(periodId)}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(d => { if (d && d.daily && d.monthly) this.studioTargets = d; })
+                    .catch(() => {})
+            ]);
             this.loading = false;
         },
 

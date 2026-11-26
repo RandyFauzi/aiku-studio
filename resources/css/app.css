@@ -448,3 +448,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @keyframes record-flame-glow { from { transform:scale(.96) rotate(-2deg); } to { transform:scale(1.03) rotate(2deg); } }
 @media(max-width:767px) { .portal .record-streak-card { order:0; width:100%; padding:18px 18px 12px; } }
 @media(prefers-reduced-motion:reduce) { .record-streak-popup *, .record-streak-popup *::before { animation:none !important; transition:none !important; } }
+
+/* Studio Target Progress Bar & Shimmer Animations */
+.studio-target-card { position:relative; overflow:hidden; transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease, border-color .25s ease; }
+.studio-target-card:hover { transform:translateY(-2px); }
+.studio-target-track { position:relative; height:10px; border-radius:999px; background:#e2e8f0; overflow:hidden; box-shadow:inset 0 1px 2px rgba(15,23,42,.08); }
+.studio-target-fill { position:relative; height:100%; border-radius:999px; transition:width 1s cubic-bezier(.22,1,.36,1); overflow:hidden; }
+.studio-target-fill::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.42) 50%, rgba(255,255,255,0) 100%); transform:translateX(-100%); animation:studio-bar-shimmer 2.2s infinite; }
+@keyframes studio-bar-shimmer { 100% { transform:translateX(100%); } }
+@media(prefers-reduced-motion:reduce) { .studio-target-fill { transition:none; } .studio-target-fill::after { animation:none; } .studio-target-card:hover { transform:none; } }

@@ -17,6 +17,7 @@ use App\Http\Controllers\RecordingMatchingController;
 use App\Http\Controllers\RecordStreakController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShiftDayController;
+use App\Http\Controllers\StudioTargetController;
 use App\Http\Controllers\SyncController;
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\EnsureAdministrator;
@@ -37,6 +38,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
 
         return $home === '/' ? view('panel.index') : redirect($home);
     });
+    Route::get('/api/studio-targets', [StudioTargetController::class, 'show'])->middleware('throttle:120,1');
 
     // Investor Portal (Read-only, isolated to the logged-in investor)
     Route::middleware(EnsureInvestor::class)->group(function () {

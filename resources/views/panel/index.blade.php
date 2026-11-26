@@ -136,42 +136,63 @@
                     </div>
                 </div>
 
-                <!-- KPI 2: Realisasi Payroll -->
-                <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Realisasi Payroll</span>
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                            </div>
+                <!-- KPI 2: Target Harian Studio -->
+                <div class="studio-target-card bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-sky-200 flex flex-col justify-between">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-sky-100/50 blur-2xl pointer-events-none"></div>
+                    <div class="relative">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Harian Studio</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                                  :class="studioTargets.daily.achieved ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200'">
+                                <span class="w-1.5 h-1.5 rounded-full animate-pulse" :class="studioTargets.daily.achieved ? 'bg-emerald-500' : 'bg-sky-500'"></span>
+                                <span x-text="studioTargets.daily.percent + '%'">0%</span>
+                            </span>
                         </div>
                         <div class="flex items-baseline gap-1.5">
-                            <span class="text-xl sm:text-2xl lg:text-[25px] font-black text-slate-900 tracking-tight font-mono" x-text="formatRupiah(totalPayrollPaid)">Rp 0</span>
+                            <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight" x-text="studioTargets.daily.actual_hours">0</span>
+                            <span class="text-xs font-bold text-slate-400" x-text="'/ ' + studioTargets.daily.target_hours + ' Jam'">/ 71.7 Jam</span>
+                        </div>
+                        <div class="mt-3 studio-target-track" role="progressbar" :aria-valuenow="studioTargets.daily.bar_percent" aria-valuemin="0" aria-valuemax="100">
+                            <div class="studio-target-fill"
+                                 :class="studioTargets.daily.achieved ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500' : 'bg-gradient-to-r from-sky-500 via-cyan-400 to-indigo-500'"
+                                 :style="'width:' + studioTargets.daily.bar_percent + '%'"></div>
                         </div>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>Total Dokumen: <strong class="text-slate-700 font-bold" x-text="totalSlipsCount + ' Slip'"></strong></span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-100/80">Lunas Terbit</span>
+                    <div class="relative mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Sisa hari ini: <strong class="text-slate-700 font-bold" x-text="studioTargets.daily.remaining_hours + 'h'"></strong></span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border"
+                              :class="studioTargets.daily.achieved ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-sky-50 text-sky-700 border-sky-100'"
+                              x-text="studioTargets.daily.achieved ? 'Target Tercapai' : 'Progres Hari Ini'"></span>
                     </div>
                 </div>
 
-                <!-- KPI 3: Antrean Rekap -->
-                <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Antrean Rekap</span>
-                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                            </div>
+                <!-- KPI 3: Target Bulanan Studio (2.150 Jam Cut-Off 16-15) -->
+                <div class="studio-target-card bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-amber-200 flex flex-col justify-between">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-amber-100/50 blur-2xl pointer-events-none"></div>
+                    <div class="relative">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Target Bulanan Studio</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                                  :class="studioTargets.monthly.achieved ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (studioTargets.monthly.on_track ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-amber-50 text-amber-700 border-amber-200')">
+                                <span class="w-1.5 h-1.5 rounded-full animate-pulse" :class="studioTargets.monthly.achieved ? 'bg-emerald-500' : (studioTargets.monthly.on_track ? 'bg-teal-500' : 'bg-amber-500')"></span>
+                                <span x-text="studioTargets.monthly.percent + '%'">0%</span>
+                            </span>
                         </div>
                         <div class="flex items-baseline gap-1.5">
-                            <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight" x-text="recordingsStats.belumRekapCount || 0">0</span>
-                            <span class="text-xs font-bold text-slate-400">Tugas Siap</span>
+                            <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight" x-text="Number(studioTargets.monthly.actual_hours || 0).toLocaleString('id-ID')">0</span>
+                            <span class="text-xs font-bold text-slate-400" x-text="'/ ' + Number(studioTargets.monthly.target_hours || 2150).toLocaleString('id-ID') + ' Jam'">/ 2.150 Jam</span>
+                        </div>
+                        <div class="mt-3 studio-target-track" role="progressbar" :aria-valuenow="studioTargets.monthly.bar_percent" aria-valuemin="0" aria-valuemax="100">
+                            <div class="studio-target-fill"
+                                 :class="studioTargets.monthly.achieved ? 'bg-gradient-to-r from-emerald-500 via-lime-400 to-emerald-500' : (studioTargets.monthly.on_track ? 'bg-gradient-to-r from-[#00B090] via-emerald-400 to-teal-500' : 'bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500')"
+                                 :style="'width:' + studioTargets.monthly.bar_percent + '%'"></div>
                         </div>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>Status Rekaman:</span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-100/80">Siap Diproses</span>
+                    <div class="relative mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Cut-off 16–15: <strong class="text-slate-700 font-bold" x-text="studioTargets.monthly.remaining_hours + 'h sisa'"></strong></span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border"
+                              :class="studioTargets.monthly.achieved ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : (studioTargets.monthly.on_track ? 'bg-teal-50 text-teal-700 border-teal-100' : 'bg-amber-50 text-amber-700 border-amber-100')"
+                              x-text="studioTargets.monthly.achieved ? 'Target Tembus' : (studioTargets.monthly.on_track ? 'On Track' : 'Pace ' + studioTargets.monthly.recommended_daily_pace + 'h/hr')"></span>
                     </div>
                 </div>
 

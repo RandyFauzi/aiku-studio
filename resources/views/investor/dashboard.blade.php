@@ -68,6 +68,8 @@
             <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold" x-text="error"></div>
         </template>
 
+        @include('components.studio-targets')
+
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">

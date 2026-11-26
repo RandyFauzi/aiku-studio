@@ -1,3 +1,7 @@
+### [2026-11-26 11:44 WITA] — Antigravity: ganti 2 KPI card menjadi Target Harian & Bulanan Studio (2150 jam cut-off 16-15) untuk semua user
+- `StudioTargetService`, `StudioTargetController`, `routes/web.php`, `studio-targets.blade.php`, `panel/index.blade.php`, `portal/home.blade.php`, `investor/dashboard.blade.php`, `app.js`, `app.css`, `public/build/*`, `StudioTargetTest`: Mengganti card Realisasi Payroll & Antrean Rekap dengan Target Harian Studio (`2150 / total_days`) dan Target Bulanan Studio (`2150` jam per siklus cut-off 16–15) lengkap dengan animasi shimmer/glow & progress bar, serta menampilkannya untuk semua role (`admin`, `contributor`, `investor`).
+- Validasi: `npm run build` sukses, `php artisan view:clear` sukses, `StudioTargetTest` & `InvestorPortalTest` (7 tests, 55 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-25 23:46 WITA] — Antigravity: rapikan layout filter Validasi Tugas & Rekaman untuk tablet & layar kecil
 - `resources/views/panel/recordings.blade.php`: Memisahkan bar filter menjadi 2 baris rapi — baris atas berisi Search input (`flex-1 min-w-0`) + toggle List/Grid + Reset di kanan atas, dan baris bawah berisi 6 dropdown filter dalam grid responsif (`grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`) dengan lebar tombol penuh simetris.
 - Validasi: `php artisan view:clear` sukses. State IDLE.

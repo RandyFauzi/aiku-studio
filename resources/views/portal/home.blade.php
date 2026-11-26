@@ -9,6 +9,10 @@
     <p class="portal-date" x-text="dateLabel(today)"></p>
 </div>
 
+<div class="mb-5">
+    @include('components.studio-targets')
+</div>
+
 <div class="portal-dashboard-grid">
     <div class="portal-stack">
         @include('portal.streak')
