@@ -488,8 +488,11 @@
                             </td>
                             <td class="block px-4 py-2 align-middle md:table-cell md:py-4">
                                 <span class="mb-1 block text-xs text-slate-500 md:hidden">Total durasi</span>
-                                <span class="font-mono text-base font-bold text-emerald-900" x-text="report.total_duration_minutes"></span>
-                                <span class="text-xs text-slate-500">menit</span>
+                                <div>
+                                    <span class="font-mono text-base font-bold text-emerald-900" x-text="report.total_duration_minutes"></span>
+                                    <span class="text-xs text-slate-500">menit</span>
+                                </div>
+                                <div class="mt-0.5 text-[11px] font-semibold text-emerald-700" x-text="'≈ ' + formatHoursLabel(report.total_duration_minutes)"></div>
                             </td>
                             <td class="block min-w-0 px-4 py-2 align-middle md:table-cell md:py-4">
                                 <span class="mb-1 block text-xs text-slate-500 md:hidden">HP digunakan</span>
@@ -813,7 +816,14 @@
             </header>
             <div class="min-h-0 overflow-y-auto p-5 sm:p-6 space-y-5">
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50 p-4">
-                    <div><p class="text-xs text-emerald-800">Durasi dilaporkan</p><p class="mt-1 text-2xl font-bold text-emerald-950"><span x-text="selectedReport?.total_duration_minutes || 0"></span> <span class="text-sm font-medium">menit</span></p></div>
+                    <div>
+                        <p class="text-xs text-emerald-800">Durasi dilaporkan</p>
+                        <p class="mt-1 text-2xl font-bold text-emerald-950">
+                            <span x-text="selectedReport?.total_duration_minutes || 0"></span>
+                            <span class="text-sm font-medium">menit</span>
+                            <span class="ml-1.5 text-sm font-semibold text-emerald-700" x-text="'(' + formatHoursLabel(selectedReport?.total_duration_minutes || 0) + ')'"></span>
+                        </p>
+                    </div>
                     <p class="text-xs text-emerald-900" x-text="(selectedReport?.phones?.length || 0) + ' HP · Revisi #' + (selectedReport?.revision || 1)"></p>
                 </div>
                 <dl class="grid gap-3 text-sm sm:grid-cols-2">

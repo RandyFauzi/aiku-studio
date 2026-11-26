@@ -1,3 +1,7 @@
+### [2026-11-26 11:56 WITA] — Antigravity: tampilkan hitungan jam pada daftar & detail Laporan Harian
+- `resources/js/work-reports.js`, `resources/views/work-reports/admin.blade.php`, `public/build/*`: Menambahkan helper `formatHoursLabel()` dan menampilkan konversi jam (`≈ X jam Y menit`) di kolom Total Menit daftar Laporan Harian serta modal detail laporan.
+- Validasi: `npm run build` & `php artisan view:clear` sukses. State IDLE.
+
 ### [2026-11-26 11:51 WITA] — Antigravity: hapus duplikasi tombol worker di tabel Validasi Tugas & Rekaman
 - `resources/views/panel/recordings.blade.php`: Mengganti `x-show="rec.assigned_worker_name"` / `x-show="!rec.assigned_worker_name"` menjadi `<template x-if="...">` pada List View dan Grid View agar `:style="getWorkerInlineStyle(...)"` tidak menimpa `display: none` dari `x-show` dan menyebabkan tombol `? Belum Ditandai` muncul ganda bersama `+ Tandai Pekerja`.
 - Validasi: `php artisan view:clear` sukses. State IDLE.

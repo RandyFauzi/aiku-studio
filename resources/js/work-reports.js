@@ -350,6 +350,14 @@ window.dailyWorkReportData = () => ({
 });
 
 window.adminWorkReportsData = () => ({
+    formatHoursLabel(value) {
+        const mins = Math.max(0, Math.round(Number(value) || 0));
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (h > 0 && m > 0) return `${h} jam ${m} menit`;
+        if (h > 0) return `${h} jam`;
+        return `${m} menit`;
+    },
     reportTimestamp(value) {
         if (!value) return '—';
         const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value) ? value.replace(' ', 'T') + 'Z' : value;
