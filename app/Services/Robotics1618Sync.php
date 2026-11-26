@@ -68,6 +68,9 @@ class Robotics1618Sync
             $username = config('payroll.robotics_1618_username');
             $password = config('payroll.robotics_1618_password');
             $timeout = (int) config('payroll.robotics_1618_timeout', 60);
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(max(240, $timeout + 120));
+            }
 
             if (empty($username) || empty($password)) {
                 throw new RuntimeException('Kredensial ROBOTICS_1618_USERNAME atau ROBOTICS_1618_PASSWORD belum diatur di file .env.');
@@ -213,6 +216,9 @@ class Robotics1618Sync
             $username = config('payroll.robotics_1618_username');
             $password = config('payroll.robotics_1618_password');
             $timeout = (int) config('payroll.robotics_1618_timeout', 60);
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(max(240, $timeout + 120));
+            }
             $targetProgram = $program ?: config('payroll.robotics_1618_program', 'household-asia');
 
             if (empty($username) || empty($password)) {
@@ -399,35 +405,57 @@ class Robotics1618Sync
 
     private function downloadCsv(string $csvUrl, string $cookieFile, string $destinationPath, int $timeout): void
     {
-        $fp = fopen($destinationPath, 'w+b');
-        if (! $fp) {
-            throw new RuntimeException('Tidak dapat membuka file penyimpanan sementara untuk unduhan CSV.');
+        $downloadTimeout = max($timeout, 180);
+        $maxAttempts = 2;
+        $lastError = '';
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $fp = fopen($destinationPath, 'w+b');
+            if (! $fp) {
+                throw new RuntimeException('Tidak dapat membuka file penyimpanan sementara untuk unduhan CSV.');
+            }
+
+            $ch = curl_init($csvUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_FILE => $fp,
+                CURLOPT_COOKIEFILE => $cookieFile,
+                CURLOPT_COOKIEJAR => $cookieFile,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_CONNECTTIMEOUT => 15,
+                CURLOPT_TIMEOUT => $downloadTimeout,
+                CURLOPT_LOW_SPEED_LIMIT => 1024,
+                CURLOPT_LOW_SPEED_TIME => 30,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_USERAGENT => 'AIKuStudioSync/1.0',
+                CURLOPT_SSL_VERIFYPEER => ! app()->isLocal(),
+            ]);
+
+            $success = curl_exec($ch);
+            $info = curl_getinfo($ch);
+            $curlErr = curl_error($ch);
+            $curlErrno = curl_errno($ch);
+            curl_close($ch);
+            fclose($fp);
+
+            if ($success && $info['http_code'] === 200) {
+                if (filesize($destinationPath) === 0) {
+                    throw new RuntimeException('File recordings.csv dari 1618 kosong.');
+                }
+
+                return;
+            }
+
+            $lastError = "Gagal mengunduh recordings.csv (HTTP {$info['http_code']}): {$curlErr}";
+            $retryable = in_array($curlErrno, [CURLE_OPERATION_TIMEDOUT, CURLE_RECV_ERROR, CURLE_PARTIAL_FILE, CURLE_GOT_NOTHING], true);
+            if ($attempt < $maxAttempts && $retryable) {
+                usleep(500000);
+                continue;
+            }
+            break;
         }
 
-        $ch = curl_init($csvUrl);
-        curl_setopt_array($ch, [
-            CURLOPT_FILE => $fp,
-            CURLOPT_COOKIEFILE => $cookieFile,
-            CURLOPT_COOKIEJAR => $cookieFile,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => $timeout,
-            CURLOPT_USERAGENT => 'AIKuStudioSync/1.0',
-            CURLOPT_SSL_VERIFYPEER => ! app()->isLocal(),
-        ]);
-
-        $success = curl_exec($ch);
-        $info = curl_getinfo($ch);
-        $curlErr = curl_error($ch);
-        curl_close($ch);
-        fclose($fp);
-
-        if (! $success || $info['http_code'] !== 200) {
-            throw new RuntimeException("Gagal mengunduh recordings.csv (HTTP {$info['http_code']}): {$curlErr}");
-        }
-
-        if (filesize($destinationPath) === 0) {
-            throw new RuntimeException('File recordings.csv dari 1618 kosong.');
-        }
+        throw new RuntimeException($lastError);
     }
 
     private function processCsvStream(string $csvPath, array $allowedLookup): array
