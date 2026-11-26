@@ -82,8 +82,8 @@ document.addEventListener('alpine:init', () => {
         monthlyWorkers: [],
         studioTargets: {
             period: { id: '', name: 'Siklus 16 - 15', total_days: 30, days_elapsed: 0, days_remaining: 30, is_current: true },
-            daily: { date: '', target_hours: 71.7, actual_hours: 0, logged_hours: 0, remaining_hours: 71.7, percent: 0, bar_percent: 0, achieved: false },
-            monthly: { target_hours: 2150, actual_hours: 0, logged_hours: 0, remaining_hours: 2150, expected_hours_to_date: 0, recommended_daily_pace: 71.7, percent: 0, bar_percent: 0, achieved: false, on_track: false }
+            daily: { date: '', target_hours: 80, actual_hours: 0, logged_hours: 0, remaining_hours: 80, percent: 0, bar_percent: 0, achieved: false },
+            monthly: { target_hours: 2150, actual_hours: 0, logged_hours: 0, remaining_hours: 2150, expected_hours_to_date: 0, recommended_daily_pace: 80, percent: 0, bar_percent: 0, achieved: false, on_track: false }
         },
 
         formatRupiah,

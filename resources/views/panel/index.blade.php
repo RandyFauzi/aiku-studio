@@ -150,7 +150,7 @@
                         </div>
                         <div class="flex items-baseline gap-1.5">
                             <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight" x-text="studioTargets.daily.actual_hours">0</span>
-                            <span class="text-xs font-bold text-slate-400" x-text="'/ ' + studioTargets.daily.target_hours + ' Jam'">/ 71.7 Jam</span>
+                            <span class="text-xs font-bold text-slate-400" x-text="'/ ' + studioTargets.daily.target_hours + ' Jam'">/ 80 Jam</span>
                         </div>
                         <div class="mt-3 studio-target-track" role="progressbar" :aria-valuenow="studioTargets.daily.bar_percent" aria-valuemin="0" aria-valuemax="100">
                             <div class="studio-target-fill"

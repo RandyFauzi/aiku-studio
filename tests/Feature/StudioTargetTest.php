@@ -87,7 +87,7 @@ class StudioTargetTest extends TestCase
             $res->assertOk()
                 ->assertJsonPath('period.id', '2026-11-16_2026-12-15')
                 ->assertJsonPath('period.total_days', 30)
-                ->assertJsonPath('daily.target_hours', 71.7)
+                ->assertJsonPath('daily.target_hours', 80)
                 ->assertJsonPath('daily.actual_hours', 2)
                 ->assertJsonPath('monthly.target_hours', 2150)
                 ->assertJsonPath('monthly.actual_hours', 5);

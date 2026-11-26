@@ -7,6 +7,8 @@ use Carbon\CarbonImmutable;
 
 class StudioTargetService
 {
+    public const DAILY_TARGET_HOURS = 80.0;
+
     public const MONTHLY_TARGET_HOURS = 2150.0;
 
     public function __construct(private readonly PayrollPeriod $periodResolver) {}
@@ -24,7 +26,7 @@ class StudioTargetService
         $endWita = CarbonImmutable::parse($period['endDate'], 'Asia/Makassar')->endOfDay();
 
         $totalDays = max(1, (int) $startWita->diffInDays($endWita->startOfDay()) + 1);
-        $dailyTargetHours = round(self::MONTHLY_TARGET_HOURS / $totalDays, 1);
+        $dailyTargetHours = self::DAILY_TARGET_HOURS;
 
         $isCurrentCycle = $nowWita->betweenIncluded($startWita, $endWita);
         $daysElapsed = $isCurrentCycle
@@ -60,7 +62,7 @@ class StudioTargetService
         $monthlyRemainingHours = max(0.0, round(self::MONTHLY_TARGET_HOURS - $monthlyBillableHours, 1));
         $dailyRemainingHours = max(0.0, round($dailyTargetHours - $dailyBillableHours, 1));
 
-        $expectedProgressHours = round($dailyTargetHours * $daysElapsed, 1);
+        $expectedProgressHours = round((self::MONTHLY_TARGET_HOURS / $totalDays) * $daysElapsed, 1);
         $recommendedDailyPace = $daysRemaining > 0
             ? round($monthlyRemainingHours / $daysRemaining, 1)
             : $monthlyRemainingHours;

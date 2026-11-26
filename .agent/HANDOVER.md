@@ -1,3 +1,7 @@
+### [2026-11-26 13:45 WITA] — Antigravity: ubah Target Harian Studio menjadi 80 jam/hari
+- `StudioTargetService`, `app.js`, `studio-targets.blade.php`, `panel/index.blade.php`, `StudioTargetTest`: Mengubah `DAILY_TARGET_HOURS` dari `2150 / total_days` (`71.7`) menjadi tetap `80` jam/hari sementara target bulanan tetap `2.150` jam per siklus cut-off 16–15.
+- Validasi: `php artisan view:clear` sukses, `StudioTargetTest` (3 tests, 24 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-26 11:56 WITA] — Antigravity: tampilkan hitungan jam pada daftar & detail Laporan Harian
 - `resources/js/work-reports.js`, `resources/views/work-reports/admin.blade.php`, `public/build/*`: Menambahkan helper `formatHoursLabel()` dan menampilkan konversi jam (`≈ X jam Y menit`) di kolom Total Menit daftar Laporan Harian serta modal detail laporan.
 - Validasi: `npm run build` & `php artisan view:clear` sukses. State IDLE.

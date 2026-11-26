@@ -69,8 +69,8 @@
             loading: true,
             data: {
                 period: { name: 'Siklus 16 – 15' },
-                daily: { target_hours: 71.7, actual_hours: 0, remaining_hours: 71.7, percent: 0, bar_percent: 0, achieved: false },
-                monthly: { target_hours: 2150, actual_hours: 0, remaining_hours: 2150, recommended_daily_pace: 71.7, percent: 0, bar_percent: 0, achieved: false, on_track: false }
+                daily: { target_hours: 80, actual_hours: 0, remaining_hours: 80, percent: 0, bar_percent: 0, achieved: false },
+                monthly: { target_hours: 2150, actual_hours: 0, remaining_hours: 2150, recommended_daily_pace: 80, percent: 0, bar_percent: 0, achieved: false, on_track: false }
             },
             async load() {
                 try {
