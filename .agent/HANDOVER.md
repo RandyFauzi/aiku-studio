@@ -1,3 +1,7 @@
+### [2026-11-27 23:58 WITA] — Antigravity: rebuild Vite CSS untuk class responsif Reporting & Profit
+- `resources/views/panel/profit.blade.php`, `public/build/*`: Menjalankan `npm run build` agar utility class Tailwind baru (`xl:grid-cols-3`, `xl:col-span-2`, `2xl:grid-cols-5`, dll) ter-compile ke bundle CSS produksi, serta merapikan toggle `USD`/`IDR` dengan `overflow-hidden`.
+- Validasi: `npm run build` & `php artisan view:clear` sukses. State IDLE.
+
 ### [2026-11-27 23:52 WITA] — Antigravity: rapikan layout responsif Reporting & Profit dan tambah estimasi bagi 3
 - `resources/views/panel/profit.blade.php`: Merapikan 5 KPI card (`grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-5`, `tabular-nums`, `min-w-0`) dan grid Parameter Finansial & Distribusi Pendapatan (`xl:grid-cols-3`) agar tidak sesak/tabrakan di layar tablet/mobile, serta menambahkan kartu **Estimasi Pembagian Profit (Laba Bersih ÷ 3)** untuk Lutfhi Amak, Randy, dan Reza Ahong.
 - Validasi: `php artisan view:clear` & `PayrollMigrationTest` (`all migrated pages render after login`) lulus. State IDLE.

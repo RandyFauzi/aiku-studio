@@ -258,15 +258,15 @@
                         <!-- Mode Rate -->
                         <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/60 min-w-0">
                             <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Tipe Rate Client</label>
-                            <div class="flex rounded-lg bg-gray-200/70 p-1 gap-1">
+                            <div class="flex rounded-lg bg-gray-200/70 p-1 gap-1 overflow-hidden">
                                 <button type="button" @click="rateMode = 'USD'; saveSettings()" 
                                         :class="rateMode === 'USD' ? 'bg-white text-gray-900 font-bold shadow-xs' : 'text-gray-500 hover:text-gray-900'"
-                                        class="flex-1 py-1.5 px-2 text-xs rounded-md transition text-center whitespace-nowrap cursor-pointer">
+                                        class="flex-1 py-1.5 px-1.5 text-[11px] sm:text-xs rounded-md transition text-center whitespace-nowrap cursor-pointer">
                                     USD ($/jam)
                                 </button>
                                 <button type="button" @click="rateMode = 'IDR'; saveSettings()" 
                                         :class="rateMode === 'IDR' ? 'bg-white text-gray-900 font-bold shadow-xs' : 'text-gray-500 hover:text-gray-900'"
-                                        class="flex-1 py-1.5 px-2 text-xs rounded-md transition text-center whitespace-nowrap cursor-pointer">
+                                        class="flex-1 py-1.5 px-1.5 text-[11px] sm:text-xs rounded-md transition text-center whitespace-nowrap cursor-pointer">
                                     IDR (Rp/jam)
                                 </button>
                             </div>
