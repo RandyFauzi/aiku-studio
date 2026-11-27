@@ -1,3 +1,7 @@
+### [2026-11-27 23:52 WITA] — Antigravity: rapikan layout responsif Reporting & Profit dan tambah estimasi bagi 3
+- `resources/views/panel/profit.blade.php`: Merapikan 5 KPI card (`grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-5`, `tabular-nums`, `min-w-0`) dan grid Parameter Finansial & Distribusi Pendapatan (`xl:grid-cols-3`) agar tidak sesak/tabrakan di layar tablet/mobile, serta menambahkan kartu **Estimasi Pembagian Profit (Laba Bersih ÷ 3)** untuk Lutfhi Amak, Randy, dan Reza Ahong.
+- Validasi: `php artisan view:clear` & `PayrollMigrationTest` (`all migrated pages render after login`) lulus. State IDLE.
+
 ### [2026-11-26 17:15 WITA] — Antigravity: perbaiki timeout unduhan recordings.csv 1618 Robotics
 - `app/Services/Robotics1618Sync.php`: Menambahkan `CURLOPT_ENCODING => ''` (gzip/deflate transfer compression untuk CSV 6.7MB+), memperpanjang `CURLOPT_TIMEOUT` ke minimal `180` detik dengan `CURLOPT_LOW_SPEED_LIMIT` (1 KB/s selama 30s) & `set_time_limit(240)`, serta retry otomatis 1x untuk error jaringan sementara.
 - Validasi: `Robotics1618SyncTest` lulus 100%. State IDLE.

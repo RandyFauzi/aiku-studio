@@ -146,61 +146,61 @@
             </div>
 
             <!-- Top Highlight Metric Cards (Dashboard Style) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-5 gap-3.5 sm:gap-4">
                 <!-- Card 1: Gross Revenue -->
-                <div class="bg-gradient-to-br from-indigo-50/70 to-blue-50/40 border border-indigo-100/80 p-5 rounded-2xl relative overflow-hidden shadow-2xs">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Pendapatan Client</p>
-                        <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                <div class="min-w-0 bg-gradient-to-br from-indigo-50/70 to-blue-50/40 border border-indigo-100/80 p-4 sm:p-5 rounded-2xl relative overflow-hidden shadow-2xs">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <p class="text-[11px] sm:text-xs font-bold text-indigo-700 uppercase tracking-wider">Pendapatan Client</p>
+                        <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-black text-gray-900 tracking-tight" x-text="formatRupiah(profitSummary.grossRevenue)"></div>
+                    <div class="text-xl sm:text-2xl 2xl:text-[22px] font-black text-gray-900 tracking-tight tabular-nums break-words" x-text="formatRupiah(profitSummary.grossRevenue)"></div>
                     <p class="text-xs text-indigo-600 font-medium mt-1">
                         <span x-text="profitSummary.approvedHours + 'h'"></span> disetujui @ <span x-text="formatRupiah(effectiveClientRateIdr)"></span>/h
                     </p>
                 </div>
 
                 <!-- Card 2: Total Payroll Expense -->
-                <div class="bg-gradient-to-br from-rose-50/70 to-pink-50/40 border border-rose-100/80 p-5 rounded-2xl relative overflow-hidden shadow-2xs">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-bold text-rose-700 uppercase tracking-wider">Beban Payroll</p>
-                        <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs">
+                <div class="min-w-0 bg-gradient-to-br from-rose-50/70 to-pink-50/40 border border-rose-100/80 p-4 sm:p-5 rounded-2xl relative overflow-hidden shadow-2xs">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <p class="text-[11px] sm:text-xs font-bold text-rose-700 uppercase tracking-wider">Beban Payroll</p>
+                        <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-black text-rose-600 tracking-tight" x-text="formatRupiah(profitSummary.totalPayrollCost)"></div>
+                    <div class="text-xl sm:text-2xl 2xl:text-[22px] font-black text-rose-600 tracking-tight tabular-nums break-words" x-text="formatRupiah(profitSummary.totalPayrollCost)"></div>
                     <p class="text-xs text-rose-600 font-medium mt-1">
                         <span x-text="profitSummary.contributorsCount"></span> worker (<span x-text="profitSummary.payrollRatioPct + '%'"></span> dari omset)
                     </p>
                 </div>
 
                 <!-- Card 3: Gross Profit -->
-                <div class="bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border border-emerald-100/80 p-5 rounded-2xl relative overflow-hidden shadow-2xs">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Laba Kotor</p>
-                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs">
+                <div class="min-w-0 bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border border-emerald-100/80 p-4 sm:p-5 rounded-2xl relative overflow-hidden shadow-2xs">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <p class="text-[11px] sm:text-xs font-bold text-emerald-700 uppercase tracking-wider">Laba Kotor</p>
+                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-black text-emerald-700 tracking-tight" x-text="formatRupiah(profitSummary.grossProfit)"></div>
+                    <div class="text-xl sm:text-2xl 2xl:text-[22px] font-black text-emerald-700 tracking-tight tabular-nums break-words" x-text="formatRupiah(profitSummary.grossProfit)"></div>
                     <p class="text-xs text-emerald-600 font-medium mt-1">
                         Revenue - Total Beban Gaji
                     </p>
                 </div>
 
                 <!-- Card 4: Net Profit Studio -->
-                <div class="bg-gradient-to-br from-violet-100/90 via-purple-50 to-indigo-50 border-2 border-brand/30 p-5 rounded-2xl relative overflow-hidden shadow-sm">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-black text-brand uppercase tracking-wider flex items-center gap-1">
+                <div class="min-w-0 bg-gradient-to-br from-violet-100/90 via-purple-50 to-indigo-50 border-2 border-brand/30 p-4 sm:p-5 rounded-2xl relative overflow-hidden shadow-sm">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <p class="text-[11px] sm:text-xs font-black text-brand uppercase tracking-wider flex items-center gap-1">
                             <span>Laba Bersih</span>
                             <span class="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-brand text-white">Net</span>
                         </p>
-                        <div class="w-7 h-7 rounded-lg bg-brand text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                        <div class="w-7 h-7 rounded-lg bg-brand text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-black text-brand tracking-tight" x-text="formatRupiah(profitSummary.netProfit)"></div>
+                    <div class="text-xl sm:text-2xl 2xl:text-[22px] font-black text-brand tracking-tight tabular-nums break-words" x-text="formatRupiah(profitSummary.netProfit)"></div>
                     <div class="flex items-center gap-1.5 mt-1">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800" x-text="'+' + profitSummary.profitMarginPct + '%'"></span>
                         <span class="text-[11px] text-gray-500 font-medium">Margin Bersih</span>
@@ -208,15 +208,15 @@
                 </div>
 
                 <!-- Card 5: Total Jam Logged & QC Approval -->
-                <div class="bg-gradient-to-br from-teal-50/70 to-emerald-50/40 border border-teal-100/80 p-5 rounded-2xl relative overflow-hidden shadow-2xs">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-bold text-teal-800 uppercase tracking-wider">Total Jam Logged</p>
-                        <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">
+                <div class="min-w-0 sm:col-span-2 md:col-span-1 bg-gradient-to-br from-teal-50/70 to-emerald-50/40 border border-teal-100/80 p-4 sm:p-5 rounded-2xl relative overflow-hidden shadow-2xs">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <p class="text-[11px] sm:text-xs font-bold text-teal-800 uppercase tracking-wider">Total Jam Logged</p>
+                        <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                     </div>
-                    <div class="text-2xl font-black text-slate-800 tracking-tight">
-                        <span x-text="profitSummary.loggedHours"></span><span class="text-base font-bold text-slate-400 ml-1">Jam</span>
+                    <div class="text-xl sm:text-2xl 2xl:text-[22px] font-black text-slate-800 tracking-tight tabular-nums">
+                        <span x-text="profitSummary.loggedHours"></span><span class="text-sm sm:text-base font-bold text-slate-400 ml-1">Jam</span>
                     </div>
                     <p class="text-xs text-teal-700 font-medium mt-1">
                         <span x-text="profitSummary.totalTasks + ' Tasks'"></span> (<span class="font-bold text-emerald-700" x-text="profitSummary.qcEfficiencyPct + '% Approved'"></span>)
@@ -230,43 +230,43 @@
             </div>
 
             <!-- Interactive Settings & Financial Breakdown Cards -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 sm:gap-6">
                 
                 <!-- Left: Interactive Rate & Parameter Calculator -->
-                <div class="lg:col-span-2 bg-white border border-gray-200/80 rounded-2xl p-6 shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-2 mb-5">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-brand/10 text-brand flex items-center justify-center font-bold">
+                <div class="xl:col-span-2 bg-white border border-gray-200/80 rounded-2xl p-5 sm:p-6 shadow-sm min-w-0">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3 mb-5">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-xl bg-brand/10 text-brand flex items-center justify-center font-bold shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <h3 class="text-base font-bold text-gray-900">Parameter Finansial & Kalkulator Rate</h3>
                                 <p class="text-xs text-gray-400">Ubah angka di bawah ini, kalkulasi laba dan margin di seluruh halaman akan terhitung otomatis.</p>
                             </div>
                         </div>
                         
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
                                 Live Sync
                             </span>
-                            <button @click="resetSettings()" class="text-xs font-semibold text-gray-400 hover:text-gray-700 underline transition">Reset Default</button>
+                            <button @click="resetSettings()" class="text-xs font-semibold text-gray-400 hover:text-gray-700 underline transition whitespace-nowrap cursor-pointer">Reset Default</button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-4">
                         <!-- Mode Rate -->
-                        <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/60">
+                        <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/60 min-w-0">
                             <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Tipe Rate Client</label>
                             <div class="flex rounded-lg bg-gray-200/70 p-1 gap-1">
                                 <button type="button" @click="rateMode = 'USD'; saveSettings()" 
                                         :class="rateMode === 'USD' ? 'bg-white text-gray-900 font-bold shadow-xs' : 'text-gray-500 hover:text-gray-900'"
-                                        class="flex-1 py-1.5 text-xs rounded-md transition text-center">
+                                        class="flex-1 py-1.5 px-2 text-xs rounded-md transition text-center whitespace-nowrap cursor-pointer">
                                     USD ($/jam)
                                 </button>
                                 <button type="button" @click="rateMode = 'IDR'; saveSettings()" 
                                         :class="rateMode === 'IDR' ? 'bg-white text-gray-900 font-bold shadow-xs' : 'text-gray-500 hover:text-gray-900'"
-                                        class="flex-1 py-1.5 text-xs rounded-md transition text-center">
+                                        class="flex-1 py-1.5 px-2 text-xs rounded-md transition text-center whitespace-nowrap cursor-pointer">
                                     IDR (Rp/jam)
                                 </button>
                             </div>
@@ -357,45 +357,81 @@
 
                         <!-- Legend Items -->
                         <div class="space-y-2.5 text-xs">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                                    <span class="text-gray-600 font-medium">Beban Gaji Kontributor</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
+                                    <span class="text-gray-600 font-medium truncate">Beban Gaji Kontributor</span>
                                 </div>
-                                <span class="font-bold text-gray-900" x-text="profitSummary.payrollRatioPct + '%'"></span>
+                                <span class="font-bold text-gray-900 shrink-0 tabular-nums" x-text="profitSummary.payrollRatioPct + '%'"></span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-                                    <span class="text-gray-600 font-medium">Biaya Operasional (OpEx)</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0"></span>
+                                    <span class="text-gray-600 font-medium truncate">Biaya Operasional (OpEx)</span>
                                 </div>
-                                <span class="font-bold text-gray-900" x-text="profitSummary.opExRatioPct + '%'"></span>
+                                <span class="font-bold text-gray-900 shrink-0 tabular-nums" x-text="profitSummary.opExRatioPct + '%'"></span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                                    <a href="/investors" class="text-gray-600 hover:text-amber-700 font-medium underline decoration-dotted">Bagi Hasil Investor HP</a>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                                    <a href="/investors" class="text-gray-600 hover:text-amber-700 font-medium underline decoration-dotted truncate">Bagi Hasil Investor HP</a>
                                 </div>
-                                <span class="font-bold text-amber-700" x-text="formatRupiah(profitSummary.investorShare) + ' (' + profitSummary.investorRatioPct + '%)'"></span>
+                                <span class="font-bold text-amber-700 shrink-0 tabular-nums" x-text="formatRupiah(profitSummary.investorShare) + ' (' + profitSummary.investorRatioPct + '%)'"></span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                                    <span class="text-emerald-700 font-bold">Laba Bersih Studio</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <span class="text-emerald-700 font-bold truncate">Laba Bersih Studio</span>
                                 </div>
-                                <span class="font-extrabold text-emerald-700" x-text="profitSummary.profitRatioPct + '%'"></span>
+                                <span class="font-extrabold text-emerald-700 shrink-0 tabular-nums" x-text="profitSummary.profitRatioPct + '%'"></span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Bottom Quick Stat -->
-                    <div class="mt-5 pt-4 border-t border-gray-100 bg-slate-50/70 p-3 rounded-xl border border-gray-100 text-xs flex justify-between items-center">
+                    <div class="mt-5 pt-4 border-t border-gray-100 bg-slate-50/70 p-3 rounded-xl border border-gray-100 text-xs flex flex-wrap justify-between items-center gap-2">
                         <span class="text-gray-500 font-medium">Rata-rata Profit / Jam Kerja:</span>
-                        <span class="font-extrabold text-gray-900 text-sm" x-text="formatRupiah(profitSummary.avgProfitPerHour) + ' /h'"></span>
+                        <span class="font-extrabold text-gray-900 text-sm tabular-nums" x-text="formatRupiah(profitSummary.avgProfitPerHour) + ' /h'"></span>
                     </div>
                 </div>
 
             </div>
+
+            <!-- Estimasi Pembagian Profit (Laba Bersih ÷ 3) -->
+            <section class="bg-white border border-gray-200/80 rounded-2xl p-5 sm:p-6 shadow-sm" aria-label="Estimasi Pembagian Profit">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-gray-100">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Estimasi Pembagian Profit (Laba Bersih ÷ 3)</h3>
+                        <p class="text-xs text-gray-400">Dihitung otomatis dari Laba Bersih Studio dibagi rata ke 3 penerima (33,3% per orang).</p>
+                    </div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-200/70 text-xs shrink-0 self-start sm:self-auto">
+                        <span class="text-gray-500 font-medium">Total Laba Bersih:</span>
+                        <span class="font-extrabold text-brand tabular-nums" x-text="formatRupiah(profitSummary.netProfit)"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+                    <template x-for="(owner, idx) in [
+                        { name: 'Lutfhi Amak', initials: 'LA', badge: 'bg-indigo-100 text-indigo-700', border: 'border-indigo-100 bg-indigo-50/30' },
+                        { name: 'Randy', initials: 'RN', badge: 'bg-emerald-100 text-emerald-700', border: 'border-emerald-100 bg-emerald-50/30' },
+                        { name: 'Reza Ahong', initials: 'RA', badge: 'bg-amber-100 text-amber-700', border: 'border-amber-100 bg-amber-50/30' }
+                    ]" :key="owner.name">
+                        <div class="rounded-xl border p-4 flex flex-col justify-between gap-3 min-w-0" :class="owner.border">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-8 h-8 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0" :class="owner.badge" x-text="owner.initials"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-bold text-slate-900 truncate" x-text="owner.name"></p>
+                                        <p class="text-[11px] text-slate-500">Bagian 1/3 (33,3%)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-lg sm:text-xl font-black text-slate-900 tracking-tight tabular-nums break-words"
+                                 x-text="formatRupiah(Math.round((Number(profitSummary.netProfit) || 0) / 3))"></div>
+                        </div>
+                    </template>
+                </div>
+            </section>
 
             <!-- Contributor Profitability Table -->
             <div class="bg-white border border-gray-200/80 rounded-2xl overflow-hidden shadow-sm">
