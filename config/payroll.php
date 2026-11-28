@@ -17,4 +17,5 @@ return [
     'robotics_1618_username' => env('ROBOTICS_1618_USERNAME', 'kamerakita-ai'),
     'robotics_1618_password' => env('ROBOTICS_1618_PASSWORD', 'RrtVZnLYuRfKYTkvtaUU'),
     'robotics_1618_timeout' => (int) env('ROBOTICS_1618_TIMEOUT', 60),
+    'profit_pin' => (string) env('PROFIT_PAGE_PIN', '123123'),
 ];

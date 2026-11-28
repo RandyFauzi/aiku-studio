@@ -900,6 +900,10 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('profitData', () => ({
         sidebarOpen: getInitialSidebarOpen(),
         isLoading: true,
+        pinUnlocked: false,
+        pinInput: '',
+        pinError: '',
+        pinVerifying: false,
         
         // Period Management
         periods: [],
@@ -936,13 +940,48 @@ document.addEventListener('alpine:init', () => {
         formatPeriod,
 
         async init() {
+            // Watch sidebarOpen in profitData
+            this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });
+            this.$nextTick(() => this.$refs.profitPinInput?.focus());
+        },
+
+        async verifyPin() {
+            const pin = (this.pinInput || '').trim();
+            if (!pin) {
+                this.pinError = 'Masukkan PIN terlebih dahulu.';
+                return;
+            }
+            this.pinVerifying = true;
+            this.pinError = '';
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const res = await fetch('/api/profit/verify-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: JSON.stringify({ pin })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'PIN tidak valid.');
+                }
+                this.pinUnlocked = true;
+                this.pinInput = '';
+                await this.loadProtectedProfitData();
+            } catch (e) {
+                this.pinError = e.message || 'PIN salah.';
+                this.pinInput = '';
+                this.$nextTick(() => this.$refs.profitPinInput?.focus());
+            } finally {
+                this.pinVerifying = false;
+            }
+        },
+
+        async loadProtectedProfitData() {
             try {
                 const res = await fetch('/api/finance/settings');
                 const data = await res.json();
                 if (res.ok && data.settings) Object.assign(this, data.settings);
             } catch (e) { console.error('Gagal memuat pengaturan profit', e); }
-            // Watch sidebarOpen in profitData
-            this.$watch('sidebarOpen', val => { try { if (window.innerWidth >= 768) { localStorage.setItem('aiku_sidebar_open', String(val)); }; } catch(e) {} });
             await this.fetchPeriods();
         },
 

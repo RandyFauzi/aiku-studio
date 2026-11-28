@@ -1,3 +1,7 @@
+### [2026-11-28 20:33 WITA] — Antigravity: tambah proteksi PIN (123123) setiap buka halaman Reporting & Profit
+- `config/payroll.php`, `PayrollController`, `routes/web.php`, `profit.blade.php`, `app.js`, `public/build/*`, `ProfitPinTest`: Menambahkan verifikasi PIN server-side (`POST /api/profit/verify-pin`, default `123123` via `PROFIT_PAGE_PIN`) dan layar kunci PIN di `profitData` (`pinUnlocked = false` setiap halaman dibuka/refresh, tidak disimpan di storage/session).
+- Validasi: `npm run build`, `php artisan view:clear`, & `ProfitPinTest` (3 tests, 7 assertions) lulus 100%. State IDLE.
+
 ### [2026-11-27 23:58 WITA] — Antigravity: rebuild Vite CSS untuk class responsif Reporting & Profit
 - `resources/views/panel/profit.blade.php`, `public/build/*`: Menjalankan `npm run build` agar utility class Tailwind baru (`xl:grid-cols-3`, `xl:col-span-2`, `2xl:grid-cols-5`, dll) ter-compile ke bundle CSS produksi, serta merapikan toggle `USD`/`IDR` dengan `overflow-hidden`.
 - Validasi: `npm run build` & `php artisan view:clear` sukses. State IDLE.

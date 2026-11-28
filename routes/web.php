@@ -168,6 +168,7 @@ Route::middleware(['auth', EnsureActiveAccount::class])->group(function () {
             Route::put('/shifts/days/{date}', [ShiftDayController::class, 'save']);
             Route::delete('/shifts/days/{date}', [ShiftDayController::class, 'destroy']);
             Route::get('/payroll/periods', [PayrollController::class, 'periods']);
+            Route::post('/profit/verify-pin', [PayrollController::class, 'verifyProfitPin'])->middleware('throttle:10,1');
             Route::get('/payroll/live-summary', [PayrollController::class, 'summary']);
             Route::get('/payroll/worker-evidence', [PayrollController::class, 'evidence']);
             Route::get('/payroll/pending-carry-over', [PayrollController::class, 'pendingCarryOver']);

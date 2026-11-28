@@ -17,6 +17,23 @@ use Illuminate\Support\Facades\DB;
 
 class PayrollController extends Controller
 {
+    public function verifyProfitPin(Request $request)
+    {
+        $data = $request->validate([
+            'pin' => 'required|string|max:20',
+        ]);
+
+        $expected = (string) config('payroll.profit_pin', '123123');
+        if (! hash_equals($expected, trim($data['pin']))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PIN salah. Silakan coba lagi.',
+            ], 422);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     public function periods(PayrollPeriod $resolver)
     {
         $current = $resolver->cutoff();

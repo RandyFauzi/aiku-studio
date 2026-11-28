@@ -52,6 +52,42 @@
             </div>
         </header>
 
+        <div x-show="!pinUnlocked" class="flex-1 flex items-center justify-center p-4 sm:p-6">
+            <div class="bg-white border border-slate-200/90 rounded-3xl shadow-xl w-full max-w-sm p-6 sm:p-7 text-center space-y-5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-[#00B090] border border-emerald-200 flex items-center justify-center mx-auto">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-extrabold text-slate-900">Akses Halaman Profit</h2>
+                    <p class="text-xs text-slate-500 mt-1">Masukkan PIN keamanan untuk membuka laporan finansial & profit studio.</p>
+                </div>
+                <form @submit.prevent="verifyPin()" class="space-y-3 text-left">
+                    <div>
+                        <label for="profit-pin-input" class="sr-only">PIN Keamanan</label>
+                        <input id="profit-pin-input"
+                               x-ref="profitPinInput"
+                               x-model="pinInput"
+                               type="password"
+                               inputmode="numeric"
+                               autocomplete="off"
+                               maxlength="20"
+                               required
+                               placeholder="Masukkan PIN"
+                               class="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-center text-base font-mono font-bold tracking-[0.35em] text-slate-900 focus:outline-none focus:bg-white focus:border-[#00B090] focus:ring-2 focus:ring-[#00B090]/20">
+                    </div>
+                    <template x-if="pinError">
+                        <p class="text-xs font-semibold text-rose-600 text-center" x-text="pinError"></p>
+                    </template>
+                    <button type="submit"
+                            :disabled="pinVerifying"
+                            class="w-full h-11 rounded-xl bg-[#00B090] hover:bg-[#009B7E] text-white text-xs sm:text-sm font-bold transition shadow-sm disabled:opacity-50 cursor-pointer"
+                            x-text="pinVerifying ? 'Memverifikasi...' : 'Buka Laporan Profit'"></button>
+                    <a href="/" class="block text-center text-xs font-semibold text-slate-400 hover:text-slate-700 pt-1">Kembali ke Dashboard</a>
+                </form>
+            </div>
+        </div>
+
+        <template x-if="pinUnlocked">
         <div class="w-full max-w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
             <!-- Breadcrumb & Header Controls -->
@@ -607,8 +643,9 @@
             </div>
 
         </div>
+        </template>
     </main>
 
-    <script src="/assets/app.js"></script>
+    <script src="/assets/app.js?v={{ filemtime(public_path('assets/app.js')) }}"></script>
 </body>
 </html>
